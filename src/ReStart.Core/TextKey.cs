@@ -419,4 +419,106 @@ public enum TextKey
     ErrorAppCommandUnavailable,
     /// <summary>Could not run the app command: </summary>
     ErrorAppCommand,
+    /// <summary>Updates</summary>
+    SettingsUpdates,
+    /// <summary>Version: {0}</summary>
+    AboutVersion,
+    /// <summary>Build: {0}</summary>
+    AboutBuild,
+    /// <summary>Runtime: {0} · {1}</summary>
+    AboutRuntime,
+    /// <summary>Settings schema: {0}</summary>
+    AboutSchema,
+    /// <summary>Last saved by: {0}</summary>
+    AboutSavedVersion,
+    /// <summary>Licenses and notices</summary>
+    AboutLicenses,
+    /// <summary>ReStart licenses</summary>
+    LicenseTitle,
+    /// <summary>Settings migration</summary>
+    SettingsMigration,
+    /// <summary>No recorded upgrade. New settings use the current format.</summary>
+    MigrationNone,
+    /// <summary>{0} → {1} · schema {2} → {3} · {4}</summary>
+    MigrationLast,
+    /// <summary>Rollback backup: {0}</summary>
+    MigrationBackup,
+    /// <summary>Legacy / unknown</summary>
+    MigrationLegacy,
+    /// <summary>These settings were created by a newer version and are read-only.</summary>
+    MigrationReadOnly,
+    /// <summary>To roll back, exit ReStart, keep a copy of the current layout, and restore the matching backup as layout.json. An older app cannot edit a newer schema.</summary>
+    MigrationRollbackHelp,
+    /// <summary>Open settings folder</summary>
+    OpenDataFolder,
+    /// <summary>Check for updates</summary>
+    UpdateCheckNow,
+    /// <summary>Checking GitHub releases…</summary>
+    UpdateChecking,
+    /// <summary>ReStart {0} is available.</summary>
+    UpdateAvailable,
+    /// <summary>This version is up to date for the selected channel.</summary>
+    UpdateUpToDate,
+    /// <summary>No complete release is available for this architecture and channel.</summary>
+    UpdateNoReleases,
+    /// <summary>Release access is unavailable. For this private repository, save a token with access to ReStart. Check the token's expiry and repository permission if one is already saved.</summary>
+    UpdateAccessRequired,
+    /// <summary>GitHub's request limit was reached. Try again later.</summary>
+    UpdateRateLimited,
+    /// <summary>The update service could not be reached. Check the connection and try again.</summary>
+    UpdateNetworkError,
+    /// <summary>The release response could not be verified. Open Releases to check manually.</summary>
+    UpdateInvalidResponse,
+    /// <summary>Last checked: {0}</summary>
+    UpdateLastChecked,
+    /// <summary>Check for updates at startup</summary>
+    UpdateOnStartup,
+    /// <summary>Include prereleases</summary>
+    UpdateIncludePrereleases,
+    /// <summary>Open Releases</summary>
+    UpdateOpenRelease,
+    /// <summary>Release notes</summary>
+    UpdateReleaseNotes,
+    /// <summary>GitHub access</summary>
+    UpdateAuth,
+    /// <summary>For private releases, create a fine-grained GitHub token for LastResolution/ReStart with Contents: read. Store it in Windows Credential Manager. It is never included in layout exports. Saving or removing it takes effect immediately.</summary>
+    UpdateAuthHelp,
+    /// <summary>A release token is saved.</summary>
+    UpdateAuthSaved,
+    /// <summary>No release token is saved.</summary>
+    UpdateAuthMissing,
+    /// <summary>Save token</summary>
+    UpdateSaveToken,
+    /// <summary>Remove saved token</summary>
+    UpdateRemoveToken,
+    /// <summary>Windows could not access the saved credential.</summary>
+    UpdateCredentialError,
+    /// <summary>Updates are checked only. Download and extract the release manually; the app does not replace itself.</summary>
+    UpdateNoAutoInstall,
+    /// <summary>Update checks contact api.github.com with the app version and authentication when configured. No app list, layout or usage history is sent.</summary>
+    UpdatePrivacy,
+    /// <summary>Network checks and credential changes are disabled in preview mode.</summary>
+    UpdatesDisabledInPreview,
+    /// <summary>GitHub read token</summary>
+    TokenLabel,
+    /// <summary>The token was saved in Windows Credential Manager.</summary>
+    TokenSaved,
+    /// <summary>The saved token was removed.</summary>
+    TokenRemoved,
+    /// <summary>Select a license or notice to read and copy.</summary>
+    LicenseChoose,
+    /// <summary>Show accent color on Start</summary>
+    SettingsStartAccent,
+    /// <summary>Applies to the dark Start surface. Classic tiles share the accent unless explicitly customized.</summary>
+    SettingsStartAccentHelp,
+    /// <summary>Tile background color</summary>
+    TileBackgroundColor,
+    /// <summary>Use theme color</summary>
+    TileThemeColor,
+    /// <summary>Custom color…</summary>
+    TileCustomColor,
+    /// <summary>Background color (#RRGGBB)</summary>
+    PromptTileColor,
+    /// <summary>Enter a color as #RRGGBB, for example #0078D7.</summary>
+    ErrorInvalidColor,
 }

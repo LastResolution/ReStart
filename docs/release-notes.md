@@ -1,94 +1,53 @@
-# ReStart v0.4.1
+# ReStart v0.5.0
 
-起動直後にEなどを入力しても検索候補が更新されない問題を修正した非公開プレリリースです。
+[日本語](https://github.com/LastResolution/ReStart/blob/v0.5.0/docs/ja/release-notes.md)
 
-アプリ一覧が届く前に入力した検索語は空の一覧に対して検索されたままになっていました。入力は保持し、アプリ列挙とアイコン取得の完了時に現在の検索語で結果を更新します。読み込み中は「一致なし」の代わりに読み込み状態を表示します。
+This private development prerelease improves placement and startup search, and adds the information needed to inspect and maintain an installation.
 
-Windowsキー捕捉などの設定も列挙完了を待たずに反映します。読み込み終了時に、ユーザーが移したキーボードフォーカスを検索欄へ奪い返す処理も修正しました。
+## Placement and appearance
 
-## 検証
+Empty-board drops now detach independent tiles without headers or a full group footprint. Groups measure their content instead of reserving a fixed minimum width, move at half-cell horizontal anchors and support a wider horizontally scrollable board (Shift+wheel). Drag space grows only when reaching an edge, and unnecessary vertical padding is removed. These flexible placement choices are explicit ReStart extensions.
 
-- 修正前に失敗するコールドスタートの回帰テストを追加。新しいWPFウィンドウへ文字入力イベントを送り、最初のE、列挙完了後のEdge候補、継続入力Ed、再表示、ナビゲーションからの入力など6チェックを確認しました。
-- 検索語を直接設定する描画smokeとは別のテストです。OSの物理WindowsキーやIMEのすべての経路を検証したものではありません。
-- 保存形式はschema 2のままです。v0.4.0の全アプリ階層・テーマ・文字移動の改善も含みます。
+Empty-board drops now detach independent tiles without headers or a full group footprint. Groups measure their content instead of reserving a fixed minimum width, move at half-cell horizontal anchors and support a wider horizontally scrollable board (Shift+wheel). Drag space grows only when reaching an edge, and unnecessary vertical padding is removed. These flexible placement choices are explicit ReStart extensions.
 
-旧版を通知領域から終了し、ZIP全体を展開してReStart.exeを起動してください。展開先を変更して自動起動を使う場合は、新版の設定から登録先を更新してください。
+Small-only groups no longer reserve a medium tile's height. Explicit group collisions exclude trailing spacing, and dragging previews the destinations of displaced groups. Preview and commit share one calculation and preserve child tile coordinates. Unnamed group prompts appear on hover/focus.
 
-[再現範囲](https://github.com/LastResolution/ReStart/blob/v0.4.1/docs/fidelity.md) · [v0.4.0からの差分](https://github.com/LastResolution/ReStart/compare/v0.4.0...v0.4.1)
+Tile-local renaming and background colors are available under right-click → ReStart. Choose a palette/custom #RRGGBB or reset to the theme; text contrast follows the plate. High contrast takes precedence.
 
----
+The D&D folder path checks a continuous one-second center hover. The original expansion animation was reviewed again: the parent becomes an up-chevron and contents expand beneath a complete row. The extra upper divider and small-child row minimum are removed.
 
-# ReStart v0.4.0
+Classic app tiles share the selected accent unless explicitly overridden. The dark Start surface can also use the accent, while modern tiles use uniform translucent backplates. Exact Windows 10 acrylic composition and animation remain approximations.
 
-全アプリ一覧を平坦な一覧から、Windowsのスタートメニューフォルダーを開閉できる構造へ変更した非公開プレリリースです。Windows 10 22H2との完全一致を確認した版ではありません。
+## Search and app menus
 
-## 全アプリ一覧
+Typing E before the catalog finishes loading now retains the input and refreshes results when apps arrive. Continued input, reopening and navigation focus have dedicated regression checks. Input integration preferences apply before catalog enumeration.
 
-- ユーザー・共通のスタートメニューにあるフォルダー階層と、OSのローカライズされた表示名を保持します。
-- フォルダーをクリックまたはSpaceで開閉し、左右キーでも操作できます。読み上げ用の展開状態を公開します。
-- 折り畳んだフォルダー内のアプリも検索対象です。ReStartを閉じて開くとタイル画面へ戻り、一覧フォルダーも折り畳みます。
-- AUMID、リンク先と起動引数、一意の表示名の順に照合します。既存のピン留めIDと起動先を保持し、曖昧な同名アプリを別の版へ統合しません。
-- 列の境界で文字見出し・展開フォルダー・最初の子を分断せず、実際に使う列を横幅全体へ配置します。
+App menus offer Pin to Start / Unpin from Start, including pins inside folders. More and Uninstall appear only when the app exposes the corresponding enabled canonical shell command. Preview disables external commands; elevation and uninstall were not executed during verification.
 
-## キーボードとテーマ
+## Version, licenses, migration and updates
 
-待機中の検索欄で↓を押すと一覧またはタイルへ入ります。一覧にフォーカスがある時の英数字入力は頭文字ジャンプになり、Ctrl+Fで検索できます。文字選択には存在しない文字も無効状態で表示します。アイコン取得による再描画後も、現在の見出しへ移動します。
+Settings → About shows the running version/build, architecture and full license texts. Layout and data shows the last upgrade and rollback file.
 
-フォルダー行もダーク・ライト共通のテーマを使用し、一覧のアイコンに残っていたタイル用の余白を修正しました。
+Settings → Updates supports manual and optional startup checks. Private-release access uses a repository-scoped GitHub read token stored in Windows Credential Manager. Authentication, rate-limit and network failures are distinct from “up to date.” Checks do not send app lists, layouts or usage history. Download and installation are manual.
 
-## 更新と検証
+**Settings move to schema 3.** Before replacing schemas 1/2, ReStart preserves their original bytes in a durable versioned backup. Application upgrades within the same schema are also backed up. The last upgrade is recorded in the document. Older builds reject schema 3; follow [rollback instructions](https://github.com/LastResolution/ReStart/blob/v0.5.0/docs/migration.md) before downgrading.
 
-v0.3と同じschema 2を使います。通常版の設定や保存形式の変更はありません。旧版を通知領域から終了してから、ZIP全体を別のフォルダーへ展開しReStart.exeを起動してください。展開先を変えて自動起動を使う場合は、新版の設定で登録先を更新してください。
+Documentation is now English-first, with Japanese counterparts and both portable readmes.
 
-- Releaseビルドは警告0・エラー0、Core 105テスト合格。
-- フォルダー・検索・テーマ・文字移動のWPFチェック13件を実施。従来の配置17件、4サイズ・8回の再表示も確認します。
-- Spaceの物理入力、Narratorの通し検証、Windows 10実機との並行比較、異なるDPI、ARM64実機は未確認です。
-- 日本語の五十音分類、使用履歴、個別シェルメニュー、Windows Search全体、旧UWP通知には差分があります。同名候補の識別が曖昧な場合は重複表示を残します。
-- 物理ドラッグは操作補助の `foreground window did not report a process id` エラーにより再確認待ちです。自動WPF検証を物理入力の成功とは扱いません。
+## Install or update
 
-[README](https://github.com/LastResolution/ReStart/blob/v0.4.0/README.md) · [再現範囲](https://github.com/LastResolution/ReStart/blob/v0.4.0/docs/fidelity.md) · [v0.3.0からの差分](https://github.com/LastResolution/ReStart/compare/v0.3.0...v0.4.0)
+1. Exit the old app from the tray.
+2. Extract the entire architecture-matching ZIP into a new folder; keep TileHost, Examples, third-party and the notices.
+3. Start ReStart.exe. Settings remain in your local application-data folder.
+4. If the path changed and sign-in startup is enabled, save that setting again to update the registration.
+5. Inspect Settings → Layout and data for the migration record and retained backup.
 
----
+SHA-256 files accompany both ZIPs. Packages are unsigned.
 
-# ReStart v0.3.0
+## Verification and limits
 
-グループを単なる並び順から独立した位置の配置へ変更し、名前編集とフォルダー表示をWindows 10の操作に近づけた非公開プレリリースです。本家の全挙動との一致を確認した版ではありません。
+Release build: zero warnings/errors; 151 Core tests. Native fixtures cover 31 placement/name/folder checks, cold-start input, app directories/menus, migration, licenses, both languages/themes and accent behavior. CI also packages x64 and ARM64 from clean checkouts.
 
-## グループとタイルの配置
+Physical dragging is still awaiting confirmation after the desktop helper returned `foreground window did not report a process id`. Physical Windows-key/taskbar sequences, full IME/Narrator coverage, mixed DPI, ARM64 hardware and side-by-side Windows 10 22H2 comparison remain unverified. Legacy UWP notifications, full Windows Search, usage history and Jump Lists are not implemented. See [the behavior audit](https://github.com/LastResolution/ReStart/blob/v0.5.0/docs/behavior-audit.md) and [fidelity](https://github.com/LastResolution/ReStart/blob/v0.5.0/docs/fidelity.md).
 
-- グループごとの列と縦位置を保存します。見出しをドラッグして移動し、空白も残せます。衝突するグループは下へ送ります。
-- タイルを既存グループ以外の空き領域へドロップすると、その位置に新しいグループを作ります。
-- 狭い画面ではグループを表示領域へ再配置します。表示幅を変えただけでは、保存したアンカーを書き換えません。
-- アプリ一覧からのドラッグで、横長のアプリ行のつかみ位置がタイルの移動先を大きくずらす問題も修正しました。
-- 一覧や検索結果からのドラッグ開始でタイル画面へ切り替えます。下端では作業領域を延長し、まだ何もない下方へ移動できます。キャンセルでは元の検索・一覧・スクロール状態へ戻します。
-
-## 名前の直接編集
-
-グループ名をダブルクリック、または見出しでEnter / F2を押すと、その場で入力できます。Enterで確定、Escで取消、フォーカスを外すと確定します。未命名の欄はクリックで編集します。別のダイアログは開きません。
-
-## フォルダー
-
-タイルを別のタイルの中央へ約1秒重ねてから離すとフォルダーになります。Shiftは不要です。開くと親タイルが上向き矢印になり、名前と内容をタイル行の下へ展開します。大タイルを分断せず、後続タイルとグループを一時的に押し下げます。閉じると元の配置へ戻ります。
-
-展開中の名前編集、内容の追加と取り出しにも対応します。新規フォルダーに元のルート座標が残って大きな空白ができる問題を修正しました。
-
-## 保存形式と更新
-
-保存形式をschema 2に更新しました。schema 1の設定を読み込んだ場合、最初の保存前に元データを `layout.json.schema1-<ID>.bak` へ保全します。通常の `.bak` が更新されても、この移行用バックアップは残ります。バックアップを保全できない場合は新形式で上書きしません。
-
-v0.2へ戻す場合はReStartを終了し、現在の `layout.json` を別途退避してからschema 1バックアップを `layout.json` として戻してください。v0.2は新形式を表示・編集できず、上書きを防ぐ読み取り専用扱いになります。
-
-1. 起動中の旧版を通知領域から終了してください。
-2. x64 PCはReStart-win-x64.zip、ARM PCはReStart-win-arm64.zipを選び、ZIP全体を展開します。SHA-256も添付しています。
-3. ReStart.exeを起動します。TileHost、Examples、third-partyも本体と同じ展開先に置きます。
-4. 展開先を変更して自動起動を使う場合は、新版の設定で自動起動をオンにして保存し、登録先を更新してください。
-
-## 検証と残る差分
-
-- Releaseビルドは警告0・エラー0、91件のテストに成功。
-- 分離したプレビューで配置8件・命名4件・フォルダー5件のWPFチェックを実施。4サイズ・8回の再表示チェックも実施します。
-- 物理ドラッグはWindows操作補助が `foreground window did not report a process id` を返したため未検証です。コード経由のWPFチェックを、実マウスの成功とは扱いません。
-- Windows 10実機とのスナップ間隔・クリック回数・アニメーションの並行比較、異なるDPI、ARM64実機、物理Windowsキーとタスクバー操作は追加検証が必要です。
-- 旧UWP通知、Windows Search全体、アプリ一覧の階層や使用履歴など、まだ本家との差分があります。未署名・非公開の開発版です。
-
-[README](https://github.com/LastResolution/ReStart/blob/v0.3.0/README.md) · [調査根拠](https://github.com/LastResolution/ReStart/blob/v0.3.0/docs/research.md) · [再現範囲](https://github.com/LastResolution/ReStart/blob/v0.3.0/docs/fidelity.md) · [v0.2.2からの差分](https://github.com/LastResolution/ReStart/compare/v0.2.2...v0.3.0)
+[README](https://github.com/LastResolution/ReStart/blob/v0.5.0/README.md) · [Changes since v0.4.0](https://github.com/LastResolution/ReStart/compare/v0.4.0...v0.5.0)

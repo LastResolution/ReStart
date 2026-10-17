@@ -1,23 +1,32 @@
-# APIと状態の契約
+# API and state contracts
 
-実装の公開型・メンバーにはXMLドキュメントコメントを付け、App / Core / TileHost のビルドで `.xml` を出力します。コメント不足のCS1591はビルドエラーです。コメントは名前の言い換えにせず、呼び出し側が守る条件と副作用を説明します。
+[日本語](ja/api-contracts.md)
 
-| 境界 | 契約 |
+App, Core and TileHost emit XML documentation. Missing public/protected comments fail the build (CS1591). Describe preconditions, ownership and side effects rather than repeating a member's name.
+
+| Boundary | Contract |
 | --- | --- |
-| TextCatalog / TextKey | 言語と独立した型付きキー。翻訳対象はアプリ所有のUI文言だけ |
-| LayoutDocument | schema versionを検証。表示値・IDは正規化し、入れ子フォルダーは拒否 |
-| GroupLayout | グループの列・半セル単位の縦位置を配置。表示上の再配置はモデルを変更せず、Moveだけがアンカーと衝突解消を保存 |
-| FolderExpansion | フォルダーの一時的な行内展開を計算。大タイルを分断せず、保存されたルートタイルのRowは変更しない |
-| LayoutStore | 一時ファイルから置き換え、直前のバックアップを保持。未対応バージョンは型で識別して上書き禁止 |
-| TileLayout | 論理セルで配置し、入力モデルを変更しない。既存座標を予約してから衝突・未配置項目を詰める |
-| LayoutEditor | 移動・フォルダー化のモデル変更。IDと一段の親子関係を維持 |
-| AppCatalog | Shell COMを専用STAで使用。アイコンはFreezeして共有。バッチ通知からUIを変更する場合はDispatcherへ渡す |
-| SingleInstanceGate | 実行ファイルの場所や版とは独立したユーザー・セッション単位の寿命。ActivationハンドルはGateが所有 |
-| StartIntegration | フックは短く終了し、WPF操作はDispatcherへ渡す。終了時に登録解除 |
-| StartupRegistration | 現ユーザーのRun値1つだけを更新。設定の保存失敗に備え、値と型を復元可能 |
-| ScriptTilePackages | GUIDでインストール先を解決。任意のJSパスをレイアウトから実行しない |
-| JsTileRunner | 1回ごとに新しいrealm。JSON以外のホストオブジェクトを渡さない |
-| ScriptTileSession | 1セッションに同時リクエスト1つ。現ユーザーだけが接続できる非同期名前付きパイプを使い、通信キャンセルとは独立した待機期限も持つ |
-| WorkerJob | メモリ・プロセス数・寿命の制限。OSの権限を落としたサンドボックスではない |
+| TextCatalog / TextKey | Stable language-independent keys; only app-owned UI text is translated |
+| LayoutDocument | Accept supported schemas; bound presentation values and IDs; reject nested folders |
+| TileGroup.IsStandalone | Exactly one root tile, no group name/header; malformed multi-item entries become ordinary groups without discarding items |
+| TileLayout | Pure cell packing; reserve valid explicit positions before auto placement |
+| GroupLayout | Pure bounds and previews; Move alone commits anchors/collision displacement, never child coordinates |
+| FolderExpansion | Temporary inline geometry; preserve persisted root rows |
+| LayoutEditor | Transfer ownership while preserving IDs; Detach creates an independent entry; no nested folders |
+| LayoutStore | Preserve original migration/upgrade bytes before atomic replacement; protect unsupported/newer producers |
+| AppCatalog | Shell COM stays on STA threads; share only frozen WPF images; dispatch UI updates |
+| AppPinning | One pin per app identity, including folder children; independent tiles cannot accept another app as a group destination |
+| AppShellCommands | Read enabled canonical verbs; re-query on invocation; never invoke from preview |
+| SingleInstanceGate | Per-user/session identity independent of version/path; the gate owns its activation handle |
+| StartIntegration | Short hooks; dispatch WPF work; release registrations on exit |
+| StartupRegistration | Update one current-user Run value; preserve value and kind for rollback |
+| ReleaseVersion / ReleaseClient | Validate versions and bounded release data; require architecture ZIP plus checksum; distinguish access, rate, network and invalid-data failures |
+| ReleaseCredentialStore | Current-user generic credential; never serialize, prefill or log the token |
+| ScriptTilePackages | Resolve installed GUIDs; a layout cannot execute an arbitrary JS path |
+| JsTileRunner | New realm each render; expose JSON only |
+| ScriptTileSession | One request at a time; bounded asynchronous IPC and an independent parent deadline |
+| WorkerJob | Memory/process/lifetime limits; no claim of reduced OS privileges |
 
-タイルの画面座標はWPFのDIP、保存する座標は論理セル、スクリプトのprogressは0〜1です。メニュー非表示時のJSプロセス終了は状態JSONを保持し、タイル再読み込みとアプリ終了では状態をリセットします。詳細は各型のコメントと [JavaScript API](javascript-tiles.md) を参照してください。
+Screen coordinates use WPF DIPs; persisted tile cells are logical integers; group rows use half-cell steps; JavaScript progress is 0–1. Display-only reflow, preview and folder expansion must not modify persistence.
+
+Changes to schemas or protocols require round-trip and backward-input tests, documented migration/rollback behavior, and an explicit compatibility decision. UI strings must never determine whether a file is safe to overwrite.

@@ -30,6 +30,7 @@ public partial class MainWindow
             RenderGroups();
             UpdateLayout();
             Require(GroupsPanel.Columns >= 4, "The placement fixture has too few group columns.");
+            Require(ContentScroll.ScrollableHeight <= 1 && ContentScroll.ScrollableWidth <= 1, "A fitting board creates unnecessary scrollbars.");
             var boardHeight = GroupsPanel.ActualHeight;
             ExtendDragSpace();
             UpdateLayout();
@@ -75,19 +76,26 @@ public partial class MainWindow
             UpdateLayout();
             Require(b.Column == 4 && b.Row == 10 && a.Column == 0 && a.Row == 0, "Moving a tile collapsed an unrelated gap.");
             _dragOffset = new(Cell, Cell);
-            var blank = new Point(3 * pitch + Cell, 4 * Cell / 2 + GroupLayout.HeaderHeight + Cell);
+            var blank = new Point(3 * pitch + Cell, 4 * Cell / 2 + Cell);
             Require(GroupAt(blank) == null, "The new-group target is not empty.");
-            MoveTileToNewGroup(a, blank);
+            MoveTileToStandalone(a, blank);
             UpdateLayout();
             var created = Document.Groups.Single(g => g.Tiles.Contains(a));
-            Require(created != left && created.Column == 3 && created.Row == 4, "Dropping on empty board space did not create a positioned group.");
+            Require(created != left && created.IsStandalone && created.Column == 3 && created.Row == 4, "Dropping on empty board space did not detach an independent tile.");
+            var standalone = GroupsPanel.Children.OfType<StackPanel>().Single(s => s.Tag == created);
+            Require(!standalone.Children.OfType<GroupHeader>().Any() && standalone.ContextMenu == null
+                && Math.Abs(standalone.ActualWidth - 2 * Cell) <= 1 && Math.Abs(standalone.ActualHeight - 2 * Cell) <= 1,
+                "An independent tile still has a group header, menu, or invisible group footprint.");
             Require(left.Tiles.SequenceEqual(new[] { b }), "The source tile was duplicated or lost.");
             VerifyGroupBounds();
-            var unnamedHeader = HeaderFor(created);
+            var unnamed = new TileGroup { Name = "", Column = 2, Row = 30 };
+            Document.Groups.Add(unnamed);
+            RenderGroups(); UpdateLayout();
+            var unnamedHeader = HeaderFor(unnamed);
             unnamedHeader.Handle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             Require(unnamedHeader.IsEditing, "The unnamed-group placeholder did not enter inline editing.");
             RaiseEditorKey(unnamedHeader.Children.OfType<TextBox>().Single(), Key.Escape);
-            Require(created.Name == "", "Cancelling an unnamed group replaced its empty label.");
+            Require(unnamed.Name == "", "Cancelling an unnamed group replaced its empty label.");
 
             var header = HeaderFor(left);
             header.Handle.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, Environment.TickCount, MouseButton.Left) { RoutedEvent = Control.MouseDoubleClickEvent });
@@ -113,16 +121,50 @@ public partial class MainWindow
                 "Committing a name removed the tile before its pending click.");
 
             var saved = LayoutStore.Read(_store.FilePath);
-            Require(saved.Version == 2 && saved.Groups.Single(g => g.Id == created.Id).Column == 3
+            Require(saved.Version == LayoutDocument.CurrentVersion && saved.Groups.Single(g => g.Id == created.Id).Column == 3
                 && saved.Groups.Single(g => g.Id == created.Id).Tiles.Single().Id == a.Id, "Saved layout lost its schema, anchor, or tile identity.");
             Root.Width = 800;
             UpdateLayout();
             VerifyGroupBounds();
             Require(created.Column == 3 && created.Row == 4, "A narrow view rewrote saved anchors.");
+            Require(ContentScroll.ScrollableWidth > 0, "A wide board cannot scroll horizontally on a narrow screen.");
+            ContentScroll.ScrollToRightEnd(); UpdateLayout();
+            Require(ContentScroll.HorizontalOffset > 0, "Horizontal scrolling does not reach off-screen content.");
             Root.Width = 1920;
             UpdateLayout();
             VerifyGroupBounds();
             SaveScreenshot(Path.Combine(Path.GetDirectoryName(snapshotPath)!, Path.GetFileNameWithoutExtension(snapshotPath) + "-board.png"));
+            var standaloneFolder = new Tile { Label = "Independent folder", Column = 2, Children = [new() { Label = "Child one" }, new() { Label = "Child two" }] };
+            var folderEntry = LayoutEditor.Detach(Document, standaloneFolder, 3, 16, 2, GroupsPanel.Columns, Cell);
+            RenderGroups(); UpdateLayout();
+            var closedX = RootPanelFor(folderEntry).Children.OfType<Button>().Single().TranslatePoint(new Point(), GroupsPanel).X;
+            OpenFolder(standaloneFolder); UpdateLayout();
+            var expandedRoot = RootPanelFor(folderEntry);
+            Require(expandedRoot.Expansion?.Folder == standaloneFolder && Math.Abs(expandedRoot.Children.OfType<Button>().Single().TranslatePoint(new Point(), GroupsPanel).X - closedX) <= 1,
+                "Expanding an independent folder moved its root tile horizontally.");
+            Require(!GroupsPanel.Children.OfType<StackPanel>().Single(s => s.Tag == folderEntry).Children.OfType<GroupHeader>().Any(),
+                "An independent folder acquired a group header.");
+            VerifyGroupBounds();
+            CloseFolder(this, new());
+            LayoutEditor.Remove(Document, standaloneFolder.Id);
+            RenderGroups(); UpdateLayout();
+            var compactGroup = new TileGroup { Name = "Compact", Column = 2, Row = 0, Tiles = [new() { Size = TileSize.Small, Column = 0, Row = 0 }] };
+            Document.Groups.Add(compactGroup); RenderGroups(); UpdateLayout();
+            Require(Math.Abs(RootPanelFor(compactGroup).ActualWidth - Cell) <= 1, "A one-cell group still reserves the configured group width.");
+            _dragOffset = new(10, 10);
+            MoveGroupOnBoard(compactGroup, new(1.5 * Cell + 10, 30 * Cell / 2 + 10)); UpdateLayout();
+            Require(compactGroup.X == 1.5 && Math.Abs(GroupsPanel.Placements.Single(p => p.Group == compactGroup).Left - 1.5 * Cell) <= 1,
+                "A group cannot move between the old fixed-width column anchors.");
+            Document.Groups.Remove(compactGroup); RenderGroups(); UpdateLayout();
+            var targetPanel = RootPanelFor(left);
+            var targetButton = targetPanel.Children.OfType<Button>().Single(button => button.Tag == b);
+            var center = targetButton.TranslatePoint(new Point(targetButton.ActualWidth / 2, targetButton.ActualHeight / 2), targetPanel);
+            _folderHover.Reset();
+            Require(FolderHoverTarget(a, targetPanel, center, a.Id, 0) == null
+                && FolderHoverTarget(a, targetPanel, center, a.Id, 999) == null
+                && FolderHoverTarget(a, targetPanel, center, a.Id, 1000) == b, "Actual tile hit testing does not arm a folder after a continuous one-second center hover.");
+            var edge = targetButton.TranslatePoint(new Point(1, 1), targetPanel);
+            Require(FolderHoverTarget(a, targetPanel, edge, a.Id, 1001) == null, "The tile edge incorrectly creates a folder instead of moving a tile.");
             MoveTileIntoGroup(a, left, 4, 10, b);
             var folder = left.Tiles.Single(t => t.IsFolder);
             MoveTileIntoGroup(folder, left, 0, 0);
@@ -131,6 +173,10 @@ public partial class MainWindow
             OpenFolder(folder);
             UpdateLayout();
             var root = RootPanelFor(left);
+            var opened = root.Children.OfType<Button>().Single(button => button.Tag == folder);
+            opened.ApplyTemplate();
+            Require(opened.Template.FindName("Chrome", opened) is Border chrome && chrome.BorderBrush == opened.BorderBrush
+                && opened.BorderThickness.Left > 0, "The open-folder outline is ignored by the button template.");
             var inline = root.Children.OfType<InlineFolderView>().Single();
             Require(root.Expansion?.Folder == folder && inline.Tiles.Children.Count == 2, "Folder contents did not expand inside the tile group.");
             var targetPoint = inline.Tiles.TranslatePoint(new Point(Cell, Cell), GroupsPanel);
@@ -156,7 +202,7 @@ public partial class MainWindow
             root = RootPanelFor(left);
             belowElement = root.Children.OfType<Button>().Single(button => button.Tag == below);
             Require(root.Expansion == null && Math.Abs(belowElement.TranslatePoint(new Point(), root).Y - 2 * Cell) <= 1, "Closing the inline folder did not restore root tile positions.");
-            return new(12, 4, 5, saved.Version, Document.Groups.Count);
+            return new(17, 4, 10, saved.Version, Document.Groups.Count);
         }
         finally
         {
@@ -183,7 +229,8 @@ public partial class MainWindow
         Require(bounds.All(b => b.Left >= -1 && b.Right <= GroupsPanel.ActualWidth + 1), "A group escaped the viewport width.");
         for (var i = 0; i < bounds.Length; i++)
             for (var j = i + 1; j < bounds.Length; j++)
-                Require(!bounds[i].IntersectsWith(bounds[j]), "Two displayed groups overlap.");
+                Require(!(bounds[i].Left < bounds[j].Right - 0.5 && bounds[i].Right > bounds[j].Left + 0.5
+                    && bounds[i].Top < bounds[j].Bottom - 0.5 && bounds[i].Bottom > bounds[j].Top + 0.5), "Two displayed groups overlap.");
     }
 }
 

@@ -71,13 +71,13 @@ public sealed class LayoutStoreTests : IDisposable
         File.WriteAllText(FilePath, original);
         var store = new LayoutStore(FilePath);
         var document = store.Load()!;
-        Assert.Equal(2, document.Version);
+        Assert.Equal(LayoutDocument.CurrentVersion, document.Version);
         store.Save(document);
         var migrationPath = Assert.IsType<string>(store.MigrationBackupPath);
         document.Groups[0].Name = "updated";
         store.Save(document);
         Assert.Equal(original, File.ReadAllText(migrationPath));
-        Assert.Equal(2, LayoutStore.Read(FilePath + ".bak").Version);
+        Assert.Equal(LayoutDocument.CurrentVersion, LayoutStore.Read(FilePath + ".bak").Version);
         Assert.Single(Directory.GetFiles(_directory, "*.schema1-*.bak"));
     }
 
@@ -92,6 +92,42 @@ public sealed class LayoutStoreTests : IDisposable
         store.Save(document);
         Assert.Equal(legacy, File.ReadAllText(store.MigrationBackupPath!));
         Assert.Equal("recovered", LayoutStore.Read(FilePath).Groups[0].Name);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void UpgradePreservesPreferencesAndRecordsADurableRollbackSource(int schema)
+    {
+        var original = $"{{\"Version\":{schema},\"Preferences\":{{\"Language\":\"ja\",\"CaptureWindowsKey\":false,\"Columns\":8}},\"Groups\":[{{\"Name\":\"Custom\"}}]}}";
+        File.WriteAllText(FilePath, original);
+        var store = new LayoutStore(FilePath, "0.5.0");
+        var document = store.Load()!;
+        store.Save(document);
+        var restored = LayoutStore.Read(FilePath);
+        Assert.Equal("ja", restored.Preferences.Language);
+        Assert.False(restored.Preferences.CaptureWindowsKey);
+        Assert.Equal(8, restored.Preferences.Columns);
+        Assert.Equal("Custom", Assert.Single(restored.Groups).Name);
+        Assert.Equal(schema, restored.LastUpgrade!.FromSchema);
+        Assert.Equal("0.5.0", restored.SavedWithAppVersion);
+        Assert.Equal(original, File.ReadAllText(Path.Combine(_directory, restored.LastUpgrade.BackupFile)));
+        store.Save(document);
+        Assert.Equal(original, File.ReadAllText(store.UpgradeBackupPath!));
+        Assert.Single(Directory.GetFiles(_directory, $"*.schema{schema}-*.bak"));
+    }
+
+    [Fact]
+    public void SameSchemaApplicationUpgradeIsBackedUpOnceAndNewerProducersAreProtected()
+    {
+        var old = new LayoutStore(FilePath, "0.5.0"); old.Load(); old.Save(new());
+        var original = File.ReadAllText(FilePath);
+        var current = new LayoutStore(FilePath, "0.6.0"); var document = current.Load()!; current.Save(document); current.Save(document);
+        Assert.Equal(original, File.ReadAllText(current.UpgradeBackupPath!));
+        Assert.Single(Directory.GetFiles(_directory, "*.upgrade-*.bak"));
+        var older = new LayoutStore(FilePath, "0.5.0"); older.Load();
+        Assert.True(older.IsReadOnly);
+        Assert.Throws<InvalidOperationException>(() => older.Save(new()));
     }
 
     [Fact]

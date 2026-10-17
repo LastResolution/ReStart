@@ -9,13 +9,14 @@ using ReStart.Core;
 
 namespace ReStart.App;
 
-internal sealed class SettingsWindow : Window
+internal sealed partial class SettingsWindow : Window
 {
     private readonly MainWindow _main;
     private readonly LayoutStore _store;
     private readonly Preferences _draft;
     private readonly TextBlock _feedback = new() { TextWrapping = TextWrapping.Wrap, Margin = new(0, 12, 0, 0) };
     private bool _dataChanged;
+    private readonly Dictionary<string, Button> _sectionButtons = [];
 
     public SettingsWindow(MainWindow main, LayoutStore store)
     {
@@ -50,6 +51,7 @@ internal sealed class SettingsWindow : Window
             var button = new Button { Content = name, HorizontalContentAlignment = HorizontalAlignment.Left, Margin = new(0, 0, 0, 4), Padding = new(12, 12, 8, 12) };
             button.Click += (_, _) => { view.Content = section; view.ScrollToTop(); foreach (var b in navigationButtons) b.Background = Brushes.Transparent; button.Background = Resource("TileBrush"); };
             navigation.Children.Add(button); navigationButtons.Add(button);
+            _sectionButtons[name] = button;
             if (navigationButtons.Count == 1) { view.Content = section; button.Background = Resource("TileBrush"); }
             return section;
         }
@@ -65,6 +67,8 @@ internal sealed class SettingsWindow : Window
         Check(content, L.T(K.SettingsCloseOnDeactivate), _draft.CloseOnDeactivate, v => _draft.CloseOnDeactivate = v);
         content = Section(L.T(K.SettingsAppearance));
         Select(content, L.T(K.SettingsTheme), new[] { L.T(K.ThemeSystem), L.T(K.ThemeDark), L.T(K.ThemeLight) }, (int)_draft.Theme, i => _draft.Theme = (ReStart.Core.ThemeMode)i);
+        Check(content, L.T(K.SettingsStartAccent), _draft.ShowAccentOnStart, v => _draft.ShowAccentOnStart = v);
+        Note(content, L.T(K.SettingsStartAccentHelp));
         Check(content, L.T(K.SettingsWallpaper), _draft.ShowWallpaper, v => _draft.ShowWallpaper = v);
         Check(content, L.T(K.SettingsColoredTiles), _draft.ColoredTiles, v => _draft.ColoredTiles = v);
         Check(content, L.T(K.SettingsAnimation), _draft.Animate, v => _draft.Animate = v);
@@ -92,6 +96,7 @@ internal sealed class SettingsWindow : Window
         content.Children.Add(dataButtons);
         Note(content, L.T(K.StoragePrefix) + _store.FilePath);
         Note(content, L.T(K.SettingsPrivacy));
+        BuildMigrationInfo(content);
         content = Section(L.T(K.SettingsScriptTiles));
         Note(content, L.T(K.ScriptAuthoringHelp));
         var scriptButtons = new WrapPanel();
@@ -99,8 +104,10 @@ internal sealed class SettingsWindow : Window
         DataButton(scriptButtons, L.T(K.ImportScriptTile), () => { _main.ImportScriptTile(); });
         content.Children.Add(scriptButtons);
         Note(content, L.T(K.ScriptCapabilitiesHelp));
+        content = Section(L.T(K.SettingsUpdates));
+        BuildUpdates(content);
         content = Section(L.T(K.SettingsAbout));
-        Note(content, "ReStart v" + typeof(App).Assembly.GetName().Version?.ToString(3));
+        BuildAbout(content);
         Heading(content, L.T(K.AboutScope));
         Note(content, L.T(K.AboutCompatibility));
         var links = new WrapPanel { Margin = new(0, 10, 0, 0) };
@@ -139,11 +146,12 @@ internal sealed class SettingsWindow : Window
         System.Windows.Automation.AutomationProperties.SetName(slider, label);
         slider.ValueChanged += (_, _) => { changed(slider.Value); percent.Text = $"{slider.Value:P0}"; }; row.Children.Add(slider); panel.Children.Add(row);
     }
-    private static void DataButton(Panel panel, string label, Action action)
+    private static Button DataButton(Panel panel, string label, Action action)
     {
         var button = new Button { Content = label, Margin = new(0, 0, 8, 6), Background = Resource("TileBrush") };
-        button.Click += (_, _) => action(); panel.Children.Add(button);
+        button.Click += (_, _) => action(); panel.Children.Add(button); return button;
     }
+    internal void SelectSection(string name) => _sectionButtons[name].RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
     private void Save(object sender, RoutedEventArgs e)
     {
         var previous = _main.Document.Preferences;

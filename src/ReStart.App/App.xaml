@@ -6,6 +6,7 @@
     <SolidColorBrush x:Key="MutedBrush" Color="#C3C3C3" />
     <SolidColorBrush x:Key="PanelBrush" Color="#F2232323" />
     <SolidColorBrush x:Key="TileBrush" Color="#383838" />
+    <SolidColorBrush x:Key="StartTileBrush" Color="#20FFFFFF" />
     <SolidColorBrush x:Key="AccentBrush" Color="#0078D7" />
     <SolidColorBrush x:Key="ControlBrush" Color="#2B2B2B" />
     <SolidColorBrush x:Key="BorderBrush" Color="#707070" />
@@ -20,14 +21,16 @@
     <Style TargetType="Button">
       <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
       <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="BorderThickness" Value="2" />
+      <Setter Property="BorderBrush" Value="Transparent" />
       <Setter Property="Padding" Value="12,8" />
       <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
       <Setter Property="Cursor" Value="Hand" />
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="Button">
-            <Border x:Name="Chrome" Background="{TemplateBinding Background}" BorderThickness="2" BorderBrush="Transparent" Padding="{TemplateBinding Padding}">
+            <Border x:Name="Chrome" Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" Padding="{TemplateBinding Padding}">
               <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
             </Border>
             <ControlTemplate.Triggers>
@@ -73,7 +76,8 @@
               <Border x:Name="MenuChrome" Background="Transparent" Padding="{TemplateBinding Padding}">
                 <Grid>
                   <Grid.ColumnDefinitions><ColumnDefinition Width="20" /><ColumnDefinition Width="*" /><ColumnDefinition Width="18" /></Grid.ColumnDefinitions>
-                  <TextBlock x:Name="Check" Text="✓" Visibility="Collapsed" VerticalAlignment="Center" />
+                  <ContentPresenter x:Name="Icon" ContentSource="Icon" Width="18" Height="18" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                  <TextBlock x:Name="Check" Text="✓" Foreground="White" Visibility="Collapsed" VerticalAlignment="Center" />
                   <ContentPresenter Grid.Column="1" ContentSource="Header" RecognizesAccessKey="True" VerticalAlignment="Center" />
                   <TextBlock x:Name="Arrow" Grid.Column="2" Text="›" Visibility="Collapsed" HorizontalAlignment="Right" VerticalAlignment="Center" />
                 </Grid>
@@ -86,6 +90,7 @@
             </Grid>
             <ControlTemplate.Triggers>
               <Trigger Property="HasItems" Value="True"><Setter TargetName="Arrow" Property="Visibility" Value="Visible" /></Trigger>
+              <Trigger Property="Icon" Value="{x:Null}"><Setter TargetName="Check" Property="Foreground" Value="{DynamicResource TextBrush}" /></Trigger>
               <Trigger Property="IsHighlighted" Value="True"><Setter TargetName="MenuChrome" Property="Background" Value="{DynamicResource TileBrush}" /></Trigger>
               <Trigger Property="IsChecked" Value="True"><Setter TargetName="Check" Property="Visibility" Value="Visible" /></Trigger>
               <Trigger Property="IsEnabled" Value="False"><Setter TargetName="MenuChrome" Property="Opacity" Value="0.4" /></Trigger>

@@ -1,13 +1,26 @@
-# 表示言語とテーマ
+# Language and themes
 
-設定 → 言語で、日本語・English・システムに合わせるを選択します。保存するとメイン UI の表示言語と日付書式が切り替わります。設定画面は次に開いたときに新しい言語になります。日本語以外のシステム言語では英語を使用します。アプリ名と保存済みのグループ名・タイル名は変更しません。
+[日本語](ja/localization.md)
 
-翻訳は `src/ReStart.Core/Locales/ja.json` と `en.json` の埋め込みリソースです。キーは `TextKey` 列挙型の安定した識別子で、表示文言や日本語の原文をキーにしません。C# は `TextCatalog.T(TextKey.NavSettings)`、書式付きは `TextCatalog.F(TextKey.StatusPinned, appName)`、XAML は `{local:Loc Key=NavSettings}` を使用します。
+Settings → Language offers English, Japanese and system language. Saving switches main UI text and date formatting; reopen Settings to see its new language. Systems outside Japanese use English. App names, saved tile/group names and JavaScript output remain unchanged.
 
-文言の追加は `TextKey.cs` と両方のJSONを同時に更新してください。誤ったキー名はコンパイルエラーです。列挙型と各JSONのキー集合が一致することを読み込み時に検証し、空の値と書式プレースホルダーの数を自動テストで確認します。自動生成された表示ラベルを含め、C# / XAML に日本語のUI文字列を直接書きません。OSから得たアプリ名、ユーザーが保存した名前、JavaScriptの出力は翻訳リソースへ渡しません。
+Translations are embedded `src/ReStart.Core/Locales/en.json` and `ja.json`. `TextKey` contains stable semantic identifiers, not source-language sentences.
 
-レイアウトのバージョンエラーは `UnsupportedLayoutVersionException` で識別します。エラーメッセージの翻訳内容からファイルを上書きできるか判断しません。
+~~~csharp
+TextCatalog.T(TextKey.NavSettings);
+TextCatalog.F(TextKey.StatusPinned, appName);
+~~~
 
-設定画面は起動と操作・外観・言語・レイアウトとデータ・情報に分け、保存ボタンを固定します。チェックボックス・ComboBox・スライダー・スクロールバー・カレンダーはアプリ共通の色を使用します。ダーク・ライト・システムとハイコントラストに対応し、Windows のタイトルバー色も揃えます。
+~~~xml
+<TextBlock Text="{local:Loc Key=NavSettings}" />
+~~~
 
-プレビューの設定画面だけは UI 検証のため独立したウィンドウとして表示します。通常モードではメイン画面をオーナーにしたダイアログです。
+Add the enum member and both JSON entries together. Unknown keys fail compilation. Catalog loading checks matching key sets; tests validate nonempty values, format placeholders and fallback. Do not hardcode Japanese UI text in C#/XAML, including generated labels. Do not send user/OS-owned text through translation lookup.
+
+Unsupported layouts are identified by `UnsupportedLayoutVersionException`, never by matching translated error text. Developer comments and primary documentation use English; Japanese documentation lives beside root docs or under `docs/ja`.
+
+Settings navigation separates behavior, appearance, language, JavaScript, updates, layout/data and About; actions stay in a fixed footer. Checkboxes, combo boxes, sliders, scrollbars, dialogs and calendar use shared palette resources. System mode follows the Windows system theme for Start. High contrast takes precedence over wallpaper/effects and tile colors.
+
+Classic app tiles share the selected global accent unless explicitly customized under ReStart → Tile background color. The override survives save/reopen and can be reset to the theme. Modern tiles have uniform translucent backplates and transparent app-list icon backgrounds. The optional accent-colored Start surface is dark-mode only. Individual tile colors are an extension; there is no per-group color setting.
+
+Preview settings are independent fixture windows, with startup, network checks and credential writes disabled. Normal settings are owned by the main window.

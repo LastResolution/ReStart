@@ -31,7 +31,7 @@ public partial class MainWindow
             extras.Items.Clear();
             extras.Visibility = AppPinning.IsPinned(Document, app) ? Visibility.Collapsed : Visibility.Visible;
             var groups = new MenuItem { Header = L.T(K.PinToGroupMenu) };
-            foreach (var group in Document.Groups)
+            foreach (var group in Document.Groups.Where(g => !g.IsStandalone))
                 Add(groups, group.Name.Length == 0 ? L.T(K.UnnamedGroup) : group.Name, () =>
                 {
                     if (!Document.Groups.Contains(group)) return;

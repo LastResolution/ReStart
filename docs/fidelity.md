@@ -1,47 +1,45 @@
-# 再現仕様と差分
+# Fidelity and limitations
 
-Windows 10 の全画面スタートに近い操作を提供します。「実装済み」は ReStart に機能があることを示し、Windows 10 との完全一致を意味しません。完全再現を主張するには、Windows 10 22H2 との比較を含む下記の残課題を解決する必要があります。
+[日本語](ja/fidelity.md)
 
-| 領域 | 状態 | 実装・差分 |
-| --- | --- | --- |
-| 全画面とタスクバー | 実装済み | ポインターのある画面の WorkingArea を使用。複数画面・異なる DPI は未検証 |
-| 左のバー | 実装済み | 展開、タイル / 全アプリ切替、アカウント、フォルダー、設定、電源。開き直すと検索・一覧・オーバーレイを閉じてタイルの先頭へ戻る |
-| 通常時のヘッダー | 実装済み | 検索時だけ検索欄を表示。通常はタイルを主役にする |
-| 背景 | 近似 | デスクトップ壁紙のぼかしと色。旧 Start の Acrylic / Reveal と描画方式が異なる |
-| テーマ | 実装済み | ダーク / ライト / システム、設定・スクロールバー・選択欄・スライダー・カレンダーを同じ配色で描画。ハイコントラストの色、旧版の色付きタイル |
-| 4種類のサイズ | 実装済み | 小・中・横長・大。論理グリッドを利用 |
-| 多言語 | 実操作確認済み | 日本語 / 英語 / システム言語。UI・メニュー・日付・Automation 名を切替。ユーザーが保存した名前は保持 |
-| グループ | 再現を改善中 | 列・縦位置と空白を保存。見出しドラッグ中は相手の押し出し先もプレビューし、確定と同じ計算を使用。小タイル1個に中タイル分の高さを要求しない。未命名の見出しは通常空白で、ホバー / フォーカス時に命名欄を表示。Windows 10のスナップ間隔・アニメーションとの一致は未検証 |
-| タイルの移動 | 配置・保存検証済み | 空きセルとグループ間への移動、空き領域への新規グループ、座標保存、移動先の枠、端スクロール。配置モデル変更後の物理ドラッグは操作補助のエラーで再確認待ち。Windows 10のアニメーションは未照合 |
-| タイルフォルダー | 再現を改善中 | 約1秒の重ね合わせで作成。タイル行の下へ展開し、後続タイルとグループを一時的に押し下げる。名前は行内編集。展開領域への追加と取り出しを検証。スナップやアニメーションの実機比較は未実施 |
-| アプリ列挙と起動 | 実装済み | AppsFolder と .lnk / .url。Win32 / Store アプリの実際の起動先を保持 |
-| アプリアイコン | 実装済み | Shell Image Factory。取得できない項目は代替グリフ |
-| 全アプリ一覧 | 一部再現 | OSの表示名とフォルダー階層、行内開閉、文字見出しと文字ジャンプ。表示幅に合わせ、展開したフォルダーと先頭の子を同じ列に保持。日本語は「 あ・他」に集約。曖昧な同名ショートカットは誤統合せず残すため重複する場合がある |
-| アプリ検索 | 一部再現 | 開いた直後の入力を検索欄で受け取り、読み込み中の入力は列挙完了時に再検索。単語先頭一致を優先し、日本語の表記ゆれを吸収。設定・ファイル索引・Web・Cortana は対象外 |
-| 最近追加 / よく使う項目 | 未実装 | Windows の使用履歴を取得していない |
-| Windows キー | 実装済み・実機検証待ち | 単押しを捕捉し、組み合わせ時は Win キーの押下を再送。純粋ロジックは自動テスト済み |
-| スタートボタン | 試験的 | Explorer がネイティブ Start クラスを公開する場合だけ。新しい XAML 構成では未対応 |
-| タスクバークリック | 実装・実機確認待ち | タスクバーのクリックを検出し、元のクリックをWindowsに渡して閉じる。設定の「別のアプリに切り替えたら閉じる」に連動 |
-| マウス・キーボード | 実装済み | Tab / 矢印 / Enter / Esc、右クリック、ドラッグ。タッチ長押しは未検証 |
-| アクセシビリティ | 基礎実装 | WPF の標準 AutomationPeer と名前、フォーカス、ハイコントラスト。Narrator の通し検証は未実施 |
-| 時計・日付のライブ更新 | 実装済み | PC のローカル時刻で更新。日付タイルから月カレンダーを表示 |
-| JavaScript ライブタイル | 実装・プロセス検証済み | 自作JSの作成 / インポート / 編集。JSONをネイティブ表示。別プロセス、期限、メモリ制限。詳細は [開発ガイド](javascript-tiles.md) |
-| 他アプリのライブタイル | 非対応 | 旧 UWP のタイル通知 / バックグラウンド配信をホストしていない |
-| 電源・アカウント | 実装済み・実行未検証 | 実行前に確認。スリープ、シャットダウン、再起動、サインアウト、ロック |
-| 自動保存 | 実装済み | JSON と直前のバックアップ、破損保全、将来版の上書き防止 |
-| 多重起動防止 | プロセス検証済み | ユーザー・セッション単位の名前付きオブジェクト。別パスからの10回同時起動で既存1プロセスを維持。通常の二度目起動は既存画面を表示。プレビューは別枠 |
-| 自動起動 | 登録ロジック検証済み | ユーザー単位の Run キーを設定から登録 / 解除。実登録を読み、保存失敗時は登録を復元。バックグラウンド起動で画面を出さない。Windowsでの再サインインは未検証 |
-| アプリ個別メニュー | 一部再現 | アプリ単位のピン留め / 解除、その他、管理者実行、ファイルの場所、プロパティ、アンインストール。Shellのcanonical verbが公開され有効な項目だけ表示。読み取りとプレビューの無効化は検証済み、管理者実行・削除の実行は未検証。Jump Listsは未実装 |
-| Windows スタート配置の直接移行 | 未実装 | ReStart 専用 JSON のみ |
+The baseline is late Windows 10 full-screen Start. ReStart is an independent implementation. “Implemented” does not mean identical, and automated WPF fixtures do not establish physical input compatibility. No Windows 10 comparison PC/VM is available.
 
-## 受け入れ基準
+| Area | Status and practical limit |
+| --- | --- |
+| Full-screen / rail | Uses the pointer monitor's working area; expandable rail, pinned/all-apps views, folders, settings and power actions. Reopening resets search, overlays and scroll to pinned home |
+| Composition | Wallpaper blur and tint approximate Acrylic/Reveal; animations and pixel geometry are not matched |
+| Themes | Dark/light/system/high contrast; themed settings controls, scrollbars and calendar. Shared classic tile accent, translucent modern tiles and optional dark Start accent; explicit individual colors are a ReStart extension |
+| Four tile sizes | Logical 1×1 / 2×2 / 4×2 / 4×4 cells |
+| Groups | Independent column/half-cell anchors, inline naming, displaced-group preview and no trailing collision padding. Group width follows occupied content; configured 6/8 columns limit wrapping. Half-cell X anchors and horizontal scrolling are explicit extensions; exact native snap/animation behavior is unverified |
+| Independent tiles | ReStart extension: empty-board drops detach a tile without a header or full group footprint. Earlier unnamed single-item groups migrate to this form. Microsoft's group-creation guidance does not prove native standalone behavior |
+| Tile drag/drop | Cell/ownership/persistence and empty-space routes verified in domain/WPF fixtures. Physical drag re-verification is blocked by the desktop helper error described below |
+| Tile folders | About one-second center hover; inline name/content expansion with temporary displacement. Expanded independent folders preserve the root X position. Native animation timing remains unverified |
+| Catalog / icons | AppsFolder and Start-menu .lnk/.url files; shell launch identities and icons, with fallback glyphs |
+| All apps | OS display names, inline directories and initial jump. Columns use available width and preserve heading/first-child chains. Japanese items share an “other” bucket; ambiguous shortcuts may appear twice |
+| App search | Immediate text including cold startup; pending queries refresh after enumeration; width/case/kana normalization. No file/settings index, Web or Cortana |
+| App menus | Pin/unpin across folder contents; enabled canonical shell verbs for More/Uninstall. Read/availability verified; elevation and uninstall not executed. Jump Lists absent |
+| Recent / most used | Not implemented; Windows usage history is not imported |
+| Windows key | Bare-key state logic implemented/tested; physical Win+letter forwarding remains unverified |
+| Taskbar | Close on taskbar click implemented, forwarding the click. Physical sequences remain unverified. Start-button capture is experimental and only works with a discoverable native Start class |
+| Accessibility | WPF peers/names/focus, directory ExpandCollapse and high contrast. Full Narrator, touch and IME coverage pending |
+| Live content | Local clock/calendar and custom JS workers verified. Legacy UWP tile notifications/background delivery are unavailable |
+| Power/account | Commands and confirmations exist; disruptive OS actions were not executed in verification |
+| Persistence | Schema-3 migration, durable original backups, rotating backup, corruption preservation and future-producer protection tested |
+| Single instance / startup | Duplicate launches verified across paths; current-user Run registration tested in an isolated key. Real sign-in/policy interactions pending |
+| About / updates | Version/build, license texts and migration information; bounded release checks and current-user credential storage. Live private authentication requires a user-configured token; no automatic installer |
+| Native Start import | Not implemented; ReStart JSON is the supported interchange format |
 
-コアのデータ保存と配置は自動テストで保証し、画面・シェル連携は [検証手順](testing.md) に従って確認します。未検証の項目は成功したと扱いません。Windows 10 のインストールや既存シェルの書き換えを伴う検証は通常の開発作業では行いません。
+## Verification boundaries
 
-## 残る主要課題
+The test machine is Windows 11 x64 build 26200. ARM64 packages are cross-built; Windows 10 22H2, ARM64 hardware, mixed DPI and multi-monitor combinations have not been validated.
 
-1. Windows 10 22H2 の比較環境でスクリーンショットと操作を照合する。
-2. Windows 11 の XAML タスクバーと、複数モニター・DPI の組み合わせを検証する。
-3. 最近追加 / よく使う項目、日本語の文字分類、アプリ個別メニューを改善する。
-4. タッチ長押し、ドラッグ中の挿入表示と自動スクロールを詰める。
-5. JavaScriptタイルAPIを拡張し、データソースや表示形式の需要を検証する。終了済みの旧サービスへの接続は前提にしない。
+After selecting and reacquiring the preview window, the desktop helper still returned `foreground window did not report a process id` for physical dragging. Inputs were stopped rather than bypassed. WPF routed-input/composition tests and rendered geometry are useful evidence but do not replace that missing test. Physical Windows-key/taskbar operations were not sent.
+
+## Remaining work
+
+- Compare real Windows 10 22H2 placement, focus and animation once a comparison environment is available.
+- Validate shell/input behavior on current taskbar implementations and multiple DPI/monitor configurations.
+- Improve Japanese alphabet grouping, usage-based sections, Jump Lists, touch and accessibility.
+- Expand custom live-tile capabilities based on actual demand; do not assume retired Microsoft services are available.
+
+See [the behavior audit](behavior-audit.md), [testing](testing.md), [validation](validation.md) and [research](research.md). Keep these distinctions in release notes and bug reports.

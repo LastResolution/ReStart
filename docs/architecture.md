@@ -1,60 +1,63 @@
-# アーキテクチャ
+# Architecture
 
-グループ配置はGroupLayoutとGroupBoardPanelで行います。グループのColumnはグループ幅単位、Rowは半タイルセル単位です。独立した縦位置と空白を保存し、衝突するグループだけを下へ送ります。狭い画面への表示上の再配置だけでは保存アンカーを書き換えません。レイアウトschema 2に位置を保存し、schema 1は読み込み時に移行します。旧版はschema 2を将来形式として扱い、上書きを防止します。
+[日本語](ja/architecture.md)
 
-## 構成
+ReStart is a WPF desktop launcher. It owns its layout, search and live-tile protocol; it does not replace Explorer binaries.
 
-```text
-src/ReStart.Core        モデル、配置、検索、JSON保存、型付き翻訳、JS契約、キー状態
-src/ReStart.App         WPFの画面、シェル連携、入力フック、トレイ、設定、JSプロセス管理
-src/ReStart.TileHost    Jintを使う専用ワーカー。JSON-linesで入力と表示データを交換
-tests/ReStart.Core.Tests 配置の不変条件、保存の復旧、検索とキー状態のテスト
-scripts                スモークテストと配布パッケージ作成
-.github                CI / リリース / 依存関係更新 / PR と Issue テンプレート
-```
+## Components
 
-`Core` のモデル・配置・検索・保存はWPFに依存しません。SingleInstanceGateのみWindows専用の名前付き同期オブジェクトを使用し、SupportedOSPlatformを明示します。WPF の `MainWindow` が表示と編集を扱い、ドメイン上の移動・フォルダー作成を `LayoutEditor` に委譲します。
+| Project | Responsibility |
+| --- | --- |
+| `ReStart.Core` | Models, tile/group geometry, layout mutations, search, localization, persistence, release parsing and input state |
+| `ReStart.App` | WPF views, shell catalog/commands, hooks, tray, settings, update checks and worker lifetime |
+| `ReStart.TileHost` | Jint worker exchanging bounded JSON messages |
+| `ReStart.Core.Tests` | Domain invariants, persistence recovery, update feeds and isolated Windows integration tests |
+| `scripts` / `.github` | Native fixtures, portable packages, CI and releases |
 
-## シェルとアプリ起動
+Most Core logic is independent of WPF. Windows-only synchronization and test-linked services declare their platform requirements.
 
-`AppCatalog` が専用 STA スレッドで `Shell.Application` の AppsFolder と、ユーザー・共通のスタートメニューにある .lnk / .url を列挙します。同じ相対パスはユーザー側を優先します。表示名はSHGetFileInfoから取得し、フォルダー階層も保持します。
+## Placement and editing
 
-`AppCatalogLayout` は明示的なAUMID、一意のリンク先と引数、一意の表示名の順に対応付け、既存ピン留めのAppsFolder IDと起動先を維持します。パスは大文字・小文字を区別せず、引数は区別します。曖昧な同名候補や異なる既知の起動先を無理に統合せず、実ショートカットを残します。曖昧な場合は重複表示が残る可能性があります。
+`TileLayout` reserves explicit cells before packing unplaced or colliding tiles. The four footprints are 1×1, 2×2, 4×2 and 4×4. Layout calculations do not mutate input models.
 
-`AppListTree` は検索用の平坦なカタログから表示用の階層を作ります。折り畳み状態は保存せず、メニューの再表示で解除します。`AppFolderButton` はキー操作とExpandCollapseのAutomationパターンを提供します。列分割では文字見出し・展開フォルダー・最初の子の連続を同じ列に保持します。
+`GroupLayout` stores group columns and vertical anchors in half-cell steps. Groups retain independent positions and gaps; only intersecting bounds are displaced. A new X anchor stores horizontal logical cells; wide boards retain their positions and scroll rather than rewriting them on narrow screens. Preview and commit use the same calculation, preserving each tile's identity, size and internal coordinates.
 
-アイコンは別の STA ワーカーで `IShellItemImageFactory` から取得し、WPF 画像を Freeze して共有します。HBITMAP と COM オブジェクトを解放します。名前の一覧は画像の完了を待たずに表示します。
+A schema-3 `TileGroup.IsStandalone` entry stores exactly one independent tile. It renders without a group header/menu and occupies only that tile's width and height. Its tile column supplies the offset inside the board column; its vertical anchor belongs to the board. This is an explicit ReStart extension requested for detached tiles, not a claim about Windows 10's internal model. Ordinary groups measure occupied content; the configured 6/8 cells limit internal wrapping. Group X anchors snap in half-cell steps.
 
-アプリは Explorer の AppsFolder または ShellExecute で起動します。AUMID をひとつの引数として渡し、シェルのコマンド文字列として評価しません。Web タイルの作成時は http / https のみ許可します。
+`GroupBoardPanel` uses the same rectangles for measure and arrange. `LayoutEditor.Detach` freezes visible anchors and moves ownership once. `FolderExpansion` adds temporary inline content without changing saved root rows. Expanded independent folders temporarily use the column width for their children while keeping the root tile's horizontal position.
 
-## 入力と常駐
+## Catalog and shell
 
-ユーザー単位の Mutex で多重起動を避けます。2回目の起動は名前付きイベントで既存ウィンドウを表示します。トレイと `Ctrl+Alt+Space` が代替の起動経路です。
+`AppCatalog` enumerates AppsFolder and user/common Start-menu .lnk/.url files on dedicated STA threads. User entries win for equal relative paths. SHGetFileInfo supplies localized display names; directory paths remain available for `AppListTree`.
 
-低レベルフックは専用スレッドの Win32 メッセージループで動かします。単押しの Windows キーを保留し、別のキーが押された場合に Windows キー押下を再送します。入力を UI スレッドで待ちません。フック中にファイル読み取りやアプリ列挙を行いません。アプリ終了でフックとホットキーを解除します。
+`AppCatalogLayout` matches explicit AUMIDs, unique target-plus-argument identities, then unambiguous names. It preserves existing shell IDs and keeps ambiguous shortcuts distinct. Icons are obtained with IShellItemImageFactory, frozen for WPF sharing, and their native handles released.
 
-スタートボタン捕捉はネイティブ Start クラスだけを対象とします。XAML 内部の座標を推測してクリックを奪うことや、Explorer への DLL 注入は行いません。
+App directories expand inline. Column balancing keeps headings and initial children together. Search uses the flat catalog, including closed directories. Input preferences are applied before catalog loading; completing the catalog reruns any pending query without taking navigation focus.
 
-## 永続化
+`AppShellCommands` reads IContextMenu canonical verbs on an STA and displays supported enabled commands. Invocation re-queries the command ID. Preview never invokes them. App launch targets are passed as shell identities or individual arguments, not evaluated as shell command text.
 
-`LayoutDocument` の version 2 にグループのアンカー、タイル、フォルダー、設定を保存します。version 1は読み込み時に移行します。最初に正規化し、サイズ・倍率・識別子を検証します。フォルダーは1階層です。
+## Lifetime and input
 
-保存は同じディレクトリ内の一時ファイルへ書き込み、既存ファイルを `File.Replace` して直前の状態を `.bak` に残します。将来バージョンのファイルは上書きしません。JSON の読み取りにはサイズと深さの上限があります。
+A per-user/session mutex prevents duplicate normal instances across versions and paths. A named event activates the existing instance. Preview has a separate scope. Background duplicate launches do not open the menu.
 
-schema 1を読み込んで初めて保存する前に、読み込み元を `layout.json.schema1-<ID>.bak` へ保全します。通常の `.bak` が次の保存で更新されても、この移行用バックアップは残ります。壊れた本体からschema 1の `.bak` を復元した場合も、復元元を先に保全します。保全できなければ新形式の上書きは行いません。
+Low-level hooks run a short Win32 message loop on a dedicated thread. A bare Windows key toggles ReStart; combinations replay the pending Windows-key down. UI work is dispatched. Hooks, hotkeys and workers are released on exit. Native Start-button capture only targets a discoverable Start class; no DLL injection or guessed XAML hit regions are used.
 
-設定の自動起動はユーザー単位の Run キーで管理します。レイアウトのインポートはタイルだけを取り込み、その PC の設定を保持します。
+Sign-in startup manages one current-user Run value, reconciles its actual state, and restores it if settings saving fails.
 
-## 描画
+## Persistence, updates and credentials
 
-フルスクリーンはモニターの WorkingArea を Win32 の物理座標で指定します。WPF の PerMonitorV2 で描画し、タイル内部は論理セルで配置します。グループは画面幅に応じて折り返します。
+Schema 3 stores tiles, preferences, independent entries, producer version and the last upgrade record. Schemas 1/2 migrate on load; their original bytes are preserved before the first new save. Same-schema application upgrades also receive durable backups. Normal writes use a temporary file and File.Replace with a rotating .bak. Future schemas or newer producer versions are read-only. See [migration](migration.md).
 
-壁紙をぼかした背景と色のオーバーレイを使います。これは Windows 10 の Acrylic を直接呼び出す実装ではありません。ハイコントラストではシステム色を優先し、背景効果を抑えます。
+`ReleaseClient` validates bounded GitHub release pages, semantic versions and architecture-matching ZIP/checksum pairs. The app owns a timeout-limited HTTP client with automatic redirects disabled. Checks are single-flight, canceled at exit, and disabled in preview. Credentials are stored by `ReleaseCredentialStore` in Windows Credential Manager, never in layout JSON. See [updates](updates.md).
 
-## 翻訳と公開API
+## Rendering and resources
 
-TextKey列挙型をC# / XAMLから参照し、表示文言はja/enの埋め込みJSONだけに置きます。キー集合の一致と書式を検証し、保存済みのユーザーラベルは翻訳しません。公開APIのXMLコメントをビルドで検証します。[多言語実装](localization.md) と [API契約](api-contracts.md) を参照してください。
+The native window uses the pointer monitor's working area and PerMonitorV2. WPF content uses DIPs and logical cells. The wallpaper blur is an approximation of the original composition.
 
-## JavaScriptの実行境界
+Theme resources cover controls, scrollbars, dialogs and calendar. High contrast overrides effects. Modern app tiles use uniform translucent plates; Classic tiles share a global accent. Explicit per-tile color overrides are a ReStart extension and can be reset; high contrast still wins. Optional Start-surface accent applies to dark mode.
 
-ReStart.TileHostをタイルごとに専用プロセスで起動し、各描画は新しいJintエンジンで実行します。入力と出力は制限付きJSONのみです。通信は現ユーザーだけが接続できる非同期名前付きパイプで行い、応答待ちでThreadPoolのワーカーを占有しません。親側は通常1秒・初回4秒の待機期限を持ち、パイプのキャンセルに依存せずワーカーを終了できます。Job Objectでメモリと子プロセス数を制限し、メニュー非表示・アプリ終了時に終了します。詳細は [JavaScriptタイル](javascript-tiles.md) を参照してください。
+Typed `TextKey` references resolve English/Japanese embedded JSON. Saved user labels and OS app names are preserved. Public/protected APIs require XML documentation; CS1591 is a build error.
+
+## JavaScript boundary
+
+Each live tile has a separate worker, a fresh Jint realm per render, and bounded JSON input/output over current-user-only asynchronous named pipes. The parent enforces a timeout independently of pipe cancellation and owns a resource-limited Job Object. Hiding Start ends workers; successful JSON state survives hiding but resets on reload/exit. This is process isolation, not an OS privilege sandbox. See [the API guide](javascript-tiles.md).

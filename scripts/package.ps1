@@ -25,11 +25,15 @@ dotnet publish (Join-Path $repoRoot 'src/ReStart.TileHost/ReStart.TileHost.cspro
 if ($LASTEXITCODE -ne 0) { throw "Tile host publish failed: $LASTEXITCODE" }
 
 Copy-Item -LiteralPath (Join-Path $repoRoot 'LICENSE') -Destination $publishPath
-Copy-Item -LiteralPath (Join-Path $repoRoot 'docs/portable-README.txt') -Destination (Join-Path $publishPath 'README.txt')
+$version = ([xml](Get-Content -LiteralPath (Join-Path $repoRoot 'Directory.Build.props'))).Project.PropertyGroup.Version
+foreach ($language in @('', '.ja')) {
+    $template = Get-Content -LiteralPath (Join-Path $repoRoot "docs/portable-README$language.txt") -Raw
+    [IO.File]::WriteAllText((Join-Path $publishPath "README$language.txt"), $template.Replace('@VERSION@', $version), [Text.UTF8Encoding]::new($false))
+}
 # Explicit file list prevents preview settings, personal layouts, and stale files entering a release.
 $stage = Join-Path $repoRoot ("artifacts/stage/" + [Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force -Path $stage, (Join-Path $stage 'TileHost') | Out-Null
-foreach ($name in @('ReStart.exe', 'LICENSE', 'README.txt')) { Copy-Item -LiteralPath (Join-Path $publishPath $name) -Destination $stage }
+foreach ($name in @('ReStart.exe', 'LICENSE', 'README.txt', 'README.ja.txt')) { Copy-Item -LiteralPath (Join-Path $publishPath $name) -Destination $stage }
 Copy-Item -LiteralPath (Join-Path $workerPath 'ReStart.TileHost.exe') -Destination (Join-Path $stage 'TileHost')
 Copy-Item -LiteralPath (Join-Path $repoRoot 'examples/tiles') -Destination (Join-Path $stage 'Examples') -Recurse
 Copy-Item -LiteralPath (Join-Path $repoRoot 'third-party') -Destination $stage -Recurse

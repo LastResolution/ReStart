@@ -1,24 +1,38 @@
-ReStart v0.3.0
-全画面のスタートを、もう一度。
+ReStart v@VERSION@
+Full-screen Start, again.
+Japanese instructions: README.ja.txt
 
-ReStart.exe を起動してください。.NET の別途インストールと管理者権限は不要です。
-Windows キー単押し / Ctrl+Alt+Space / 通知領域のアイコンで開きます。
-設定は左下の歯車。終了は通知領域の ReStart → 終了です。
-サインイン時の自動起動は初期状態で無効です。
+Run ReStart.exe. No separate .NET install or administrator permission is needed.
+Keep TileHost, Examples and third-party with the main executable.
+Open with the bare Windows key, Ctrl+Alt+Space or the tray icon.
+Settings: gear on the left rail. Exit: ReStart tray menu.
+Sign-in startup is optional and initially disabled.
 
-タイルを右クリックしてサイズ・名前・グループを変更します。
-空白を右クリックしてグループやカスタムタイルを追加します。
-Shift を押しながらタイルにドロップするとフォルダーになります。
-すべてのアプリでアプリを右クリックするとピン留めできます。
+Drag tiles within/between groups. Dropping in empty board space detaches an
+independent tile without a group header. Drag headers to move whole groups.
+Double-click a group name to edit inline. Hover over a tile center for about
+one second before dropping to create a folder; contents open inline.
+Right-click an app in All apps to pin it. Type from home to search.
 
-レイアウト: %LOCALAPPDATA%\ReStart\layout.json
-削除方法: 設定で自動起動をオフ → ReStart を終了 → 展開したフォルダーを削除。
+Settings -> About: version/build and license texts.
+Settings -> Layout and data: upgrade record and rollback backup.
+Settings -> Updates: manual/startup checks. Private releases require a
+repository-scoped GitHub Contents:read token saved in Windows Credential Manager.
+Checks do not install updates. Exit, extract the complete ZIP and restart.
 
-本ソフトは独立実装です。旧 UWP ライブ通知や Windows Search 全体の互換実装ではありません。
-スタートボタンの捕捉は試験的機能です。Win+E などの組み合わせは環境ごとの確認が必要です。
-未署名の開発版です。組織の実行ポリシーに従ってください。
+Data: %LOCALAPPDATA%\ReStart\layout.json
+Schema 1/2 upgrade to schema 3 with durable original backups.
+Before downgrading, exit and restore a backup matching the older schema.
+Keep custom tile sources separately; layout export does not include them.
 
-README・制限・ソース: https://github.com/LastResolution/ReStart
-MIT License。Windows と各アプリの名前・アイコンは各権利者に帰属します。
+Remove: disable sign-in startup, remove any saved update token if desired,
+exit ReStart and delete its extracted installation. Local data is separate.
 
-JavaScriptタイル: TileHost と Examples も ReStart.exe と一緒に置いてください。設定のJavaScriptタイルからサンプルを作成できます。編集・保存で更新します。
+This is an unsigned development prerelease and independent implementation.
+Legacy UWP notifications, full Windows Search and Jump Lists are unavailable.
+Start-button capture is experimental. Physical Win-key/taskbar sequences,
+Windows 10 22H2 comparison, ARM64 hardware and mixed DPI remain unverified.
+
+Source, build instructions and limitations:
+https://github.com/LastResolution/ReStart
+MIT License. Windows/app names and icons belong to their respective owners.

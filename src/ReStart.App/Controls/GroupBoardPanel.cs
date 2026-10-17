@@ -17,6 +17,10 @@ public sealed class GroupBoardPanel : Panel
     public string? ExpandedFolderId { get; set; }
     /// <summary>Gets or sets a transient minimum height for scrolling a drag into previously empty board space.</summary>
     public double DragMinimumHeight { get; set; }
+    /// <summary>Gets or sets the viewport width when horizontal scrolling measures the board with infinite available width.</summary>
+    public double ViewportWidth { get; set; } = 800;
+    /// <summary>Gets or sets a temporary horizontal runway extended only when a drag reaches the right edge.</summary>
+    public double DragMinimumWidth { get; set; }
     /// <summary>Gets the number of group columns available at the last measure pass.</summary>
     public int Columns { get; private set; } = 1;
     /// <summary>Gets group bounds in the same model grid used by drag/drop and persistence.</summary>
@@ -27,12 +31,14 @@ public sealed class GroupBoardPanel : Panel
     /// <summary>Measures group content and the union of its logical positions, including blank gaps.</summary>
     protected override Size MeasureOverride(Size availableSize)
     {
-        var width = double.IsFinite(availableSize.Width) ? availableSize.Width : TileColumns * Cell;
+        var width = double.IsFinite(availableSize.Width) ? availableSize.Width : ViewportWidth;
         Columns = GroupLayout.ColumnCount(width, TileColumns, Cell);
-        foreach (UIElement child in InternalChildren) child.Measure(new(TileColumns * Cell, double.PositiveInfinity));
-        Placements = DragPlacements ?? GroupLayout.Pack(InternalChildren.OfType<FrameworkElement>().Select(e => e.Tag).OfType<TileGroup>(), Columns, TileColumns, Cell, expandedFolderId: ExpandedFolderId);
-        var height = Placements.Count == 0 ? Cell * 4 : Placements.Max(p => (p.Row + p.Rows) * Cell / 2) + Cell * 2;
-        return new(Math.Max(0, width), Math.Max(height, Math.Max(MinHeight, DragMinimumHeight)));
+        Placements = DragPlacements ?? GroupLayout.Pack(InternalChildren.OfType<FrameworkElement>().Select(e => e.Tag).OfType<TileGroup>(), Columns, TileColumns, Cell, expandedFolderId: ExpandedFolderId, preserveColumns: true);
+        foreach (FrameworkElement child in InternalChildren)
+            child.Measure(new(child.Tag is TileGroup group ? Placements.First(p => p.Group == group).Width : TileColumns * Cell, double.PositiveInfinity));
+        var height = Placements.Count == 0 ? Cell * 4 : Placements.Max(p => p.Row * Cell / 2 + p.Height);
+        var occupiedWidth = Placements.Count == 0 ? 0 : Placements.Max(p => p.Left + p.Width);
+        return new(Math.Max(width, Math.Max(occupiedWidth, DragMinimumWidth)), Math.Max(height, Math.Max(MinHeight, DragMinimumHeight)));
     }
 
     /// <summary>Places each group at its own column and vertical anchor rather than in shared wrap-panel rows.</summary>
@@ -43,7 +49,7 @@ public sealed class GroupBoardPanel : Panel
             if (child.Tag is TileGroup group)
             {
                 var p = Placements.First(p => p.Group == group);
-                child.Arrange(new(p.Column * (TileColumns * Cell + GroupLayout.Gap), p.Row * Cell / 2, TileColumns * Cell, child.DesiredSize.Height));
+                child.Arrange(new(p.Left, p.Row * Cell / 2, p.Width, child.DesiredSize.Height));
             }
             else child.Arrange(new Rect(new Point(), child.DesiredSize));
         }

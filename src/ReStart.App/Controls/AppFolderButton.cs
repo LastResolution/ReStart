@@ -29,7 +29,7 @@ internal sealed class AppFolderButton : Button
         AutomationProperties.SetName(this, name);
         var row = new DockPanel();
         var box = new Border { Width = 32, Height = 32, Margin = new(0, 0, 12, 0) };
-        box.SetResourceReference(BackgroundProperty, "TileBrush");
+        box.Background = Brushes.Transparent;
         box.Child = icon != null ? new Image { Source = icon, Width = 25, Height = 25 } : new TextBlock { Text = "\uE8B7", FontFamily = new("Segoe MDL2 Assets"), FontSize = 23, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
         DockPanel.SetDock(box, Dock.Left);
         DockPanel.SetDock(_arrow, Dock.Right);

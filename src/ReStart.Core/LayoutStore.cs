@@ -4,9 +4,10 @@ using System.Text.Json.Serialization;
 namespace ReStart.Core;
 
 /// <summary>Loads and atomically replaces a local layout while retaining a backup and protecting unsupported schemas.</summary>
-public sealed class LayoutStore(string filePath)
+public sealed class LayoutStore(string filePath, string? applicationVersion = null)
 {
     private string? _migrationSource;
+    private string? _upgradeSource;
     /// <summary>Gets the versioned layout serialization settings; this is distinct from the JavaScript wire protocol.</summary>
     public static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -21,8 +22,14 @@ public sealed class LayoutStore(string filePath)
     public string? RecoveryMessage { get; private set; }
     /// <summary>Gets whether loading an unsupported schema disabled writes to protect the original file.</summary>
     public bool IsReadOnly { get; private set; }
-    /// <summary>Gets the preserved schema-one source created before this store first writes schema two, or null.</summary>
+    /// <summary>Gets the preserved legacy source created before this store first writes the current schema, or null.</summary>
     public string? MigrationBackupPath { get; private set; }
+    /// <summary>Gets the producer application version read from disk, or empty for legacy/new settings.</summary>
+    public string LoadedAppVersion { get; private set; } = "";
+    /// <summary>Gets the source schema read before migration, or null for a new layout.</summary>
+    public int? LoadedSchemaVersion { get; private set; }
+    /// <summary>Gets the durable backup created for this store's application upgrade, or null before saving.</summary>
+    public string? UpgradeBackupPath { get; private set; }
 
     /// <summary>Loads the layout or a valid backup; preserves corrupt input and marks unsupported versions read-only.</summary>
     public LayoutDocument? Load()
@@ -30,12 +37,16 @@ public sealed class LayoutStore(string filePath)
         RecoveryMessage = null;
         IsReadOnly = false;
         _migrationSource = null;
+        _upgradeSource = null;
+        LoadedAppVersion = "";
+        LoadedSchemaVersion = null;
+        UpgradeBackupPath = null;
         MigrationBackupPath = null;
         if (!File.Exists(FilePath)) return null;
         try
         {
             var document = Read(FilePath);
-            if (document.MigratedFromVersion == 1) _migrationSource = FilePath;
+            RegisterSource(document, FilePath);
             return document;
         }
         catch (Exception ex) when (ex is JsonException or InvalidDataException or IOException or UnauthorizedAccessException or NullReferenceException)
@@ -49,7 +60,7 @@ public sealed class LayoutStore(string filePath)
                 try
                 {
                     var backup = Read(FilePath + ".bak");
-                    if (backup.MigratedFromVersion == 1) _migrationSource = FilePath + ".bak";
+                    RegisterSource(backup, FilePath + ".bak");
                     RecoveryMessage += L.T(K.RecoveryBackupRestored);
                     return backup;
                 }
@@ -57,6 +68,16 @@ public sealed class LayoutStore(string filePath)
             }
             return null;
         }
+    }
+
+    private void RegisterSource(LayoutDocument document, string source)
+    {
+        LoadedSchemaVersion = document.MigratedFromVersion ?? document.Version;
+        LoadedAppVersion = document.SavedWithAppVersion;
+        if (document.MigratedFromVersion.HasValue) _migrationSource = source;
+        if (applicationVersion != null && LoadedAppVersion != applicationVersion) _upgradeSource = source;
+        if (ReleaseVersion.Parse(LoadedAppVersion) is { } producer && ReleaseVersion.Parse(applicationVersion) is { } current && producer.CompareTo(current) > 0)
+        { IsReadOnly = true; RecoveryMessage = L.T(K.ErrorFutureLayout); }
     }
 
     /// <summary>Reads a size-bounded layout file and validates its schema and model invariants.</summary>
@@ -73,18 +94,36 @@ public sealed class LayoutStore(string filePath)
     public void Save(LayoutDocument document)
     {
         if (IsReadOnly) throw new InvalidOperationException(L.T(K.ErrorFutureLayout));
+        if (applicationVersion != null && ReleaseVersion.Parse(applicationVersion) == null) throw new ArgumentException("Invalid producer version.", nameof(applicationVersion));
         document.Normalize();
         Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
         if (_migrationSource != null && MigrationBackupPath == null)
         {
-            var migrationPath = FilePath + $".schema1-{Guid.NewGuid():N}.bak";
+            var migrationPath = FilePath + $".schema{LoadedSchemaVersion}-{Guid.NewGuid():N}.bak";
             File.Copy(_migrationSource, migrationPath, false);
             MigrationBackupPath = migrationPath;
         }
+        if (_upgradeSource != null && applicationVersion != null)
+        {
+            if (UpgradeBackupPath == null)
+            {
+                UpgradeBackupPath = MigrationBackupPath;
+                if (UpgradeBackupPath == null)
+                {
+                    var backup = FilePath + $".upgrade-{Guid.NewGuid():N}.bak";
+                    File.Copy(_upgradeSource, backup, false);
+                    UpgradeBackupPath = backup;
+                }
+            }
+            document.LastUpgrade = new(LoadedAppVersion, applicationVersion, LoadedSchemaVersion ?? document.Version,
+                document.Version, DateTimeOffset.UtcNow, Path.GetFileName(UpgradeBackupPath));
+        }
+        if (applicationVersion != null) document.SavedWithAppVersion = applicationVersion;
         var temp = FilePath + ".tmp";
         File.WriteAllText(temp, JsonSerializer.Serialize(document, JsonOptions));
         if (File.Exists(FilePath)) File.Replace(temp, FilePath, FilePath + ".bak", true);
         else File.Move(temp, FilePath);
         _migrationSource = null;
+        _upgradeSource = null;
     }
 }

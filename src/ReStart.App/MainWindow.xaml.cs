@@ -78,6 +78,11 @@ public partial class MainWindow : Window
         PinnedNav.AllowDrop = true;
         PinnedNav.PreviewDragOver += (_, e) => { if (HasDrag(e)) { ShowPinned(this, new()); e.Effects = DragDropEffects.Move; e.Handled = true; } };
         ContentScroll.AllowDrop = true;
+        ContentScroll.PreviewMouseWheel += (_, e) =>
+        {
+            if (Keyboard.Modifiers == ModifierKeys.Shift && ContentScroll.ScrollableWidth > 0)
+            { ContentScroll.ScrollToHorizontalOffset(ContentScroll.HorizontalOffset - e.Delta); e.Handled = true; }
+        };
         GroupsPanel.PreviewDragOver += OnBoardDragOver;
         GroupsPanel.PreviewDrop += OnBoardDrop;
         ContentScroll.PreviewDragOver += (_, e) =>
@@ -93,6 +98,13 @@ public partial class MainWindow : Window
                 ExtendDragSpace();
                 ContentScroll.ScrollToVerticalOffset(ContentScroll.VerticalOffset + 26);
             }
+            if (point.X < 42) ContentScroll.ScrollToHorizontalOffset(ContentScroll.HorizontalOffset - 26);
+            else if (point.X > ContentScroll.ActualWidth - 42)
+            {
+                GroupsPanel.DragMinimumWidth = Math.Min(10000 * Cell, ContentScroll.HorizontalOffset + ContentScroll.ViewportWidth + Cell * 4);
+                GroupsPanel.InvalidateMeasure();
+                ContentScroll.ScrollToHorizontalOffset(ContentScroll.HorizontalOffset + 26);
+            }
         };
         UserButton.Content = "◉     " + (_preview ? "ReStart" : Environment.UserName);
         Loaded += async (_, _) => await InitializeAsync();
@@ -102,6 +114,7 @@ public partial class MainWindow : Window
             Native.DwmSetWindowAttribute(new WindowInteropHelper(this).Handle, 33, ref square, sizeof(int));
         };
         SizeChanged += (_, _) => FitPanels();
+        ContentScroll.SizeChanged += (_, _) => FitPanels();
         _clock = new(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(1) };
         _clock.Tick += async (_, _) => { UpdateLiveTiles(); await UpdateScriptTilesAsync(); };
         _clock.Start();
@@ -155,6 +168,8 @@ public partial class MainWindow : Window
             RenderApps();
             RefreshSearchResults();
             if (_store.RecoveryMessage == null) SetStatus("");
+            if (!_preview && !_store.IsReadOnly) SaveLayout();
+            if (!_preview && Document.Preferences.CheckUpdatesOnStartup) _ = CheckForUpdatesAsync();
         }
         catch (Exception ex)
         {
@@ -227,7 +242,7 @@ public partial class MainWindow : Window
         if (p.Theme == ReStart.Core.ThemeMode.System)
         {
             using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
-            light = key?.GetValue("AppsUseLightTheme") is int value && value != 0;
+            light = key?.GetValue("SystemUsesLightTheme") is int value && value != 0;
         }
         var highContrast = SystemParameters.HighContrast;
         var foreground = highContrast ? SystemColors.WindowTextColor : light ? Colors.Black : Colors.White;
@@ -241,10 +256,20 @@ public partial class MainWindow : Window
         Application.Current.Resources["BorderBrush"] = new SolidColorBrush(highContrast ? foreground : light ? Color.FromRgb(135, 135, 135) : Color.FromRgb(112, 112, 112));
         Application.Current.Resources["HoverBrush"] = new SolidColorBrush(highContrast ? background : light ? Color.FromRgb(225, 225, 225) : Color.FromRgb(70, 70, 70));
         Application.Current.Resources["ScrollThumbBrush"] = new SolidColorBrush(highContrast ? foreground : light ? Color.FromRgb(135, 135, 135) : Color.FromRgb(115, 115, 115));
+        var startBackground = background;
+        if (p.ShowAccentOnStart && !light && !highContrast)
+        {
+            var accent = Brush(p.Accent, "#0078D7").Color;
+            // Use a darkened accent surface with uniform translucent tile plates.
+            // Exact Windows 10 acrylic composition remains a documented approximation.
+            startBackground = Color.FromRgb((byte)(accent.R * 0.65), (byte)(accent.G * 0.65), (byte)(accent.B * 0.65));
+        }
+        Application.Current.Resources["StartTileBrush"] = new SolidColorBrush(highContrast ? background
+            : light ? Color.FromArgb(20, 0, 0, 0) : Color.FromArgb(32, 255, 255, 255));
         ThemeWindow.IsLight = light;
         foreach (Window window in Application.Current.Windows) ThemeWindow.Apply(window);
-        Tint.Background = new SolidColorBrush(Color.FromArgb((byte)(highContrast ? 255 : 255 * p.BackgroundOpacity), background.R, background.G, background.B));
-        Root.Background = new SolidColorBrush(background);
+        Tint.Background = new SolidColorBrush(Color.FromArgb((byte)(highContrast ? 255 : 255 * p.BackgroundOpacity), startBackground.R, startBackground.G, startBackground.B));
+        Root.Background = new SolidColorBrush(startBackground);
         Wallpaper.Source = null;
         if (p.ShowWallpaper && !highContrast)
         {
@@ -295,24 +320,30 @@ public partial class MainWindow : Window
         foreach (var id in _scriptSessions.Keys.Where(id => !activeScriptIds.Contains(id)).ToArray()) { _scriptSessions[id].Dispose(); _scriptSessions.Remove(id); }
         foreach (var group in Document.Groups)
         {
-            var stack = new StackPanel { Background = Brushes.Transparent, Width = Document.Preferences.Columns * Cell, Tag = group };
-            var header = new GroupHeader(group.Name) { Tag = group };
-            header.Handle.Tag = group;
-            AutomationProperties.SetName(header.Handle, L.T(K.GroupPrefix) + group.Name);
-            WireInlineName(header, name =>
+            var placements = TileLayout.Pack(group.Tiles, Document.Preferences.Columns);
+            var expansion = FolderExpansion.Create(placements, Document.Preferences.Columns, _openFolder?.Id);
+            var compact = group.IsStandalone && placements.Count == 1 && expansion == null;
+            var columns = compact ? placements[0].Width : expansion != null ? Document.Preferences.Columns : Math.Max(1, placements.Count == 0 ? 0 : placements.Max(p => p.Column + p.Width));
+            var stack = new StackPanel { Background = Brushes.Transparent, Width = columns * Cell, Tag = group };
+            if (!group.IsStandalone)
             {
-                group.Name = name;
-                AutomationProperties.SetName(header.Handle, L.T(K.GroupPrefix) + name);
-            }, () => GroupsPanel.Children.OfType<StackPanel>().Where(s => s.Tag == group).SelectMany(s => s.Children.OfType<GroupHeader>()).FirstOrDefault());
-            header.Handle.ContextMenu = GroupMenu(group);
-            WireDrag(header.Handle, "ReStart.Group", group.Id);
-            var panel = new TilePanel { Columns = Document.Preferences.Columns, Cell = Cell, Placements = TileLayout.Pack(group.Tiles, Document.Preferences.Columns) };
-            panel.Expansion = FolderExpansion.Create(panel.Placements, panel.Columns, _openFolder?.Id);
+                var header = new GroupHeader(group.Name) { Tag = group };
+                header.Handle.Tag = group;
+                AutomationProperties.SetName(header.Handle, L.T(K.GroupPrefix) + group.Name);
+                WireInlineName(header, name =>
+                {
+                    group.Name = name;
+                    AutomationProperties.SetName(header.Handle, L.T(K.GroupPrefix) + name);
+                }, () => GroupsPanel.Children.OfType<StackPanel>().Where(s => s.Tag == group).SelectMany(s => s.Children.OfType<GroupHeader>()).FirstOrDefault());
+                header.Handle.ContextMenu = GroupMenu(group);
+                WireDrag(header.Handle, "ReStart.Group", group.Id);
+                stack.Children.Add(header);
+                stack.ContextMenu = GroupMenu(group);
+            }
+            var panel = new TilePanel { Columns = columns, Cell = Cell, Placements = compact ? [placements[0] with { Column = 0, Row = 0 }] : placements, Expansion = expansion };
             foreach (var placement in panel.Placements) panel.Children.Add(CreateTileButton(placement.Tile));
             if (panel.Expansion != null) panel.Children.Add(CreateInlineFolder(panel));
-            stack.Children.Add(header);
             stack.Children.Add(panel);
-            stack.ContextMenu = GroupMenu(group);
             GroupsPanel.Children.Add(stack);
         }
         if (Document.Groups.Count == 0)
@@ -332,6 +363,7 @@ public partial class MainWindow : Window
         if (ContentScroll.ActualWidth < 1) return;
         GroupsPanel.TileColumns = Document.Preferences.Columns;
         GroupsPanel.Cell = Cell;
+        GroupsPanel.ViewportWidth = Math.Max(1, ContentScroll.ActualWidth - (ContentScroll.ComputedVerticalScrollBarVisibility == Visibility.Visible ? 12 : 0));
         GroupsPanel.InvalidateMeasure();
     }
 
@@ -340,14 +372,23 @@ public partial class MainWindow : Window
         var displayName = TileDisplayName(tile);
         var button = new Button { Tag = tile, Padding = new(0), HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch, ToolTip = displayName };
         AutomationProperties.SetName(button, displayName + (tile.IsFolder && tile.Label.Length > 0 ? L.T(K.TileFolderSuffix) : ""));
-        var colorful = Document.Preferences.ColoredTiles || tile.Widget.Length > 0;
-        button.Background = colorful && !SystemParameters.HighContrast ? Brush(tile.Color.Length > 0 ? tile.Color : Document.Preferences.Accent, "#0078D7") : (System.Windows.Media.Brush)FindResource("TileBrush");
-        if (colorful && !SystemParameters.HighContrast) button.Foreground = Brushes.White;
+        var colorful = tile.UseCustomColor || Document.Preferences.ColoredTiles || tile.Widget.Length > 0;
+        button.Background = colorful && !SystemParameters.HighContrast ? Brush((tile.UseCustomColor || tile.Widget.Length > 0) && tile.Color.Length > 0 ? tile.Color : Document.Preferences.Accent, "#0078D7") : (System.Windows.Media.Brush)FindResource("StartTileBrush");
+        if (colorful && !SystemParameters.HighContrast && button.Background is SolidColorBrush plate)
+        {
+            static double Linear(byte value) => value / 255d <= 0.04045 ? value / 255d / 12.92 : Math.Pow((value / 255d + 0.055) / 1.055, 2.4);
+            var luminance = 0.2126 * Linear(plate.Color.R) + 0.7152 * Linear(plate.Color.G) + 0.0722 * Linear(plate.Color.B);
+            button.Foreground = luminance > 0.179 ? Brushes.Black : Brushes.White;
+        }
         var grid = new Grid { Margin = new(7) };
         if (tile.IsFolder)
         {
             if (_openFolder == tile)
+            {
+                button.SetResourceReference(BorderBrushProperty, SystemParameters.HighContrast ? "TextBrush" : "AccentBrush");
+                button.BorderThickness = new(2);
                 grid.Children.Add(new TextBlock { Text = "\uE70E", FontFamily = new("Segoe MDL2 Assets"), FontSize = 22, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center });
+            }
             else
             {
                 var mini = new UniformGridProxy { Columns = 2, Rows = 2, Width = tile.Size == TileSize.Small ? 28 : 52, Height = tile.Size == TileSize.Small ? 28 : 52, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
@@ -413,6 +454,7 @@ public partial class MainWindow : Window
         if (!tile.IsFolder && tile.Widget.Length == 0 && tile.Target.Length > 0)
             AddAppShellItems(menu, _apps.FirstOrDefault(a => a.Id == tile.AppId) ?? new(tile.AppId, tile.Label, tile.Target, tile.IsShellApp));
         var extras = new MenuItem { Header = "ReStart" };
+        extras.Items.Add(TileColorMenu(tile));
         Add(extras, L.T(K.RenameTile), () =>
         {
             if (tile.IsFolder) { RenameFolder(tile); return; }
@@ -422,7 +464,7 @@ public partial class MainWindow : Window
         if (tile.Widget.Length > 0) Add(menu, tile.Live ? L.T(K.DisableLiveTile) : L.T(K.EnableLiveTile), () => { tile.Live = !tile.Live; CommitLayout(); });
         if (tile.Widget == "script") AddScriptMenu(menu, tile);
         var move = new MenuItem { Header = L.T(K.MoveToGroup) };
-        foreach (var group in Document.Groups)
+        foreach (var group in Document.Groups.Where(g => !g.IsStandalone))
         {
             var item = new MenuItem { Header = group.Name };
             item.Click += (_, _) => { LayoutEditor.Move(Document, tile, group); CommitLayout(); };
@@ -443,10 +485,7 @@ public partial class MainWindow : Window
         }
         else Add(extras, L.T(K.UnpackFolder), () =>
         {
-            var group = Document.Groups.First(g => g.Tiles.Contains(tile));
-            var index = group.Tiles.IndexOf(tile);
-            group.Tiles.Remove(tile);
-            group.Tiles.InsertRange(index, tile.Children);
+            LayoutEditor.UnpackFolder(Document, tile);
             CommitLayout();
         });
         menu.Items.Add(extras);
@@ -481,7 +520,6 @@ public partial class MainWindow : Window
         _folderHover.Reset();
         if (format == "ReStart.Group" && _openFolder != null) { CloseFolder(this, new()); UpdateLayout(); }
         var previousView = PrepareDragView(format);
-        ExtendDragSpace();
         button.ReleaseMouseCapture();
         e.Handled = true;
         try
@@ -496,6 +534,7 @@ public partial class MainWindow : Window
             ClearDropPreview();
             _folderHover.Reset();
             GroupsPanel.DragMinimumHeight = 0;
+            GroupsPanel.DragMinimumWidth = 0;
             GroupsPanel.InvalidateMeasure();
             Dispatcher.BeginInvoke(() => _dragging = false, DispatcherPriority.Background);
         }
@@ -514,7 +553,9 @@ public partial class MainWindow : Window
 
     private static bool HasDrag(DragEventArgs e) => e.Data.GetDataPresent("ReStart.Tile") || e.Data.GetDataPresent("ReStart.App") || e.Data.GetDataPresent("ReStart.Group");
     private Tile? DragTile(DragEventArgs e) => e.Data.GetData("ReStart.Tile") is string id ? FindTile(id) :
-        e.Data.GetData("ReStart.App") is string appId && _apps.FirstOrDefault(a => a.Id == appId) is AppEntry app ? Tile.FromApp(app) : null;
+        e.Data.GetData("ReStart.App") is string appId ? TileForAppDrag(appId) : null;
+    private Tile? TileForAppDrag(string appId) => _apps.FirstOrDefault(a => a.Id == appId) is AppEntry app
+        ? AppPinning.Find(Document, app) ?? Tile.FromApp(app) : null;
     private void ShowDropPreview(TilePanel panel, Tile tile, int col, int row)
     {
         if (_dropAdorner?.AdornedElement != panel)
@@ -550,7 +591,8 @@ public partial class MainWindow : Window
             var (col, row) = TileLayout.Snap(model.X - _dragOffset.X, model.Y - _dragOffset.Y, Cell, tile.Size, Document.Preferences.Columns);
             var sourceId = (string?)e.Data.GetData("ReStart.Tile") ?? (string?)e.Data.GetData("ReStart.App") ?? tile.Id;
             var folderTarget = FolderHoverTarget(tile, panel, point, sourceId);
-            MoveTileIntoGroup(tile, group, col, row, folderTarget);
+            if (group.IsStandalone && folderTarget == null) MoveTileToStandalone(tile, e.GetPosition(GroupsPanel));
+            else MoveTileIntoGroup(tile, group, col, row, folderTarget);
         }
     }
 
@@ -561,7 +603,12 @@ public partial class MainWindow : Window
     }
 
     private Tile? FindTile(string id) => LayoutEditor.Find(Document, id);
-    private void RemoveTile(string id) => LayoutEditor.Remove(Document, id);
+    private void RemoveTile(string id)
+    {
+        var owner = Document.Groups.FirstOrDefault(g => g.Tiles.Any(t => t.Id == id || t.Children.Any(c => c.Id == id)));
+        LayoutEditor.Remove(Document, id);
+        if (owner?.Tiles.Count == 0) Document.Groups.Remove(owner);
+    }
     private void MergeFolder(Tile source, Tile target) => LayoutEditor.MergeFolder(Document, source, target);
 
     private void CommitLayout()
@@ -580,7 +627,7 @@ public partial class MainWindow : Window
         var button = new Button { Tag = app, HorizontalContentAlignment = HorizontalAlignment.Stretch, Padding = new(4, 3, 4, 3), Height = 44, ToolTip = app.Name };
         AutomationProperties.SetName(button, app.Name);
         var panel = new DockPanel();
-        var iconBox = new Border { Width = 32, Height = 32, Margin = new(0, 0, 12, 0), Background = (System.Windows.Media.Brush)FindResource("TileBrush") };
+        var iconBox = new Border { Width = 32, Height = 32, Margin = new(0, 0, 12, 0), Background = Document.Preferences.ColoredTiles ? (System.Windows.Media.Brush)FindResource("AccentBrush") : Brushes.Transparent };
         var icon = CreateIcon(Tile.FromApp(app), 25);
         icon.Margin = new(0);
         iconBox.Child = icon;
@@ -611,6 +658,7 @@ public partial class MainWindow : Window
         RefreshSearchResults();
         if (!searching) return;
         ContentScroll.ScrollToTop();
+        ContentScroll.ScrollToLeftEnd();
     }
 
     private void RefreshSearchResults()
@@ -694,8 +742,9 @@ public partial class MainWindow : Window
 
     private void PinCustom(Tile tile)
     {
-        if (Document.Groups.Count == 0) Document.Groups.Add(new());
-        Document.Groups[0].Tiles.Add(tile);
+        var group = Document.Groups.FirstOrDefault(g => !g.IsStandalone);
+        if (group == null) Document.Groups.Add(new() { IsStandalone = true, Name = "", Tiles = [tile] });
+        else group.Tiles.Add(tile);
         CommitLayout();
     }
 
@@ -861,7 +910,7 @@ public partial class MainWindow : Window
     private static bool IsAnyMenuOpen() => Mouse.Captured is ContextMenu || Mouse.Captured is System.Windows.Controls.Primitives.MenuBase;
     private void OnClosing(object? sender, CancelEventArgs e) { if (!_exit) { e.Cancel = true; Hide(); } }
     /// <summary>Stops timers and isolated script workers before permanently closing the launcher.</summary>
-    public void Exit() { _exit = true; _clock.Stop(); _nameRefreshTimer?.Stop(); PauseScripts(); Close(); }
+    public void Exit() { _exit = true; _clock.Stop(); _nameRefreshTimer?.Stop(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); Close(); }
 
     /// <summary>Renders only the launcher root to a PNG for reproducible UI verification.</summary>
     public void SaveScreenshot(string path)

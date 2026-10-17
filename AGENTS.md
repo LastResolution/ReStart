@@ -8,4 +8,4 @@
 - Do not commit `artifacts`, `preview-data`, personal app lists, layouts, logs, signing keys, credentials, or research screenshots from Microsoft.
 - Keep `docs/fidelity.md` honest about implemented, partially reproduced, unverified, and unavailable behaviors. Never describe a feature as identical to Windows 10 without evidence.
 - Preserve the shell: no Explorer patching or injected DLLs. Hooks must be reversible, short, and disposed on exit.
-- Update Japanese README and relevant documentation when behavior or release procedures change.
+- Keep primary documentation, README and release notes in English; update the Japanese counterparts when behavior or release procedures change.

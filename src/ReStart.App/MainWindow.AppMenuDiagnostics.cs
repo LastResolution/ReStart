@@ -25,6 +25,8 @@ public partial class MainWindow
             Require((string)pin.Header == L.T(K.PinToStart), "An unpinned app does not offer Pin to Start.");
             pin.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
             Require(AppPinning.IsPinned(fixture.Document, app) && fixture.Document.Groups.Count == 1, "Pin to Start did not create one app pin.");
+            Require(ReferenceEquals(fixture.TileForAppDrag(app.Id), AppPinning.Find(fixture.Document, app)) && fixture.Document.Groups.Count == 1,
+                "Dragging an already pinned app creates a duplicate instead of moving its existing tile.");
             menu = fixture.CreateAppMenu(app);
             pin = menu.Items.OfType<MenuItem>().First();
             Require((string)pin.Header == L.T(K.UnpinTile), "A pinned app still offers duplicate pinning.");
@@ -39,6 +41,9 @@ public partial class MainWindow
             var extras = menu.Items.OfType<MenuItem>().Single(i => i.Header is "ReStart");
             var groups = extras.Items.OfType<MenuItem>().First();
             Require(groups.Items.OfType<MenuItem>().Single().Header is "After", "The app menu retained an obsolete group name.");
+            var temporary = AppPinning.Pin(fixture.Document, app, group);
+            fixture.RemoveTile(temporary.Id);
+            Require(!fixture.Document.Groups.Contains(group), "Unpinning a group's last tile leaves an empty group behind.");
             var more = menu.Items.OfType<MenuItem>().Single(i => (string)i.Header == L.T(K.MenuMore));
             var uninstall = menu.Items.OfType<MenuItem>().Single(i => (string)i.Header == L.T(K.UninstallApp));
             fixture.PopulateAppShellItems(more, uninstall, app, new HashSet<string>(["runas", "opencontaining", "uninstall"], StringComparer.OrdinalIgnoreCase));
@@ -52,7 +57,7 @@ public partial class MainWindow
             Require(commands.Contains("runas") && commands.Contains("properties"), "The canonical command reader did not find standard executable verbs.");
             Require((await AppShellCommands.ReadAsync(new("missing", "Missing fixture", Path.Combine(directory, "missing.exe"), false))).Count == 0,
                 "An unavailable app invented shell capabilities.");
-            return new(3, 2, 2);
+            return new(5, 2, 2);
         }
         finally { fixture.Exit(); Activate(); }
     }

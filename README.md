@@ -1,161 +1,121 @@
 <p align="center"><img src="assets/ReStart.png" width="88" alt="ReStart" /></p>
 
 <h1 align="center">ReStart</h1>
+<p align="center">Full-screen Start, again.</p>
 
-<p align="center">全画面のスタートを、もう一度。</p>
+[English](README.md) | [日本語](README.ja.md)
 
-<p align="center">
-  <a href="https://github.com/LastResolution/ReStart/actions/workflows/ci.yml"><img src="https://github.com/LastResolution/ReStart/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-  <img src="https://img.shields.io/badge/Windows-11%20%2F%2010-0078D7" alt="Windows 11 / 10" />
-  <img src="https://img.shields.io/badge/.NET-10-512BD4" alt=".NET 10" />
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT" /></a>
-</p>
+[![CI](https://github.com/LastResolution/ReStart/actions/workflows/ci.yml/badge.svg)](https://github.com/LastResolution/ReStart/actions/workflows/ci.yml) · Windows 11 / 10 · .NET 10 · [MIT](LICENSE)
 
-ReStart は、Windows 10 の「全画面表示のスタート」を Windows 11 で使うためのデスクトップランチャーです。左の操作バー、画面に広がるタイル、名前付きグループ、全アプリ一覧を、Windows ネイティブの WPF で独立実装しています。
+ReStart recreates the Windows 10 full-screen Start experience as an independent Windows desktop launcher. It provides a left navigation rail, pinned tiles, inline tile folders, app search and an expandable all-apps list.
 
-**現在は v0.4 の開発・検証段階です。Windows 10 の内部実装を移植したものではなく、完全互換を達成したという意味ではありません。** 調査した動作、実装状況、既知の差分は [再現仕様](docs/fidelity.md) で管理します。
+**v0.5 is a private development prerelease. Full Windows 10 compatibility has not been achieved or verified.** See [the behavior audit](docs/behavior-audit.md) and [fidelity and limitations](docs/fidelity.md) for the distinction between implementation, automated verification and physical-device testing.
 
-![ReStart のピン留めタイル画面](docs/images/start.png)
+![Pinned tiles](docs/images/start.png)
 
-画面はデモ用アプリ名を使った ReStart のプレビューです。通常起動では、この PC のアプリとアイコンが表示されます。
+These are ReStart screenshots with demonstration data. Normal mode reads this PC's app names and icons. Additional previews show [app columns](docs/images/app-list.png), [app directories](docs/images/app-folders.png), [group placement](docs/images/group-placement.png) and [inline folders](docs/images/inline-folder.png).
 
-[全アプリ一覧のプレビュー](docs/images/app-list.png)は、架空のアプリを使った横幅1920 DIPの配置検証です。
-[グループの独立配置](docs/images/group-placement.png)と[フォルダーの行内展開](docs/images/inline-folder.png)も、架空データで検証したReStartの画面です。
-[全アプリのフォルダー表示](docs/images/app-folders.png)では、OSのスタートメニュー階層を保った開閉を再現しています。
+## Features
 
-## できること
+- Full-screen tiles within the monitor's working area, keeping the taskbar available.
+- Open with a bare Windows key, `Ctrl+Alt+Space` or the tray icon. Reopening returns to the pinned home view.
+- Four tile sizes; saved cells, content-sized groups and independent tiles. Empty-board drops detach tiles without group headers. Groups move on half-cell horizontal anchors; wide boards scroll horizontally, including Shift+wheel.
+- Inline group naming with double-click / Enter / F2. Folder creation by hovering one tile over another for about one second; contents expand between tile rows.
+- Group collision previews show displaced groups. Small-only groups avoid an artificial medium-tile minimum height, and explicit collision bounds exclude trailing spacing.
+- OS-provided app names, icons and Start-menu directories. Closed directories remain searchable. Stable AUMIDs and link targets/arguments distinguish same-named shortcuts.
+- Type immediately to search, including before catalog loading completes. Pending queries refresh automatically. Search normalizes width, case and kana.
+- Pin / unpin apps and display supported shell commands under More. Extra layout operations are under ReStart.
+- English / Japanese / system language, dark / light / system theme and high contrast.
+- Uniform translucent modern tiles, optional dark Start accent surfaces and a shared classic accent. Individual tile colors and display names are available under right-click → ReStart; colors can be reset to the theme.
+- Custom JavaScript live tiles with a separate worker, examples and a [development guide](docs/javascript-tiles.md).
+- Single instance per user/session, optional sign-in startup, atomic settings, durable migration backups and layout import/export.
+- In-app version/build information, license texts, migration information and authenticated private-release checks.
 
-- タスクバーを残した全画面表示。マウスポインターのあるモニターに開きます。
-- Windows キー単押し、`Ctrl+Alt+Space`、通知領域のアイコンで表示・非表示。
-- 左のバーでピン留めタイルと「すべてのアプリ」を切り替え。開き直すとタイル画面の先頭へ戻ります。
-- 全アプリ一覧の列数・列幅を画面幅に合わせ、右側の表示領域まで使います。
-- スタートメニューのフォルダーを行内で開閉。閉じたフォルダーのアプリも検索できます。同名アプリはアプリID・起動先・引数で識別します。
-- インストール済みの Win32 / Store アプリとスタートメニューのショートカットを列挙し、実際のアプリを起動。
-- 小・中・横長・大の4サイズ。グループの列と縦位置、タイルの空きセルを保存し、ドラッグで配置。
-- 見出しをダブルクリックして名前を直接編集。空き領域へのタイルドロップでグループを作成。
-- タイルを約1秒重ねてフォルダーを作り、タイル行の下に内容を展開。名前の直接編集、追加・取り出し、ピン留め・解除。
-- 入力してアプリを検索。大文字・小文字、全角英数、ひらがな・カタカナの差を吸収。
-- 起動直後の読み込み中に入力した検索語も保持し、アプリ一覧が届いた時点で結果を更新します。
-- ファイル、フォルダー、Web サイトをピン留め。
-- ローカルで更新する時計・日付タイル。
-- 自分でJavaScriptを書くライブタイル。作成・インポート・編集、時計 / カウントダウンのサンプル。[開発ガイド](docs/javascript-tiles.md)を参照。
-- 日本語 / English / システム言語に対応。設定の保存後すぐに切り替わり、アプリ名や自分で付けた名前は保持します。
-- ダーク / ライト / システムテーマ、色付きタイル、壁紙背景、タイル倍率、グループ幅の変更。
-- レイアウトの自動保存、バックアップ、JSON のインポート・エクスポート。
-- ドキュメント、ピクチャ、アカウント設定、ロック、電源メニュー。
-- サインイン時の自動起動は「設定 → 起動と操作」から選択。画面を開かず通知領域に常駐します。
-- 通常起動はユーザー・ログオンセッションごとに1つ。別の場所の実行ファイルを起動しても既存の画面を開きます。プレビューは独立した検証モードです。
+Legacy UWP tile notifications, the full Windows Search index, Cortana, Jump Lists and usage-based recommendations remain outside the implemented scope. Native taskbar Start-button interception is experimental and depends on Explorer's implementation.
 
-旧 UWP のライブ通知や Cortana、Windows Search 全体は含みません。タスクバーのスタートボタン捕捉は Windows の構成に依存する試験機能です。通常は Windows キーまたは `Ctrl+Alt+Space` を使います。
+## Install and run
 
-## 使い始める
+1. Download a ZIP from [Releases](https://github.com/LastResolution/ReStart/releases). Repository access is required while it is private.
+2. Choose `ReStart-win-x64.zip` for x64 or `ReStart-win-arm64.zip` for ARM64.
+3. Exit any running ReStart from its tray menu. Extract the entire ZIP, retaining `TileHost`, `Examples`, `third-party` and the notices.
+4. Run `ReStart.exe`. No separate .NET installation or administrator permission is required for normal operation.
+5. Open Settings from the gear icon. If you moved the installation and use sign-in startup, save that setting again to update the registered path.
 
-1. [Releases](https://github.com/LastResolution/ReStart/releases) の Windows 用 ZIP をダウンロードします。非公開リポジトリのためアクセス権が必要です。
-2. `ReStart-win-x64.zip` を保存したいフォルダーに展開します。ARM PC では `win-arm64` を選んでください。
-3. `ReStart.exe` を起動します。管理者権限や .NET の別途インストールは不要です。
-4. Windows キーを単押しすると ReStart が開きます。設定は左下の歯車です。
+Packages are unsigned. Windows 11 x64 is the hardware verification target; Windows 10 22H2, ARM64 hardware, mixed DPI and multiple-monitor combinations require further testing.
 
-ZIP 配布は未署名です。組織の実行ポリシーに従ってください。Windows 11 x64 が実機検証対象です。Windows 10 22H2 と ARM64 は対応ビルド対象ですが、実機検証は別途必要です。
+## Controls
 
-初回はアプリの登録情報を読み取ります。アイコンはバックグラウンドで取得します。既存の Windows スタートや Explorer のファイルを書き換えることはありません。ReStart 終了時にキーの捕捉を解除します。
-
-## 操作
-
-| 操作 | 動作 |
+| Action | Result |
 | --- | --- |
-| Windows キー単押し | 開く / 閉じる。設定で無効化可能 |
-| `Ctrl+Alt+Space` | 開く / 閉じる |
-| `Esc` | 検索やフォルダーを閉じる。もう一度で ReStart を閉じる |
-| 文字入力 / `Ctrl+F` | アプリを検索 |
-| 検索欄で `Enter` | 先頭の結果を起動 |
-| `Tab` / 矢印 / `Enter` | フォーカス移動 / 選択項目の起動 |
-| タイルを右クリック | サイズ、名前、移動先、フォルダー、解除 |
-| タイルをドラッグ | グループ内・グループ間で移動 |
-| タイルを空き領域へドロップ | その位置に新しいグループを作成 |
-| アプリ一覧・検索結果からドラッグ | タイル画面へ切り替えて配置。キャンセルで元の表示へ復帰 |
-| 別のタイルの中央で約1秒保持してドロップ | フォルダーにまとめる |
-| グループ名をダブルクリック / `Enter` / `F2` | その場で名前を編集。`Enter`で確定、`Esc`で取消 |
-| グループ名をドラッグ | グループの列・縦位置を移動。空白も保持 |
-| 背景の空白を右クリック | グループやカスタムタイルを追加 |
-| アプリ一覧を右クリック | スタートにピン留め / 解除。Windowsが提供する「その他」やアンインストール |
-| 右クリック → ReStart | 名前・配置などの追加操作。アプリのピン留め先も選択可能 |
-| 一覧の文字見出しをクリック | 文字を選んで移動 |
-| 一覧のフォルダーをクリック / `Space` | 内容を開閉。`→`で開く、`←`で閉じる |
-| 一覧にフォーカス中の英数字 | 同じ頭文字の表示行へ移動。検索は`Ctrl+F` |
-| 待機中の検索欄で`↓` | 一覧またはタイルへフォーカスを移す |
+| Bare Windows key / `Ctrl+Alt+Space` | Open or close |
+| Type / `Ctrl+F` | Search apps from the home view |
+| `Enter` in search | Launch the first result |
+| `Esc` | Close the current search, folder or overlay, then Start |
+| `Tab` / arrows / `Enter` | Navigate and activate |
+| `↓` in idle search | Enter the app list or tile grid |
+| Click / `Space` on an app directory | Expand or collapse; `→` expands and `←` collapses |
+| Alphanumeric key while an app row is focused | Jump to a visible initial; `Ctrl+F` opens search |
+| Drag a tile | Move within or between groups |
+| Drop into empty space | Detach an independent tile at that position |
+| Hover over a tile center for about one second, then drop | Create a tile folder |
+| Drag a group header | Preview and move the group without changing its tile cells |
+| Double-click a group name / `Enter` / `F2` | Edit inline; `Enter` commits, `Esc` cancels |
+| Right-click an app or tile | Pin/unpin, resize, supported shell commands and extra layout actions |
 
-`Win+E` などは Windows 側に渡します。キーフックとの組み合わせは、IME・常駐アプリ・管理者アプリなど環境ごとの検証が必要です。困ったときは通知領域から終了するか、設定で Windows キーの捕捉を無効にしてください。
+Win+letter shortcuts are forwarded to Windows. Physical Windows-key, taskbar and IME combinations still need device-level verification.
 
-## データと削除
+## Settings, upgrades and updates
 
-設定・レイアウトは `%LOCALAPPDATA%\ReStart\layout.json` に保存します。直前の保存が `layout.json.bak` に残ります。壊れたファイルは保全し、利用可能ならバックアップを読み込みます。将来の形式を古い ReStart で読み込んだ場合は上書きを禁止します。
+Data lives in `%LOCALAPPDATA%\ReStart\layout.json`. The previous save is `layout.json.bak`; invalid files are preserved and future schemas are protected.
 
-v0.3ではグループ位置を保存するschema 2へ移行します。旧schema 1は最初の保存前に `layout.json.schema1-<ID>.bak` へ保全します。v0.2へ戻す場合はReStartを終了し、現在の `layout.json` を別途退避してから、このschema 1バックアップを `layout.json` として戻してください。v0.2は新形式を表示・編集できません。
+v0.5 uses **schema 3**. Schemas 1 and 2 are migrated with their original bytes preserved in `layout.json.schema<version>-<id>.bak` before writing. Same-schema app upgrades also retain a durable backup. Settings → Layout and data shows the recorded source version, schema, date and rollback file. See [migration and rollback](docs/migration.md).
 
-レイアウトにはアプリ名、起動先、ファイルやフォルダーのパスが含まれます。エクスポートする際は共有内容を確認してください。インポートしても自動起動やキーフックの設定は引き継ぎません。
+Settings → About displays the running version/build, settings schema and full license texts. Settings → Updates provides manual and optional startup checks. For private releases, save a fine-grained GitHub token scoped to this repository with **Contents: read**. It is held in Windows Credential Manager, never in layout JSON or exports. Authentication failures and connection errors are distinct from “up to date.” Updates are downloaded and installed manually. See [updates](docs/updates.md).
 
-アンインストーラーは不要です。設定でサインイン時の起動をオフにし、通知領域から ReStart を終了して、展開したフォルダーを削除してください。設定も消す場合は上記のデータフォルダーを削除します。
+No advertising or usage analytics are included. Update checks contact GitHub with the app version and configured authentication; app lists, layouts and usage history are not sent. Launching an app or website follows that application's behavior.
 
-ReStart 自体に広告・解析・自動更新通信はありません。クリックした Web サイトや外部アプリは、それぞれの動作に従います。
+To remove ReStart, disable sign-in startup, exit the tray app and delete the extracted installation. Remove the saved release token in Settings first if desired. Delete the local data folder only if you also want to remove settings and custom tiles.
 
-## ソースから開発する
+## Build Release locally
 
-必要なものは Windows と [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) です。SDK は `global.json` に固定し、プレビュー版を使いません。JavaScript 実行用の別プロセスに Jint を使用します。テストには xUnit を使います。
+Use Windows and the stable [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) selected by `global.json`. Exit the app if its output files are in use.
 
-```powershell
+~~~powershell
 git clone https://github.com/LastResolution/ReStart.git
 cd ReStart
-dotnet restore ReStart.slnx
+dotnet restore ReStart.slnx --locked-mode
 dotnet build ReStart.slnx -c Release --no-restore
 dotnet test ReStart.slnx -c Release --no-build
-dotnet run --project src/ReStart.App -c Release
-```
+.\src\ReStart.App\bin\Release\net10.0-windows\ReStart.exe
+~~~
 
-常駐フックを有効にせず、デモ用データで UI を確認するには:
+This is a framework-dependent developer build. Use isolated preview mode to avoid hooks, real settings, startup registration, update requests and credential changes:
 
-```powershell
+~~~powershell
 dotnet run --project src/ReStart.App -c Release -- --preview
-```
-
-表示・シェル列挙・アイコン取得を検証して PNG と結果 JSON を保存するには:
-
-```powershell
 ./scripts/smoke.ps1
-```
+~~~
 
-配布用 ZIP と SHA-256 を作るには:
+Create self-contained portable packages and SHA-256 files with:
 
-```powershell
+~~~powershell
 ./scripts/package.ps1 -Runtime win-x64
 # ./scripts/package.ps1 -Runtime win-arm64
-```
+~~~
 
-通常のReleaseビルドと起動は次のとおりです。出力先の実行ファイルを使用中の場合は、通知領域からReStartを終了してからビルドしてください。
+Output: `artifacts/packages/ReStart-win-x64.zip` or `ReStart-win-arm64.zip`. Always distribute and extract the entire ZIP. Generated artifacts and preview data are ignored by Git.
 
-```powershell
-dotnet build ReStart.slnx -c Release
-.\src\ReStart.App\bin\Release\net10.0-windows\ReStart.exe
-```
+## Development and documentation
 
-このビルドは開発PCの.NETランタイムを使用します。配布用の `package.ps1` はランタイムを同梱し、`artifacts/packages/ReStart-win-x64.zip` または `ReStart-win-arm64.zip` を出力します。ZIP全体を展開し、`TileHost`・`Examples` も一緒に置いてください。
+Work on short feature/fix branches, commit cohesive changes, open a PR, require all Windows CI/package checks to pass, then squash merge and delete the branch. Release tags come from main. The repository remains private unless explicitly changed.
 
-生成物は `artifacts/` に作られ、Git の対象外です。プレビューのデータも通常の設定とは分離されます。
+- [Contributing](CONTRIBUTING.md) · [Architecture](docs/architecture.md) · [API contracts](docs/api-contracts.md)
+- [Testing](docs/testing.md) · [Validation record](docs/validation.md) · [Releasing](docs/releasing.md)
+- [Research](docs/research.md) · [Fidelity](docs/fidelity.md) · [Changelog](CHANGELOG.md)
+- [English release notes](docs/release-notes.md) · [日本語リリースノート](docs/ja/release-notes.md)
 
-## リポジトリの運用
+English is the primary documentation language; Japanese counterparts are linked from each document. UI strings use typed resource keys and both language catalogs. Public/protected API comments are checked at build time.
 
-- `main` を配布可能な基準にし、`feat/*`・`fix/*`・`docs/*` の短いブランチで作業します。
-- 変更理由ごとにコミットし、Pull Request に動作・検証・制限を記載します。
-- Windows CI でビルドとテストを実行してから、Squash merge で `main` に取り込みます。
-- `v*` タグで x64 / ARM64 の配布物とチェックサムを作成します。0.x はプレリリースです。
-- Actions の権限を絞り、外部 Actions はコミット SHA に固定します。
-- Dependabot が NuGet と GitHub Actions の更新を提案します。
+## License and acknowledgments
 
-詳しくは [開発への参加](CONTRIBUTING.md)、[アーキテクチャ](docs/architecture.md)、[検証方法](docs/testing.md)、[リリース手順](docs/releasing.md) を参照してください。
-
-バージョンごとの変更は [CHANGELOG](CHANGELOG.md)、実施済みの確認は [検証記録](docs/validation.md) にまとめています。
-
-## 参考とライセンス
-
-参考にした Microsoft の一次資料は [調査記録](docs/research.md) にまとめています。Microsoft のバイナリ、旧 Start のコードや画像は同梱していません。Windows および各アプリの名称・アイコンは各権利者に帰属します。ReStart は Microsoft とは独立したプロジェクトです。
-
-ReStart のコードは [MIT License](LICENSE) です。
+ReStart is licensed under the [MIT License](LICENSE). Dependency and .NET redistribution notices are included in packages and available in-app. Windows and application names/icons belong to their respective owners. No Microsoft Start binaries, source implementation or research screenshots are redistributed. ReStart is independent of Microsoft.

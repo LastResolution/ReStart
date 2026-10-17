@@ -22,6 +22,6 @@ public sealed record FolderExpansion(Tile Folder, int Row, int ChildRows, IReadO
             row = crossing.Max(p => p.Row + p.Height);
         }
         var children = TileLayout.Pack(folder.Tile.Children, columns);
-        return new(folder.Tile, row, Math.Max(2, children.Max(p => p.Row + p.Height)), children);
+        return new(folder.Tile, row, Math.Max(1, children.Max(p => p.Row + p.Height)), children);
     }
 }

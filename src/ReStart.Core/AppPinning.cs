@@ -11,8 +11,9 @@ public static class AppPinning
     {
         if (destination != null && !document.Groups.Contains(destination)) throw new ArgumentException("Unknown destination group.", nameof(destination));
         if (Find(document, app) is { } existing) return existing;
-        destination ??= document.Groups.FirstOrDefault();
-        if (destination == null) document.Groups.Add(destination = new() { Name = "" });
+        if (destination?.IsStandalone == true) throw new ArgumentException("An independent tile is not a destination group.", nameof(destination));
+        destination ??= document.Groups.FirstOrDefault(g => !g.IsStandalone);
+        if (destination == null) document.Groups.Add(destination = new() { Name = "", IsStandalone = true });
         var tile = Tile.FromApp(app);
         destination.Tiles.Add(tile);
         return tile;
@@ -40,7 +41,8 @@ public static class AppPinning
         return removed;
     }
 
-    private static Tile? Find(LayoutDocument document, AppEntry app) => document.Groups.SelectMany(g => g.Tiles)
+    /// <summary>Finds an existing root or folder-child pin without moving it or changing the document.</summary>
+    public static Tile? Find(LayoutDocument document, AppEntry app) => document.Groups.SelectMany(g => g.Tiles)
         .SelectMany(t => new[] { t }.Concat(t.Children)).FirstOrDefault(t => Matches(t, app));
     private static bool Matches(Tile tile, AppEntry app) => !tile.IsFolder && tile.Widget.Length == 0
         && app.Id.Length > 0 && string.Equals(tile.AppId, app.Id, StringComparison.OrdinalIgnoreCase);

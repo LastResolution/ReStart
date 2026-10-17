@@ -1,9 +1,17 @@
-# セキュリティに関する報告
+# Security policy
 
-現在の保守対象は、最新の 0.1.x 開発版です。
+[日本語](SECURITY.ja.md)
 
-脆弱性の可能性がある場合は、リポジトリの **Security → Report a vulnerability** が利用できれば非公開報告を使ってください。利用できない場合は、再現コードや個人情報を公開せず、所有者に連絡方法を確認してください。通常の UI 不具合は Issues で報告できます。
+The latest 0.x development release is the supported line. Packages are currently unsigned.
 
-レイアウト JSON には実行ファイル・ショートカット・URI の起動先が含まれます。信頼できないレイアウトはインポートしないでください。インポートしただけではタイルの起動先を実行せず、キー捕捉や自動起動の設定も取り込みません。
+Use Security → Report a vulnerability privately when available. If it is unavailable, ask the repository owner for a private contact route before posting sensitive reproduction details. Ordinary UI bugs belong in Issues.
 
-ReStart は管理者権限を要求せず、通信・広告・利用状況の送信を実装していません。エラーが生じた場合のログはユーザーのローカルデータフォルダーに保存します。配布物は現在未署名です。
+Layouts contain application names, paths and launch targets. Import only layouts you trust. Importing does not launch their targets or adopt startup, hook or credential settings.
+
+Normal operation does not require elevation. Supported shell commands such as Run as administrator and Uninstall execute only after explicit user selection; preview mode disables them.
+
+Update checks contact the fixed GitHub repository API. A private-release token is stored under the current Windows user in Credential Manager, not in JSON, exports or logs. Use a fine-grained token with Contents: read for this repository. Authentication headers are request-scoped; update HTTP redirects are disabled. There is no automatic executable replacement, advertising or usage analytics.
+
+JavaScript receives JSON only and runs in separate bounded workers. CLR, Node, filesystem, network, DOM and shell-launch APIs are not exposed. These controls improve isolation and responsiveness; they are not a lowered-privilege OS sandbox. See the [tile guide](docs/javascript-tiles.md).
+
+Local error logs may contain paths. Review logs and screenshots before sharing. Do not commit tokens, credentials, signing keys or personal data.

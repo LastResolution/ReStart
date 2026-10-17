@@ -1,39 +1,45 @@
-# リリースと GitHub 運用
+# Releases and GitHub workflow
 
-## ブランチと PR
+[日本語](ja/releasing.md)
 
-日常の変更は短い機能ブランチでコミットし、PR の `Windows build and tests` が成功してから Squash merge します。コミットの先頭は `feat:` / `fix:` / `docs:` / `test:` / `chore:` を目安にします。マージ後はブランチを削除します。
+Use short feat/fix/docs/chore branches and cohesive commits. Open a PR, wait for every required CI/package check, squash merge and delete the branch. Keep the repository private. Primary docs/release notes are English; Japanese counterparts accompany them.
 
-リポジトリは非公開です。可視性の変更は別途ユーザーの明示指示が必要です。ブランチ保護・Rulesets は GitHub のプランに依存します。設定できない場合も PR と CI の手順は省略しません。
+## Main protection
 
-2026-10-17 時点では、非公開リポジトリの main 保護設定 API がプラン制限の HTTP 403 を返しました。したがって保護はサーバー上で強制されていません。非公開を優先し、CI を確認して PR 経由でマージする運用を行います。プラン変更後に required status check `Windows build and tests`、PR 必須、force push 禁止、会話解決必須を設定できます。
+GitHub rejected private main protection on October 18, 2026 with HTTP 403: “Upgrade to GitHub Pro or make this repository public to enable this feature.” Main is currently **not server-protected**. Keeping PR discipline does not provide protection against force pushes or deletion.
 
-## バージョン
+The intended configuration is committed in `.github/main-protection.json`. After upgrading to a qualifying plan, run:
 
-`Directory.Build.props` の Version を変更し、必要な README、`portable-README.txt`、`release-notes.md`、検証記録を更新する PR を作ります。マージ済みの `main` に、バージョンと一致するタグを付けます。
+~~~powershell
+./scripts/protect-main.ps1
+~~~
 
-```powershell
+It requires PRs, resolved conversations, linear history and strict checks for Windows build/tests and both clean portable jobs, disallows force pushes/deletion, and enforces rules for admins. Reviewer approval count is zero for this single-maintainer repository. The script verifies the returned protection; a plan error must not be treated as success. See [GitHub's requirements](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets). Do not change visibility or purchase a plan without authorization.
+
+## Version and tag
+
+Update Directory.Build.props, both release notes, changelogs, current guidance and validation in a PR. Portable readme versions are substituted from the project version at packaging time.
+
+~~~powershell
 git switch main
 git pull --ff-only
-git tag -a v0.4.1 -m "ReStart v0.4.1"
-git push origin v0.4.1
+git tag -a v0.5.0 -m "ReStart v0.5.0"
+git push origin v0.5.0
 gh run list --workflow release.yml
-```
+~~~
 
-`Release` ワークフローがタグとバージョン、main の祖先であることを確認し、ビルド・テスト後に x64 / ARM64 の自己完結型 ZIP と SHA-256 を作ります。両方の成功後にプレリリースを作成します。現行のワークフローは 0.x 用です。安定版を公開する際はプレリリース指定を見直します。
+The workflow verifies matching tag/project/release-note versions and main ancestry, then builds/tests. Separate clean Windows jobs create self-contained x64 and ARM64 ZIPs with SHA-256 sidecars. Publication waits for both. Current 0.x releases are private prereleases; stable publication requires a deliberate policy change.
 
-通常のPRでも、パッケージ作成をx64 / ARM64それぞれの新規チェックアウトで先頭に実行します。事前のソリューション復元で、配布スクリプトの復元漏れを隠さないためです。
+Each ordinary PR also runs packaging before any solution restore/build in fresh jobs, preventing missing restore steps from being masked. Actions are pinned to commit SHAs. Ordinary CI has contents:read; only release publication has contents:write and actions:read.
 
-失敗した場合は原因を直し、既存タグを指す `workflow_dispatch` で再実行できます。公開済みタグのすり替えは行いません。修正コードを含める場合は新しいバージョンのタグを作成します。
+## Payload and verification
 
-## 配布前の確認
+Stage from a strict file list in a fresh directory: main EXE, worker EXE, two example packages, six third-party/runtime notice files, LICENSE and English/Japanese readmes (15 files). Include notices from the exact resolved .NET runtime packs. Never include preview data, personal layouts/catalogs, credentials or logs.
 
-- CI と [検証](testing.md) を確認し、未検証を成功と記載しない。
-- 実際の app list、ユーザー名、個人レイアウト、ログが含まれていないことを確認する。
-- ZIPは新しいステージングフォルダーに作り、ReStart.exe、TileHost/ReStart.TileHost.exe、Examples、third-party、LICENSE、README.txtだけを収める。ビルドで解決した.NET Runtime / Windows Desktopのライセンスと通知もthird-partyへ同梱する。preview-dataや個人レイアウトを含めない。
-- Releases の可視性はリポジトリに従う。非公開のまま配布する。
-- 配布物の署名は未設定。署名鍵をリポジトリへ追加しない。
+Download the actual published assets. Verify both SHA-256 files, PE architecture, file/product versions and the expected payload. Run packaged x64 smoke, critical native fixtures, duplicate-launch and JS examples; ARM64 execution still needs hardware. Read [testing](testing.md) and report gaps honestly.
 
-## CI の権限
+Packages are unsigned. Never commit signing keys. Existing published tags are immutable. A failed workflow may be rerun against the same tag only if its code has not changed; code fixes require a new version/tag. The failed v0.2.0 tag was retained, with the fix released as v0.2.1.
 
-通常の CI は contents:read。リリースの publish ジョブだけ contents:write と actions:read を使います。外部 Actions を SHA に固定し、Dependabot で更新を管理します。シークレットをログへ出さないでください。
+## Updating installations
+
+Exit the old process, extract the complete ZIP, and restart. Local data remains separate. Schema/app upgrades preserve durable rollback copies before writing; see [migration](migration.md). If the executable path changes, re-save enabled startup registration. The in-app checker opens the release page; download/verification/installation are manual.

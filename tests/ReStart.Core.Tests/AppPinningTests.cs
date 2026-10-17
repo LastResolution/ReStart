@@ -24,6 +24,7 @@ public sealed class AppPinningTests
         var folder = new Tile { Label = "Folder", Children = [pin] };
         var document = new LayoutDocument { Groups = [new() { Tiles = [folder] }, new() { Name = "Destination" }] };
         Assert.Same(pin, AppPinning.Pin(document, App with { Id = "APP-ID" }, document.Groups[1]));
+        Assert.Same(pin, AppPinning.Find(document, App));
         Assert.Empty(document.Groups[1].Tiles);
         Assert.True(AppPinning.IsPinned(document, App));
         Assert.Equal(6, pin.Row);

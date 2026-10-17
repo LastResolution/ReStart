@@ -9,11 +9,11 @@ namespace ReStart.App;
 public partial class MainWindow
 {
     private readonly TileFolderHover _folderHover = new();
-    private sealed record DragViewState(bool AllApps, bool SearchRequested, string Query, double ScrollOffset);
+    private sealed record DragViewState(bool AllApps, bool SearchRequested, string Query, double ScrollOffset, double HorizontalOffset);
 
     private DragViewState PrepareDragView(string format)
     {
-        var previous = new DragViewState(_allApps, _searchRequested, SearchBox.Text, ContentScroll.VerticalOffset);
+        var previous = new DragViewState(_allApps, _searchRequested, SearchBox.Text, ContentScroll.VerticalOffset, ContentScroll.HorizontalOffset);
         if (format == "ReStart.App") { ShowPinned(this, new()); UpdateLayout(); }
         return previous;
     }
@@ -25,6 +25,7 @@ public partial class MainWindow
         SearchBox.Text = previous.Query;
         SearchChanged(SearchBox, new(TextBox.TextChangedEvent, UndoAction.None));
         ContentScroll.ScrollToVerticalOffset(previous.ScrollOffset);
+        ContentScroll.ScrollToHorizontalOffset(previous.HorizontalOffset);
     }
 
     private void ExtendDragSpace()
@@ -34,7 +35,7 @@ public partial class MainWindow
         GroupsPanel.InvalidateMeasure();
     }
 
-    private Tile? FolderHoverTarget(Tile source, TilePanel panel, Point point, string sourceId)
+    private Tile? FolderHoverTarget(Tile source, TilePanel panel, Point point, string sourceId, long? timestamp = null)
     {
         var button = Ancestor<Button>(panel.InputHitTest(point) as DependencyObject);
         var target = button?.Tag as Tile;
@@ -45,7 +46,7 @@ public partial class MainWindow
             allowed = inside.X >= button.ActualWidth * 0.2 && inside.X <= button.ActualWidth * 0.8
                 && inside.Y >= button.ActualHeight * 0.2 && inside.Y <= button.ActualHeight * 0.8;
         }
-        return _folderHover.Update(sourceId, allowed ? target!.Id : null, Environment.TickCount64) ? target : null;
+        return _folderHover.Update(sourceId, allowed ? target!.Id : null, timestamp ?? Environment.TickCount64) ? target : null;
     }
     private (TileGroup Group, TilePanel Panel)? GroupAt(Point point)
     {
@@ -99,16 +100,13 @@ public partial class MainWindow
                 _dropAdorner!.FolderTarget = true;
                 _dropAdorner.InvalidateVisual();
             }
+            else if (target.Group.IsStandalone) PreviewStandalone(tile, point);
             else ShowDropPreview(target.Panel, tile, column, row);
         }
         else
         {
             _folderHover.Reset();
-            var (column, row) = GroupLayout.Snap(point.X - _dragOffset.X, point.Y - _dragOffset.Y - GroupLayout.HeaderHeight,
-                GroupsPanel.Columns, Document.Preferences.Columns, Cell);
-            var (width, height) = TileLayout.Dimensions(tile.Size);
-            ShowBoardPreview(new(column * (Document.Preferences.Columns * Cell + GroupLayout.Gap), row * Cell / 2,
-                Document.Preferences.Columns * Cell, GroupLayout.HeaderHeight + height * Cell));
+            PreviewStandalone(tile, point);
         }
     }
 
@@ -148,23 +146,22 @@ public partial class MainWindow
             }
             else DropInGroup(target.Group, target.Panel, e);
         }
-        else if (DragTile(e) is Tile tile) MoveTileToNewGroup(tile, point);
+        else if (DragTile(e) is Tile tile) MoveTileToStandalone(tile, point);
     }
 
     private void MoveGroupOnBoard(TileGroup group, Point point)
     {
-        var (column, row) = GroupLayout.Snap(point.X - _dragOffset.X, point.Y - _dragOffset.Y, GroupsPanel.Columns, Document.Preferences.Columns, Cell);
-        GroupLayout.Move(Document, group, column, row, GroupsPanel.Columns, Cell);
+        var (column, row, x) = BoardAnchor(point);
+        GroupLayout.Move(Document, group, column, row, GroupsPanel.Columns, Cell, x);
         CommitLayout();
     }
 
     private void PreviewGroupOnBoard(TileGroup group, Point point)
     {
-        var (column, row) = GroupLayout.Snap(point.X - _dragOffset.X, point.Y - _dragOffset.Y, GroupsPanel.Columns, Document.Preferences.Columns, Cell);
-        var placements = GroupLayout.PreviewMove(Document, group, column, row, GroupsPanel.Columns, Cell);
+        var (column, row, x) = BoardAnchor(point);
+        var placements = GroupLayout.PreviewMove(Document, group, column, row, GroupsPanel.Columns, Cell, x);
         var target = placements.Single(p => p.Group == group);
-        ShowBoardPreview(new(target.Column * (Document.Preferences.Columns * Cell + GroupLayout.Gap), target.Row * Cell / 2,
-            Document.Preferences.Columns * Cell, target.Height));
+        ShowBoardPreview(new(target.Left, target.Row * Cell / 2, target.Width, target.Height));
         GroupsPanel.DragPlacements = placements;
         GroupsPanel.InvalidateMeasure();
     }
@@ -178,21 +175,27 @@ public partial class MainWindow
         CommitLayout();
     }
 
-    private void MoveTileToNewGroup(Tile tile, Point point)
+    private (int Column, int Row, double X) BoardAnchor(Point point)
     {
-        var source = Document.Groups.FirstOrDefault(g => g.Tiles.Any(t => t == tile || t.Children.Contains(tile)));
-        var (column, row) = GroupLayout.Snap(point.X - _dragOffset.X, point.Y - _dragOffset.Y - GroupLayout.HeaderHeight,
-            GroupsPanel.Columns, Document.Preferences.Columns, Cell);
-        var group = new TileGroup { Name = "", Column = column, Row = row };
-        // Freeze the existing view before adding a new automatically measured group.
-        foreach (var p in GroupLayout.Pack(Document.Groups, GroupsPanel.Columns, Document.Preferences.Columns, Cell))
-        { p.Group.Column = p.Column; p.Group.Row = p.Row; }
-        Document.Groups.Add(group);
-        var within = TileLayout.Snap(point.X - _dragOffset.X - column * (Document.Preferences.Columns * Cell + GroupLayout.Gap), 0,
-            Cell, tile.Size, Document.Preferences.Columns);
-        LayoutEditor.MoveToCell(Document, tile, group, within.Column, 0);
-        if (source?.Tiles.Count == 0) Document.Groups.Remove(source);
-        GroupLayout.Move(Document, group, column, row, GroupsPanel.Columns, Cell);
+        var pitch = Document.Preferences.Columns * Cell + GroupLayout.Gap;
+        var x = Math.Clamp(Math.Round((point.X - _dragOffset.X) / Cell * 2, MidpointRounding.AwayFromZero) / 2, 0, 10000);
+        var column = Math.Clamp((int)Math.Floor(x * Cell / pitch), 0, 63);
+        var row = Math.Clamp((int)Math.Round((point.Y - _dragOffset.Y) / (Cell / 2), MidpointRounding.AwayFromZero), 0, 20000);
+        return (column, row, x);
+    }
+
+    private void PreviewStandalone(Tile tile, Point point)
+    {
+        var (_, row, x) = BoardAnchor(point);
+        var (width, height) = TileLayout.Dimensions(tile.Size);
+        ShowBoardPreview(new(x * Cell,
+            row * Cell / 2, width * Cell, height * Cell));
+    }
+
+    private void MoveTileToStandalone(Tile tile, Point point)
+    {
+        var (column, row, x) = BoardAnchor(point);
+        LayoutEditor.Detach(Document, tile, column, row, 0, GroupsPanel.Columns, Cell, x);
         CommitLayout();
     }
 }

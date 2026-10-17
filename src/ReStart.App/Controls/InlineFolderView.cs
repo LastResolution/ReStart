@@ -11,8 +11,8 @@ internal sealed class InlineFolderView : Border
     internal InlineFolderView(GroupHeader header, TilePanel tiles)
     {
         Tiles = tiles;
-        BorderThickness = new(0, 1, 0, 1);
-        Padding = new(0, 5, 0, 5);
+        BorderThickness = new(0, 0, 0, 1);
+        Padding = new(0, 5, 0, 6);
         SetResourceReference(BorderBrushProperty, "BorderBrush");
         var body = new StackPanel();
         body.Children.Add(header);

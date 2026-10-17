@@ -97,7 +97,7 @@ public partial class MainWindow
     private void ApplyScriptFrame(StackPanel body, Button button, Tile tile, ScriptTileFrame frame)
     {
         body.Children.Clear();
-        if (!SystemParameters.HighContrast)
+        if (!SystemParameters.HighContrast && !tile.UseCustomColor)
         {
             button.Background = frame.Background.Length == 0 ? (System.Windows.Media.Brush)FindResource("AccentBrush") : Brush(frame.Background, Document.Preferences.Accent);
             button.Foreground = frame.Foreground.Length == 0 ? Brushes.White : Brush(frame.Foreground, "#FFFFFF");

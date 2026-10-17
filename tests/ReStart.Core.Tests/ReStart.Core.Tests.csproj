@@ -22,6 +22,7 @@
     <ProjectReference Include="..\..\src\ReStart.Core\ReStart.Core.csproj" />
     <ProjectReference Include="..\..\src\ReStart.TileHost\ReStart.TileHost.csproj" />
     <Compile Include="..\..\src\ReStart.App\Services\StartupRegistration.cs" Link="StartupRegistration.cs" />
+    <Compile Include="..\..\src\ReStart.App\Services\ReleaseCredentialStore.cs" Link="ReleaseCredentialStore.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\ScriptTileSession.cs" Link="ScriptTileSession.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\ScriptTilePackages.cs" Link="ScriptTilePackages.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\WorkerJob.cs" Link="WorkerJob.cs" />

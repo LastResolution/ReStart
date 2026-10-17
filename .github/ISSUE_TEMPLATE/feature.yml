@@ -1,15 +1,15 @@
-name: 機能・再現精度の改善
-description: Windows 10 との差分や改善案を記録します
+name: Feature or fidelity improvement
+description: Describe a Windows 10 behavior or an explicit ReStart extension. English or Japanese is welcome.
 labels: [enhancement]
 body:
   - type: textarea
     id: proposal
     attributes:
-      label: 再現したい動作
-      description: Windows 10 のバージョン、操作、期待する結果を記載してください。
+      label: Desired behavior
+      description: Include the Windows 10 version, action and expected result, or identify this as an extension.
     validations:
       required: true
   - type: textarea
     id: sources
     attributes:
-      label: 参考資料・確認方法
+      label: References and verification method

@@ -37,10 +37,10 @@
             </Grid>
           </StackPanel>
         </Grid>
-        <ScrollViewer x:Name="ContentScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,10,0,24">
+        <ScrollViewer x:Name="ContentScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" PanningMode="Both">
           <Grid>
             <controls:GroupBoardPanel x:Name="GroupsPanel" HorizontalAlignment="Stretch" VerticalAlignment="Top" MinHeight="{Binding ViewportHeight, ElementName=ContentScroll}" AllowDrop="True" />
-            <controls:AppListPanel x:Name="AppsPanel" HorizontalAlignment="Stretch" VerticalAlignment="Top" Visibility="Collapsed" />
+            <controls:AppListPanel x:Name="AppsPanel" Width="{Binding ViewportWidth, ElementName=ContentScroll}" HorizontalAlignment="Left" VerticalAlignment="Top" Visibility="Collapsed" />
             <StackPanel x:Name="ResultsPanel" MaxWidth="720" HorizontalAlignment="Left" Visibility="Collapsed" />
           </Grid>
         </ScrollViewer>

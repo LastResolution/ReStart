@@ -32,7 +32,7 @@ public partial class App : Application
             Shutdown(smoke ? 2 : 0); return;
         }
         var data = preview ? Path.Combine(AppContext.BaseDirectory, "preview-data") : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ReStart");
-        var store = new LayoutStore(Path.Combine(data, "layout.json"));
+        var store = new LayoutStore(Path.Combine(data, "layout.json"), AppBuildInfo.Version);
         _window = new MainWindow(store, preview);
         MainWindow = _window;
         _wait = ThreadPool.RegisterWaitForSingleObject(_instance.Activation, (_, _) => Dispatcher.BeginInvoke(() => _window?.Present()), null, Timeout.Infinite, false);
@@ -116,6 +116,7 @@ public partial class App : Application
             AppFolderSmokeResult? appFolders = null;
             FirstInputSmokeResult? firstInput = null;
             AppMenuSmokeResult? appMenus = null;
+            ReleaseInfoSmokeResult? releaseInfo = null;
             string? error = null;
             try
             {
@@ -124,12 +125,13 @@ public partial class App : Application
                 if (args.Contains("--app-tree-test")) appFolders = _window.VerifyAppFolders(path);
                 if (args.Contains("--first-input-test")) firstInput = await _window.VerifyFirstInputAsync(path);
                 if (args.Contains("--app-menu-test")) appMenus = await _window.VerifyAppMenusAsync(path);
+                if (args.Contains("--release-info-test")) releaseInfo = await _window.VerifyReleaseInfoAsync(path);
                 _window.SaveScreenshot(path);
             }
             catch (Exception ex) when (ex is IOException or InvalidOperationException) { success = false; error = ex.Message; }
             try
             {
-                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, catalogFolders = _window.CatalogFolderCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, navigation, placement, appFolders, firstInput, appMenus, error, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
+                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, catalogFolders = _window.CatalogFolderCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, navigation, placement, appFolders, firstInput, appMenus, releaseInfo, error, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
             }
             catch (IOException) { success = false; }
             _window.Exit(); Shutdown(success ? 0 : 1);

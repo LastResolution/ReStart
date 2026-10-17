@@ -60,6 +60,8 @@ public sealed class Tile
     public int? Row { get; set; }
     /// <summary>Gets or sets the optional saved tile color.</summary>
     public string Color { get; set; } = "";
+    /// <summary>Gets or sets whether an explicitly selected tile color overrides the shared theme and script background.</summary>
+    public bool UseCustomColor { get; set; }
     /// <summary>Gets or sets a built-in widget kind; script identifies a local JavaScript package.</summary>
     public string Widget { get; set; } = "";
     /// <summary>Gets or sets an installed package identifier, never an arbitrary source-file path.</summary>
@@ -84,6 +86,10 @@ public sealed class Tile
 /// <summary>Stores root tiles and an optional position on the full-screen group grid.</summary>
 public sealed class TileGroup
 {
+    /// <summary>Gets or sets an absolute horizontal board anchor in logical cells; null uses the legacy group-column anchor.</summary>
+    public double? X { get; set; }
+    /// <summary>Gets or sets whether this entry is one independent tile with no group header or reserved group width.</summary>
+    public bool IsStandalone { get; set; }
     /// <summary>Gets or sets a stable identifier unique within the layout.</summary>
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     /// <summary>Gets or sets a user-owned group label.</summary>
@@ -99,6 +105,10 @@ public sealed class TileGroup
 /// <summary>Stores local UI and integration choices; imported layouts do not replace these settings.</summary>
 public sealed class Preferences
 {
+    /// <summary>Gets or sets whether one read-only update check runs at normal startup.</summary>
+    public bool CheckUpdatesOnStartup { get; set; } = true;
+    /// <summary>Gets or sets whether published prereleases are eligible for update notifications.</summary>
+    public bool IncludePrereleaseUpdates { get; set; } = true;
     /// <summary>Gets or sets ja, en, or system for UI resource selection.</summary>
     public string Language { get; set; } = "system";
     /// <summary>Gets or sets whether a bare Windows-key press toggles ReStart.</summary>
@@ -113,6 +123,8 @@ public sealed class Preferences
     public bool ShowWallpaper { get; set; } = true;
     /// <summary>Gets or sets whether app tiles use classic accent-colored backgrounds.</summary>
     public bool ColoredTiles { get; set; }
+    /// <summary>Gets or sets whether the dark Start surface uses the selected accent color, as in late Windows 10.</summary>
+    public bool ShowAccentOnStart { get; set; }
     /// <summary>Gets or sets whether showing the menu animates when system accessibility settings permit.</summary>
     public bool Animate { get; set; } = true;
     /// <summary>Gets or sets the requested application theme.</summary>
@@ -131,12 +143,16 @@ public sealed class Preferences
 public sealed class LayoutDocument
 {
     /// <summary>Current supported layout schema version.</summary>
-    public const int CurrentVersion = 2;
+    public const int CurrentVersion = 3;
     /// <summary>Current supported layout schema version.</summary>
     public int Version { get; set; } = CurrentVersion;
     /// <summary>Gets the legacy version migrated by normalization; omitted from saved layouts.</summary>
     [System.Text.Json.Serialization.JsonIgnore]
     public int? MigratedFromVersion { get; private set; }
+    /// <summary>Gets or sets the application version that last saved this document; empty denotes a legacy producer.</summary>
+    public string SavedWithAppVersion { get; set; } = "";
+    /// <summary>Gets or sets the last successful application/schema upgrade and its durable backup filename.</summary>
+    public LayoutUpgradeInfo? LastUpgrade { get; set; }
     /// <summary>Gets or sets local UI and shell integration preferences.</summary>
     public Preferences Preferences { get; set; } = new();
     /// <summary>Gets or sets groups in display order.</summary>
@@ -145,10 +161,15 @@ public sealed class LayoutDocument
     /// <summary>Repairs bounded presentation values and duplicate identities; rejects unsupported schemas and nested folders.</summary>
     public void Normalize()
     {
-        if (Version == 1) { MigratedFromVersion = 1; Version = CurrentVersion; }
+        var migrateStandalone = Version is >= 1 and < 3;
+        if (Version is >= 1 and < CurrentVersion) { MigratedFromVersion = Version; Version = CurrentVersion; }
         else if (Version != CurrentVersion)
             throw new UnsupportedLayoutVersionException(Version);
         Preferences ??= new();
+        if (ReleaseVersion.Parse(SavedWithAppVersion) == null) SavedWithAppVersion = "";
+        if (LastUpgrade != null && (LastUpgrade.BackupFile == null || LastUpgrade.FromAppVersion == null || LastUpgrade.ToAppVersion == null
+            || LastUpgrade.BackupFile.Length > 100 || LastUpgrade.BackupFile != Path.GetFileName(LastUpgrade.BackupFile)
+            || LastUpgrade.FromAppVersion.Length > 128 || LastUpgrade.ToAppVersion.Length > 128)) LastUpgrade = null;
         Groups ??= [];
         Preferences.Columns = Preferences.Columns == 8 ? 8 : 6;
         Preferences.TileScale = double.IsFinite(Preferences.TileScale) ? Math.Clamp(Preferences.TileScale, 0.7, 1.5) : 1;
@@ -163,10 +184,20 @@ public sealed class LayoutDocument
                 ids.Add(group.Id);
             }
             group.Name = (group.Name ?? "").Trim();
+            if (group.X.HasValue && (!double.IsFinite(group.X.Value) || group.X is < 0 or > 10000)) group.X = null;
             if (group.Column is < 0 or > 63 || group.Row is < 0 or > 20000 || group.Column.HasValue != group.Row.HasValue)
             { group.Column = null; group.Row = null; }
             group.Tiles ??= [];
             NormalizeTiles(group.Tiles, ids, 0);
+            if (group.IsStandalone && group.Tiles.Count != 1) group.IsStandalone = false;
+            if (migrateStandalone && group.Name.Length == 0 && group.Tiles.Count == 1)
+            {
+                // Earlier versions represented every detached tile as an unnamed group.
+                group.IsStandalone = true;
+                if (group.Row.HasValue) group.Row = Math.Min(20000, group.Row.Value + 2 * (group.Tiles[0].Row ?? 0) +
+                    (int)Math.Round(GroupLayout.HeaderHeight / (52 * Preferences.TileScale / 2)));
+            }
+            if (group.IsStandalone) { group.Name = ""; group.Tiles[0].Row = 0; }
         }
     }
 
@@ -186,6 +217,7 @@ public sealed class LayoutDocument
             tile.Widget ??= "";
             tile.ScriptId ??= "";
             tile.Color ??= "";
+            if (tile.UseCustomColor && (tile.Color.Length != 7 || tile.Color[0] != '#' || !tile.Color.Skip(1).All(Uri.IsHexDigit))) tile.UseCustomColor = false;
             tile.Children ??= [];
             if (!Enum.IsDefined(tile.Size)) tile.Size = TileSize.Medium;
             if (tile.Column is < 0 or > 15 || tile.Row is < 0 or > 200 || tile.Column.HasValue != tile.Row.HasValue)
@@ -196,3 +228,6 @@ public sealed class LayoutDocument
         }
     }
 }
+
+/// <summary>Records a completed local upgrade and the backup needed to restore the prior application or schema.</summary>
+public sealed record LayoutUpgradeInfo(string FromAppVersion, string ToAppVersion, int FromSchema, int ToSchema, DateTimeOffset AtUtc, string BackupFile);

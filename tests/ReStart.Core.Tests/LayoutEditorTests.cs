@@ -12,6 +12,7 @@ public sealed class LayoutEditorTests
         var document = new LayoutDocument { Groups = [a, b] };
         LayoutEditor.Move(document, tile, b);
         Assert.Empty(a.Tiles); Assert.Same(tile, Assert.Single(b.Tiles));
+        Assert.Same(b, Assert.Single(document.Groups));
         LayoutEditor.Move(document, tile, b);
         Assert.Single(b.Tiles);
     }
@@ -58,5 +59,17 @@ public sealed class LayoutEditorTests
         LayoutEditor.MergeFolder(document, child, folder);
         Assert.Same(folder, Assert.Single(group.Tiles));
         Assert.Same(child, Assert.Single(folder.Children));
+    }
+
+    [Fact]
+    public void CrossGroupFolderCreationPrunesOnlyTheNewlyEmptySource()
+    {
+        var source = new Tile(); var target = new Tile();
+        var emptied = new TileGroup { Tiles = [source] }; var destination = new TileGroup { Tiles = [target] };
+        var previouslyEmpty = new TileGroup();
+        var document = new LayoutDocument { Groups = [emptied, destination, previouslyEmpty] };
+        LayoutEditor.MergeFolder(document, source, target);
+        Assert.Equal(new[] { destination, previouslyEmpty }, document.Groups);
+        Assert.Equal(new[] { target, source }, Assert.Single(destination.Tiles).Children);
     }
 }

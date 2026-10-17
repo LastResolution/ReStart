@@ -1,12 +1,12 @@
-## 変更
+## Change
 
-何をきっかけに、どの動作が変わるかを書いてください。
+Describe the trigger, the problem and the resulting behavior for a reviewer without chat context.
 
-## 検証
+## Validation
 
-- [ ] Release ビルド
-- [ ] 関連するコアテスト
-- [ ] UI / シェル連携を変えた場合は Windows 実機で確認
-- [ ] 再現仕様・既知の制限・README を更新
+- [ ] Release build and relevant tests pass
+- [ ] All Windows CI and clean portable checks pass
+- [ ] UI changes have rendered/native verification; physical limits are stated
+- [ ] Fidelity, README and English/Japanese guidance are current
 
-検証した Windows ビルド、DPI、モニター構成と、未検証の範囲を記載してください。
+State Windows build, DPI/monitor setup, evidence and unverified boundaries.

@@ -1,52 +1,77 @@
 # Changelog
 
+[日本語](CHANGELOG.ja.md)
+
+## 0.5.0 — 2026-10-18
+
+- Fix first-character search during cold startup: retain pending input and refresh when the catalog/icons arrive.
+- Add app-level pin/unpin without duplicate folder children and supported canonical shell commands.
+- Preview displaced groups, preserve child cells and remove unnecessary small-group height and trailing collision spacing.
+- Detach independent tiles without headers/extra width. Size groups to content, permit half-cell horizontal placement and scroll wide boards; extend drag runways only at the edge.
+- Add per-tile background palettes/custom RGB colors with a theme reset and readable text; retain local tile renaming under ReStart.
+- Audit Start interactions against primary sources, refine folder expansion lines/selection and verify the actual dwell hit geometry.
+- Detach independent tiles without headers/extra width. Size groups to content, permit half-cell horizontal placement and scroll wide boards; extend drag runways only at the edge.
+- Add per-tile background palettes/custom RGB colors with a theme reset and readable text; retain local tile renaming under ReStart.
+- Audit Start interactions against primary sources, refine folder expansion lines/selection and verify the actual dwell hit geometry.
+- Apply one global classic tile accent and an optional dark Start accent surface with modern translucent tiles.
+- Add in-app build/version, complete license text, migration records and private-release checks with Windows Credential Manager.
+- Introduce schema 3 with durable schema 1/2 and application-upgrade backups and newer-producer protection.
+- Make documentation English-first with Japanese counterparts and bilingual portable instructions.
+- Extend Core, native WPF, clean portable and release verification. Physical input and exact Windows 10 comparison limitations remain documented.
+
+The 0.4.1 cold-start fix was merged during development and is included here; no separate 0.4.1 release was published.
+
+## 0.4.0 — 2026-10-18
+
+- Preserve Start-menu directory structure and localized OS display names.
+- Match AUMIDs and unambiguous link targets/arguments before display-name fallbacks.
+- Add inline app-folder expansion, accessibility state, hidden-leaf search and keyboard initials.
+- Balance populated app columns and preserve header chains.
+- Verify dark/light folder rows and reset folder expansion on reopening.
+
 ## 0.3.0 — 2026-10-18
 
-- グループの並び順だけに依存するWrapPanelを廃止し、独立した列と縦位置・空白を保存する配置へ変更。空き領域へのタイルドロップで新しいグループを作成。
-- グループ名のモーダルな変更を廃止。ダブルクリック / Enter / F2のインライン編集、Enter確定、Esc取消、フォーカスを外して確定に対応。
-- 修飾キー不要の約1秒の重ね合わせでフォルダーを作成。中央オーバーレイを廃止し、タイル行の下へ名前と内容を展開。追加・取り出し・閉じた後の復元を改善。
-- 名前確定時に続けてクリックしたタイルが消えないよう、既存コントロールを保持。
-- 保存形式をschema 2へ更新。schema 1の初回保存前に、循環しない移行用バックアップを保全。
-- 91テスト、配置・行内編集・フォルダーのWPF検証、4サイズの再表示チェックを追加・更新。物理D&Dと本家実機比較は未確認として記録。
+- Replace ordered wrapping with independently saved group columns, rows and gaps.
+- Add inline group naming, unnamed groups and placement into empty board space.
+- Create folders after about one second of hovering; expand content between tile rows.
+- Preserve click targets when committing names and improve folder contents/coordinates.
+- Introduce schema 2 and durable schema 1 migration backups.
+- Add placement/name/folder fixtures and record the physical-drag helper limitation.
 
 ## 0.2.2 — 2026-10-18
 
-- 全アプリ一覧の4列上限と固定幅を廃止し、列数・列幅を画面に合わせて右側の表示領域まで使用。文字見出しも左揃えに修正。
-- 全アプリや検索を表示して閉じた後、開き直すとタイル画面の先頭へ戻るよう修正。検索語・文字ジャンプ・フォルダー・展開メニューも解除。
-- 800 / 1280 / 1920 / 2560 DIPのWPF描画と8回のHide / Presentを検証する回帰チェックをCIに追加。
+- Remove the four-column cap and use the full all-apps width.
+- Return from search/all apps to the pinned home view on reopening.
+- Add four responsive-width and eight hide/present regression checks.
 
 ## 0.2.1 — 2026-10-18
 
-- クリーンなチェックアウトから配布ZIPを作る際に、共通ライブラリの復元が不足する問題を修正。
-- x64 / ARM64のパッケージ作成を、通常のビルドと独立した新規環境でCI検証。
-- v0.2.0はタグ作成後の配布ビルドで停止し、Releaseは未公開。v0.2.1に以下の変更をまとめて同梱。
+- Restore neutral project-reference assets explicitly for clean portable builds.
+- Verify x64/ARM64 packages from independent clean checkouts.
+- Include the 0.2 changes after the 0.2.0 tag build failed; no 0.2.0 release was published.
 
 ## 0.2.0 — 2026-10-18
 
-- タイルのドラッグ開始、空きセル・グループ間の移動、座標保存、移動先の表示と端スクロールを修正・追加。
-- 初期グループ、検索見出しと結果を左寄せに変更。全アプリ一覧の列を均等化。
-- 設定をカテゴリ別に整理し、操作ボタン文字を中央揃えに変更。スクロールバー・選択欄・スライダー・カレンダーのテーマを統一。
-- 日本語 / 英語 / システム言語を追加。型付きTextKeyとJSONで文言を分離し、公開APIのXMLコメントをビルドで検証。
-- 自作JavaScriptライブタイルの作成・インポート・編集、時計 / カウントダウンのサンプル、APIガイドを追加。
-- JSの実行プロセスを分離し、期限・メモリ・通信サイズを制限。失敗時は最後の表示を保持し、タイル単位のエラーとして処理。
-- 別パスの実行ファイルにも対応した多重起動防止を強化。自動起動の実登録との照合・復元・バックグラウンド起動を改善。
-- 開いた直後の検索入力と単語先頭一致の順位を修正。タスクバークリックで閉じる処理を追加。
-- 73テストと描画・プロセス検証、配布ZIPへの実行ホスト・サンプル・第三者ライセンス同梱を追加。
-- Windowsキーとタスクバー操作の通し確認、再サインイン、ARM64実機などの未検証事項はリリースノートに明記。
+- Repair tile drag initiation, explicit cells, cross-group movement, previews and edge scrolling.
+- Align initial groups/search to the left and improve app columns.
+- Redesign Settings and theme scrollbars, selectors, sliders, calendar and button alignment.
+- Add English/Japanese/system resources, typed keys and enforced public API XML comments.
+- Add JavaScript tile packages, examples, worker deadlines, memory and protocol bounds.
+- Improve single-instance handling across paths and reversible sign-in startup.
+- Add type-to-search ranking and taskbar-click dismissal.
+- Package runtime/dependency notices and record unverified OS input/hardware behavior.
 
 ## 0.1.1 — 2026-10-17
 
-- グループの編集・削除・インポート後、アプリ一覧と検索結果のピン留め先が古いまま残る問題を修正。
-- 設定画面のバージョン表示をアセンブリの実バージョンから取得。
-- グループ改名後のメニュー表示と、改名先へのピン留め・JSON 保存を実画面で検証。
+- Refresh app pin destinations after group changes/imports.
+- Read the displayed version from the running assembly.
+- Verify renamed-group menu and persistence behavior.
 
 ## 0.1.0 — 2026-10-17
 
-- Windows 10 の全画面スタートを参考にした WPF ランチャーの初期実装。
-- タイル、4サイズ、グループ、フォルダー、実アプリ列挙と起動、アプリ名検索。
-- 時計・日付タイル、テーマ、壁紙、ローカル保存と復旧、インポート・エクスポート。
-- Windows キー、グローバルホットキー、通知領域、任意の自動起動。
-- 36件のコアテスト、Windows CI、x64 / ARM64 の自己完結型配布。
-- 再現仕様・一次資料の調査・検証とリリース手順を整備。
+- Initial WPF launcher: tiles, groups, folders, real apps/icons and local app search.
+- Clock/date, theme, wallpaper, persistence/recovery, import/export.
+- Windows key, hotkey, tray and optional startup integration.
+- Initial 36 Core tests, Windows CI, portable x64/ARM64 and project documentation.
 
-現行の再現範囲と未対応機能は [docs/fidelity.md](docs/fidelity.md) に記載しています。
+See [fidelity](docs/fidelity.md) for the current support boundary.
