@@ -25,3 +25,8 @@
 Microsoft の資料と当時の画像は、構造・操作の根拠です。Windows 10 実機での全操作の並行比較はまだ行っていません。座標やアニメーションのフレーム単位の一致を保証するものではありません。壁紙のぼかし、グループの折り返し、アプリ検索の順位は ReStart 側の実装です。
 
 元資料の画像や Windows の実装コードは配布物へ転載しません。README の画面は ReStart のプレビューで生成します。
+
+### 多重起動と自動起動
+
+- [Run / RunOnce registry keys](https://learn.microsoft.com/en-us/windows/win32/setupapi/run-and-runonce-registry-keys): ユーザー単位のサインイン時起動、コマンド260文字制限、起動時刻の保証がない点を確認。
+- [Mutex constructors](https://learn.microsoft.com/en-us/dotnet/api/system.threading.mutex.-ctor?view=net-10.0): 名前付きオブジェクトの新規作成判定と寿命を利用。実行ファイルの場所によらず同じ名前を使用。

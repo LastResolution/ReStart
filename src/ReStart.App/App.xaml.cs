@@ -11,13 +11,11 @@ namespace ReStart.App;
 
 public partial class App : Application
 {
-    private Mutex? _mutex;
-    private EventWaitHandle? _signal;
+    private SingleInstanceGate? _instance;
     private RegisteredWaitHandle? _wait;
     private StartIntegration? _integration;
     private System.Windows.Forms.NotifyIcon? _tray;
     private MainWindow? _window;
-    private bool _ownsMutex;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -25,21 +23,25 @@ public partial class App : Application
         var preview = e.Args.Contains("--preview") || e.Args.Contains("--smoke-test");
         var smoke = e.Args.Contains("--smoke-test");
         var sid = WindowsIdentity.GetCurrent().User?.Value ?? Environment.UserName;
-        var suffix = preview ? ".Preview" : "";
-        _mutex = new Mutex(true, "Local\\ReStart." + sid + suffix, out _ownsMutex);
-        _signal = new EventWaitHandle(false, EventResetMode.AutoReset, "Local\\ReStart.Activate." + sid + suffix);
-        if (!_ownsMutex) { _signal.Set(); Shutdown(); return; }
+        _instance = new(sid, preview);
+        if (!_instance.IsPrimary)
+        {
+            if (!smoke && !e.Args.Contains("--background")) _instance.NotifyExisting();
+            Shutdown(smoke ? 2 : 0); return;
+        }
         var data = preview ? Path.Combine(AppContext.BaseDirectory, "preview-data") : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ReStart");
         var store = new LayoutStore(Path.Combine(data, "layout.json"));
         _window = new MainWindow(store, preview);
         MainWindow = _window;
-        _wait = ThreadPool.RegisterWaitForSingleObject(_signal, (_, _) => Dispatcher.BeginInvoke(() => _window?.Present()), null, Timeout.Infinite, false);
+        _wait = ThreadPool.RegisterWaitForSingleObject(_instance.Activation, (_, _) => Dispatcher.BeginInvoke(() => _window?.Present()), null, Timeout.Infinite, false);
         if (preview)
         {
+            _window.Title = L.T("ReStart — プレビュー");
             _window.Width = 1280; _window.Height = 800; _window.Topmost = false;
             _window.ShowInTaskbar = true; _window.WindowStyle = WindowStyle.SingleBorderWindow;
             _window.ResizeMode = ResizeMode.CanResize; _window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-            _window.Show();
+            if (e.Args.Contains("--background") && !smoke) _ = _window.InitializeAsync();
+            else _window.Show();
             if (smoke) RunSmoke(e.Args);
             return;
         }
@@ -52,8 +54,8 @@ public partial class App : Application
             if (_integration.Status is string status) _window.SetStatus(status);
         };
         CreateTray();
-        _window.Present();
-        if (e.Args.Contains("--background")) _window.Hide();
+        if (e.Args.Contains("--background")) _ = _window.InitializeAsync();
+        else _window.Present();
         DispatcherUnhandledException += (_, args) =>
         {
             args.Handled = true;
@@ -119,9 +121,7 @@ public partial class App : Application
         _integration?.Dispose();
         _tray?.Dispose();
         _wait?.Unregister(null);
-        _signal?.Dispose();
-        if (_ownsMutex) _mutex?.ReleaseMutex();
-        _mutex?.Dispose();
+        _instance?.Dispose();
         base.OnExit(e);
     }
 }

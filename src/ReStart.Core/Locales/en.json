@@ -154,5 +154,12 @@
   "▤     ドキュメント": "▤     Documents",
   "▧     ピクチャ": "▧     Pictures",
   "⚙     ReStart の設定": "⚙     ReStart settings",
-  "⏻     電源": "⏻     Power"
+  "⏻     電源": "⏻     Power",
+  "ReStart — プレビュー": "ReStart — Preview",
+  "自動起動には配布用の ReStart.exe を使用してください。": "Use the portable ReStart.exe to register startup.",
+  "自動起動に登録するパスが長すぎます。短い場所に ReStart を移動してください。": "The startup path is too long. Move ReStart to a shorter path.",
+  "プレビューでは自動起動の登録を変更しません。": "Preview mode does not change Windows startup registration.",
+  "サインイン時は通知領域に常駐します。画面はキー操作で開きます。": "Starts in the notification area when you sign in. Use the shortcut to open Start.",
+  "登録済みの起動コマンド: ": "Registered startup command: ",
+  "自動起動の登録を戻せませんでした: ": "Could not restore startup registration: "
 }

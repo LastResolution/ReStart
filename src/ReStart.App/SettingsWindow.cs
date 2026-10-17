@@ -24,6 +24,7 @@ internal sealed class SettingsWindow : Window
         Style = (Style)FindResource(typeof(Window));
         _store = store;
         _draft = JsonSerializer.Deserialize<Preferences>(JsonSerializer.Serialize(main.Document.Preferences))!;
+        if (!main.IsPreview) _draft.StartWithWindows = StartupRegistration.Current.IsEnabled;
         Title = L.T("ReStart の設定"); Width = 940; Height = 740; MinWidth = 760; MinHeight = 500;
         WindowStartupLocation = main.IsPreview ? WindowStartupLocation.CenterScreen : WindowStartupLocation.CenterOwner; ShowInTaskbar = main.IsPreview;
         var root = new DockPanel { Margin = new(28, 24, 28, 20) };
@@ -57,7 +58,10 @@ internal sealed class SettingsWindow : Window
         Note(content, L.T("Win+E / Win+D などのショートカットは Windows に渡します。Ctrl+Alt+Space とトレイからも開けます。"));
         Check(content, L.T("タスクバーのスタートボタンも置き換える（試験的）"), _draft.CaptureStartButton, v => _draft.CaptureStartButton = v);
         Note(content, L.T("Windows がネイティブの Start ボタンを公開する構成で動作します。Windows 11 の構成によっては利用できません。"));
-        Check(content, L.T("Windows へのサインイン時に起動する"), _draft.StartWithWindows, v => _draft.StartWithWindows = v);
+        var autostart = Check(content, L.T("Windows へのサインイン時に起動する"), _draft.StartWithWindows, v => _draft.StartWithWindows = v);
+        autostart.IsEnabled = !main.IsPreview;
+        Note(content, L.T(main.IsPreview ? "プレビューでは自動起動の登録を変更しません。" : "サインイン時は通知領域に常駐します。画面はキー操作で開きます。"));
+        if (!main.IsPreview && StartupRegistration.Current.Command is string command) Note(content, L.T("登録済みの起動コマンド: ") + command);
         Check(content, L.T("別のアプリに切り替えたら閉じる"), _draft.CloseOnDeactivate, v => _draft.CloseOnDeactivate = v);
         content = Section(L.T("外観"));
         Select(content, L.T("テーマ"), new[] { L.T("システムに合わせる"), L.T("ダーク"), L.T("ライト") }, (int)_draft.Theme, i => _draft.Theme = (ReStart.Core.ThemeMode)i);
@@ -105,11 +109,11 @@ internal sealed class SettingsWindow : Window
     private static System.Windows.Media.Brush Resource(string key) => (System.Windows.Media.Brush)Application.Current.FindResource(key);
     private static void Heading(Panel panel, string text) => panel.Children.Add(new TextBlock { Text = text, FontSize = 20, Margin = new(0, 0, 0, 16) });
     private static void Note(Panel panel, string text) => panel.Children.Add(new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, FontSize = 12, Foreground = Resource("MutedBrush"), Margin = new(0, 3, 0, 8), LineHeight = 20 });
-    private static void Check(Panel panel, string label, bool initial, Action<bool> changed)
+    private static CheckBox Check(Panel panel, string label, bool initial, Action<bool> changed)
     {
         var checkbox = new CheckBox { Content = new TextBlock { Text = label, TextWrapping = TextWrapping.Wrap }, IsChecked = initial };
         System.Windows.Automation.AutomationProperties.SetName(checkbox, label);
-        checkbox.Checked += (_, _) => changed(true); checkbox.Unchecked += (_, _) => changed(false); panel.Children.Add(checkbox);
+        checkbox.Checked += (_, _) => changed(true); checkbox.Unchecked += (_, _) => changed(false); panel.Children.Add(checkbox); return checkbox;
     }
     private static void Select(Panel panel, string label, string[] options, int index, Action<int> changed)
     {
@@ -136,17 +140,26 @@ internal sealed class SettingsWindow : Window
     private void Save(object sender, RoutedEventArgs e)
     {
         var previous = _main.Document.Preferences;
+        StartupRegistration.Entry? registration = null;
         try
         {
+            if (!_main.IsPreview)
+            {
+                registration = StartupRegistration.Current.Capture();
+                StartupRegistration.Current.SetEnabled(_draft.StartWithWindows);
+            }
             _main.Document.Preferences = _draft;
             _store.Save(_main.Document);
-            if (previous.StartWithWindows != _draft.StartWithWindows) StartupRegistration.SetEnabled(_draft.StartWithWindows);
             DialogResult = true;
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.Security.SecurityException)
         {
             _main.Document.Preferences = previous;
-            try { _store.Save(_main.Document); } catch (IOException) { }
+            if (registration != null)
+            {
+                try { StartupRegistration.Current.Restore(registration); }
+                catch (Exception rollback) when (rollback is IOException or UnauthorizedAccessException or System.Security.SecurityException) { _feedback.Text = L.T("自動起動の登録を戻せませんでした: ") + rollback.Message; return; }
+            }
             _feedback.Text = L.T("保存できませんでした: ") + ex.Message;
         }
     }

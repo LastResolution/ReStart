@@ -35,6 +35,7 @@ public partial class MainWindow : Window
     private int _dialogDepth;
     private Tile? _openFolder;
     private bool _exit;
+    private Task? _initialization;
     public LayoutDocument Document { get; private set; } = new();
     public Action? PreferencesChanged { get; set; }
     public bool IsReady => _ready;
@@ -76,7 +77,9 @@ public partial class MainWindow : Window
         _clock.Start();
     }
 
-    private async Task InitializeAsync()
+    public Task InitializeAsync() => _initialization ??= InitializeCoreAsync();
+
+    private async Task InitializeCoreAsync()
     {
         try
         {
@@ -141,6 +144,8 @@ public partial class MainWindow : Window
 
     public void Present()
     {
+        var dialog = OwnedWindows.Cast<Window>().LastOrDefault(w => w.IsVisible);
+        if (dialog != null) { dialog.Activate(); return; }
         var handle = new WindowInteropHelper(this).EnsureHandle();
         var screen = System.Windows.Forms.Screen.FromPoint(System.Windows.Forms.Cursor.Position);
         var area = screen.WorkingArea;
@@ -172,6 +177,7 @@ public partial class MainWindow : Window
         LocalizationResources.Apply(p.Language);
         Language = System.Windows.Markup.XmlLanguage.GetLanguage(L.Culture.IetfLanguageTag);
         RefreshBackgroundMenu();
+        if (_preview) Title = L.T("ReStart — プレビュー");
         var light = p.Theme == ReStart.Core.ThemeMode.Light;
         if (p.Theme == ReStart.Core.ThemeMode.System)
         {

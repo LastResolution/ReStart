@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ReStart.Core\ReStart.Core.csproj" />
+    <Compile Include="..\..\src\ReStart.App\Services\StartupRegistration.cs" Link="StartupRegistration.cs" />
   </ItemGroup>
 
 </Project>
