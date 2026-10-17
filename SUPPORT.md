@@ -8,4 +8,4 @@ Use [Issues](https://github.com/LastResolution/ReStart/issues/new/choose) for or
 
 Report vulnerabilities privately using the route in [SECURITY.md](SECURITY.md). Do not post credentials, private layouts, app catalogs or unredacted logs/screenshots. Windows startup/Explorer integration can be disabled in Settings before removing or moving the installation.
 
-ReStart is independent of Microsoft. The [validation record](docs/testing.md) describes tested environments; report platform-specific differences with their exact configuration.
+ReStart is independent of Microsoft. See [compatibility](docs/fidelity.md) for platform coverage; report platform-specific differences with their exact configuration.
