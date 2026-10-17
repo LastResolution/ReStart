@@ -479,6 +479,7 @@ public partial class MainWindow : Window
         if (Math.Abs(point.X - _dragOrigin.X) < SystemParameters.MinimumHorizontalDragDistance && Math.Abs(point.Y - _dragOrigin.Y) < SystemParameters.MinimumVerticalDragDistance) return;
         _dragging = true;
         _folderHover.Reset();
+        if (format == "ReStart.Group" && _openFolder != null) { CloseFolder(this, new()); UpdateLayout(); }
         var previousView = PrepareDragView(format);
         ExtendDragSpace();
         button.ReleaseMouseCapture();
@@ -530,6 +531,7 @@ public partial class MainWindow : Window
     }
     private void ClearDropPreview()
     {
+        if (GroupsPanel.DragPlacements != null) { GroupsPanel.DragPlacements = null; GroupsPanel.InvalidateMeasure(); }
         if (_dropAdorner == null) return;
         AdornerLayer.GetAdornerLayer(_dropAdorner.AdornedElement)?.Remove(_dropAdorner);
         _dropAdorner = null;

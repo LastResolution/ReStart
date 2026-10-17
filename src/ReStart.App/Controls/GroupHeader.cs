@@ -25,6 +25,8 @@ internal sealed class GroupHeader : Grid
         Children.Add(Handle);
         Children.Add(_editor);
         Handle.Click += (_, _) => { if (_name.Length == 0) BeginEdit(); };
+        Handle.IsMouseDirectlyOverChanged += (_, _) => { if (!IsEditing) Handle.Content = DisplayName; };
+        Handle.IsKeyboardFocusWithinChanged += (_, _) => { if (!IsEditing) Handle.Content = DisplayName; };
         Handle.MouseDoubleClick += (_, e) => { BeginEdit(); e.Handled = true; };
         Handle.PreviewKeyDown += (_, e) => { if (e.Key is Key.Enter or Key.F2) { BeginEdit(); e.Handled = true; } };
         _editor.PreviewKeyDown += (_, e) =>
@@ -35,7 +37,8 @@ internal sealed class GroupHeader : Grid
         System.Windows.Automation.AutomationProperties.SetName(_editor, L.T(prompt));
     }
 
-    private string DisplayName => string.IsNullOrEmpty(_name) ? L.T(_placeholder) : _name;
+    private string DisplayName => string.IsNullOrEmpty(_name)
+        ? _placeholder != K.NameGroup || Handle.IsMouseOver || Handle.IsKeyboardFocusWithin ? L.T(_placeholder) : "" : _name;
 
     internal void BeginEdit()
     {

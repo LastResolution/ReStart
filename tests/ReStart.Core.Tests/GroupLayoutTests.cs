@@ -70,7 +70,7 @@ public sealed class GroupLayoutTests
     {
         var legacy = JsonSerializer.Deserialize<LayoutDocument>("{\"Version\":1,\"Groups\":[{\"Name\":\"work\"}]}", LayoutStore.JsonOptions)!;
         legacy.Normalize();
-        Assert.Equal(2, legacy.Version);
+        Assert.Equal(LayoutDocument.CurrentVersion, legacy.Version);
         Assert.Null(legacy.Groups[0].Column);
         var group = Group(3, 24); group.Name = "";
         var doc = new LayoutDocument { Groups = [group] };
@@ -86,6 +86,46 @@ public sealed class GroupLayoutTests
         var a = Group(1, null); var b = Group(-1, 2); var c = Group(3, 20001);
         new LayoutDocument { Groups = [a, b, c] }.Normalize();
         Assert.All(new[] { a, b, c }, g => { Assert.Null(g.Column); Assert.Null(g.Row); });
+    }
+
+    [Fact]
+    public void SingleSmallTileDoesNotReserveAMediumTileHeight()
+    {
+        var small = Group(); small.Tiles[0].Size = TileSize.Small;
+        var medium = Group();
+        var placements = GroupLayout.Pack([small, medium], 2, 6, 52);
+        Assert.Equal(GroupLayout.HeaderHeight + 52, placements[0].Height);
+        Assert.True(placements[0].Rows < placements[1].Rows);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(3)]
+    public void PreviewMatchesCommitWithoutChangingSingleOrMultipleTileContents(int count)
+    {
+        var source = Group(0, 0);
+        source.Tiles = Enumerable.Range(0, count).Select(i => new Tile { Size = TileSize.Small, Column = 4, Row = i * 2 }).ToList();
+        var target = Group(1, 0);
+        var document = new LayoutDocument { Groups = [source, target] };
+        var before = JsonSerializer.Serialize(document, LayoutStore.JsonOptions);
+        var contents = JsonSerializer.Serialize(source.Tiles, LayoutStore.JsonOptions);
+        var preview = GroupLayout.PreviewMove(document, source, 1, 0, 3, 52);
+        Assert.Equal(before, JsonSerializer.Serialize(document, LayoutStore.JsonOptions));
+        Assert.True(preview.Single(p => p.Group == target).Row > 0);
+        GroupLayout.Move(document, source, 1, 0, 3, 52);
+        Assert.Equal(preview, GroupLayout.Pack(document.Groups, 3, 6, 52));
+        Assert.Equal(contents, JsonSerializer.Serialize(source.Tiles, LayoutStore.JsonOptions));
+    }
+
+    [Fact]
+    public void TrailingSpacingIsNotAnInvisibleCollisionAreaForExplicitGroups()
+    {
+        var first = Group(0, 0); first.Tiles[0].Size = TileSize.Small;
+        var second = Group(0, 4); second.Tiles[0].Size = TileSize.Small;
+        var placements = GroupLayout.Pack([first, second], 2, 6, 52);
+        Assert.Equal(4, placements[1].Row);
+        Assert.Equal(GroupLayout.HeaderHeight + 52, placements[0].Height);
+        Assert.True(placements[0].Height < second.Row * 26);
     }
 
     private static void AssertNoOverlaps(IReadOnlyList<GroupPlacement> placements)

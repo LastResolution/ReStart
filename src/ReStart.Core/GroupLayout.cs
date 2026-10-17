@@ -1,7 +1,7 @@
 namespace ReStart.Core;
 
-/// <summary>Describes a group in horizontal group columns and vertical half-cell steps, including its trailing gap.</summary>
-public readonly record struct GroupPlacement(TileGroup Group, int Column, int Row, int Rows);
+/// <summary>Describes a group anchor, logical height and exact visible height, excluding trailing spacing.</summary>
+public readonly record struct GroupPlacement(TileGroup Group, int Column, int Row, int Rows, double Height);
 
 /// <summary>Places groups independently in columns, preserving explicit gaps and displacing only overlapping groups.</summary>
 public static class GroupLayout
@@ -26,46 +26,60 @@ public static class GroupLayout
         if (columns is < 1 or > 64 || !double.IsFinite(cell) || cell <= 0) throw new ArgumentOutOfRangeException(nameof(columns));
         var items = groups.ToArray();
         var placed = new Dictionary<TileGroup, GroupPlacement>();
-        int Height(TileGroup group)
+        double Height(TileGroup group)
         {
             var tiles = TileLayout.Pack(group.Tiles, tileColumns);
-            var rows = Math.Max(2, tiles.Count == 0 ? 0 : tiles.Max(t => t.Row + t.Height));
+            var rows = Math.Max(1, tiles.Count == 0 ? 0 : tiles.Max(t => t.Row + t.Height));
             var expansion = FolderExpansion.Create(tiles, tileColumns, expandedFolderId);
-            return (int)Math.Ceiling((HeaderHeight + rows * cell + Gap + (expansion?.ExtraHeight(cell) ?? 0)) / (cell / 2));
+            return HeaderHeight + rows * cell + (expansion?.ExtraHeight(cell) ?? 0);
         }
-        int FreeRow(int column, int row, int height)
+        int FreeRow(int column, int row, double height, bool automatic = false)
         {
+            var spacing = automatic ? Gap : 0;
             while (true)
             {
-                var overlap = placed.Values.Where(p => p.Column == column && row < p.Row + p.Rows && row + height > p.Row).ToArray();
+                var overlap = placed.Values.Where(p => p.Column == column && row * cell / 2 < p.Row * cell / 2 + p.Height + spacing
+                    && row * cell / 2 + height + spacing > p.Row * cell / 2).ToArray();
                 if (overlap.Length == 0) return row;
-                row = overlap.Max(p => p.Row + p.Rows);
+                row = (int)Math.Ceiling(overlap.Max(p => p.Row * cell / 2 + p.Height + spacing) / (cell / 2));
             }
         }
         foreach (var group in items.Where(g => g.Column.HasValue && g.Row.HasValue).OrderByDescending(g => g == priority))
         {
             var column = Math.Clamp(group.Column!.Value, 0, columns - 1);
             var height = Height(group);
-            placed[group] = new(group, column, FreeRow(column, Math.Max(0, group.Row!.Value), height), height);
+            placed[group] = new(group, column, FreeRow(column, Math.Max(0, group.Row!.Value), height), (int)Math.Ceiling(height / (cell / 2)), height);
         }
         foreach (var group in items.Where(g => !placed.ContainsKey(g)))
         {
             var height = Height(group);
-            var target = Enumerable.Range(0, columns).Select(c => (Column: c, Row: FreeRow(c, 0, height))).OrderBy(p => p.Row).ThenBy(p => p.Column).First();
-            placed[group] = new(group, target.Column, target.Row, height);
+            var target = Enumerable.Range(0, columns).Select(c => (Column: c, Row: FreeRow(c, 0, height, true))).OrderBy(p => p.Row).ThenBy(p => p.Column).First();
+            placed[group] = new(group, target.Column, target.Row, (int)Math.Ceiling(height / (cell / 2)), height);
         }
         return items.Select(g => placed[g]).ToArray();
     }
 
-    /// <summary>Moves a group to a chosen anchor, freezes unaffected positions, and saves collision resolution into the models.</summary>
-    public static void Move(LayoutDocument document, TileGroup group, int column, int row, int availableColumns, double cell)
+    /// <summary>Calculates the exact proposed drop layout without modifying group anchors or any tile contents.</summary>
+    public static IReadOnlyList<GroupPlacement> PreviewMove(LayoutDocument document, TileGroup group, int column, int row, int availableColumns, double cell)
     {
         if (!document.Groups.Contains(group)) throw new ArgumentException("Unknown group.", nameof(group));
-        foreach (var p in Pack(document.Groups, availableColumns, document.Preferences.Columns, cell))
-        { p.Group.Column = p.Column; p.Group.Row = p.Row; }
-        group.Column = Math.Clamp(column, 0, availableColumns - 1);
-        group.Row = Math.Clamp(row, 0, 20000);
-        foreach (var p in Pack(document.Groups, availableColumns, document.Preferences.Columns, cell, group))
+        var current = Pack(document.Groups, availableColumns, document.Preferences.Columns, cell);
+        var shadows = current.Select(p => new TileGroup
+        {
+            Column = p.Group == group ? Math.Clamp(column, 0, availableColumns - 1) : p.Column,
+            Row = p.Group == group ? Math.Clamp(row, 0, 20000) : p.Row,
+            Tiles = p.Group.Tiles
+        }).ToArray();
+        var originals = shadows.Select((shadow, i) => (shadow, original: current[i].Group)).ToDictionary(p => p.shadow, p => p.original);
+        var priority = shadows[Array.FindIndex(current.ToArray(), p => p.Group == group)];
+        return Pack(shadows, availableColumns, document.Preferences.Columns, cell, priority)
+            .Select(p => p with { Group = originals[p.Group] }).ToArray();
+    }
+
+    /// <summary>Commits the proposed group layout while preserving every tile's identity, size and local cell coordinates.</summary>
+    public static void Move(LayoutDocument document, TileGroup group, int column, int row, int availableColumns, double cell)
+    {
+        foreach (var p in PreviewMove(document, group, column, row, availableColumns, cell))
         { p.Group.Column = p.Column; p.Group.Row = p.Row; }
     }
 }

@@ -21,6 +21,8 @@ public sealed class GroupBoardPanel : Panel
     public int Columns { get; private set; } = 1;
     /// <summary>Gets group bounds in the same model grid used by drag/drop and persistence.</summary>
     public IReadOnlyList<GroupPlacement> Placements { get; private set; } = [];
+    /// <summary>Gets or sets a transient proposed group layout; null renders the persisted anchors.</summary>
+    public IReadOnlyList<GroupPlacement>? DragPlacements { get; set; }
 
     /// <summary>Measures group content and the union of its logical positions, including blank gaps.</summary>
     protected override Size MeasureOverride(Size availableSize)
@@ -28,7 +30,7 @@ public sealed class GroupBoardPanel : Panel
         var width = double.IsFinite(availableSize.Width) ? availableSize.Width : TileColumns * Cell;
         Columns = GroupLayout.ColumnCount(width, TileColumns, Cell);
         foreach (UIElement child in InternalChildren) child.Measure(new(TileColumns * Cell, double.PositiveInfinity));
-        Placements = GroupLayout.Pack(InternalChildren.OfType<FrameworkElement>().Select(e => e.Tag).OfType<TileGroup>(), Columns, TileColumns, Cell, expandedFolderId: ExpandedFolderId);
+        Placements = DragPlacements ?? GroupLayout.Pack(InternalChildren.OfType<FrameworkElement>().Select(e => e.Tag).OfType<TileGroup>(), Columns, TileColumns, Cell, expandedFolderId: ExpandedFolderId);
         var height = Placements.Count == 0 ? Cell * 4 : Placements.Max(p => (p.Row + p.Rows) * Cell / 2) + Cell * 2;
         return new(Math.Max(0, width), Math.Max(height, Math.Max(MinHeight, DragMinimumHeight)));
     }

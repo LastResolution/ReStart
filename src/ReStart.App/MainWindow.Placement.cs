@@ -73,10 +73,7 @@ public partial class MainWindow
             _folderHover.Reset();
             var group = Document.Groups.FirstOrDefault(g => g.Id == groupId);
             if (group == null) { e.Effects = DragDropEffects.None; return; }
-            var (column, row) = GroupLayout.Snap(point.X - _dragOffset.X, point.Y - _dragOffset.Y, GroupsPanel.Columns, Document.Preferences.Columns, Cell);
-            var placement = GroupLayout.Pack([group], GroupsPanel.Columns, Document.Preferences.Columns, Cell, expandedFolderId: _openFolder?.Id)[0];
-            ShowBoardPreview(new(column * (Document.Preferences.Columns * Cell + GroupLayout.Gap), row * Cell / 2,
-                Document.Preferences.Columns * Cell, placement.Rows * Cell / 2 - GroupLayout.Gap));
+            PreviewGroupOnBoard(group, point);
             return;
         }
         var tile = DragTile(e);
@@ -159,6 +156,17 @@ public partial class MainWindow
         var (column, row) = GroupLayout.Snap(point.X - _dragOffset.X, point.Y - _dragOffset.Y, GroupsPanel.Columns, Document.Preferences.Columns, Cell);
         GroupLayout.Move(Document, group, column, row, GroupsPanel.Columns, Cell);
         CommitLayout();
+    }
+
+    private void PreviewGroupOnBoard(TileGroup group, Point point)
+    {
+        var (column, row) = GroupLayout.Snap(point.X - _dragOffset.X, point.Y - _dragOffset.Y, GroupsPanel.Columns, Document.Preferences.Columns, Cell);
+        var placements = GroupLayout.PreviewMove(Document, group, column, row, GroupsPanel.Columns, Cell);
+        var target = placements.Single(p => p.Group == group);
+        ShowBoardPreview(new(target.Column * (Document.Preferences.Columns * Cell + GroupLayout.Gap), target.Row * Cell / 2,
+            Document.Preferences.Columns * Cell, target.Height));
+        GroupsPanel.DragPlacements = placements;
+        GroupsPanel.InvalidateMeasure();
     }
 
     private void MoveTileIntoGroup(Tile tile, TileGroup destination, int column, int row, Tile? folderTarget = null)

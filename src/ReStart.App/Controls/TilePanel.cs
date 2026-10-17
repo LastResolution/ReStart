@@ -39,7 +39,7 @@ public sealed class TilePanel : Panel
         }
         if (Expansion != null && InternalChildren.Count > Placements.Count)
             InternalChildren[Placements.Count].Measure(new(Columns * Cell, Expansion.ExtraHeight(Cell)));
-        return new(Columns * Cell, Math.Max(2, rows) * Cell + (Expansion?.ExtraHeight(Cell) ?? 0));
+        return new(Columns * Cell, Math.Max(1, rows) * Cell + (Expansion?.ExtraHeight(Cell) ?? 0));
     }
 
     /// <summary>Maps logical cell rectangles to device-independent pixels with a four-pixel tile gap.</summary>
