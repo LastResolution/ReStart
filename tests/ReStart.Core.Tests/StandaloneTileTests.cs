@@ -82,6 +82,37 @@ public sealed class StandaloneTileTests
         else Assert.True((movingStandalone ? 40 : 0) + lower * 26 >= placements[0].Top + placements[0].Height + GroupLayout.Gap);
     }
 
+    [Theory]
+    [InlineData(.7, 6)]
+    [InlineData(1, 6)]
+    [InlineData(1.5, 6)]
+    [InlineData(.7, 8)]
+    [InlineData(1, 8)]
+    [InlineData(1.5, 8)]
+    public void VerticalAlignmentRetainsTheLaneOriginAfterGlobalGridRounding(double scale, int columns)
+    {
+        var cell = 52 * scale; var laneLeft = 2 * (columns * cell + GroupLayout.Gap);
+        var above = new TileGroup { Column = 2, Row = 0, X = laneLeft / cell, IsStandalone = true, Tiles = [new() { Size = TileSize.Large }] };
+        var moving = new TileGroup { Column = 2, Row = 8, IsStandalone = true, Tiles = [new() { Size = TileSize.Large }] };
+        var placements = GroupLayout.Pack([above, moving], 4, columns, cell);
+        var rounded = Math.Round(laneLeft / (cell / 2), MidpointRounding.AwayFromZero) * cell / 2;
+        var result = GroupLayout.SnapAlignedX(placements, moving, rounded, GroupLayout.HeaderHeight + 4 * cell, 4 * cell, 4 * cell, cell);
+        Assert.Equal(laneLeft, result, 8);
+        Assert.Equal(above.X, laneLeft / cell);
+    }
+
+    [Fact]
+    public void IndependentAdjacencyUsesTheExistingEdgeAndIsolatedVerticalDragsRetainTheirX()
+    {
+        const double left = 672, cell = 52;
+        var fixedTile = new TileGroup { Column = 2, Row = 0, X = left / cell, IsStandalone = true, Tiles = [new() { Size = TileSize.Large }] };
+        var moving = new TileGroup { IsStandalone = true };
+        var placements = GroupLayout.Pack([fixedTile], 4, 6, cell);
+        Assert.Equal(880, GroupLayout.SnapBeside(placements, moving, 884, 40, 208, 208, cell));
+        Assert.Equal(left, GroupLayout.SnapAlignedX(placements, fixedTile, 676, 1000, 208, 208, cell));
+        Assert.Equal(676, GroupLayout.SnapAlignedX(placements, moving, 676, 1000, 208, 208, cell));
+    }
+
     [Fact]
     public void DetachedTileHasOnlyItsOwnFootprintAndPreservesOtherItems()
     {

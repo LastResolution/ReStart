@@ -20,14 +20,30 @@ public static class GroupLayout
         (Math.Clamp((int)Math.Round(x / (tileColumns * cell + Gap), MidpointRounding.AwayFromZero), 0, columns - 1),
          Math.Clamp((int)Math.Round(y / (cell / 2), MidpointRounding.AwayFromZero), 0, 20000));
 
-    /// <summary>Snaps a named group beside a nearby visible edge, leaving an explicit gap without enlarging collision bounds.</summary>
+    /// <summary>Snaps beside a nearby visible edge, retaining group spacing and the ordinary cell gap between independent tiles.</summary>
     public static double SnapBeside(IEnumerable<GroupPlacement> placements, TileGroup moving, double left, double top, double width, double height, double cell)
     {
-        var candidates = placements.Where(p => p.Group != moving && !(moving.IsStandalone && p.Group.IsStandalone) && top < p.Top + p.Height && top + height > p.Top)
-            .SelectMany(p => new[] { p.Left + p.Width + Gap, p.Left - width - Gap })
+        var candidates = placements.Where(p => p.Group != moving && top < p.Top + p.Height && top + height > p.Top)
+            .SelectMany(p =>
+            {
+                var gap = moving.IsStandalone && p.Group.IsStandalone ? 0 : Gap;
+                return new[] { p.Left + p.Width + gap, p.Left - width - gap };
+            })
             .Where(x => x >= 0 && Math.Abs(x - left) <= Gap + cell / 4)
             .OrderBy(x => Math.Abs(x - left)).ThenBy(x => x).ToArray();
         return candidates.Length == 0 ? left : candidates[0];
+    }
+
+    /// <summary>Aligns nearby left/right edges without rounding away a lane's non-grid origin; preserves vertical drag alignment when isolated.</summary>
+    public static double SnapAlignedX(IEnumerable<GroupPlacement> placements, TileGroup moving, double left, double top, double width, double height, double cell)
+    {
+        var items = placements.ToArray();
+        var candidates = items.Where(p => p.Group != moving && (top >= p.Top + p.Height || p.Top >= top + height)
+                && Math.Max(0, Math.Max(p.Top - top - height, top - p.Top - p.Height)) <= cell)
+            .SelectMany(p => new[] { p.Left, p.Left + p.Width - width });
+        double? Closest(IEnumerable<double> values) => values.Where(x => x >= 0 && Math.Abs(x - left) <= cell / 4)
+            .OrderBy(x => Math.Abs(x - left)).ThenBy(x => x).Select(x => (double?)x).FirstOrDefault();
+        return Closest(candidates) ?? Closest(items.Where(p => p.Group == moving).Select(p => p.Left)) ?? left;
     }
 
     /// <summary>Snaps above or below a nearby group boundary, rounding outward to retain at least the group gap.</summary>

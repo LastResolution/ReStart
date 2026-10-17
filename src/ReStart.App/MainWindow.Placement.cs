@@ -199,7 +199,8 @@ public partial class MainWindow
     {
         var placements = GroupLayout.Pack(Document.Groups, GroupsPanel.Columns, Document.Preferences.Columns, Cell, preserveColumns: true);
         var moving = placements.Single(p => p.Group == group);
-        return GroupLayout.SnapBeside(placements, group, x * Cell, row * Cell / 2, moving.Width, moving.Height, Cell) / Cell;
+        var beside = GroupLayout.SnapBeside(placements, group, x * Cell, row * Cell / 2, moving.Width, moving.Height, Cell);
+        return GroupLayout.SnapAlignedX(placements, group, beside, row * Cell / 2, moving.Width, moving.Height, Cell) / Cell;
     }
 
     private int GroupDropRow(TileGroup group, double x, int row)
@@ -239,7 +240,8 @@ public partial class MainWindow
         var moving = Document.Groups.FirstOrDefault(g => g.IsStandalone && g.Tiles.Contains(tile)) ?? new TileGroup { IsStandalone = true };
         var placements = GroupLayout.Pack(Document.Groups, GroupsPanel.Columns, Document.Preferences.Columns, Cell, preserveColumns: true);
         var (width, height) = TileLayout.Dimensions(tile.Size);
-        x = GroupLayout.SnapBeside(placements, moving, x * Cell, GroupLayout.HeaderHeight + row * Cell / 2, width * Cell, height * Cell, Cell) / Cell;
+        var beside = GroupLayout.SnapBeside(placements, moving, x * Cell, GroupLayout.HeaderHeight + row * Cell / 2, width * Cell, height * Cell, Cell);
+        x = GroupLayout.SnapAlignedX(placements, moving, beside, GroupLayout.HeaderHeight + row * Cell / 2, width * Cell, height * Cell, Cell) / Cell;
         row = GroupLayout.SnapRow(placements, moving, x * Cell, row, width * Cell, height * Cell, Cell);
         var column = Math.Clamp((int)(x * Cell / (Document.Preferences.Columns * Cell + GroupLayout.Gap)), 0, 63);
         return (column, row, x);
