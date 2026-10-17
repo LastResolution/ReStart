@@ -12,6 +12,11 @@ $packagePath = Join-Path $repoRoot 'artifacts/packages'
 $zipPath = Join-Path $packagePath "ReStart-$Runtime.zip"
 New-Item -ItemType Directory -Force -Path $publishPath, $packagePath | Out-Null
 
+# SDK project references can build RID-neutral libraries even during a RID publish.
+# Restore that graph explicitly: a clean checkout has no ordinary obj/assets yet.
+dotnet restore (Join-Path $repoRoot 'src/ReStart.App/ReStart.App.csproj') --locked-mode
+if ($LASTEXITCODE -ne 0) { throw "Restore failed: $LASTEXITCODE" }
+
 dotnet publish (Join-Path $repoRoot 'src/ReStart.App/ReStart.App.csproj') -c Release -r $Runtime --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None "-p:OutputPath=$buildPath/" -o $publishPath
 if ($LASTEXITCODE -ne 0) { throw "Publish failed: $LASTEXITCODE" }
 

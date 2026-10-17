@@ -15,12 +15,14 @@
 ```powershell
 git switch main
 git pull --ff-only
-git tag -a v0.2.0 -m "ReStart v0.2.0"
-git push origin v0.2.0
+git tag -a v0.2.1 -m "ReStart v0.2.1"
+git push origin v0.2.1
 gh run list --workflow release.yml
 ```
 
 `Release` ワークフローがタグとバージョン、main の祖先であることを確認し、ビルド・テスト後に x64 / ARM64 の自己完結型 ZIP と SHA-256 を作ります。両方の成功後にプレリリースを作成します。現行のワークフローは 0.x 用です。安定版を公開する際はプレリリース指定を見直します。
+
+通常のPRでも、パッケージ作成をx64 / ARM64それぞれの新規チェックアウトで先頭に実行します。事前のソリューション復元で、配布スクリプトの復元漏れを隠さないためです。
 
 失敗した場合は原因を直し、既存タグを指す `workflow_dispatch` で再実行できます。公開済みタグのすり替えは行いません。修正コードを含める場合は新しいバージョンのタグを作成します。
 

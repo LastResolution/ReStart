@@ -1,6 +1,8 @@
-# ReStart v0.2.0
+# ReStart v0.2.1
 
 Windows 10 の全画面スタートを参考にした、非公開の開発版です。v0.1.1 から、ドラッグの実動作、左寄せの配置、テーマに沿った設定画面、多言語対応、JavaScript ライブタイルを改善しました。
+
+v0.2.0はタグ作成後の配布ビルドで復元不足が見つかり、Releaseを公開していません。v0.2.1では復元手順を修正し、通常ビルドを先に行わないクリーン環境でもx64 / ARM64のパッケージをCI検証します。以下の改善をすべて含みます。
 
 ## 配置と操作
 
@@ -23,7 +25,7 @@ Windows 10 の全画面スタートを参考にした、非公開の開発版で
 
 時刻・言語・設定・前回の状態を受け取り、文字、補足、バッジ、色、進捗を返す API です。保存後の次の更新で反映し、エラー時は最後に成功した表示を保持します。実行は専用プロセスに分離し、時間・メモリ・通信サイズを制限します。ネットワーク、ファイル、Node.js、DOM、CLR は公開しません。
 
-作り方と制限は [JavaScript タイル開発ガイド](https://github.com/LastResolution/ReStart/blob/v0.2.0/docs/javascript-tiles.md) を参照してください。旧 UWP の通知配信を再現するものではありません。
+作り方と制限は [JavaScript タイル開発ガイド](https://github.com/LastResolution/ReStart/blob/v0.2.1/docs/javascript-tiles.md) を参照してください。旧 UWP の通知配信を再現するものではありません。
 
 ## 常駐と自動起動
 
@@ -47,4 +49,4 @@ Windows 10 の全画面スタートを参考にした、非公開の開発版で
 - Windows 10 との完全一致、ARM64 実機、複数画面・異なる DPI、タッチ、Narrator は追加検証が必要です。
 - Windows 11 の XAML タスクバーにおける Start ボタン捕捉は試験的です。旧 UWP 通知、Cortana、ファイルを含む Windows Search 全体、最近使った項目は含みません。
 
-[README](https://github.com/LastResolution/ReStart/blob/v0.2.0/README.md) · [再現範囲](https://github.com/LastResolution/ReStart/blob/v0.2.0/docs/fidelity.md) · [v0.1.1 からの差分](https://github.com/LastResolution/ReStart/compare/v0.1.1...v0.2.0)
+[README](https://github.com/LastResolution/ReStart/blob/v0.2.1/README.md) · [再現範囲](https://github.com/LastResolution/ReStart/blob/v0.2.1/docs/fidelity.md) · [v0.1.1 からの差分](https://github.com/LastResolution/ReStart/compare/v0.1.1...v0.2.1)
