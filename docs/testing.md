@@ -10,6 +10,7 @@ dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory 
 ./scripts/smoke.ps1
 ./scripts/test-navigation.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-navigation.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe -AppFolders
+./scripts/test-first-input.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-placement.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/package.ps1 -Runtime win-x64
 ```
@@ -21,6 +22,8 @@ dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory 
 CIのデスクトップより大きい幅も検証できるよう、ネイティブウィンドウの最大サイズには依存せず、実際のWPFルートへ描画幅を指定します。要求幅が反映されたことも検証します。
 
 `-AppFolders` は架空の多段フォルダーを使用します。開閉、左右キー、AutomationのExpandCollapse、隠れたアプリの検索、1920 / 3840 DIP幅の見出し連続、ダーク / ライト、頭文字ジャンプ、再描画後の文字ジャンプ先、再表示時の折り畳みを確認します。物理Space入力やNarratorの読み上げを検証するものではありません。
+
+`test-first-input.ps1` は別の隔離したWPFウィンドウを作り、カタログ読み込みを明示的に待機させます。初期フォーカスにTextCompositionManager経由でEを入力し、読み込みを解除した後にMicrosoft Edgeが候補に入ること、続けてdを入力してEdになることを確認します。再表示、バーにフォーカスがある場合、列挙前の入力設定反映、読み込み完了時にフォーカスを奪わないことも対象です。検索語を直接代入するテストとは別で、OSの物理キーやIMEの全経路を保証するものではありません。
 
 `test-placement.ps1` は新しい実行ファイル用フォルダーを作り、プレビューの保存先も分離します。グループの独立した位置、空き領域からのグループ作成、タイルの空白保持、狭い画面から戻った際のアンカー、schema 2の保存を確認します。命名は実際のWPFダブルクリック・キーイベント経路を使い、Enter確定 / Esc取消とモーダルウィンドウが開かないことを検証します。OSの物理マウスドラッグを模擬するものではありません。
 

@@ -101,7 +101,7 @@ public partial class App : Application
         var searchIndex = Array.IndexOf(args, "--search-query");
         var query = searchIndex >= 0 && searchIndex + 1 < args.Length ? args[searchIndex + 1] : null;
         var searchPrepared = false;
-        timer.Tick += (_, _) =>
+        timer.Tick += async (_, _) =>
         {
             if (_window == null) return;
             if ((!_window.IsReady || !_window.IconsReady || !_window.ScriptsReady) && watch.Elapsed < TimeSpan.FromSeconds(45)) return;
@@ -114,18 +114,20 @@ public partial class App : Application
             NavigationSmokeResult? navigation = null;
             PlacementSmokeResult? placement = null;
             AppFolderSmokeResult? appFolders = null;
+            FirstInputSmokeResult? firstInput = null;
             string? error = null;
             try
             {
                 if (args.Contains("--navigation-test")) navigation = _window.VerifyNavigation(path);
                 if (args.Contains("--placement-test")) placement = _window.VerifyPlacement(path);
                 if (args.Contains("--app-tree-test")) appFolders = _window.VerifyAppFolders(path);
+                if (args.Contains("--first-input-test")) firstInput = await _window.VerifyFirstInputAsync(path);
                 _window.SaveScreenshot(path);
             }
             catch (Exception ex) when (ex is IOException or InvalidOperationException) { success = false; error = ex.Message; }
             try
             {
-                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, catalogFolders = _window.CatalogFolderCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, navigation, placement, appFolders, error, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
+                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, catalogFolders = _window.CatalogFolderCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, navigation, placement, appFolders, firstInput, error, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
             }
             catch (IOException) { success = false; }
             _window.Exit(); Shutdown(success ? 0 : 1);

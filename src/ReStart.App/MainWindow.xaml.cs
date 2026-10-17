@@ -24,6 +24,8 @@ public partial class MainWindow : Window
     private readonly LayoutStore _store;
     private readonly bool _preview;
     private readonly AppCatalog _catalog = new();
+    private readonly Func<Task<List<AppEntry>>> _loadCatalog;
+    private readonly bool _catalogFixture;
     private readonly DispatcherTimer _clock;
     private readonly List<(TextBlock Text, Tile Tile)> _liveLabels = [];
     private readonly Dictionary<string, FrameworkElement> _sections = [];
@@ -60,10 +62,15 @@ public partial class MainWindow : Window
     public LayoutDocument CreateInitialLayout() => SeedLayout.Create(_apps);
 
     /// <summary>Hosts the full-screen launcher and coordinates local models, native input, and tile rendering.</summary>
-    public MainWindow(LayoutStore store, bool preview)
+    public MainWindow(LayoutStore store, bool preview) : this(store, preview, null) { }
+
+    internal MainWindow(LayoutStore store, bool preview, Func<Task<List<AppEntry>>>? catalogLoader)
     {
+        if (!preview && catalogLoader != null) throw new ArgumentException("Catalog fixtures require preview mode.", nameof(catalogLoader));
         _store = store;
         _preview = preview;
+        _catalogFixture = catalogLoader != null;
+        _loadCatalog = catalogLoader ?? _catalog.LoadAsync;
         _scriptPackages = new(Path.GetDirectoryName(store.FilePath)!);
         IsVisibleChanged += (_, _) => { if (!IsVisible) PauseScripts(); };
         InitializeComponent();
@@ -109,9 +116,12 @@ public partial class MainWindow : Window
         {
             Document = _store.Load() ?? new();
             ApplyAppearance();
-            _apps = await _catalog.LoadAsync();
+            // Preferences and the bare-Windows-key hook must not wait for shell
+            // enumeration. Input is accepted while the catalog is still loading.
+            PreferencesChanged?.Invoke();
+            _apps = await _loadCatalog();
             var actualApps = _apps;
-            if (_preview)
+            if (_preview && !_catalogFixture)
             {
                 var previews = PreviewApps();
                 _apps = previews;
@@ -124,8 +134,9 @@ public partial class MainWindow : Window
             RenderApps();
             SetStatus(_store.RecoveryMessage ?? L.F(K.StatusCatalogReady, _apps.Count));
             _ready = true;
+            RefreshSearchResults();
             PreferencesChanged?.Invoke();
-            if (IsActive) FocusSearchInput();
+            if (IsActive && (Keyboard.FocusedElement == null || Keyboard.FocusedElement == this || SearchBox.IsKeyboardFocused)) FocusSearchInput();
             var pinnedIds = Document.Groups.SelectMany(g => g.Tiles).SelectMany(t => new[] { t }.Concat(t.Children)).Select(t => t.AppId).ToHashSet();
             await _catalog.LoadIconsAsync(actualApps.OrderByDescending(a => pinnedIds.Contains(a.Id)), () => Dispatcher.BeginInvoke(() =>
             {
@@ -142,12 +153,14 @@ public partial class MainWindow : Window
             IconsReady = true;
             RenderGroups();
             RenderApps();
+            RefreshSearchResults();
             if (_store.RecoveryMessage == null) SetStatus("");
         }
         catch (Exception ex)
         {
             SetStatus(L.T(K.ErrorCatalogLoad) + ex.Message);
             _ready = true;
+            RefreshSearchResults();
         }
     }
 
@@ -599,7 +612,6 @@ public partial class MainWindow : Window
         if (SearchPlaceholder == null) return;
         var query = SearchBox.Text.Trim();
         SearchPlaceholder.Visibility = query.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
-        ResultsPanel.Children.Clear();
         var searching = query.Length > 0;
         UpdateSearchChrome(searching || _searchRequested);
         ResultsPanel.Visibility = searching ? Visibility.Visible : Visibility.Collapsed;
@@ -609,13 +621,25 @@ public partial class MainWindow : Window
         AddButton.Visibility = searching || _allApps ? Visibility.Collapsed : Visibility.Visible;
         PinnedNav.Background = !_allApps && !searching ? (System.Windows.Media.Brush)FindResource("TileBrush") : Brushes.Transparent;
         AppsNav.Background = _allApps && !searching ? (System.Windows.Media.Brush)FindResource("TileBrush") : Brushes.Transparent;
+        RefreshSearchResults();
         if (!searching) return;
-        var results = AppSearch.Find(_apps, query);
-        ResultsPanel.Children.Add(new TextBlock { Text = results.Count == 0 ? L.T(K.SearchNoMatches) : L.T(K.SearchBestMatch), Margin = new(6, 10, 0, 14), Foreground = (System.Windows.Media.Brush)FindResource("MutedBrush") });
-        foreach (var result in results) ResultsPanel.Children.Add(AppButton(result));
-        if (results.Count == 0)
-            ResultsPanel.Children.Add(new TextBlock { Text = L.T(K.SearchHint), Margin = new(6), FontSize = 13 });
         ContentScroll.ScrollToTop();
+    }
+
+    private void RefreshSearchResults()
+    {
+        var focusedId = ((Keyboard.FocusedElement as Button)?.Tag as AppEntry)?.Id;
+        ResultsPanel.Children.Clear();
+        var query = SearchBox.Text.Trim();
+        if (query.Length == 0) return;
+        var results = AppSearch.Find(_apps, query);
+        var loading = !_ready && _apps.Count == 0;
+        ResultsPanel.Children.Add(new TextBlock { Text = loading ? L.T(K.StatusLoading) : results.Count == 0 ? L.T(K.SearchNoMatches) : L.T(K.SearchBestMatch), Margin = new(6, 10, 0, 14), Foreground = (System.Windows.Media.Brush)FindResource("MutedBrush") });
+        foreach (var result in results) ResultsPanel.Children.Add(AppButton(result));
+        if (results.Count == 0 && !loading)
+            ResultsPanel.Children.Add(new TextBlock { Text = L.T(K.SearchHint), Margin = new(6), FontSize = 13 });
+        if (focusedId != null && ResultsPanel.IsVisible)
+            ResultsPanel.Children.OfType<Button>().FirstOrDefault(b => b.Tag is AppEntry app && app.Id == focusedId)?.Focus();
     }
 
     private void ResetToPinnedView()
