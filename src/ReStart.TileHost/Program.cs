@@ -11,7 +11,9 @@ try
         ScriptTileResponse response;
         try
         {
-            var request = JsonSerializer.Deserialize<ScriptTileRequest>(line, ScriptTileProtocol.Json) ?? throw new InvalidDataException("Missing request.");
+            var request = JsonSerializer.Deserialize<ScriptTileRequest>(line, ScriptTileProtocol.Json) ?? throw new InvalidDataException(TextCatalog.T(K.ErrorScriptRequestMissing));
+            if (request.Context.ValueKind == JsonValueKind.Object && request.Context.TryGetProperty("locale", out var locale) && locale.ValueKind == JsonValueKind.String)
+                TextCatalog.SetLanguage(TextCatalog.Resolve("system", locale.GetString()));
             response = new(JsTileRunner.Render(request), null);
         }
         catch (Exception ex)
@@ -20,7 +22,7 @@ try
             response = new(null, message[..Math.Min(message.Length, 400)]);
         }
         var output = JsonSerializer.Serialize(response, ScriptTileProtocol.Json);
-        if (output.Length > ScriptTileProtocol.MaxResponse) output = "{\"error\":\"Tile output exceeds 16 KB.\"}";
+        if (output.Length > ScriptTileProtocol.MaxResponse) output = JsonSerializer.Serialize(new ScriptTileResponse(null, TextCatalog.T(K.ErrorScriptOutputSize)), ScriptTileProtocol.Json);
         Console.WriteLine(output); Console.Out.Flush();
     }
 }

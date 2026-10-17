@@ -5,6 +5,8 @@ using Microsoft.Win32.SafeHandles;
 
 namespace ReStart.App.Services;
 
+/// <summary>Bounds a worker to one process and 192 MB, and terminates it when the parent closes the job.</summary>
+/// <remarks>This is resource and lifetime isolation, not a reduced-privilege OS sandbox.</remarks>
 [System.Runtime.Versioning.SupportedOSPlatform("windows")]
 internal sealed class WorkerJob : IDisposable
 {

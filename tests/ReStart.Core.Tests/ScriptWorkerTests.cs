@@ -1,12 +1,24 @@
 using System.Diagnostics;
 using System.Runtime.Versioning;
 using ReStart.App.Services;
+using ReStart.Core;
 
 namespace ReStart.Core.Tests;
 
 [SupportedOSPlatform("windows")]
 public sealed class ScriptWorkerTests
 {
+    [Fact]
+    public async Task WorkerValidationErrorsFollowRequestedLocale()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        using var session = new ScriptTileSession(Path.Combine(AppContext.BaseDirectory, "ReStart.TileHost.exe"));
+        const string invalid = "function render(){return {progress:2};}";
+        Assert.Null(await session.RenderAsync(invalid, new { locale = "ja-JP" }));
+        Assert.Contains(TextCatalog.Translate(K.ErrorScriptFrameInvalid, "ja"), session.Error);
+        Assert.Null(await session.RenderAsync(invalid, new { locale = "en-US" }));
+        Assert.Contains(TextCatalog.Translate(K.ErrorScriptFrameInvalid, "en"), session.Error);
+    }
     [Fact]
     public async Task WorkerProcessHandlesErrorsAndRestartsAfterDeadline()
     {

@@ -9,7 +9,7 @@ internal static class ShellLauncher
 
     public static void Launch(string target, bool shellApp = false, bool elevated = false)
     {
-        if (string.IsNullOrWhiteSpace(target)) throw new InvalidOperationException(L.T("起動先がありません。"));
+        if (string.IsNullOrWhiteSpace(target)) throw new InvalidOperationException(L.T(K.ErrorNoTarget));
         if (shellApp)
         {
             // ArgumentList keeps the complete AUMID/path as one argument; never interpret it as a command.

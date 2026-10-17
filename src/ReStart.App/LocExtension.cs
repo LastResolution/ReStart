@@ -3,9 +3,12 @@ using System.Windows.Markup;
 
 namespace ReStart.App;
 
+/// <summary>Provides a dynamic WPF resource for a typed, language-independent text identifier.</summary>
 public sealed class LocExtension : MarkupExtension
 {
-    public string Key { get; set; } = "";
+    /// <summary>Gets or sets the compile-time text identifier to bind as a dynamic resource.</summary>
+    public ReStart.Core.TextKey Key { get; set; }
+    /// <summary>Registers the key for language refresh and returns a dynamic-resource expression.</summary>
     public override object ProvideValue(IServiceProvider serviceProvider)
     {
         LocalizationResources.Keys.Add(Key);
@@ -16,7 +19,7 @@ public sealed class LocExtension : MarkupExtension
 
 internal static class LocalizationResources
 {
-    public static HashSet<string> Keys { get; } = [];
+    public static HashSet<ReStart.Core.TextKey> Keys { get; } = [];
     public static void Apply(string language)
     {
         L.SetLanguage(language);

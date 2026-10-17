@@ -6,6 +6,12 @@ namespace ReStart.Core.Tests;
 
 public sealed class LocalizationTests
 {
+    [Fact]
+    public void UnsupportedSchemaCarriesVersionWithoutInspectingTranslatedText()
+    {
+        var error = Assert.Throws<UnsupportedLayoutVersionException>(() => new LayoutDocument { Version = 99 }.Normalize());
+        Assert.Equal(99, error.Version);
+    }
     [Theory]
     [InlineData("ja", "en-US", "ja")]
     [InlineData("en", "ja-JP", "en")]
@@ -23,13 +29,13 @@ public sealed class LocalizationTests
         {
             var japanese = TextCatalog.Translate(key, "ja");
             var english = TextCatalog.Translate(key, "en");
-            Assert.Equal(key, japanese);
+            Assert.False(string.IsNullOrWhiteSpace(japanese));
             Assert.False(string.IsNullOrWhiteSpace(english));
-            var args = Enumerable.Repeat<object>("sample", CompositeFormat.Parse(key).MinimumArgumentCount).ToArray();
-            Assert.Equal(CompositeFormat.Parse(key).MinimumArgumentCount, CompositeFormat.Parse(english).MinimumArgumentCount);
+            var args = Enumerable.Repeat<object>("sample", CompositeFormat.Parse(japanese).MinimumArgumentCount).ToArray();
+            Assert.Equal(CompositeFormat.Parse(japanese).MinimumArgumentCount, CompositeFormat.Parse(english).MinimumArgumentCount);
             _ = string.Format(CultureInfo.InvariantCulture, english, args);
         }
-        Assert.Equal("Settings", TextCatalog.Translate("設定", "en"));
-        Assert.Equal("my custom label", TextCatalog.Translate("my custom label", "ja"));
+        Assert.Equal("Settings", TextCatalog.Translate(TextKey.NavSettings, "en"));
+        Assert.Throws<KeyNotFoundException>(() => TextCatalog.Translate((TextKey)int.MaxValue, "en"));
     }
 }

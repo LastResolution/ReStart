@@ -18,6 +18,7 @@ using ReStart.Core;
 
 namespace ReStart.App;
 
+/// <summary>Hosts the full-screen launcher and coordinates local models, native input, and tile rendering.</summary>
 public partial class MainWindow : Window
 {
     private readonly LayoutStore _store;
@@ -37,15 +38,24 @@ public partial class MainWindow : Window
     private bool _exit;
     private bool _searchRequested;
     private Task? _initialization;
+    /// <summary>Gets the current local layout document.</summary>
     public LayoutDocument Document { get; private set; } = new();
+    /// <summary>Gets or sets the callback that reapplies shell integration after loading or saving preferences.</summary>
     public Action? PreferencesChanged { get; set; }
+    /// <summary>Gets whether initial catalog loading has completed, including a reported failure.</summary>
     public bool IsReady => _ready;
+    /// <summary>Gets whether hooks, startup registration, and real user data are isolated for verification.</summary>
     public bool IsPreview => _preview;
+    /// <summary>Gets whether background icon enumeration has completed.</summary>
     public bool IconsReady { get; private set; }
+    /// <summary>Gets the number of real applications enumerated for diagnostics.</summary>
     public int CatalogCount => _catalog.Count;
+    /// <summary>Gets the number of icons loaded for diagnostics.</summary>
     public int IconCount => _catalog.Icons.Count;
+    /// <summary>Creates a localized default layout from the currently loaded app catalog.</summary>
     public LayoutDocument CreateInitialLayout() => SeedLayout.Create(_apps);
 
+    /// <summary>Hosts the full-screen launcher and coordinates local models, native input, and tile rendering.</summary>
     public MainWindow(LayoutStore store, bool preview)
     {
         _store = store;
@@ -80,6 +90,7 @@ public partial class MainWindow : Window
         _clock.Start();
     }
 
+    /// <summary>Initializes layout and catalog once; background startup may call this before showing a window.</summary>
     public Task InitializeAsync() => _initialization ??= InitializeCoreAsync();
 
     private async Task InitializeCoreAsync()
@@ -101,7 +112,7 @@ public partial class MainWindow : Window
             ApplyAppearance();
             RenderGroups();
             RenderApps();
-            SetStatus(_store.RecoveryMessage ?? L.F("{0} 個のアプリ  ·  文字を入力して検索  ·  Esc で閉じる", _apps.Count));
+            SetStatus(_store.RecoveryMessage ?? L.F(K.StatusCatalogReady, _apps.Count));
             _ready = true;
             PreferencesChanged?.Invoke();
             if (IsActive) FocusSearchInput();
@@ -125,7 +136,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            SetStatus(L.T("アプリの読み込みに失敗しました: ") + ex.Message);
+            SetStatus(L.T(K.ErrorCatalogLoad) + ex.Message);
             _ready = true;
         }
     }
@@ -133,18 +144,20 @@ public partial class MainWindow : Window
     private static List<AppEntry> PreviewApps() =>
     [
         new("edge", "Microsoft Edge", "https://www.microsoft.com/edge", false),
-        new("mail", "メール", "mailto:", false), new("photos", "フォト", "ms-photos:", false),
-        new("store", "Microsoft Store", "ms-windows-store:", false), new("notepad", "メモ帳", "notepad.exe", false),
-        new("calc", "電卓", "calc.exe", false), new("paint", "ペイント", "mspaint.exe", false),
+        new("mail", L.T(K.AppMail), "mailto:", false), new("photos", L.T(K.AppPhotos), "ms-photos:", false),
+        new("store", "Microsoft Store", "ms-windows-store:", false), new("notepad", L.T(K.AppNotepad), "notepad.exe", false),
+        new("calc", L.T(K.AppCalculator), "calc.exe", false), new("paint", L.T(K.AppPaint), "mspaint.exe", false),
         new("terminal", "Windows Terminal", "wt.exe", false), new("code", "Visual Studio Code", "https://code.visualstudio.com", false)
     ];
 
+    /// <summary>Hides the active launcher or presents the existing window.</summary>
     public void Toggle()
     {
         if (IsVisible && IsActive && _dialogDepth == 0) Hide();
         else Present();
     }
 
+    /// <summary>Presents the launcher on the pointer monitor and prepares native text input; existing owned dialogs retain focus.</summary>
     public void Present()
     {
         var dialog = OwnedWindows.Cast<Window>().LastOrDefault(w => w.IsVisible);
@@ -170,20 +183,21 @@ public partial class MainWindow : Window
     private void RefreshBackgroundMenu()
     {
         var backgroundMenu = new ContextMenu();
-        Add(backgroundMenu, L.T("新しいグループ"), AddGroup);
-        Add(backgroundMenu, L.T("アプリをピン留め"), () => ShowAllApps(this, new()));
-        Add(backgroundMenu, L.T("タイルを追加"), () => OpenAddMenu(AddButton, new()));
-        Add(backgroundMenu, L.T("ReStart の設定"), ShowSettings);
+        Add(backgroundMenu, L.T(K.NewGroup), AddGroup);
+        Add(backgroundMenu, L.T(K.PinApp), () => ShowAllApps(this, new()));
+        Add(backgroundMenu, L.T(K.AddTile), () => OpenAddMenu(AddButton, new()));
+        Add(backgroundMenu, L.T(K.SettingsTitle), ShowSettings);
         Root.ContextMenu = backgroundMenu;
     }
 
+    /// <summary>Applies language, theme, contrast, wallpaper, and shared control resources from local preferences.</summary>
     public void ApplyAppearance()
     {
         var p = Document.Preferences;
         LocalizationResources.Apply(p.Language);
         Language = System.Windows.Markup.XmlLanguage.GetLanguage(L.Culture.IetfLanguageTag);
         RefreshBackgroundMenu();
-        if (_preview) Title = L.T("ReStart — プレビュー");
+        if (_preview) Title = L.T(K.PreviewTitle);
         var light = p.Theme == ReStart.Core.ThemeMode.Light;
         if (p.Theme == ReStart.Core.ThemeMode.System)
         {
@@ -218,6 +232,7 @@ public partial class MainWindow : Window
         }
     }
 
+    /// <summary>Reapplies preferences and rebuilds visible groups and app views without changing saved labels.</summary>
     public void RefreshLayout()
     {
         ApplyAppearance();
@@ -232,12 +247,13 @@ public partial class MainWindow : Window
         catch (FormatException) { return new((Color)ColorConverter.ConvertFromString(fallback)); }
     }
 
+    /// <summary>Persists the current document and reports recoverable write errors in the status area.</summary>
     public void SaveLayout()
     {
         try { _store.Save(Document); }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
-            SetStatus(L.T("保存できませんでした: ") + ex.Message);
+            SetStatus(L.T(K.ErrorSave) + ex.Message);
         }
     }
 
@@ -252,7 +268,7 @@ public partial class MainWindow : Window
         {
             var stack = new StackPanel { Background = Brushes.Transparent, Width = Document.Preferences.Columns * Cell, Margin = new(0, 0, 24, 28), Tag = group, AllowDrop = true };
             var header = new Button { Content = group.Name, HorizontalContentAlignment = HorizontalAlignment.Left, FontSize = 15, Padding = new(0, 8, 0, 12), HorizontalAlignment = HorizontalAlignment.Stretch, Tag = group };
-            AutomationProperties.SetName(header, L.T("グループ: ") + group.Name);
+            AutomationProperties.SetName(header, L.T(K.GroupPrefix) + group.Name);
             header.Click += (_, _) => { if (!_dragging) RenameGroup(group); };
             header.ContextMenu = GroupMenu(group);
             WireDrag(header, "ReStart.Group", group.Id);
@@ -281,7 +297,7 @@ public partial class MainWindow : Window
         }
         if (Document.Groups.Count == 0)
         {
-            var button = new Button { Content = L.T("＋ グループを作成して、アプリをピン留め"), Margin = new(0, 80, 0, 0), FontSize = 18 };
+            var button = new Button { Content = L.T(K.EmptyGroups), Margin = new(0, 80, 0, 0), FontSize = 18 };
             button.Click += (_, _) => AddGroup();
             GroupsPanel.Children.Add(button);
         }
@@ -305,7 +321,7 @@ public partial class MainWindow : Window
     private Button CreateTileButton(Tile tile)
     {
         var button = new Button { Tag = tile, Padding = new(0), HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch, ToolTip = tile.Label };
-        AutomationProperties.SetName(button, tile.Label + (tile.IsFolder ? L.T(" フォルダー") : ""));
+        AutomationProperties.SetName(button, tile.Label + (tile.IsFolder ? L.T(K.TileFolderSuffix) : ""));
         var colorful = Document.Preferences.ColoredTiles || tile.Widget.Length > 0;
         button.Background = colorful && !SystemParameters.HighContrast ? Brush(tile.Color.Length > 0 ? tile.Color : Document.Preferences.Accent, "#0078D7") : (System.Windows.Media.Brush)FindResource("TileBrush");
         if (colorful && !SystemParameters.HighContrast) button.Foreground = Brushes.White;
@@ -362,19 +378,19 @@ public partial class MainWindow : Window
     private ContextMenu TileMenu(Tile tile)
     {
         var menu = new ContextMenu();
-        Add(menu, L.T("スタートからピン留めを外す"), () => { RemoveTile(tile.Id); CommitLayout(); });
-        var resize = new MenuItem { Header = L.T("サイズ変更") };
-        foreach (var (size, label) in new[] { (TileSize.Small, L.T("小")), (TileSize.Medium, L.T("中")), (TileSize.Wide, L.T("横長")), (TileSize.Large, L.T("大")) })
+        Add(menu, L.T(K.UnpinTile), () => { RemoveTile(tile.Id); CommitLayout(); });
+        var resize = new MenuItem { Header = L.T(K.ResizeTile) };
+        foreach (var (size, label) in new[] { (TileSize.Small, L.T(K.TileSmall)), (TileSize.Medium, L.T(K.TileMedium)), (TileSize.Wide, L.T(K.TileWide)), (TileSize.Large, L.T(K.TileLarge)) })
         {
             var item = new MenuItem { Header = label, IsCheckable = true, IsChecked = tile.Size == size };
             item.Click += (_, _) => { tile.Size = size; CommitLayout(); };
             resize.Items.Add(item);
         }
         menu.Items.Add(resize);
-        Add(menu, L.T("名前を変更"), () => { var value = Prompt(L.T("タイルの名前"), tile.Label); if (value != null) { tile.Label = value; CommitLayout(); } });
-        if (tile.Widget.Length > 0) Add(menu, tile.Live ? L.T("ライブタイルをオフにする") : L.T("ライブタイルをオンにする"), () => { tile.Live = !tile.Live; CommitLayout(); });
+        Add(menu, L.T(K.RenameTile), () => { var value = Prompt(L.T(K.PromptTileName), tile.Label); if (value != null) { tile.Label = value; CommitLayout(); } });
+        if (tile.Widget.Length > 0) Add(menu, tile.Live ? L.T(K.DisableLiveTile) : L.T(K.EnableLiveTile), () => { tile.Live = !tile.Live; CommitLayout(); });
         if (tile.Widget == "script") AddScriptMenu(menu, tile);
-        var move = new MenuItem { Header = L.T("グループへ移動") };
+        var move = new MenuItem { Header = L.T(K.MoveToGroup) };
         foreach (var group in Document.Groups)
         {
             var item = new MenuItem { Header = group.Name };
@@ -384,7 +400,7 @@ public partial class MainWindow : Window
         menu.Items.Add(move);
         if (!tile.IsFolder)
         {
-            var folders = new MenuItem { Header = L.T("フォルダーにまとめる") };
+            var folders = new MenuItem { Header = L.T(K.CreateFolder) };
             foreach (var target in Document.Groups.SelectMany(g => g.Tiles).Where(t => t.Id != tile.Id && t.Widget.Length == 0))
             {
                 var item = new MenuItem { Header = target.Label };
@@ -394,7 +410,7 @@ public partial class MainWindow : Window
             folders.IsEnabled = folders.Items.Count > 0;
             menu.Items.Add(folders);
         }
-        else Add(menu, L.T("フォルダーを展開して戻す"), () =>
+        else Add(menu, L.T(K.UnpackFolder), () =>
         {
             var group = Document.Groups.First(g => g.Tiles.Contains(tile));
             var index = group.Tiles.IndexOf(tile);
@@ -408,12 +424,12 @@ public partial class MainWindow : Window
     private ContextMenu GroupMenu(TileGroup group)
     {
         var menu = new ContextMenu();
-        Add(menu, L.T("グループ名を変更"), () => RenameGroup(group));
-        Add(menu, L.T("グループを前へ"), () => MoveGroup(group, -1));
-        Add(menu, L.T("グループを後ろへ"), () => MoveGroup(group, 1));
-        Add(menu, L.T("グループを削除"), () =>
+        Add(menu, L.T(K.RenameGroup), () => RenameGroup(group));
+        Add(menu, L.T(K.MoveGroupEarlier), () => MoveGroup(group, -1));
+        Add(menu, L.T(K.MoveGroupLater), () => MoveGroup(group, 1));
+        Add(menu, L.T(K.DeleteGroup), () =>
         {
-            if (Confirm(L.F("「{0}」と、そのピン留めを削除しますか？ アプリ自体は削除されません。", group.Name)))
+            if (Confirm(L.F(K.ConfirmDeleteGroup, group.Name)))
             { Document.Groups.Remove(group); CommitLayout(); }
         });
         return menu;
@@ -572,14 +588,14 @@ public partial class MainWindow : Window
         {
             // Resolve groups when opening, after any rename, removal, or layout import.
             menu.Items.Clear();
-            foreach (var group in Document.Groups) Add(menu, L.F("「{0}」にピン留め", group.Name), () =>
+            foreach (var group in Document.Groups) Add(menu, L.F(K.PinToGroup, group.Name), () =>
             {
                 if (!Document.Groups.Contains(group)) return;
-                group.Tiles.Add(Tile.FromApp(app)); CommitLayout(); SetStatus(L.F("{0} をピン留めしました", app.Name));
+                group.Tiles.Add(Tile.FromApp(app)); CommitLayout(); SetStatus(L.F(K.StatusPinned, app.Name));
             });
-            Add(menu, L.T("新しいグループにピン留め"), () =>
+            Add(menu, L.T(K.PinNewGroup), () =>
             {
-                var name = Prompt(L.T("グループの名前"), L.T("新しいグループ"));
+                var name = Prompt(L.T(K.PromptGroupName), L.T(K.NewGroup));
                 if (name != null) { Document.Groups.Add(new() { Name = name, Tiles = [Tile.FromApp(app)] }); CommitLayout(); }
             });
         };
@@ -598,16 +614,16 @@ public partial class MainWindow : Window
         ResultsPanel.Visibility = searching ? Visibility.Visible : Visibility.Collapsed;
         GroupsPanel.Visibility = !searching && !_allApps ? Visibility.Visible : Visibility.Collapsed;
         AppsPanel.Visibility = !searching && _allApps ? Visibility.Visible : Visibility.Collapsed;
-        ViewTitle.Text = searching ? L.T("検索") : _allApps ? L.T("すべてのアプリ") : L.T("スタート");
+        ViewTitle.Text = searching ? L.T(K.SearchTitle) : _allApps ? L.T(K.NavAllApps) : L.T(K.NavStart);
         AddButton.Visibility = searching || _allApps ? Visibility.Collapsed : Visibility.Visible;
         PinnedNav.Background = !_allApps && !searching ? (System.Windows.Media.Brush)FindResource("TileBrush") : Brushes.Transparent;
         AppsNav.Background = _allApps && !searching ? (System.Windows.Media.Brush)FindResource("TileBrush") : Brushes.Transparent;
         if (!searching) return;
         var results = AppSearch.Find(_apps, query);
-        ResultsPanel.Children.Add(new TextBlock { Text = results.Count == 0 ? L.T("一致するアプリはありません") : L.T("最も一致するアプリ"), Margin = new(6, 10, 0, 14), Foreground = (System.Windows.Media.Brush)FindResource("MutedBrush") });
+        ResultsPanel.Children.Add(new TextBlock { Text = results.Count == 0 ? L.T(K.SearchNoMatches) : L.T(K.SearchBestMatch), Margin = new(6, 10, 0, 14), Foreground = (System.Windows.Media.Brush)FindResource("MutedBrush") });
         foreach (var result in results) ResultsPanel.Children.Add(AppButton(result));
         if (results.Count == 0)
-            ResultsPanel.Children.Add(new TextBlock { Text = L.T("名前の一部を入力して検索してください。"), Margin = new(6), FontSize = 13 });
+            ResultsPanel.Children.Add(new TextBlock { Text = L.T(K.SearchHint), Margin = new(6), FontSize = 13 });
         ContentScroll.ScrollToTop();
     }
 
@@ -615,40 +631,40 @@ public partial class MainWindow : Window
     private void ShowAllApps(object sender, RoutedEventArgs e) { _searchRequested = false; _allApps = true; SearchBox.Clear(); SearchChanged(SearchBox, new(TextBox.TextChangedEvent, UndoAction.None)); ExpandedRail.Visibility = Visibility.Collapsed; ContentScroll.ScrollToTop(); }
     private void ClearSearch(object sender, RoutedEventArgs e) { SearchBox.Clear(); SearchBox.Focus(); }
     private void ToggleRail(object sender, RoutedEventArgs e) => ExpandedRail.Visibility = ExpandedRail.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
-    private void RenameGroup(TileGroup group) { var name = Prompt(L.T("グループの名前"), group.Name); if (name != null) { group.Name = name; CommitLayout(); } }
-    private void AddGroup() { var name = Prompt(L.T("グループの名前"), L.T("新しいグループ")); if (name != null) { Document.Groups.Add(new() { Name = name }); CommitLayout(); RenderApps(); } }
+    private void RenameGroup(TileGroup group) { var name = Prompt(L.T(K.PromptGroupName), group.Name); if (name != null) { group.Name = name; CommitLayout(); } }
+    private void AddGroup() { var name = Prompt(L.T(K.PromptGroupName), L.T(K.NewGroup)); if (name != null) { Document.Groups.Add(new() { Name = name }); CommitLayout(); RenderApps(); } }
 
     private void OpenAddMenu(object sender, RoutedEventArgs e)
     {
         var menu = new ContextMenu();
-        Add(menu, L.T("新しいグループ"), AddGroup);
-        Add(menu, L.T("アプリをピン留め"), () => ShowAllApps(this, new()));
-        Add(menu, L.T("ファイル・フォルダーをピン留め"), AddCustomTile);
-        Add(menu, L.T("Web サイトをピン留め"), () =>
+        Add(menu, L.T(K.NewGroup), AddGroup);
+        Add(menu, L.T(K.PinApp), () => ShowAllApps(this, new()));
+        Add(menu, L.T(K.PinFileFolder), AddCustomTile);
+        Add(menu, L.T(K.PinWebsite), () =>
         {
-            var url = Prompt(L.T("Web サイトの URL"), "https://");
+            var url = Prompt(L.T(K.PromptWebsiteUrl), "https://");
             if (url == null) return;
-            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme is not ("http" or "https")) { SetStatus(L.T("http または https の URL を指定してください。")); return; }
-            var label = Prompt(L.T("タイルの名前"), uri.Host);
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme is not ("http" or "https")) { SetStatus(L.T(K.ErrorInvalidUrl)); return; }
+            var label = Prompt(L.T(K.PromptTileName), uri.Host);
             if (label != null) PinCustom(new() { AppId = url, Label = label, Target = url, IsShellApp = false, Size = TileSize.Wide });
         });
-        Add(menu, L.T("JavaScript タイルを作成"), CreateScriptTile);
-        Add(menu, L.T("JavaScript タイルをインポート"), ImportScriptTile);
-        Add(menu, L.T("時計タイル"), () => PinCustom(new() { AppId = "restart:clock", Label = L.T("クロック"), Widget = "clock", Target = "ms-clock:", IsShellApp = false }));
-        Add(menu, L.T("カレンダータイル"), () => PinCustom(new() { AppId = "restart:calendar", Label = L.T("カレンダー"), Widget = "calendar", Target = "", IsShellApp = false, Size = TileSize.Wide }));
+        Add(menu, L.T(K.CreateScriptTile), CreateScriptTile);
+        Add(menu, L.T(K.ImportScriptTile), ImportScriptTile);
+        Add(menu, L.T(K.AddClock), () => PinCustom(new() { AppId = "restart:clock", Label = L.T(K.AppClock), Widget = "clock", Target = "ms-clock:", IsShellApp = false }));
+        Add(menu, L.T(K.AddCalendar), () => PinCustom(new() { AppId = "restart:calendar", Label = L.T(K.AppCalendar), Widget = "calendar", Target = "", IsShellApp = false, Size = TileSize.Wide }));
         OpenMenu(menu, (Button)sender);
     }
 
     private void AddCustomTile()
     {
         var menu = new ContextMenu();
-        Add(menu, L.T("ファイルを選ぶ"), () =>
+        Add(menu, L.T(K.ChooseFile), () =>
         {
-            WithDialog(() => { var dialog = new OpenFileDialog { Title = L.T("ピン留めするファイル") }; if (dialog.ShowDialog(this) == true) PinCustom(new() { AppId = dialog.FileName, Target = dialog.FileName, Label = Path.GetFileNameWithoutExtension(dialog.FileName), IsShellApp = false }); });
+            WithDialog(() => { var dialog = new OpenFileDialog { Title = L.T(K.PromptPinFile) }; if (dialog.ShowDialog(this) == true) PinCustom(new() { AppId = dialog.FileName, Target = dialog.FileName, Label = Path.GetFileNameWithoutExtension(dialog.FileName), IsShellApp = false }); });
         });
-        Add(menu, L.T("フォルダーを選ぶ"), () =>
+        Add(menu, L.T(K.ChooseFolder), () =>
         {
-            WithDialog(() => { var dialog = new OpenFolderDialog { Title = L.T("ピン留めするフォルダー") }; if (dialog.ShowDialog(this) == true) PinCustom(new() { AppId = dialog.FolderName, Target = dialog.FolderName, Label = Path.GetFileName(dialog.FolderName), IsShellApp = false }); });
+            WithDialog(() => { var dialog = new OpenFolderDialog { Title = L.T(K.PromptPinFolder) }; if (dialog.ShowDialog(this) == true) PinCustom(new() { AppId = dialog.FolderName, Target = dialog.FolderName, Label = Path.GetFileName(dialog.FolderName), IsShellApp = false }); });
         });
         OpenMenu(menu, AddButton);
     }
@@ -710,7 +726,7 @@ public partial class MainWindow : Window
             return;
         }
         try { ShellLauncher.Launch(app); Hide(); }
-        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or System.IO.FileNotFoundException) { SetStatus(L.T("起動できませんでした: ") + ex.Message); }
+        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or System.IO.FileNotFoundException) { SetStatus(L.T(K.ErrorLaunch) + ex.Message); }
     }
     private void OpenDocuments(object sender, RoutedEventArgs e) => LaunchPath(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
     private void OpenPictures(object sender, RoutedEventArgs e) => LaunchPath(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures));
@@ -718,22 +734,22 @@ public partial class MainWindow : Window
     private void OpenAccount(object sender, RoutedEventArgs e)
     {
         var menu = new ContextMenu();
-        Add(menu, L.T("アカウント設定の変更"), () => LaunchPath("ms-settings:yourinfo"));
-        Add(menu, L.T("ロック"), () => { Hide(); Native.LockWorkStation(); });
-        Add(menu, L.T("サインアウト"), () => RunPower("/l", L.T("サインアウト")));
+        Add(menu, L.T(K.AccountSettings), () => LaunchPath("ms-settings:yourinfo"));
+        Add(menu, L.T(K.AccountLock), () => { Hide(); Native.LockWorkStation(); });
+        Add(menu, L.T(K.AccountSignOut), () => RunPower("/l", L.T(K.AccountSignOut)));
         OpenMenu(menu, (Button)sender);
     }
     private void OpenPower(object sender, RoutedEventArgs e)
     {
         var menu = new ContextMenu();
-        Add(menu, L.T("スリープ"), () => { if (Confirm(L.T("PC をスリープしますか？"))) { Hide(); System.Windows.Forms.Application.SetSuspendState(System.Windows.Forms.PowerState.Suspend, false, false); } });
-        Add(menu, L.T("シャットダウン"), () => RunPower("/s", L.T("シャットダウン")));
-        Add(menu, L.T("再起動"), () => RunPower("/r", L.T("再起動")));
+        Add(menu, L.T(K.PowerSleep), () => { if (Confirm(L.T(K.ConfirmSleep))) { Hide(); System.Windows.Forms.Application.SetSuspendState(System.Windows.Forms.PowerState.Suspend, false, false); } });
+        Add(menu, L.T(K.PowerShutdown), () => RunPower("/s", L.T(K.PowerShutdown)));
+        Add(menu, L.T(K.PowerRestart), () => RunPower("/r", L.T(K.PowerRestart)));
         OpenMenu(menu, (Button)sender);
     }
     private void RunPower(string operation, string label)
     {
-        if (!Confirm(L.F("PC を{0}しますか？ 作業中のファイルを保存してください。", label))) return;
+        if (!Confirm(L.F(K.ConfirmPower, label))) return;
         var info = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "shutdown.exe")) { UseShellExecute = false, CreateNoWindow = true };
         info.ArgumentList.Add(operation);
         if (operation != "/l") { info.ArgumentList.Add("/t"); info.ArgumentList.Add("0"); }
@@ -743,6 +759,7 @@ public partial class MainWindow : Window
 
     private static void OpenMenu(ContextMenu menu, Button target) { menu.PlacementTarget = target; menu.IsOpen = true; }
     private void OpenSettings(object sender, RoutedEventArgs e) => ShowSettings();
+    /// <summary>Shows the settings dialog with close-on-deactivate suspended, then reapplies saved preferences.</summary>
     public void ShowSettings()
     {
         WithDialog(() => { var settings = new SettingsWindow(this, _store) { Owner = _preview ? null : this }; settings.ShowDialog(); });
@@ -750,9 +767,13 @@ public partial class MainWindow : Window
         RefreshLayout();
         PreferencesChanged?.Invoke();
     }
+    /// <summary>Displays a transient status or recovery message.</summary>
     public void SetStatus(string message) => StatusText.Text = message;
+    /// <summary>Prepares a query for rendering verification only; this does not simulate physical keyboard input.</summary>
     public void SetSmokeSearch(string query) { SearchBox.Text = query; FocusSearchInput(); }
+    /// <summary>Gets rendered app-result names for smoke diagnostics.</summary>
     public string[] SearchResultNames => ResultsPanel.Children.OfType<Button>().Select(AutomationProperties.GetName).ToArray();
+    /// <summary>Gets whether the native text input remains in the visible WPF tree.</summary>
     public bool SearchInputInVisibleTree => SearchBox.IsVisible;
     private void WithDialog(Action action) { _dialogDepth++; try { action(); } finally { _dialogDepth--; } }
     private bool Confirm(string text)
@@ -767,6 +788,7 @@ public partial class MainWindow : Window
         WithDialog(() => answer = TextPrompt.Show(this, title, value));
         return answer;
     }
+    /// <summary>Gets the current local layout document.</summary>
     public void ReplaceDocument(LayoutDocument document) { Document = document; SaveLayout(); RefreshLayout(); }
 
     private void FocusSearchInput()
@@ -780,6 +802,7 @@ public partial class MainWindow : Window
     {
         TopBar.Height = visible ? 52 : 0; TopBar.Opacity = visible ? 1 : 0; TopBar.IsHitTestVisible = visible;
     }
+    /// <summary>Closes the menu after a taskbar click unless a dialog or drag currently owns the interaction.</summary>
     public void DismissFromTaskbar()
     {
         if (IsVisible && _dialogDepth == 0 && !_dragging && Document.Preferences.CloseOnDeactivate) Hide();
@@ -824,8 +847,10 @@ public partial class MainWindow : Window
     }
     private static bool IsAnyMenuOpen() => Mouse.Captured is ContextMenu || Mouse.Captured is System.Windows.Controls.Primitives.MenuBase;
     private void OnClosing(object? sender, CancelEventArgs e) { if (!_exit) { e.Cancel = true; Hide(); } }
+    /// <summary>Stops timers and isolated script workers before permanently closing the launcher.</summary>
     public void Exit() { _exit = true; _clock.Stop(); PauseScripts(); Close(); }
 
+    /// <summary>Renders only the launcher root to a PNG for reproducible UI verification.</summary>
     public void SaveScreenshot(string path)
     {
         UpdateLayout();

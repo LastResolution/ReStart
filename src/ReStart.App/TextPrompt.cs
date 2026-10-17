@@ -16,8 +16,8 @@ internal static class TextPrompt
         System.Windows.Automation.AutomationProperties.SetName(input, title);
         panel.Children.Add(input);
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new(0, 16, 0, 0) };
-        var cancel = new Button { Content = L.T("キャンセル"), IsCancel = true, MinWidth = 100 };
-        var save = new Button { Content = L.T("保存"), IsDefault = true, MinWidth = 90, Margin = new(8, 0, 0, 0) };
+        var cancel = new Button { Content = L.T(K.CommonCancel), IsCancel = true, MinWidth = 100 };
+        var save = new Button { Content = L.T(K.CommonSave), IsDefault = true, MinWidth = 90, Margin = new(8, 0, 0, 0) };
         save.SetResourceReference(Control.BackgroundProperty, "AccentBrush");
         save.Click += (_, _) => { if (!string.IsNullOrWhiteSpace(input.Text)) window.DialogResult = true; };
         buttons.Children.Add(cancel); buttons.Children.Add(save);

@@ -10,7 +10,7 @@ internal sealed class CalendarWindow : Window
     private readonly StackPanel _body = new() { Margin = new(24) };
     public CalendarWindow(Window owner)
     {
-        Owner = owner; Title = L.T("カレンダー"); Width = 400; Height = 450;
+        Owner = owner; Title = L.T(K.AppCalendar); Width = 400; Height = 450;
         ResizeMode = ResizeMode.NoResize; WindowStartupLocation = WindowStartupLocation.CenterOwner;
         ShowInTaskbar = false; Style = (Style)FindResource(typeof(Window)); ThemeWindow.Attach(this);
         Content = _body; Render();

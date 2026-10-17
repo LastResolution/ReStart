@@ -3,8 +3,10 @@ using System.Text;
 
 namespace ReStart.Core;
 
+/// <summary>Ranks local application names after Unicode-width and kana normalization.</summary>
 public static class AppSearch
 {
+    /// <summary>Returns up to limit matches, prioritizing exact names, name prefixes, word prefixes, then substrings.</summary>
     public static IReadOnlyList<AppEntry> Find(IEnumerable<AppEntry> apps, string query, int limit = 80)
     {
         var words = Fold(query).Split(' ', StringSplitOptions.RemoveEmptyEntries);

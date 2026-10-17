@@ -8,11 +8,15 @@ using System.Collections.Concurrent;
 
 namespace ReStart.App.Services;
 
+/// <summary>Enumerates AppsFolder and local shortcuts on dedicated STA threads without altering the shell.</summary>
 public sealed class AppCatalog
 {
+    /// <summary>Gets frozen icon images safe to consume from the UI thread.</summary>
     public ConcurrentDictionary<string, ImageSource> Icons { get; } = new(StringComparer.OrdinalIgnoreCase);
+    /// <summary>Gets the number of applications returned by the last completed enumeration.</summary>
     public int Count { get; private set; }
 
+    /// <summary>Enumerates real app names and launch identities on a background STA thread.</summary>
     public Task<List<AppEntry>> LoadAsync()
     {
         var completion = new TaskCompletionSource<List<AppEntry>>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -27,6 +31,7 @@ public sealed class AppCatalog
         return completion.Task;
     }
 
+    /// <summary>Loads icons on a background STA thread. The optional batch callback runs there and must dispatch any UI work.</summary>
     public Task LoadIconsAsync(IEnumerable<AppEntry> apps, Action? batchReady = null)
     {
         var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);

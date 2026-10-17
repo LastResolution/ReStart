@@ -25,14 +25,14 @@ internal sealed class SettingsWindow : Window
         _store = store;
         _draft = JsonSerializer.Deserialize<Preferences>(JsonSerializer.Serialize(main.Document.Preferences))!;
         if (!main.IsPreview) _draft.StartWithWindows = StartupRegistration.Current.IsEnabled;
-        Title = L.T("ReStart の設定"); Width = 940; Height = 740; MinWidth = 760; MinHeight = 500;
+        Title = L.T(K.SettingsTitle); Width = 940; Height = 740; MinWidth = 760; MinHeight = 500;
         WindowStartupLocation = main.IsPreview ? WindowStartupLocation.CenterScreen : WindowStartupLocation.CenterOwner; ShowInTaskbar = main.IsPreview;
         var root = new DockPanel { Margin = new(28, 24, 28, 20) };
         var footer = new StackPanel { Margin = new(0, 12, 0, 0) };
         footer.Children.Add(_feedback);
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
-        var close = new Button { Content = L.T("閉じる"), MinWidth = 90, IsCancel = true };
-        var save = new Button { Content = L.T("保存"), MinWidth = 100, Margin = new(12, 0, 0, 0), IsDefault = true };
+        var close = new Button { Content = L.T(K.CommonClose), MinWidth = 90, IsCancel = true };
+        var save = new Button { Content = L.T(K.CommonSave), MinWidth = 100, Margin = new(12, 0, 0, 0), IsDefault = true };
         save.SetResourceReference(BackgroundProperty, "AccentBrush"); save.Foreground = Brushes.White;
         save.Click += Save;
         buttons.Children.Add(close); buttons.Children.Add(save); footer.Children.Add(buttons);
@@ -53,60 +53,60 @@ internal sealed class SettingsWindow : Window
             if (navigationButtons.Count == 1) { view.Content = section; button.Background = Resource("TileBrush"); }
             return section;
         }
-        var content = Section(L.T("起動と操作"));
-        Check(content, L.T("Windows キー単押しで ReStart を開く"), _draft.CaptureWindowsKey, v => _draft.CaptureWindowsKey = v);
-        Note(content, L.T("Win+E / Win+D などのショートカットは Windows に渡します。Ctrl+Alt+Space とトレイからも開けます。"));
-        Check(content, L.T("タスクバーのスタートボタンも置き換える（試験的）"), _draft.CaptureStartButton, v => _draft.CaptureStartButton = v);
-        Note(content, L.T("Windows がネイティブの Start ボタンを公開する構成で動作します。Windows 11 の構成によっては利用できません。"));
-        var autostart = Check(content, L.T("Windows へのサインイン時に起動する"), _draft.StartWithWindows, v => _draft.StartWithWindows = v);
+        var content = Section(L.T(K.SettingsStartup));
+        Check(content, L.T(K.SettingsWindowsKey), _draft.CaptureWindowsKey, v => _draft.CaptureWindowsKey = v);
+        Note(content, L.T(K.SettingsShortcutHelp));
+        Check(content, L.T(K.SettingsStartButton), _draft.CaptureStartButton, v => _draft.CaptureStartButton = v);
+        Note(content, L.T(K.SettingsStartButtonHelp));
+        var autostart = Check(content, L.T(K.SettingsAutostart), _draft.StartWithWindows, v => _draft.StartWithWindows = v);
         autostart.IsEnabled = !main.IsPreview;
-        Note(content, L.T(main.IsPreview ? "プレビューでは自動起動の登録を変更しません。" : "サインイン時は通知領域に常駐します。画面はキー操作で開きます。"));
-        if (!main.IsPreview && StartupRegistration.Current.Command is string command) Note(content, L.T("登録済みの起動コマンド: ") + command);
-        Check(content, L.T("別のアプリに切り替えたら閉じる"), _draft.CloseOnDeactivate, v => _draft.CloseOnDeactivate = v);
-        content = Section(L.T("外観"));
-        Select(content, L.T("テーマ"), new[] { L.T("システムに合わせる"), L.T("ダーク"), L.T("ライト") }, (int)_draft.Theme, i => _draft.Theme = (ReStart.Core.ThemeMode)i);
-        Check(content, L.T("デスクトップの壁紙を背景に表示する"), _draft.ShowWallpaper, v => _draft.ShowWallpaper = v);
-        Check(content, L.T("旧スタートの色付きタイルを使う"), _draft.ColoredTiles, v => _draft.ColoredTiles = v);
-        Check(content, L.T("表示時のアニメーション"), _draft.Animate, v => _draft.Animate = v);
-        Select(content, L.T("グループの幅"), new[] { L.T("中タイル 3 列"), L.T("中タイル 4 列") }, _draft.Columns == 8 ? 1 : 0, i => _draft.Columns = i == 1 ? 8 : 6);
-        Slide(content, L.T("タイルの大きさ"), 0.7, 1.5, _draft.TileScale, v => _draft.TileScale = v, true);
-        Slide(content, L.T("背景の濃さ"), 0.3, 1, _draft.BackgroundOpacity, v => _draft.BackgroundOpacity = v, false);
+        Note(content, L.T(main.IsPreview ? K.PreviewAutostartHelp : K.StartupBackgroundHelp));
+        if (!main.IsPreview && StartupRegistration.Current.Command is string command) Note(content, L.T(K.StartupCommandPrefix) + command);
+        Check(content, L.T(K.SettingsCloseOnDeactivate), _draft.CloseOnDeactivate, v => _draft.CloseOnDeactivate = v);
+        content = Section(L.T(K.SettingsAppearance));
+        Select(content, L.T(K.SettingsTheme), new[] { L.T(K.ThemeSystem), L.T(K.ThemeDark), L.T(K.ThemeLight) }, (int)_draft.Theme, i => _draft.Theme = (ReStart.Core.ThemeMode)i);
+        Check(content, L.T(K.SettingsWallpaper), _draft.ShowWallpaper, v => _draft.ShowWallpaper = v);
+        Check(content, L.T(K.SettingsColoredTiles), _draft.ColoredTiles, v => _draft.ColoredTiles = v);
+        Check(content, L.T(K.SettingsAnimation), _draft.Animate, v => _draft.Animate = v);
+        Select(content, L.T(K.SettingsGroupWidth), new[] { L.T(K.ColumnsThree), L.T(K.ColumnsFour) }, _draft.Columns == 8 ? 1 : 0, i => _draft.Columns = i == 1 ? 8 : 6);
+        Slide(content, L.T(K.SettingsTileSize), 0.7, 1.5, _draft.TileScale, v => _draft.TileScale = v, true);
+        Slide(content, L.T(K.SettingsOpacity), 0.3, 1, _draft.BackgroundOpacity, v => _draft.BackgroundOpacity = v, false);
         var colors = new StackPanel { Orientation = Orientation.Horizontal, Margin = new(0, 8, 0, 12) };
         foreach (var color in new[] { "#0078D7", "#0063B1", "#008272", "#107C10", "#744DA9", "#C239B3", "#D83B01", "#E81123" })
         {
             var button = new Button { Width = 42, Height = 34, Background = (SolidColorBrush)new BrushConverter().ConvertFromString(color)!, Margin = new(0, 0, 8, 0), ToolTip = color, Padding = new(0), HorizontalContentAlignment = HorizontalAlignment.Center, Content = _draft.Accent == color ? "✓" : "", Foreground = Brushes.White };
-            System.Windows.Automation.AutomationProperties.SetName(button, L.T("アクセント ") + color);
+            System.Windows.Automation.AutomationProperties.SetName(button, L.T(K.AccentPrefix) + color);
             button.Click += (_, _) => { _draft.Accent = color; foreach (Button b in colors.Children) b.Content = ""; button.Content = "✓"; };
             colors.Children.Add(button);
         }
-        content.Children.Add(new TextBlock { Text = L.T("アクセントカラー"), Margin = new(0, 8, 0, 0) }); content.Children.Add(colors);
-        content = Section(L.T("言語"));
-        Select(content, L.T("表示言語"), new[] { L.T("システムに合わせる"), L.T("日本語"), "English" }, _draft.Language == "ja" ? 1 : _draft.Language == "en" ? 2 : 0, i => _draft.Language = i == 1 ? "ja" : i == 2 ? "en" : "system");
-        Note(content, L.T("保存すると表示言語が切り替わります。アプリ名や自分で付けた名前は変更しません。"));
-        content = Section(L.T("レイアウトとデータ"));
-        Note(content, L.T("並べ替え・サイズ・フォルダーは自動保存されます。タイルを Shift を押しながら重ねるとフォルダーになります。"));
+        content.Children.Add(new TextBlock { Text = L.T(K.SettingsAccent), Margin = new(0, 8, 0, 0) }); content.Children.Add(colors);
+        content = Section(L.T(K.SettingsLanguage));
+        Select(content, L.T(K.SettingsDisplayLanguage), new[] { L.T(K.ThemeSystem), L.T(K.LanguageJapanese), "English" }, _draft.Language == "ja" ? 1 : _draft.Language == "en" ? 2 : 0, i => _draft.Language = i == 1 ? "ja" : i == 2 ? "en" : "system");
+        Note(content, L.T(K.SettingsLanguageHelp));
+        content = Section(L.T(K.SettingsLayout));
+        Note(content, L.T(K.SettingsLayoutHelp));
         var dataButtons = new WrapPanel { Margin = new(0, 10, 0, 4) };
-        DataButton(dataButtons, L.T("エクスポート"), Export);
-        DataButton(dataButtons, L.T("インポート"), Import);
-        DataButton(dataButtons, L.T("初期レイアウトに戻す"), Reset);
+        DataButton(dataButtons, L.T(K.CommonExport), Export);
+        DataButton(dataButtons, L.T(K.CommonImport), Import);
+        DataButton(dataButtons, L.T(K.ResetLayout), Reset);
         content.Children.Add(dataButtons);
-        Note(content, L.T("保存先: ") + _store.FilePath);
-        Note(content, L.T("通信・広告・利用状況の送信はありません。インストール済みアプリとショートカットはこの PC だけで読み取ります。"));
-        content = Section(L.T("JavaScript タイル"));
-        Note(content, L.T("JavaScript で独自のライブタイルを作れます。サンプルを作成し、メモ帳で tile.js を編集してください。保存後、次の更新で反映します。"));
+        Note(content, L.T(K.StoragePrefix) + _store.FilePath);
+        Note(content, L.T(K.SettingsPrivacy));
+        content = Section(L.T(K.SettingsScriptTiles));
+        Note(content, L.T(K.ScriptAuthoringHelp));
         var scriptButtons = new WrapPanel();
-        DataButton(scriptButtons, L.T("サンプルを作成"), () => { _main.CreateScriptTile(); _feedback.Text = L.T("タイルを追加しました。設定を閉じると表示されます。"); });
-        DataButton(scriptButtons, L.T("JavaScript タイルをインポート"), () => { _main.ImportScriptTile(); });
+        DataButton(scriptButtons, L.T(K.CreateScriptSample), () => { _main.CreateScriptTile(); _feedback.Text = L.T(K.StatusScriptAdded); });
+        DataButton(scriptButtons, L.T(K.ImportScriptTile), () => { _main.ImportScriptTile(); });
         content.Children.Add(scriptButtons);
-        Note(content, L.T("スクリプトには時刻・言語・設定・前回の状態を渡します。ネットワーク、ファイル、Node.js、DOM、CLR は公開しません。詳細は README のタイル開発ガイドを参照してください。"));
-        content = Section(L.T("情報"));
+        Note(content, L.T(K.ScriptCapabilitiesHelp));
+        content = Section(L.T(K.SettingsAbout));
         Note(content, "ReStart v" + typeof(App).Assembly.GetName().Version?.ToString(3));
-        Heading(content, L.T("再現範囲"));
-        Note(content, L.T("Windows 10 の全画面スタートを参考に独立実装しています。旧 UWP のライブ通知、Cortana、Windows Search 全体、Explorer 内部の置き換えは含まれません。時計・日付タイルはローカルで更新します。"));
+        Heading(content, L.T(K.AboutScope));
+        Note(content, L.T(K.AboutCompatibility));
         var links = new WrapPanel { Margin = new(0, 10, 0, 0) };
         DataButton(links, "GitHub / README", () => ShellLauncher.Launch("https://github.com/LastResolution/ReStart"));
-        DataButton(links, L.T("Windows の設定"), () => ShellLauncher.Launch("ms-settings:"));
-        DataButton(links, L.T("ReStart を終了"), () => { DialogResult = false; ((App)Application.Current).ExitApplication(); });
+        DataButton(links, L.T(K.OpenWindowsSettings), () => ShellLauncher.Launch("ms-settings:"));
+        DataButton(links, L.T(K.AppExit), () => { DialogResult = false; ((App)Application.Current).ExitApplication(); });
         content.Children.Add(links);
         root.Children.Add(body);
         Content = root;
@@ -165,36 +165,36 @@ internal sealed class SettingsWindow : Window
             if (registration != null)
             {
                 try { StartupRegistration.Current.Restore(registration); }
-                catch (Exception rollback) when (rollback is IOException or UnauthorizedAccessException or System.Security.SecurityException) { _feedback.Text = L.T("自動起動の登録を戻せませんでした: ") + rollback.Message; return; }
+                catch (Exception rollback) when (rollback is IOException or UnauthorizedAccessException or System.Security.SecurityException) { _feedback.Text = L.T(K.ErrorStartupRollback) + rollback.Message; return; }
             }
-            _feedback.Text = L.T("保存できませんでした: ") + ex.Message;
+            _feedback.Text = L.T(K.ErrorSave) + ex.Message;
         }
     }
     private void Export()
     {
-        var dialog = new SaveFileDialog { Title = L.T("レイアウトをエクスポート"), FileName = "ReStart-layout.json", Filter = "JSON|*.json" };
+        var dialog = new SaveFileDialog { Title = L.T(K.ExportLayout), FileName = "ReStart-layout.json", Filter = "JSON|*.json" };
         if (dialog.ShowDialog(this) != true) return;
-        try { File.WriteAllText(dialog.FileName, JsonSerializer.Serialize(_main.Document, LayoutStore.JsonOptions)); _feedback.Text = L.T("エクスポートしました。起動先のパスなどが含まれます。"); }
+        try { File.WriteAllText(dialog.FileName, JsonSerializer.Serialize(_main.Document, LayoutStore.JsonOptions)); _feedback.Text = L.T(K.StatusExported); }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { _feedback.Text = ex.Message; }
     }
     private void Import()
     {
-        var dialog = new OpenFileDialog { Title = L.T("レイアウトをインポート"), Filter = "JSON|*.json" };
+        var dialog = new OpenFileDialog { Title = L.T(K.ImportLayout), Filter = "JSON|*.json" };
         if (dialog.ShowDialog(this) != true) return;
         try
         {
             var imported = LayoutStore.Read(dialog.FileName);
-            if (MessageBox.Show(this, L.T("現在のピン留めを置き換えますか？ インポート元のタイルには起動先のパスが含まれます。信頼できるファイルを使用してください。"), "ReStart", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+            if (MessageBox.Show(this, L.T(K.ConfirmImport), "ReStart", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
             // Preferences are local to this PC; importing a layout must not enable hooks or autostart.
             imported.Preferences = _main.Document.Preferences;
-            _store.Save(imported); _main.ReplaceDocument(imported); _dataChanged = true; _feedback.Text = L.T("レイアウトをインポートしました。");
+            _store.Save(imported); _main.ReplaceDocument(imported); _dataChanged = true; _feedback.Text = L.T(K.StatusImported);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or InvalidDataException or InvalidOperationException or NullReferenceException) { _feedback.Text = L.T("読み込めませんでした: ") + ex.Message; }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or InvalidDataException or InvalidOperationException or NullReferenceException) { _feedback.Text = L.T(K.ErrorRead) + ex.Message; }
     }
     private void Reset()
     {
-        if (MessageBox.Show(this, L.T("現在のピン留めを初期状態に戻しますか？"), "ReStart", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+        if (MessageBox.Show(this, L.T(K.ConfirmReset), "ReStart", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
         var document = _main.CreateInitialLayout(); document.Preferences = _main.Document.Preferences;
-        _main.ReplaceDocument(document); _dataChanged = true; _feedback.Text = L.T("初期レイアウトに戻しました。");
+        _main.ReplaceDocument(document); _dataChanged = true; _feedback.Text = L.T(K.StatusLayoutReset);
     }
 }

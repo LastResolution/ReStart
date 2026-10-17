@@ -9,6 +9,7 @@ using ReStart.Core;
 
 namespace ReStart.App;
 
+/// <summary>Owns the single-instance lease, tray, shell integration, and application shutdown.</summary>
 public partial class App : Application
 {
     private SingleInstanceGate? _instance;
@@ -17,6 +18,7 @@ public partial class App : Application
     private System.Windows.Forms.NotifyIcon? _tray;
     private MainWindow? _window;
 
+    /// <summary>Acquires the instance lease before creating UI or registering shell hooks.</summary>
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
@@ -36,7 +38,7 @@ public partial class App : Application
         _wait = ThreadPool.RegisterWaitForSingleObject(_instance.Activation, (_, _) => Dispatcher.BeginInvoke(() => _window?.Present()), null, Timeout.Infinite, false);
         if (preview)
         {
-            _window.Title = L.T("ReStart — プレビュー");
+            _window.Title = L.T(K.PreviewTitle);
             _window.Width = 1280; _window.Height = 800; _window.Topmost = false;
             _window.ShowInTaskbar = true; _window.WindowStyle = WindowStyle.SingleBorderWindow;
             _window.ResizeMode = ResizeMode.CanResize; _window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
@@ -62,7 +64,7 @@ public partial class App : Application
             args.Handled = true;
             var directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ReStart");
             try { Directory.CreateDirectory(directory); File.AppendAllText(Path.Combine(directory, "error.log"), $"{DateTimeOffset.Now:O} {args.Exception}\n"); } catch (IOException) { }
-            MessageBox.Show(L.T("ReStart でエラーが発生したため終了します。保存済みのレイアウトは保持されます。"), "ReStart", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(L.T(K.ErrorUnhandled), "ReStart", MessageBoxButton.OK, MessageBoxImage.Error);
             ExitApplication();
         };
     }
@@ -70,13 +72,13 @@ public partial class App : Application
     private void CreateTray()
     {
         var menu = new System.Windows.Forms.ContextMenuStrip();
-        menu.Items.Add(L.T("ReStart を開く"), null, (_, _) => Dispatcher.Invoke(() => _window!.Present()));
-        menu.Items.Add(L.T("設定"), null, (_, _) => Dispatcher.Invoke(() => { _window!.Present(); _window.ShowSettings(); }));
+        menu.Items.Add(L.T(K.AppOpen), null, (_, _) => Dispatcher.Invoke(() => _window!.Present()));
+        menu.Items.Add(L.T(K.NavSettings), null, (_, _) => Dispatcher.Invoke(() => { _window!.Present(); _window.ShowSettings(); }));
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
-        menu.Items.Add(L.T("終了"), null, (_, _) => Dispatcher.Invoke(ExitApplication));
+        menu.Items.Add(L.T(K.CommonExit), null, (_, _) => Dispatcher.Invoke(ExitApplication));
         _tray = new System.Windows.Forms.NotifyIcon
         {
-            Text = L.T("ReStart — Ctrl+Alt+Space で開く"),
+            Text = L.T(K.TrayTooltip),
             Icon = System.Drawing.Icon.ExtractAssociatedIcon(Environment.ProcessPath!) ?? System.Drawing.SystemIcons.Application,
             ContextMenuStrip = menu,
             Visible = true
@@ -87,8 +89,8 @@ public partial class App : Application
     private void RefreshTrayLanguage()
     {
         if (_tray?.ContextMenuStrip is not { } menu) return;
-        menu.Items[0].Text = L.T("ReStart を開く"); menu.Items[1].Text = L.T("設定"); menu.Items[3].Text = L.T("終了");
-        _tray.Text = L.T("ReStart — Ctrl+Alt+Space で開く");
+        menu.Items[0].Text = L.T(K.AppOpen); menu.Items[1].Text = L.T(K.NavSettings); menu.Items[3].Text = L.T(K.CommonExit);
+        _tray.Text = L.T(K.TrayTooltip);
     }
 
     private void RunSmoke(string[] args)
@@ -120,7 +122,9 @@ public partial class App : Application
         timer.Start();
     }
 
+    /// <summary>Saves the current layout and disposes the launcher before shutting down the application.</summary>
     public void ExitApplication() { _window?.SaveLayout(); _window?.Exit(); Shutdown(); }
+    /// <summary>Releases hooks, tray resources, activation waits, and the instance lease.</summary>
     protected override void OnExit(ExitEventArgs e)
     {
         _integration?.Dispose();

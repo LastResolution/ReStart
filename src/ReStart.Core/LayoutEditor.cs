@@ -1,10 +1,13 @@
 namespace ReStart.Core;
 
+/// <summary>Applies layout mutations while preserving tile identifiers and folder ownership.</summary>
 public static class LayoutEditor
 {
+    /// <summary>Finds a root tile or one-level folder child by its stable layout identifier.</summary>
     public static Tile? Find(LayoutDocument document, string id) => document.Groups.SelectMany(g => g.Tiles)
         .SelectMany(t => new[] { t }.Concat(t.Children)).FirstOrDefault(t => t.Id == id);
 
+    /// <summary>Removes a tile and removes its parent folder if that folder becomes empty.</summary>
     public static void Remove(LayoutDocument document, string id)
     {
         foreach (var group in document.Groups)
@@ -19,6 +22,7 @@ public static class LayoutEditor
         }
     }
 
+    /// <summary>Moves a tile into a group in list order and clears its previous explicit coordinates.</summary>
     public static void Move(LayoutDocument document, Tile tile, TileGroup group, Tile? before = null)
     {
         if (!document.Groups.Contains(group)) throw new ArgumentException("Group does not belong to the document.", nameof(group));
@@ -29,6 +33,7 @@ public static class LayoutEditor
         group.Tiles.Insert(index < 0 ? group.Tiles.Count : index, tile);
     }
 
+    /// <summary>Moves a non-folder source into a root target, creating a one-level folder when necessary.</summary>
     public static void MergeFolder(LayoutDocument document, Tile source, Tile target)
     {
         if (source == target || source.IsFolder || target.Children.Contains(source)) return;
@@ -39,10 +44,11 @@ public static class LayoutEditor
         else
         {
             var index = group.Tiles.IndexOf(target);
-            group.Tiles[index] = new() { Label = L.T("フォルダー"), Size = TileSize.Medium, Column = target.Column, Row = target.Row, Children = [target, source] };
+            group.Tiles[index] = new() { Label = L.T(K.TileFolder), Size = TileSize.Medium, Column = target.Column, Row = target.Row, Children = [target, source] };
         }
     }
 
+    /// <summary>Moves a tile to an explicit cell, preserving unaffected positions and repacking only conflicting tiles.</summary>
     public static void MoveToCell(LayoutDocument document, Tile tile, TileGroup destination, int column, int row)
     {
         if (!document.Groups.Contains(destination)) throw new ArgumentException("Unknown group.", nameof(destination));

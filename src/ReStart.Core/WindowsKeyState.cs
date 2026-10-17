@@ -1,6 +1,17 @@
 namespace ReStart.Core;
 
-public enum WindowsKeyAction { Pass, Suppress, Toggle, ReplayWindowsDown }
+/// <summary>Action requested from the native low-level keyboard adapter.</summary>
+public enum WindowsKeyAction
+{
+    /// <summary>Forward the original event to Windows.</summary>
+    Pass,
+    /// <summary>Consume the physical Windows-key transition.</summary>
+    Suppress,
+    /// <summary>Consume the release and toggle the launcher.</summary>
+    Toggle,
+    /// <summary>Replay the suppressed Windows-key press before forwarding a shortcut key.</summary>
+    ReplayWindowsDown
+}
 
 /// <summary>Separates a bare Windows key from Win+letter shortcuts without changing their order.</summary>
 public sealed class WindowsKeyState
@@ -9,6 +20,7 @@ public sealed class WindowsKeyState
     private bool _shortcut;
     private bool _replayed;
 
+    /// <summary>Consumes a physical key transition and returns the hook action; a bare Windows key toggles only on release.</summary>
     public WindowsKeyAction Process(int virtualKey, bool down, bool modifierAlreadyHeld = false)
     {
         if (virtualKey is 0x5B or 0x5C)
@@ -34,5 +46,6 @@ public sealed class WindowsKeyState
         return WindowsKeyAction.Pass;
     }
 
+    /// <summary>Gets the suppressed Windows virtual-key code to replay before a shortcut, or zero.</summary>
     public int HeldKey => _held;
 }

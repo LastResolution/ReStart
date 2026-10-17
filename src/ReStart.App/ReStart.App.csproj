@@ -10,6 +10,7 @@
     <AssemblyName>ReStart</AssemblyName>
     <ApplicationIcon>../../assets/ReStart.ico</ApplicationIcon>
     <Description>Windows 10 inspired full-screen Start for Windows 11.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../ReStart.Core/ReStart.Core.csproj" />

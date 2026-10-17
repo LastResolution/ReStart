@@ -15,10 +15,14 @@ public partial class MainWindow
     private readonly Dictionary<string, ScriptTileFrame> _scriptFrames = [];
     private ScriptTilePackages _scriptPackages = null!;
     private bool _scriptRendering;
+    /// <summary>Gets the number of live root JavaScript tiles in the current document.</summary>
     public int ScriptTileCount => Document.Groups.SelectMany(g => g.Tiles).Count(t => t.Widget == "script" && t.Live);
+    /// <summary>Gets the number of cached successful JavaScript frames.</summary>
     public int ScriptFrameCount => _scriptFrames.Count;
+    /// <summary>Gets whether all live root JavaScript tiles have produced a successful frame.</summary>
     public bool ScriptsReady => Document.Groups.SelectMany(g => g.Tiles).Where(t => t.Widget == "script" && t.Live).All(t => _scriptFrames.ContainsKey(t.Id));
 
+    /// <summary>Installs the bundled clock sample, pins it, and explicitly opens its source in Notepad.</summary>
     public void CreateScriptTile()
     {
         try
@@ -26,30 +30,31 @@ public partial class MainWindow
             var tile = _scriptPackages.Import(Path.Combine(AppContext.BaseDirectory, "Examples", "clock", "manifest.json"));
             PinCustom(tile); _scriptPackages.Edit(tile.ScriptId);
         }
-        catch (Exception ex) when (ex is IOException or InvalidOperationException or System.ComponentModel.Win32Exception or System.Text.Json.JsonException) { SetStatus(ex.Message); }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or InvalidOperationException or System.ComponentModel.Win32Exception or System.Text.Json.JsonException) { SetStatus(ex.Message); }
     }
 
+    /// <summary>Copies a selected manifest and tile.js into an installed package and pins the new tile.</summary>
     public void ImportScriptTile()
     {
         WithDialog(() =>
         {
-            var dialog = new OpenFileDialog { Title = L.T("JavaScript タイルの manifest.json を選択"), Filter = "manifest.json|manifest.json" };
+            var dialog = new OpenFileDialog { Title = L.T(K.PromptScriptManifest), Filter = "manifest.json|manifest.json" };
             if (dialog.ShowDialog(this) != true) return;
             try { PinCustom(_scriptPackages.Import(dialog.FileName)); }
-            catch (Exception ex) when (ex is IOException or InvalidOperationException or System.Text.Json.JsonException) { SetStatus(ex.Message); }
+            catch (Exception ex) when (ex is IOException or InvalidDataException or InvalidOperationException or System.Text.Json.JsonException) { SetStatus(ex.Message); }
         });
     }
 
     private void AddScriptMenu(ContextMenu menu, Tile tile)
     {
-        Add(menu, L.T("JavaScript を編集"), () => EditScript(tile));
-        Add(menu, L.T("タイルの設定を編集"), () => EditScript(tile, "manifest.json"));
-        Add(menu, L.T("タイルのフォルダーを開く"), () =>
+        Add(menu, L.T(K.EditScript), () => EditScript(tile));
+        Add(menu, L.T(K.EditScriptSettings), () => EditScript(tile, "manifest.json"));
+        Add(menu, L.T(K.OpenScriptFolder), () =>
         {
             try { ShellLauncher.Launch(_scriptPackages.Folder(tile.ScriptId)); }
-            catch (Exception ex) when (ex is IOException or InvalidOperationException or System.ComponentModel.Win32Exception) { SetStatus(ex.Message); }
+            catch (Exception ex) when (ex is IOException or InvalidDataException or InvalidOperationException or System.ComponentModel.Win32Exception) { SetStatus(ex.Message); }
         });
-        Add(menu, L.T("タイルを再読み込み"), () =>
+        Add(menu, L.T(K.ReloadScript), () =>
         {
             if (_scriptSessions.Remove(tile.Id, out var session)) session.Dispose();
             CommitLayout();
@@ -58,7 +63,7 @@ public partial class MainWindow
     private void EditScript(Tile tile, string file = "tile.js")
     {
         try { _scriptPackages.Edit(tile.ScriptId, file); }
-        catch (Exception ex) when (ex is IOException or InvalidOperationException or System.ComponentModel.Win32Exception) { SetStatus(ex.Message); }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or InvalidOperationException or System.ComponentModel.Win32Exception) { SetStatus(ex.Message); }
     }
 
     private async Task UpdateScriptTilesAsync()
@@ -79,13 +84,13 @@ public partial class MainWindow
                     session.NextUpdate = DateTimeOffset.Now.AddSeconds(manifest.RefreshSeconds);
                     var frame = await session.RenderAsync(source, new { now = DateTimeOffset.Now.ToString("O"), locale = L.Culture.Name, size = view.Tile.Size.ToString().ToLowerInvariant(), settings = manifest.Settings, state = session.State });
                     if (frame != null) { _scriptFrames[view.Tile.Id] = frame; ApplyScriptFrame(view.Body, view.Button, view.Tile, frame); }
-                    view.Button.ToolTip = session.Error == null ? view.Tile.Label : L.T("タイルのエラー: ") + session.Error;
-                    if (frame == null && view.Body.Children.Count == 0) view.Body.Children.Add(new TextBlock { Text = L.T("タイルのエラー"), TextWrapping = TextWrapping.Wrap });
+                    view.Button.ToolTip = session.Error == null ? view.Tile.Label : L.T(K.ErrorScriptPrefix) + session.Error;
+                    if (frame == null && view.Body.Children.Count == 0) view.Body.Children.Add(new TextBlock { Text = L.T(K.ErrorScript), TextWrapping = TextWrapping.Wrap });
                 }
-                catch (Exception ex) when (ex is IOException or InvalidOperationException or System.Text.Json.JsonException)
-                { view.Button.ToolTip = L.T("タイルのエラー: ") + ex.Message; if (view.Body.Children.Count == 0) view.Body.Children.Add(new TextBlock { Text = L.T("タイルのエラー") }); }
+                catch (Exception ex) when (ex is IOException or InvalidDataException or InvalidOperationException or System.Text.Json.JsonException)
+                { view.Button.ToolTip = L.T(K.ErrorScriptPrefix) + ex.Message; if (view.Body.Children.Count == 0) view.Body.Children.Add(new TextBlock { Text = L.T(K.ErrorScript) }); }
             }));
-            foreach (var view in current.Skip(8)) view.Button.ToolTip = L.T("JavaScript タイルは同時に8個まで更新できます。");
+            foreach (var view in current.Skip(8)) view.Button.ToolTip = L.T(K.MaxScriptTiles);
         }
         finally { _scriptRendering = false; }
     }

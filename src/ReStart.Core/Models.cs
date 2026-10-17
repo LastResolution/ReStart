@@ -1,32 +1,70 @@
 namespace ReStart.Core;
 
-public enum TileSize { Small, Medium, Wide, Large }
-public enum ThemeMode { System, Dark, Light }
-
-public sealed record AppEntry(string Id, string Name, string LaunchTarget, bool IsShellApp = true)
+/// <summary>Logical tile footprints measured in grid cells.</summary>
+public enum TileSize
 {
-    public string Section => string.IsNullOrWhiteSpace(Name) ? "#" :
-        char.IsAsciiLetter(Name[0]) ? char.ToUpperInvariant(Name[0]).ToString() :
-        char.IsDigit(Name[0]) ? "#" : L.T("あ・他");
+    /// <summary>One by one cell.</summary>
+    Small,
+    /// <summary>Two by two cells.</summary>
+    Medium,
+    /// <summary>Four by two cells.</summary>
+    Wide,
+    /// <summary>Four by four cells.</summary>
+    Large
+}
+/// <summary>Requested application palette; high contrast always takes precedence.</summary>
+public enum ThemeMode
+{
+    /// <summary>Follow the Windows application theme.</summary>
+    System,
+    /// <summary>Use the dark palette.</summary>
+    Dark,
+    /// <summary>Use the light palette.</summary>
+    Light
 }
 
+/// <summary>Describes an installed application or shortcut without modifying its OS-provided name.</summary>
+public sealed record AppEntry(string Id, string Name, string LaunchTarget, bool IsShellApp = true)
+{
+    /// <summary>Gets the display bucket used for alphabet navigation.</summary>
+    public string Section => string.IsNullOrWhiteSpace(Name) ? "#" :
+        char.IsAsciiLetter(Name[0]) ? char.ToUpperInvariant(Name[0]).ToString() :
+        char.IsDigit(Name[0]) ? "#" : L.T(K.AppListOther);
+}
+
+/// <summary>Stores a persistent root tile or one-level folder child.</summary>
 public sealed class Tile
 {
+    /// <summary>Gets or sets a stable identifier unique within the layout.</summary>
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
+    /// <summary>Gets or sets the source application identity or built-in tile identity.</summary>
     public string AppId { get; set; } = "";
+    /// <summary>Gets or sets the user-owned display label; language changes never rewrite saved labels.</summary>
     public string Label { get; set; } = "";
+    /// <summary>Gets or sets the launch target. A script tile does not execute this target.</summary>
     public string Target { get; set; } = "";
+    /// <summary>Gets or sets whether the launch target is an AppsFolder shell identity.</summary>
     public bool IsShellApp { get; set; } = true;
+    /// <summary>Gets or sets the logical tile footprint.</summary>
     public TileSize Size { get; set; } = TileSize.Medium;
+    /// <summary>Gets or sets an explicit logical column, or null for automatic placement.</summary>
     public int? Column { get; set; }
+    /// <summary>Gets or sets an explicit logical row, or null for automatic placement.</summary>
     public int? Row { get; set; }
+    /// <summary>Gets or sets the optional saved tile color.</summary>
     public string Color { get; set; } = "";
+    /// <summary>Gets or sets a built-in widget kind; script identifies a local JavaScript package.</summary>
     public string Widget { get; set; } = "";
+    /// <summary>Gets or sets an installed package identifier, never an arbitrary source-file path.</summary>
     public string ScriptId { get; set; } = "";
+    /// <summary>Gets or sets whether live updates are enabled for this tile.</summary>
     public bool Live { get; set; } = true;
+    /// <summary>Gets or sets one-level folder contents; nested folders are rejected.</summary>
     public List<Tile> Children { get; set; } = [];
+    /// <summary>Gets whether this tile currently owns folder children.</summary>
     public bool IsFolder => Children.Count > 0;
 
+    /// <summary>Creates a new tile preserving the source application name and launch identity.</summary>
     public static Tile FromApp(AppEntry app) => new()
     {
         AppId = app.Id,
@@ -36,41 +74,65 @@ public sealed class Tile
     };
 }
 
+/// <summary>Stores a named group of root tiles in display order.</summary>
 public sealed class TileGroup
 {
+    /// <summary>Gets or sets a stable identifier unique within the layout.</summary>
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
-    public string Name { get; set; } = L.T("新しいグループ");
+    /// <summary>Gets or sets a user-owned group label.</summary>
+    public string Name { get; set; } = L.T(K.NewGroup);
+    /// <summary>Gets or sets the root tiles in this group.</summary>
     public List<Tile> Tiles { get; set; } = [];
 }
 
+/// <summary>Stores local UI and integration choices; imported layouts do not replace these settings.</summary>
 public sealed class Preferences
 {
+    /// <summary>Gets or sets ja, en, or system for UI resource selection.</summary>
     public string Language { get; set; } = "system";
+    /// <summary>Gets or sets whether a bare Windows-key press toggles ReStart.</summary>
     public bool CaptureWindowsKey { get; set; } = true;
+    /// <summary>Gets or sets experimental native Start-button interception.</summary>
     public bool CaptureStartButton { get; set; }
+    /// <summary>Gets or sets the saved startup preference; settings reconcile it with the real Run registration.</summary>
     public bool StartWithWindows { get; set; }
+    /// <summary>Gets or sets whether switching apps or clicking the taskbar closes the menu.</summary>
     public bool CloseOnDeactivate { get; set; } = true;
+    /// <summary>Gets or sets whether the desktop wallpaper is used as the background.</summary>
     public bool ShowWallpaper { get; set; } = true;
+    /// <summary>Gets or sets whether app tiles use classic accent-colored backgrounds.</summary>
     public bool ColoredTiles { get; set; }
+    /// <summary>Gets or sets whether showing the menu animates when system accessibility settings permit.</summary>
     public bool Animate { get; set; } = true;
+    /// <summary>Gets or sets the requested application theme.</summary>
     public ThemeMode Theme { get; set; } = ThemeMode.Dark;
+    /// <summary>Gets or sets the requested accent color.</summary>
     public string Accent { get; set; } = "#0078D7";
+    /// <summary>Gets or sets background tint opacity, normalized to 0.3 through 1.</summary>
     public double BackgroundOpacity { get; set; } = 0.86;
+    /// <summary>Gets or sets the cell scale, normalized to 0.7 through 1.5.</summary>
     public double TileScale { get; set; } = 1;
+    /// <summary>Gets or sets six or eight logical cells per tile group.</summary>
     public int Columns { get; set; } = 6;
 }
 
+/// <summary>Defines the versioned, locally persisted layout and its normalization rules.</summary>
 public sealed class LayoutDocument
 {
+    /// <summary>Current supported layout schema version.</summary>
     public const int CurrentVersion = 1;
+    /// <summary>Current supported layout schema version.</summary>
     public int Version { get; set; } = CurrentVersion;
+    /// <summary>Gets or sets local UI and shell integration preferences.</summary>
     public Preferences Preferences { get; set; } = new();
+    /// <summary>Gets or sets groups in display order.</summary>
     public List<TileGroup> Groups { get; set; } = [];
 
+    /// <summary>Repairs bounded presentation values and duplicate identities; rejects unsupported schemas and nested folders.</summary>
     public void Normalize()
     {
         if (Version != CurrentVersion)
-            throw new InvalidDataException(L.F("未対応のレイアウト形式です: {0}", Version));
+            throw new UnsupportedLayoutVersionException(Version);
         Preferences ??= new();
         Groups ??= [];
         Preferences.Columns = Preferences.Columns == 8 ? 8 : 6;
@@ -85,7 +147,7 @@ public sealed class LayoutDocument
                 group.Id = Guid.NewGuid().ToString("N");
                 ids.Add(group.Id);
             }
-            group.Name = string.IsNullOrWhiteSpace(group.Name) ? L.T("新しいグループ") : group.Name.Trim();
+            group.Name = string.IsNullOrWhiteSpace(group.Name) ? L.T(K.NewGroup) : group.Name.Trim();
             group.Tiles ??= [];
             NormalizeTiles(group.Tiles, ids, 0);
         }
@@ -93,7 +155,7 @@ public sealed class LayoutDocument
 
     private static void NormalizeTiles(List<Tile> tiles, HashSet<string> ids, int depth)
     {
-        if (tiles.Count > 2000) throw new InvalidDataException(L.T("タイル数が多すぎます。"));
+        if (tiles.Count > 2000) throw new InvalidDataException(L.T(K.ErrorTooManyTiles));
         foreach (var tile in tiles)
         {
             if (string.IsNullOrEmpty(tile.Id) || !ids.Add(tile.Id))
@@ -101,7 +163,7 @@ public sealed class LayoutDocument
                 tile.Id = Guid.NewGuid().ToString("N");
                 ids.Add(tile.Id);
             }
-            tile.Label ??= L.T("アプリ");
+            tile.Label ??= L.T(K.AppFallback);
             tile.AppId ??= "";
             tile.Target ??= "";
             tile.Widget ??= "";
@@ -112,7 +174,7 @@ public sealed class LayoutDocument
             if (tile.Column is < 0 or > 15 || tile.Row is < 0 or > 200 || tile.Column.HasValue != tile.Row.HasValue)
             { tile.Column = null; tile.Row = null; }
             if (depth >= 1 && tile.Children.Count != 0)
-                throw new InvalidDataException(L.T("フォルダーの入れ子には対応していません。"));
+                throw new InvalidDataException(L.T(K.ErrorNestedFolder));
             NormalizeTiles(tile.Children, ids, depth + 1);
         }
     }

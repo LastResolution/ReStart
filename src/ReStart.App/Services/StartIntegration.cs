@@ -6,6 +6,7 @@ using ReStart.Core;
 
 namespace ReStart.App.Services;
 
+/// <summary>Adapts native shell input to dispatcher callbacks; low-level hooks must remain short and reversible.</summary>
 internal sealed class StartIntegration : IDisposable
 {
     private readonly Dispatcher _dispatcher;
@@ -57,7 +58,7 @@ internal sealed class StartIntegration : IDisposable
         _hookThread.Start();
         ready.Wait();
         if (!Native.RegisterHotKey(handle, 0x5253, 0x4003, 0x20))
-            Status = L.T("Ctrl+Alt+Space は別のアプリが使用しています。トレイから開いてください。");
+            Status = L.T(K.ErrorHotkeyInUse);
     }
 
     public void Apply(Preferences preferences)
@@ -68,6 +69,7 @@ internal sealed class StartIntegration : IDisposable
         Native.PostThreadMessage(_hookThreadId, 0x8001, 0, 0);
     }
 
+    /// <summary>Installs taskbar-dismiss detection only while the menu is visible unless Start-button capture also needs it.</summary>
     public void SetMenuOpen(bool visible)
     {
         _menuOpen = visible;
@@ -79,7 +81,7 @@ internal sealed class StartIntegration : IDisposable
         if (_captureWindows && _keyboard == 0)
         {
             _keyboard = Native.SetWindowsHookEx(13, _keyboardCallback, Native.GetModuleHandle(null), 0);
-            if (_keyboard == 0) Status = L.T("Windows キーの登録に失敗しました: ") + new Win32Exception(Marshal.GetLastWin32Error()).Message;
+            if (_keyboard == 0) Status = L.T(K.ErrorWindowsKeyCapture) + new Win32Exception(Marshal.GetLastWin32Error()).Message;
         }
         if (!_captureWindows && _keyboard != 0) { Native.UnhookWindowsHookEx(_keyboard); _keyboard = 0; _keys = new(); }
         var needMouse = _captureStart || _dismissOnTaskbar && _menuOpen;

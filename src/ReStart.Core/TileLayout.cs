@@ -1,9 +1,12 @@
 namespace ReStart.Core;
 
+/// <summary>Describes one tile rectangle in logical grid cells.</summary>
 public readonly record struct TilePlacement(Tile Tile, int Column, int Row, int Width, int Height);
 
+/// <summary>Packs tiles into a logical grid without changing the input models.</summary>
 public static class TileLayout
 {
+    /// <summary>Returns the logical cell width and height for a tile size.</summary>
     public static (int Width, int Height) Dimensions(TileSize size) => size switch
     {
         TileSize.Small => (1, 1),
@@ -13,6 +16,7 @@ public static class TileLayout
     };
 
     // Reserve user-positioned tiles first. Legacy tiles and collisions fill free cells.
+    /// <summary>Reserves valid explicit positions first, then packs legacy or colliding tiles into free cells in input order.</summary>
     public static IReadOnlyList<TilePlacement> Pack(IEnumerable<Tile> tiles, int columns)
     {
         if (columns < 4 || columns > 16) throw new ArgumentOutOfRangeException(nameof(columns));
@@ -56,6 +60,7 @@ public static class TileLayout
         return items.Select(t => positions[t]).ToArray();
     }
 
+    /// <summary>Rounds a pointer-relative position to a cell and clamps the tile inside the configured columns and row limit.</summary>
     public static (int Column, int Row) Snap(double x, double y, double cell, TileSize size, int columns)
     {
         var (width, _) = Dimensions(size);

@@ -114,6 +114,15 @@ dotnet run --project src/ReStart.App -c Release -- --preview
 # ./scripts/package.ps1 -Runtime win-arm64
 ```
 
+通常のReleaseビルドと起動は次のとおりです。出力先の実行ファイルを使用中の場合は、通知領域からReStartを終了してからビルドしてください。
+
+```powershell
+dotnet build ReStart.slnx -c Release
+.\src\ReStart.App\bin\Release\net10.0-windows\ReStart.exe
+```
+
+このビルドは開発PCの.NETランタイムを使用します。配布用の `package.ps1` はランタイムを同梱し、`artifacts/packages/ReStart-win-x64.zip` または `ReStart-win-arm64.zip` を出力します。ZIP全体を展開し、`TileHost`・`Examples` も一緒に置いてください。
+
 生成物は `artifacts/` に作られ、Git の対象外です。プレビューのデータも通常の設定とは分離されます。
 
 ## リポジトリの運用
