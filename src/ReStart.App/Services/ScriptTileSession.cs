@@ -37,7 +37,7 @@ internal sealed class ScriptTileSession(string? workerExecutable = null) : IDisp
                 _reader = new(_pipe, new UTF8Encoding(false), false, 4096, leaveOpen: true);
                 _writer = new(_pipe, new UTF8Encoding(false), 4096, leaveOpen: true);
             }
-            using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(cold ? 4 : 1));
+            using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(cold ? 10 : 1));
             var request = new ScriptTileRequest(source, JsonSerializer.SerializeToElement(context, ScriptTileProtocol.Json));
             var line = JsonSerializer.Serialize(request, ScriptTileProtocol.Json);
             if (line.Length > ScriptTileProtocol.MaxRequest) throw new InvalidDataException(TextCatalog.T(K.ErrorScriptRequestSize));
