@@ -9,6 +9,7 @@ dotnet build ReStart.slnx -c Release --no-restore
 dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory artifacts/test-results
 ./scripts/smoke.ps1
 ./scripts/test-navigation.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+./scripts/test-placement.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/package.ps1 -Runtime win-x64
 ```
 
@@ -17,6 +18,10 @@ dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory 
 `test-navigation.ps1` はメモリ上の架空アプリ288個を使い、800 / 1280 / 1920 / 2560 DIP幅で一覧の右端、画面外へのはみ出し、文字見出しの分断を検証します。一覧と検索から実際のHide / Presentを8回実行し、タイル表示・先頭位置・検索解除・オーバーレイ終了も確認します。プレビューはサイズを維持し、本番の設定・レイアウトは変更しません。結果JSONと各サイズのPNGは `artifacts/navigation/` に出力し、CIにも保存します。物理Windowsキーやタスクバー操作の代わりにはなりません。
 
 CIのデスクトップより大きい幅も検証できるよう、ネイティブウィンドウの最大サイズには依存せず、実際のWPFルートへ描画幅を指定します。要求幅が反映されたことも検証します。
+
+`test-placement.ps1` は新しい実行ファイル用フォルダーを作り、プレビューの保存先も分離します。グループの独立した位置、空き領域からのグループ作成、タイルの空白保持、狭い画面から戻った際のアンカー、schema 2の保存を確認します。命名は実際のWPFダブルクリック・キーイベント経路を使い、Enter確定 / Esc取消とモーダルウィンドウが開かないことを検証します。OSの物理マウスドラッグを模擬するものではありません。
+
+同じチェックで、フォルダーの行内展開・名前の直接編集・展開先への追加・取り出し・閉じた後の位置復元も検証します。`placement-board.png` と `placement-folder.png` は架空データの描画です。
 
 ## 実機チェックリスト
 

@@ -31,6 +31,8 @@ public partial class MainWindow : Window
     private bool _allApps, _dragging, _ready;
     private Point _dragOrigin;
     private Point _dragOffset;
+    private GroupHeader? _editingGroupHeader;
+    private bool _groupsRenderPending;
     private DropAdorner? _dropAdorner;
     private long _lastDragScroll;
     private int _dialogDepth;
@@ -67,6 +69,8 @@ public partial class MainWindow : Window
         PinnedNav.AllowDrop = true;
         PinnedNav.PreviewDragOver += (_, e) => { if (HasDrag(e)) { ShowPinned(this, new()); e.Effects = DragDropEffects.Move; e.Handled = true; } };
         ContentScroll.AllowDrop = true;
+        GroupsPanel.PreviewDragOver += OnBoardDragOver;
+        GroupsPanel.PreviewDrop += OnBoardDrop;
         ContentScroll.PreviewDragOver += (_, e) =>
         {
             if (!HasDrag(e)) return;
@@ -75,7 +79,11 @@ public partial class MainWindow : Window
             _lastDragScroll = now;
             var point = e.GetPosition(ContentScroll);
             if (point.Y < 42) ContentScroll.ScrollToVerticalOffset(ContentScroll.VerticalOffset - 26);
-            else if (point.Y > ContentScroll.ActualHeight - 42) ContentScroll.ScrollToVerticalOffset(ContentScroll.VerticalOffset + 26);
+            else if (point.Y > ContentScroll.ActualHeight - 42)
+            {
+                ExtendDragSpace();
+                ContentScroll.ScrollToVerticalOffset(ContentScroll.VerticalOffset + 26);
+            }
         };
         UserButton.Content = "◉     " + (_preview ? "ReStart" : Environment.UserName);
         Loaded += async (_, _) => await InitializeAsync();
@@ -119,7 +127,7 @@ public partial class MainWindow : Window
             var pinnedIds = Document.Groups.SelectMany(g => g.Tiles).SelectMany(t => new[] { t }.Concat(t.Children)).Select(t => t.AppId).ToHashSet();
             await _catalog.LoadIconsAsync(actualApps.OrderByDescending(a => pinnedIds.Contains(a.Id)), () => Dispatcher.BeginInvoke(() =>
             {
-                if (!_dragging && FolderOverlay.Visibility != Visibility.Visible) RenderGroups();
+                if (!_dragging) RenderGroups();
             }, DispatcherPriority.Background));
             if (_preview)
             {
@@ -260,6 +268,10 @@ public partial class MainWindow : Window
 
     private void RenderGroups()
     {
+        if (_editingGroupHeader?.IsEditing == true) { _groupsRenderPending = true; return; }
+        _groupsRenderPending = false;
+        if (_openFolder != null && (!_openFolder.IsFolder || !Document.Groups.Any(g => g.Tiles.Contains(_openFolder)))) _openFolder = null;
+        GroupsPanel.ExpandedFolderId = _openFolder?.Id;
         GroupsPanel.Children.Clear();
         _liveLabels.Clear();
         _scriptViews.Clear();
@@ -267,32 +279,23 @@ public partial class MainWindow : Window
         foreach (var id in _scriptSessions.Keys.Where(id => !activeScriptIds.Contains(id)).ToArray()) { _scriptSessions[id].Dispose(); _scriptSessions.Remove(id); }
         foreach (var group in Document.Groups)
         {
-            var stack = new StackPanel { Background = Brushes.Transparent, Width = Document.Preferences.Columns * Cell, Margin = new(0, 0, 24, 28), Tag = group, AllowDrop = true };
-            var header = new Button { Content = group.Name, HorizontalContentAlignment = HorizontalAlignment.Left, FontSize = 15, Padding = new(0, 8, 0, 12), HorizontalAlignment = HorizontalAlignment.Stretch, Tag = group };
-            AutomationProperties.SetName(header, L.T(K.GroupPrefix) + group.Name);
-            header.Click += (_, _) => { if (!_dragging) RenameGroup(group); };
-            header.ContextMenu = GroupMenu(group);
-            WireDrag(header, "ReStart.Group", group.Id);
+            var stack = new StackPanel { Background = Brushes.Transparent, Width = Document.Preferences.Columns * Cell, Tag = group };
+            var header = new GroupHeader(group.Name) { Tag = group };
+            header.Handle.Tag = group;
+            AutomationProperties.SetName(header.Handle, L.T(K.GroupPrefix) + group.Name);
+            WireInlineName(header, name =>
+            {
+                group.Name = name;
+                AutomationProperties.SetName(header.Handle, L.T(K.GroupPrefix) + name);
+            }, () => GroupsPanel.Children.OfType<StackPanel>().Where(s => s.Tag == group).SelectMany(s => s.Children.OfType<GroupHeader>()).FirstOrDefault());
+            header.Handle.ContextMenu = GroupMenu(group);
+            WireDrag(header.Handle, "ReStart.Group", group.Id);
             var panel = new TilePanel { Columns = Document.Preferences.Columns, Cell = Cell, Placements = TileLayout.Pack(group.Tiles, Document.Preferences.Columns) };
+            panel.Expansion = FolderExpansion.Create(panel.Placements, panel.Columns, _openFolder?.Id);
             foreach (var placement in panel.Placements) panel.Children.Add(CreateTileButton(placement.Tile));
+            if (panel.Expansion != null) panel.Children.Add(CreateInlineFolder(panel));
             stack.Children.Add(header);
             stack.Children.Add(panel);
-            stack.PreviewDragOver += (_, e) =>
-            {
-                e.Effects = HasDrag(e) ? DragDropEffects.Move : DragDropEffects.None;
-                if (HasDrag(e) && !e.Data.GetDataPresent("ReStart.Group"))
-                {
-                    var tile = DragTile(e);
-                    if (tile != null)
-                    {
-                        var point = e.GetPosition(panel);
-                        var (col, row) = TileLayout.Snap(point.X - _dragOffset.X, point.Y - _dragOffset.Y, Cell, tile.Size, Document.Preferences.Columns);
-                        ShowDropPreview(panel, tile, col, row);
-                    }
-                }
-                e.Handled = true;
-            };
-            stack.PreviewDrop += (_, e) => DropInGroup(group, panel, e);
             stack.ContextMenu = GroupMenu(group);
             GroupsPanel.Children.Add(stack);
         }
@@ -311,24 +314,30 @@ public partial class MainWindow : Window
     private void FitPanels()
     {
         if (ContentScroll.ActualWidth < 1) return;
-        var groupWidth = Document.Preferences.Columns * Cell + 24;
-        var count = Math.Max(1, Math.Min(Math.Min(4, Document.Groups.Count), (int)(ContentScroll.ActualWidth / groupWidth)));
-        GroupsPanel.Width = Math.Min(ContentScroll.ActualWidth, count * groupWidth);
+        GroupsPanel.TileColumns = Document.Preferences.Columns;
+        GroupsPanel.Cell = Cell;
+        GroupsPanel.InvalidateMeasure();
     }
 
     private Button CreateTileButton(Tile tile)
     {
-        var button = new Button { Tag = tile, Padding = new(0), HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch, ToolTip = tile.Label };
-        AutomationProperties.SetName(button, tile.Label + (tile.IsFolder ? L.T(K.TileFolderSuffix) : ""));
+        var displayName = TileDisplayName(tile);
+        var button = new Button { Tag = tile, Padding = new(0), HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch, ToolTip = displayName };
+        AutomationProperties.SetName(button, displayName + (tile.IsFolder && tile.Label.Length > 0 ? L.T(K.TileFolderSuffix) : ""));
         var colorful = Document.Preferences.ColoredTiles || tile.Widget.Length > 0;
         button.Background = colorful && !SystemParameters.HighContrast ? Brush(tile.Color.Length > 0 ? tile.Color : Document.Preferences.Accent, "#0078D7") : (System.Windows.Media.Brush)FindResource("TileBrush");
         if (colorful && !SystemParameters.HighContrast) button.Foreground = Brushes.White;
         var grid = new Grid { Margin = new(7) };
         if (tile.IsFolder)
         {
-            var mini = new UniformGridProxy { Columns = 2, Rows = 2, Width = 52, Height = 52, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
-            foreach (var child in tile.Children.Take(4)) mini.Children.Add(CreateIcon(child, 21));
-            grid.Children.Add(mini);
+            if (_openFolder == tile)
+                grid.Children.Add(new TextBlock { Text = "\uE70E", FontFamily = new("Segoe MDL2 Assets"), FontSize = 22, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center });
+            else
+            {
+                var mini = new UniformGridProxy { Columns = 2, Rows = 2, Width = tile.Size == TileSize.Small ? 28 : 52, Height = tile.Size == TileSize.Small ? 28 : 52, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+                foreach (var child in tile.Children.Take(4)) mini.Children.Add(CreateIcon(child, tile.Size == TileSize.Small ? 12 : 21));
+                grid.Children.Add(mini);
+            }
         }
         else if (tile.Widget == "script" && tile.Live)
         {
@@ -343,7 +352,7 @@ public partial class MainWindow : Window
             grid.Children.Add(live);
         }
         else grid.Children.Add(CreateIcon(tile, tile.Size == TileSize.Small ? 23 : tile.Size == TileSize.Large ? 60 : 40));
-        if (tile.Size != TileSize.Small)
+        if (tile.Size != TileSize.Small && !tile.IsFolder)
             grid.Children.Add(new TextBlock { Text = tile.Label, FontSize = 12, VerticalAlignment = VerticalAlignment.Bottom, TextTrimming = TextTrimming.CharacterEllipsis, Margin = new(2, 0, 1, 0) });
         button.Content = grid;
         button.ContextMenu = TileMenu(tile);
@@ -385,7 +394,12 @@ public partial class MainWindow : Window
             resize.Items.Add(item);
         }
         menu.Items.Add(resize);
-        Add(menu, L.T(K.RenameTile), () => { var value = Prompt(L.T(K.PromptTileName), tile.Label); if (value != null) { tile.Label = value; CommitLayout(); } });
+        Add(menu, L.T(K.RenameTile), () =>
+        {
+            if (tile.IsFolder) { RenameFolder(tile); return; }
+            var value = Prompt(L.T(K.PromptTileName), tile.Label);
+            if (value != null) { tile.Label = value; CommitLayout(); }
+        });
         if (tile.Widget.Length > 0) Add(menu, tile.Live ? L.T(K.DisableLiveTile) : L.T(K.EnableLiveTile), () => { tile.Live = !tile.Live; CommitLayout(); });
         if (tile.Widget == "script") AddScriptMenu(menu, tile);
         var move = new MenuItem { Header = L.T(K.MoveToGroup) };
@@ -401,7 +415,7 @@ public partial class MainWindow : Window
             var folders = new MenuItem { Header = L.T(K.CreateFolder) };
             foreach (var target in Document.Groups.SelectMany(g => g.Tiles).Where(t => t.Id != tile.Id && t.Widget.Length == 0))
             {
-                var item = new MenuItem { Header = target.Label };
+                var item = new MenuItem { Header = TileDisplayName(target) };
                 item.Click += (_, _) => { MergeFolder(tile, target); CommitLayout(); };
                 folders.Items.Add(item);
             }
@@ -423,23 +437,12 @@ public partial class MainWindow : Window
     {
         var menu = new ContextMenu();
         Add(menu, L.T(K.RenameGroup), () => RenameGroup(group));
-        Add(menu, L.T(K.MoveGroupEarlier), () => MoveGroup(group, -1));
-        Add(menu, L.T(K.MoveGroupLater), () => MoveGroup(group, 1));
         Add(menu, L.T(K.DeleteGroup), () =>
         {
             if (Confirm(L.F(K.ConfirmDeleteGroup, group.Name)))
             { Document.Groups.Remove(group); CommitLayout(); }
         });
         return menu;
-    }
-
-    private void MoveGroup(TileGroup group, int delta)
-    {
-        var index = Document.Groups.IndexOf(group);
-        var destination = Math.Clamp(index + delta, 0, Document.Groups.Count - 1);
-        Document.Groups.Remove(group);
-        Document.Groups.Insert(destination, group);
-        CommitLayout();
     }
 
     private static void Add(ContextMenu menu, string label, Action action)
@@ -455,15 +458,35 @@ public partial class MainWindow : Window
         var point = e.GetPosition(this);
         if (Math.Abs(point.X - _dragOrigin.X) < SystemParameters.MinimumHorizontalDragDistance && Math.Abs(point.Y - _dragOrigin.Y) < SystemParameters.MinimumVerticalDragDistance) return;
         _dragging = true;
+        _folderHover.Reset();
+        var previousView = PrepareDragView(format);
+        ExtendDragSpace();
         button.ReleaseMouseCapture();
         e.Handled = true;
-        try { DragDrop.DoDragDrop(button, new DataObject(format, id), DragDropEffects.Move); }
-        finally { ClearDropPreview(); Dispatcher.BeginInvoke(() => _dragging = false, DispatcherPriority.Background); }
+        try
+        {
+            // A list/search row can disappear when switching to tiles. Keep the
+            // OLE drag source attached to the window for the whole operation.
+            var result = DragDrop.DoDragDrop(this, new DataObject(format, id), DragDropEffects.Move);
+            if (result == DragDropEffects.None) RestoreDragView(previousView);
+        }
+        finally
+        {
+            ClearDropPreview();
+            _folderHover.Reset();
+            GroupsPanel.DragMinimumHeight = 0;
+            GroupsPanel.InvalidateMeasure();
+            Dispatcher.BeginInvoke(() => _dragging = false, DispatcherPriority.Background);
+        }
     }
 
     private void WireDrag(Button button, string format, string id)
     {
-        button.PreviewMouseLeftButtonDown += (_, e) => { _dragOrigin = e.GetPosition(this); _dragOffset = e.GetPosition(button); };
+        button.PreviewMouseLeftButtonDown += (_, e) =>
+        {
+            _dragOrigin = e.GetPosition(this);
+            _dragOffset = format == "ReStart.App" ? new Point(Cell, Cell) : e.GetPosition(button);
+        };
         // ButtonBase consumes bubbling mouse movement; listen in the tunneling phase, including handled events.
         button.AddHandler(Mouse.PreviewMouseMoveEvent, new MouseEventHandler((_, e) => BeginDrag(button, e, format, id)), true);
     }
@@ -480,7 +503,9 @@ public partial class MainWindow : Window
             AdornerLayer.GetAdornerLayer(panel)?.Add(_dropAdorner);
         }
         var (width, height) = TileLayout.Dimensions(tile.Size);
-        _dropAdorner.CellBounds = new(col * Cell, row * Cell, width * Cell - 4, height * Cell - 4);
+        var y = row * Cell + (panel.Expansion != null && row >= panel.Expansion.Row ? panel.Expansion.ExtraHeight(Cell) : 0);
+        _dropAdorner.CellBounds = new(col * Cell, y, width * Cell - 4, height * Cell - 4);
+        _dropAdorner.FolderTarget = false;
         _dropAdorner.InvalidateVisual();
     }
     private void ClearDropPreview()
@@ -494,41 +519,17 @@ public partial class MainWindow : Window
     {
         e.Handled = true;
         ClearDropPreview();
-        if (e.Data.GetData("ReStart.Group") is string groupId)
-        {
-            var source = Document.Groups.FirstOrDefault(g => g.Id == groupId);
-            if (source == null || source == group) return;
-            var index = Document.Groups.IndexOf(group);
-            Document.Groups.Remove(source);
-            Document.Groups.Insert(Math.Min(index, Document.Groups.Count), source);
-        }
-        else
+        if (!e.Data.GetDataPresent("ReStart.Group"))
         {
             var point = e.GetPosition(panel);
-            var target = Ancestor<Button>(panel.InputHitTest(point) as DependencyObject)?.Tag as Tile;
             var tile = DragTile(e);
             if (tile == null) return;
-            var (col, row) = TileLayout.Snap(point.X - _dragOffset.X, point.Y - _dragOffset.Y, Cell, tile.Size, Document.Preferences.Columns);
-            if (e.Data.GetData("ReStart.Tile") is string id)
-            {
-                var source = FindTile(id);
-                if (source == null) return;
-                if (target != null && (Keyboard.Modifiers & ModifierKeys.Shift) != 0 && !source.IsFolder && target.Widget.Length == 0)
-                    MergeFolder(source, target);
-                else
-                {
-                    LayoutEditor.MoveToCell(Document, source, group, col, row);
-                }
-            }
-            else if (e.Data.GetData("ReStart.App") is string appId)
-            {
-                var app = _apps.FirstOrDefault(a => a.Id == appId);
-                if (app == null) return;
-                LayoutEditor.MoveToCell(Document, tile, group, col, row);
-            }
-            else return;
+            var model = panel.ToModelPoint(point);
+            var (col, row) = TileLayout.Snap(model.X - _dragOffset.X, model.Y - _dragOffset.Y, Cell, tile.Size, Document.Preferences.Columns);
+            var sourceId = (string?)e.Data.GetData("ReStart.Tile") ?? (string?)e.Data.GetData("ReStart.App") ?? tile.Id;
+            var folderTarget = FolderHoverTarget(tile, panel, point, sourceId);
+            MoveTileIntoGroup(tile, group, col, row, folderTarget);
         }
-        CommitLayout();
     }
 
     private static T? Ancestor<T>(DependencyObject? source) where T : DependencyObject
@@ -544,13 +545,12 @@ public partial class MainWindow : Window
     private void CommitLayout()
     {
         SaveLayout();
-        RenderGroups();
         if (_openFolder != null)
         {
             var current = FindTile(_openFolder.Id);
-            if (current?.IsFolder == true) OpenFolder(current);
-            else { _openFolder = null; FolderOverlay.Visibility = Visibility.Collapsed; }
+            _openFolder = current?.IsFolder == true ? current : null;
         }
+        RenderGroups();
     }
 
     private void RenderApps()
@@ -593,8 +593,11 @@ public partial class MainWindow : Window
             });
             Add(menu, L.T(K.PinNewGroup), () =>
             {
-                var name = Prompt(L.T(K.PromptGroupName), L.T(K.NewGroup));
-                if (name != null) { Document.Groups.Add(new() { Name = name, Tiles = [Tile.FromApp(app)] }); CommitLayout(); }
+                var group = new TileGroup { Name = "", Tiles = [Tile.FromApp(app)] };
+                ShowPinned(this, new());
+                Document.Groups.Add(group);
+                CommitLayout();
+                RenameGroup(group);
             });
         };
         WireDrag(button, "ReStart.App", app.Id);
@@ -627,6 +630,7 @@ public partial class MainWindow : Window
 
     private void ResetToPinnedView()
     {
+        _editingGroupHeader?.EndEdit(true);
         _allApps = false;
         _searchRequested = false;
         SearchBox.Clear();
@@ -635,7 +639,6 @@ public partial class MainWindow : Window
         ExpandedRail.Visibility = Visibility.Collapsed;
         AlphabetOverlay.Visibility = Visibility.Collapsed;
         CloseFolder(this, new());
-        FolderTiles.Children.Clear();
         ClearDropPreview();
         ContentScroll.ScrollToTop();
     }
@@ -643,8 +646,15 @@ public partial class MainWindow : Window
     private void ShowAllApps(object sender, RoutedEventArgs e) { _searchRequested = false; _allApps = true; SearchBox.Clear(); SearchChanged(SearchBox, new(TextBox.TextChangedEvent, UndoAction.None)); ExpandedRail.Visibility = Visibility.Collapsed; ContentScroll.ScrollToTop(); }
     private void ClearSearch(object sender, RoutedEventArgs e) { SearchBox.Clear(); SearchBox.Focus(); }
     private void ToggleRail(object sender, RoutedEventArgs e) => ExpandedRail.Visibility = ExpandedRail.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
-    private void RenameGroup(TileGroup group) { var name = Prompt(L.T(K.PromptGroupName), group.Name); if (name != null) { group.Name = name; CommitLayout(); } }
-    private void AddGroup() { var name = Prompt(L.T(K.PromptGroupName), L.T(K.NewGroup)); if (name != null) { Document.Groups.Add(new() { Name = name }); CommitLayout(); RenderApps(); } }
+    private void RenameGroup(TileGroup group) => GroupsPanel.Children.OfType<StackPanel>().Where(s => s.Tag == group).SelectMany(s => s.Children.OfType<GroupHeader>()).FirstOrDefault()?.BeginEdit();
+    private void AddGroup()
+    {
+        ShowPinned(this, new());
+        var group = new TileGroup { Name = "" };
+        Document.Groups.Add(group);
+        CommitLayout();
+        RenameGroup(group);
+    }
 
     private void OpenAddMenu(object sender, RoutedEventArgs e)
     {
@@ -688,32 +698,6 @@ public partial class MainWindow : Window
         CommitLayout();
     }
 
-    private void OpenFolder(Tile tile)
-    {
-        RemoveFolderLiveViews();
-        _openFolder = tile;
-        FolderTitle.Text = tile.Label;
-        FolderTiles.Children.Clear();
-        foreach (var child in tile.Children)
-        {
-            var button = CreateTileButton(child);
-            button.Width = 100; button.Height = 100; button.Margin = new(2);
-            FolderTiles.Children.Add(button);
-        }
-        FolderOverlay.Visibility = Visibility.Visible;
-        UpdateLiveTiles();
-    }
-
-    private void RemoveFolderLiveViews()
-    {
-        if (_openFolder == null) return;
-        var ids = _openFolder.Children.Select(t => t.Id).ToHashSet();
-        _scriptViews.RemoveAll(v => ids.Contains(v.Tile.Id));
-        _liveLabels.RemoveAll(v => ids.Contains(v.Tile.Id));
-    }
-    private void CloseFolder(object sender, RoutedEventArgs e) { RemoveFolderLiveViews(); FolderOverlay.Visibility = Visibility.Collapsed; _openFolder = null; }
-    private void CloseFolderBackground(object sender, MouseButtonEventArgs e) => CloseFolder(sender, e);
-    private void KeepFolderOpen(object sender, MouseButtonEventArgs e) => e.Handled = true;
     private void OpenAlphabet()
     {
         AlphabetButtons.Children.Clear();
@@ -821,13 +805,15 @@ public partial class MainWindow : Window
     }
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (_dragging) return;
+        if (_editingGroupHeader?.IsEditing == true && e.OriginalSource is TextBox) return;
         if (e.Key == Key.Tab && SearchBox.IsKeyboardFocused && SearchBox.Text.Length == 0 && !_searchRequested)
         { PinnedNav.Focus(); e.Handled = true; return; }
 
         if (e.Key == Key.Escape)
         {
             if (AlphabetOverlay.Visibility == Visibility.Visible) AlphabetOverlay.Visibility = Visibility.Collapsed;
-            else if (FolderOverlay.Visibility == Visibility.Visible) CloseFolder(this, e);
+            else if (_openFolder != null) CloseFolder(this, e);
             else if (ExpandedRail.Visibility == Visibility.Visible) ExpandedRail.Visibility = Visibility.Collapsed;
             else if (SearchBox.Text.Length > 0 || _searchRequested) { _searchRequested = false; SearchBox.Clear(); UpdateSearchChrome(false); FocusSearchInput(); }
             else Hide();
@@ -847,6 +833,7 @@ public partial class MainWindow : Window
     }
     private void OnPreviewTextInput(object sender, TextCompositionEventArgs e)
     {
+        if (_dragging) return;
         if (e.OriginalSource is TextBox || Ancestor<TextBox>(e.OriginalSource as DependencyObject) != null || Keyboard.Modifiers.HasFlag(ModifierKeys.Control) || e.Text.Length == 0 || e.Text.All(char.IsControl)) return;
         UpdateSearchChrome(true); SearchBox.Focus(); SearchBox.AppendText(e.Text); SearchBox.CaretIndex = SearchBox.Text.Length; e.Handled = true;
     }
@@ -860,7 +847,7 @@ public partial class MainWindow : Window
     private static bool IsAnyMenuOpen() => Mouse.Captured is ContextMenu || Mouse.Captured is System.Windows.Controls.Primitives.MenuBase;
     private void OnClosing(object? sender, CancelEventArgs e) { if (!_exit) { e.Cancel = true; Hide(); } }
     /// <summary>Stops timers and isolated script workers before permanently closing the launcher.</summary>
-    public void Exit() { _exit = true; _clock.Stop(); PauseScripts(); Close(); }
+    public void Exit() { _exit = true; _clock.Stop(); _nameRefreshTimer?.Stop(); PauseScripts(); Close(); }
 
     /// <summary>Renders only the launcher root to a PNG for reproducible UI verification.</summary>
     public void SaveScreenshot(string path)

@@ -65,6 +65,36 @@ public sealed class LayoutStoreTests : IDisposable
     }
 
     [Fact]
+    public void SchemaMigrationKeepsTheOriginalBeyondTheRotatingBackup()
+    {
+        const string original = "{\"Version\":1,\"Groups\":[{\"Name\":\"legacy\"}]}";
+        File.WriteAllText(FilePath, original);
+        var store = new LayoutStore(FilePath);
+        var document = store.Load()!;
+        Assert.Equal(2, document.Version);
+        store.Save(document);
+        var migrationPath = Assert.IsType<string>(store.MigrationBackupPath);
+        document.Groups[0].Name = "updated";
+        store.Save(document);
+        Assert.Equal(original, File.ReadAllText(migrationPath));
+        Assert.Equal(2, LayoutStore.Read(FilePath + ".bak").Version);
+        Assert.Single(Directory.GetFiles(_directory, "*.schema1-*.bak"));
+    }
+
+    [Fact]
+    public void RecoveringALegacyBackupPreservesThatSourceBeforeReplacingIt()
+    {
+        File.WriteAllText(FilePath, "invalid json");
+        const string legacy = "{\"Version\":1,\"Groups\":[{\"Name\":\"recovered\"}]}";
+        File.WriteAllText(FilePath + ".bak", legacy);
+        var store = new LayoutStore(FilePath);
+        var document = store.Load()!;
+        store.Save(document);
+        Assert.Equal(legacy, File.ReadAllText(store.MigrationBackupPath!));
+        Assert.Equal("recovered", LayoutStore.Read(FilePath).Groups[0].Name);
+    }
+
+    [Fact]
     public void RepairsInvalidSizesAndDuplicateIds()
     {
         var doc = new LayoutDocument { Groups = [new() { Id = "same", Tiles = [new() { Id = "same", Size = (TileSize)999 }] }] };

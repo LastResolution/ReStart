@@ -74,13 +74,17 @@ public sealed class Tile
     };
 }
 
-/// <summary>Stores a named group of root tiles in display order.</summary>
+/// <summary>Stores root tiles and an optional position on the full-screen group grid.</summary>
 public sealed class TileGroup
 {
     /// <summary>Gets or sets a stable identifier unique within the layout.</summary>
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     /// <summary>Gets or sets a user-owned group label.</summary>
     public string Name { get; set; } = L.T(K.NewGroup);
+    /// <summary>Gets or sets a horizontal group-column anchor; null uses automatic placement for legacy layouts.</summary>
+    public int? Column { get; set; }
+    /// <summary>Gets or sets the vertical anchor in half-cell steps; null uses automatic placement.</summary>
+    public int? Row { get; set; }
     /// <summary>Gets or sets the root tiles in this group.</summary>
     public List<Tile> Tiles { get; set; } = [];
 }
@@ -120,9 +124,12 @@ public sealed class Preferences
 public sealed class LayoutDocument
 {
     /// <summary>Current supported layout schema version.</summary>
-    public const int CurrentVersion = 1;
+    public const int CurrentVersion = 2;
     /// <summary>Current supported layout schema version.</summary>
     public int Version { get; set; } = CurrentVersion;
+    /// <summary>Gets the legacy version migrated by normalization; omitted from saved layouts.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public int? MigratedFromVersion { get; private set; }
     /// <summary>Gets or sets local UI and shell integration preferences.</summary>
     public Preferences Preferences { get; set; } = new();
     /// <summary>Gets or sets groups in display order.</summary>
@@ -131,7 +138,8 @@ public sealed class LayoutDocument
     /// <summary>Repairs bounded presentation values and duplicate identities; rejects unsupported schemas and nested folders.</summary>
     public void Normalize()
     {
-        if (Version != CurrentVersion)
+        if (Version == 1) { MigratedFromVersion = 1; Version = CurrentVersion; }
+        else if (Version != CurrentVersion)
             throw new UnsupportedLayoutVersionException(Version);
         Preferences ??= new();
         Groups ??= [];
@@ -147,7 +155,9 @@ public sealed class LayoutDocument
                 group.Id = Guid.NewGuid().ToString("N");
                 ids.Add(group.Id);
             }
-            group.Name = string.IsNullOrWhiteSpace(group.Name) ? L.T(K.NewGroup) : group.Name.Trim();
+            group.Name = (group.Name ?? "").Trim();
+            if (group.Column is < 0 or > 63 || group.Row is < 0 or > 20000 || group.Column.HasValue != group.Row.HasValue)
+            { group.Column = null; group.Row = null; }
             group.Tiles ??= [];
             NormalizeTiles(group.Tiles, ids, 0);
         }

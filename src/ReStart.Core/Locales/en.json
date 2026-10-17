@@ -1,4 +1,6 @@
 {
+  "NameGroup": "Name group",
+  "NameFolder": "Name folder",
   "RecoveryBackupRestored": " The backup was restored.",
   "TileFolderSuffix": " folder",
   "ErrorHotkeyInUse": "Ctrl+Alt+Space is in use. Open ReStart from the notification area.",

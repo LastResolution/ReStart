@@ -1,4 +1,6 @@
 {
+  "NameGroup": "グループに名前を付ける",
+  "NameFolder": "フォルダーに名前を付ける",
   "RecoveryBackupRestored": " バックアップを復元しました。",
   "TileFolderSuffix": " フォルダー",
   "ErrorHotkeyInUse": "Ctrl+Alt+Space は別のアプリが使用しています。トレイから開いてください。",

@@ -39,7 +39,7 @@
         </Grid>
         <ScrollViewer x:Name="ContentScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,10,0,24">
           <Grid>
-            <WrapPanel x:Name="GroupsPanel" HorizontalAlignment="Left" VerticalAlignment="Top" />
+            <controls:GroupBoardPanel x:Name="GroupsPanel" HorizontalAlignment="Stretch" VerticalAlignment="Top" MinHeight="{Binding ViewportHeight, ElementName=ContentScroll}" AllowDrop="True" />
             <controls:AppListPanel x:Name="AppsPanel" HorizontalAlignment="Stretch" VerticalAlignment="Top" Visibility="Collapsed" />
             <StackPanel x:Name="ResultsPanel" MaxWidth="720" HorizontalAlignment="Left" Visibility="Collapsed" />
           </Grid>
@@ -64,14 +64,6 @@
           <Button HorizontalContentAlignment="Left" Content="{local:Loc Key=RailPower}" Height="48" Click="OpenPower" />
         </StackPanel>
       </Grid>
-    </Border>
-    <Border x:Name="FolderOverlay" Background="#A0000000" Visibility="Collapsed" MouseDown="CloseFolderBackground">
-      <Border Background="{DynamicResource PanelBrush}" MaxWidth="650" MaxHeight="600" Padding="28" Margin="40" HorizontalAlignment="Center" VerticalAlignment="Center" MouseDown="KeepFolderOpen">
-        <DockPanel>
-          <Grid DockPanel.Dock="Top" Margin="0,0,0,22"><TextBlock x:Name="FolderTitle" FontSize="24" /><Button Content="×" AutomationProperties.Name="{local:Loc Key=CloseFolder}" HorizontalAlignment="Right" Click="CloseFolder" /></Grid>
-          <ScrollViewer VerticalScrollBarVisibility="Auto"><WrapPanel x:Name="FolderTiles" /></ScrollViewer>
-        </DockPanel>
-      </Border>
     </Border>
     <Border x:Name="AlphabetOverlay" Background="{DynamicResource PanelBrush}" Visibility="Collapsed" MaxWidth="620" MaxHeight="460" Padding="24" HorizontalAlignment="Center" VerticalAlignment="Center">
       <DockPanel><Button DockPanel.Dock="Top" Content="{local:Loc Key=AlphabetTitle}" Click="CloseAlphabet" /><WrapPanel x:Name="AlphabetButtons" Margin="0,16,0,0" /></DockPanel>

@@ -51,9 +51,13 @@ public partial class MainWindow
                 Require(ContentScroll.VerticalOffset > 0, "The scrolling fixture did not scroll.");
                 ExpandedRail.Visibility = Visibility.Visible;
                 OpenAlphabet();
-                OpenFolder(new Tile { Label = "Fixture folder", Children = [Tile.FromApp(_apps[0])] });
+                var fixtureGroup = new TileGroup { Name = "Fixture", Tiles = [new() { Label = "Fixture folder", Children = [Tile.FromApp(_apps[0])] }] };
+                Document.Groups.Add(fixtureGroup);
+                OpenFolder(fixtureGroup.Tiles[0]);
                 Hide();
                 Present();
+                Document.Groups.Remove(fixtureGroup);
+                RenderGroups();
                 UpdateLayout();
                 VerifyHome();
                 reopenChecks++;
@@ -86,7 +90,7 @@ public partial class MainWindow
         Require(SearchBox.Text.Length == 0 && TopBar.Height == 0, "Reopening retained search state.");
         Require(ContentScroll.VerticalOffset == 0, "Reopening retained the previous scroll offset.");
         Require(ExpandedRail.Visibility != Visibility.Visible && AlphabetOverlay.Visibility != Visibility.Visible
-            && FolderOverlay.Visibility != Visibility.Visible && _openFolder == null, "Reopening retained an overlay.");
+            && _openFolder == null, "Reopening retained an overlay or inline folder.");
     }
 
     private static void Require(bool condition, string message)

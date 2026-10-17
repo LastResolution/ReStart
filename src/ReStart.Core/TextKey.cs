@@ -85,6 +85,10 @@ public enum TextKey
     GroupPrefix,
     /// <summary>Group name</summary>
     PromptGroupName,
+    /// <summary>Name group</summary>
+    NameGroup,
+    /// <summary>Name folder</summary>
+    NameFolder,
     /// <summary>Group width</summary>
     SettingsGroupWidth,
     /// <summary>Move to group</summary>

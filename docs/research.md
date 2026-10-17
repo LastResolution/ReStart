@@ -26,6 +26,14 @@ Microsoft の資料と当時の画像は、構造・操作の根拠です。Wind
 
 元資料の画像や Windows の実装コードは配布物へ転載しません。README の画面は ReStart のプレビューで生成します。
 
+### 配置・名前編集の再調査（2026-10-18）
+
+- [管理対象デバイスのStart配置](https://learn.microsoft.com/en-us/windows/configuration/start/layout)は、空き領域へのドラッグによるグループ作成と、グループ上のName group入力欄を説明しています。グループ名変更に別ウィンドウを開く実装は置き換えます。
+- [Windows 10用OEM配置](https://learn.microsoft.com/en-us/windows-hardware/customize/desktop/customize-start-layout)は、4種類のタイル寸法とグループ内のRow / Columnを定義しています。余白を保持する行・列の配置を基準にします。
+- [タイルフォルダーの名前](https://blogs.windows.com/windowsexperience/2018/12/03/windows-10-tip-name-your-tile-folders/)は、タイルを重ねて約1秒保持してフォルダーを作り、展開後に名前を付ける操作を説明しています。Shift必須の操作とモーダルな表示は見直し対象です。
+- グループ名のダブルクリック編集はユーザーの実操作報告に基づきます。グループの全画面内の移動範囲、スナップ間隔、衝突時アニメーションはWindows 10実機との追加照合が必要です。
+- [2018年の公式デモGIF](https://blogs.windows.com/wp-content/uploads/prod/sites/2/2018/10/d48e2dc05daefba99b5170de49dc2f1e.gif)で、親フォルダータイルが上向き矢印になり、名前と内容がグループの行間に展開され、後続タイルを下へ送る表示を確認しました。ReStartの中央オーバーレイを廃止し、この構造へ変更します。資料画像は配布物へ含めません。
+
 ### 多重起動と自動起動
 
 - [Run / RunOnce registry keys](https://learn.microsoft.com/en-us/windows/win32/setupapi/run-and-runonce-registry-keys): ユーザー単位のサインイン時起動、コマンド260文字制限、起動時刻の保証がない点を確認。

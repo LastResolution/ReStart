@@ -39,13 +39,37 @@ public static class LayoutEditor
         if (source == target || source.IsFolder || target.Children.Contains(source)) return;
         var group = document.Groups.FirstOrDefault(g => g.Tiles.Contains(target));
         if (group == null) return;
+        var column = target.Column;
+        var row = target.Row;
         Remove(document, source.Id);
+        source.Column = null; source.Row = null;
         if (target.IsFolder) target.Children.Add(source);
         else
         {
             var index = group.Tiles.IndexOf(target);
-            group.Tiles[index] = new() { Label = L.T(K.TileFolder), Size = TileSize.Medium, Column = target.Column, Row = target.Row, Children = [target, source] };
+            target.Column = null; target.Row = null;
+            group.Tiles[index] = new() { Label = "", Size = TileSize.Medium, Column = column, Row = row, Children = [target, source] };
         }
+    }
+
+    /// <summary>Moves a non-folder tile into an open root folder, preserving identity and resolving child-cell collisions.</summary>
+    public static void MoveIntoFolder(LayoutDocument document, Tile tile, Tile folder, int column, int row)
+    {
+        if (tile.IsFolder || tile == folder || !document.Groups.Any(g => g.Tiles.Contains(folder)) || !folder.IsFolder)
+            throw new ArgumentException("The destination must be a root folder and the source must not be a folder.", nameof(folder));
+        var columns = document.Preferences.Columns;
+        var (width, height) = TileLayout.Dimensions(tile.Size);
+        column = Math.Clamp(column, 0, columns - width); row = Math.Clamp(row, 0, 200);
+        var previous = TileLayout.Pack(folder.Children, columns);
+        foreach (var p in previous) { p.Tile.Column = p.Column; p.Tile.Row = p.Row; }
+        if (folder.Children.Contains(tile)) folder.Children.Remove(tile);
+        else Remove(document, tile.Id);
+        tile.Column = column; tile.Row = row;
+        foreach (var p in previous.Where(p => p.Tile != tile))
+            if (p.Column < column + width && p.Column + p.Width > column && p.Row < row + height && p.Row + p.Height > row)
+            { p.Tile.Column = null; p.Tile.Row = null; }
+        folder.Children.Insert(0, tile);
+        foreach (var p in TileLayout.Pack(folder.Children, columns)) { p.Tile.Column = p.Column; p.Tile.Row = p.Row; }
     }
 
     /// <summary>Moves a tile to an explicit cell, preserving unaffected positions and repacking only conflicting tiles.</summary>
