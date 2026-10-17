@@ -34,6 +34,13 @@ Microsoft の資料と当時の画像は、構造・操作の根拠です。Wind
 - グループ名のダブルクリック編集はユーザーの実操作報告に基づきます。グループの全画面内の移動範囲、スナップ間隔、衝突時アニメーションはWindows 10実機との追加照合が必要です。
 - [2018年の公式デモGIF](https://blogs.windows.com/wp-content/uploads/prod/sites/2/2018/10/d48e2dc05daefba99b5170de49dc2f1e.gif)で、親フォルダータイルが上向き矢印になり、名前と内容がグループの行間に展開され、後続タイルを下へ送る表示を確認しました。ReStartの中央オーバーレイを廃止し、この構造へ変更します。資料画像は配布物へ含めません。
 
+### 全アプリ一覧の階層と識別（2026-10-18）
+
+- [スクリーンリーダーによるStartの操作](https://support.microsoft.com/en-us/accessibility/windows/use-a-screen-reader-to-explore-and-navigate-the-start-menu-in-windows)のWindows 10節で、折り畳まれたアプリフォルダーをSpaceで開き、内容を通常の一覧として操作する手順を確認しました。同じページのWindows 11節とは分けて参照します。
+- [ShellFolderItem.ExtendedProperty](https://learn.microsoft.com/en-us/windows/win32/shell/shellfolderitem-extendedproperty)、[System.Link.TargetParsingPath](https://learn.microsoft.com/en-us/windows/win32/properties/props-system-link-targetparsingpath)、[System.Link.Arguments](https://learn.microsoft.com/en-us/windows/win32/properties/props-system-link-arguments)を使い、AUMIDとリンク先・引数を読み取ります。読み取り時にリンクの解決や実行は行いません。
+- [SHGetFileInfoW](https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shgetfileinfow)のDISPLAYNAMEを用いてローカライズされた表示名を取得します。MAX_PATHを超える項目と取得失敗は実ファイル名へフォールバックします。
+- 同名アプリの照合順序、列の均等化、フォーカス復元はReStart側の実装です。Windows 10内部アルゴリズムと一致することを示す資料ではありません。
+
 ### 多重起動と自動起動
 
 - [Run / RunOnce registry keys](https://learn.microsoft.com/en-us/windows/win32/setupapi/run-and-runonce-registry-keys): ユーザー単位のサインイン時起動、コマンド260文字制限、起動時刻の保証がない点を確認。

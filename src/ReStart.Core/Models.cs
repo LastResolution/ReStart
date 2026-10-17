@@ -24,12 +24,19 @@ public enum ThemeMode
 }
 
 /// <summary>Describes an installed application or shortcut without modifying its OS-provided name.</summary>
-public sealed record AppEntry(string Id, string Name, string LaunchTarget, bool IsShellApp = true)
+/// <param name="Id">Stable AppsFolder or shortcut identity used by pinned tiles and icons.</param>
+/// <param name="Name">OS-provided application display name.</param>
+/// <param name="LaunchTarget">Shell identity, protocol or shortcut path used for launching.</param>
+/// <param name="IsShellApp">Whether the target is resolved through the AppsFolder namespace.</param>
+/// <param name="FolderPath">OS-provided relative Start-menu display folders, separated by slashes; empty for root apps.</param>
+public sealed record AppEntry(string Id, string Name, string LaunchTarget, bool IsShellApp = true, string FolderPath = "")
 {
     /// <summary>Gets the display bucket used for alphabet navigation.</summary>
-    public string Section => string.IsNullOrWhiteSpace(Name) ? "#" :
-        char.IsAsciiLetter(Name[0]) ? char.ToUpperInvariant(Name[0]).ToString() :
-        char.IsDigit(Name[0]) ? "#" : L.T(K.AppListOther);
+    public string Section => SectionFor(Name);
+    /// <summary>Returns the shared alphabet bucket for an app or folder display name.</summary>
+    public static string SectionFor(string name) => string.IsNullOrWhiteSpace(name) ? "#" :
+        char.IsAsciiLetter(name[0]) ? char.ToUpperInvariant(name[0]).ToString() :
+        char.IsDigit(name[0]) ? "#" : L.T(K.AppListOther);
 }
 
 /// <summary>Stores a persistent root tile or one-level folder child.</summary>

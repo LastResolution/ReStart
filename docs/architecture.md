@@ -17,7 +17,11 @@ scripts                スモークテストと配布パッケージ作成
 
 ## シェルとアプリ起動
 
-`AppCatalog` が専用 STA スレッドで `Shell.Application` の AppsFolder を列挙します。ユーザーと共通のスタートメニューにある .lnk / .url も補います。名前の一致で重複を避けるため、同名の異なるショートカットが一覧に出ない場合があります。
+`AppCatalog` が専用 STA スレッドで `Shell.Application` の AppsFolder と、ユーザー・共通のスタートメニューにある .lnk / .url を列挙します。同じ相対パスはユーザー側を優先します。表示名はSHGetFileInfoから取得し、フォルダー階層も保持します。
+
+`AppCatalogLayout` は明示的なAUMID、一意のリンク先と引数、一意の表示名の順に対応付け、既存ピン留めのAppsFolder IDと起動先を維持します。パスは大文字・小文字を区別せず、引数は区別します。曖昧な同名候補や異なる既知の起動先を無理に統合せず、実ショートカットを残します。曖昧な場合は重複表示が残る可能性があります。
+
+`AppListTree` は検索用の平坦なカタログから表示用の階層を作ります。折り畳み状態は保存せず、メニューの再表示で解除します。`AppFolderButton` はキー操作とExpandCollapseのAutomationパターンを提供します。列分割では文字見出し・展開フォルダー・最初の子の連続を同じ列に保持します。
 
 アイコンは別の STA ワーカーで `IShellItemImageFactory` から取得し、WPF 画像を Freeze して共有します。HBITMAP と COM オブジェクトを解放します。名前の一覧は画像の完了を待たずに表示します。
 

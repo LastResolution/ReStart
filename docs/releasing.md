@@ -15,8 +15,8 @@
 ```powershell
 git switch main
 git pull --ff-only
-git tag -a v0.3.0 -m "ReStart v0.3.0"
-git push origin v0.3.0
+git tag -a v0.4.0 -m "ReStart v0.4.0"
+git push origin v0.4.0
 gh run list --workflow release.yml
 ```
 

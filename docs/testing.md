@@ -9,6 +9,7 @@ dotnet build ReStart.slnx -c Release --no-restore
 dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory artifacts/test-results
 ./scripts/smoke.ps1
 ./scripts/test-navigation.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+./scripts/test-navigation.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe -AppFolders
 ./scripts/test-placement.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/package.ps1 -Runtime win-x64
 ```
@@ -18,6 +19,8 @@ dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory 
 `test-navigation.ps1` はメモリ上の架空アプリ288個を使い、800 / 1280 / 1920 / 2560 DIP幅で一覧の右端、画面外へのはみ出し、文字見出しの分断を検証します。一覧と検索から実際のHide / Presentを8回実行し、タイル表示・先頭位置・検索解除・オーバーレイ終了も確認します。プレビューはサイズを維持し、本番の設定・レイアウトは変更しません。結果JSONと各サイズのPNGは `artifacts/navigation/` に出力し、CIにも保存します。物理Windowsキーやタスクバー操作の代わりにはなりません。
 
 CIのデスクトップより大きい幅も検証できるよう、ネイティブウィンドウの最大サイズには依存せず、実際のWPFルートへ描画幅を指定します。要求幅が反映されたことも検証します。
+
+`-AppFolders` は架空の多段フォルダーを使用します。開閉、左右キー、AutomationのExpandCollapse、隠れたアプリの検索、1920 / 3840 DIP幅の見出し連続、ダーク / ライト、頭文字ジャンプ、再描画後の文字ジャンプ先、再表示時の折り畳みを確認します。物理Space入力やNarratorの読み上げを検証するものではありません。
 
 `test-placement.ps1` は新しい実行ファイル用フォルダーを作り、プレビューの保存先も分離します。グループの独立した位置、空き領域からのグループ作成、タイルの空白保持、狭い画面から戻った際のアンカー、schema 2の保存を確認します。命名は実際のWPFダブルクリック・キーイベント経路を使い、Enter確定 / Esc取消とモーダルウィンドウが開かないことを検証します。OSの物理マウスドラッグを模擬するものではありません。
 
@@ -31,7 +34,7 @@ CIのデスクトップより大きい幅も検証できるよう、ネイティ
 | 画面 | 100 / 125 / 150 / 200% DPI、縦画面、異なる DPI の複数画面 |
 | ピン留め | 一覧から追加、解除、4サイズ、再起動して保持 |
 | グループ | 作成・命名・削除、ヘッダーで移動、折り返し |
-| フォルダー | Shift+ドロップ、メニュー作成、開閉、子の取り出し、最後の子を移動 |
+| フォルダー | 中央で約1秒保持してドロップ、メニュー作成、行内開閉、子の取り出し、最後の子を移動 |
 | 検索 | 英数、全角英数、かな、IME、候補なし、Enter、Esc |
 | キーボード | Tab / 矢印 / Enter、Win 単押し、Win+E / D / L / Tab、Ctrl+Alt+Space |
 | アプリ | Win32、Store、.lnk、.url、未インストール済みの古いピン留め |

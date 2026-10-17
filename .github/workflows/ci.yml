@@ -29,6 +29,8 @@ jobs:
       - run: dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory artifacts/test-results
       - name: Verify responsive app list and return to home
         run: ./scripts/test-navigation.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+      - name: Verify all-apps directory expansion and search
+        run: ./scripts/test-navigation.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe -AppFolders
       - name: Verify group placement and inline naming
         run: ./scripts/test-placement.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

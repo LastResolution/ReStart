@@ -9,7 +9,7 @@
     <BaseIntermediateOutputPath Condition="'$(RuntimeIdentifier)' != ''">obj/$(RuntimeIdentifier)/</BaseIntermediateOutputPath>
     <DefaultItemExcludes>$(DefaultItemExcludes);**/obj/**;**/bin/**</DefaultItemExcludes>
     <NuGetLockFilePath Condition="'$(RuntimeIdentifier)' != ''">$(MSBuildProjectDirectory)/obj/packages.$(RuntimeIdentifier).lock.json</NuGetLockFilePath>
-    <Version>0.3.0</Version>
+    <Version>0.4.0</Version>
     <Authors>ReStart contributors</Authors>
     <RepositoryUrl>https://github.com/LastResolution/ReStart</RepositoryUrl>
     <LangVersion>latest</LangVersion>

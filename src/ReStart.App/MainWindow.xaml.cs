@@ -52,6 +52,8 @@ public partial class MainWindow : Window
     public bool IconsReady { get; private set; }
     /// <summary>Gets the number of real applications enumerated for diagnostics.</summary>
     public int CatalogCount => _catalog.Count;
+    /// <summary>Gets the number of logical Start-menu directory paths found for all-apps diagnostics.</summary>
+    public int CatalogFolderCount => _catalog.FolderCount;
     /// <summary>Gets the number of icons loaded for diagnostics.</summary>
     public int IconCount => _catalog.Icons.Count;
     /// <summary>Creates a localized default layout from the currently loaded app catalog.</summary>
@@ -170,6 +172,7 @@ public partial class MainWindow : Window
     {
         var dialog = OwnedWindows.Cast<Window>().LastOrDefault(w => w.IsVisible);
         if (dialog != null) { dialog.Activate(); return; }
+        if (_expandedAppFolders.Count > 0) { _expandedAppFolders.Clear(); RenderApps(); }
         ResetToPinnedView();
         var handle = new WindowInteropHelper(this).EnsureHandle();
         if (!IsVisible) Show();
@@ -553,28 +556,15 @@ public partial class MainWindow : Window
         RenderGroups();
     }
 
-    private void RenderApps()
-    {
-        AppsPanel.Children.Clear();
-        _sections.Clear();
-        foreach (var section in _apps.GroupBy(a => a.Section).OrderBy(g => g.Key, StringComparer.CurrentCulture))
-        {
-            var header = new Button { Content = section.Key, Tag = "section", HorizontalContentAlignment = HorizontalAlignment.Left, FontSize = 20, FontWeight = FontWeights.Light, Padding = new(8, 8, 0, 8) };
-            header.Click += (_, _) => OpenAlphabet();
-            AppsPanel.Children.Add(header);
-            foreach (var app in section) AppsPanel.Children.Add(AppButton(app));
-            _sections[section.Key] = header;
-        }
-        FitPanels();
-    }
-
     private Button AppButton(AppEntry app)
     {
-        var button = new Button { HorizontalContentAlignment = HorizontalAlignment.Stretch, Padding = new(4, 3, 4, 3), Height = 44, ToolTip = app.Name };
+        var button = new Button { Tag = app, HorizontalContentAlignment = HorizontalAlignment.Stretch, Padding = new(4, 3, 4, 3), Height = 44, ToolTip = app.Name };
         AutomationProperties.SetName(button, app.Name);
         var panel = new DockPanel();
         var iconBox = new Border { Width = 32, Height = 32, Margin = new(0, 0, 12, 0), Background = (System.Windows.Media.Brush)FindResource("TileBrush") };
-        iconBox.Child = CreateIcon(Tile.FromApp(app), 25);
+        var icon = CreateIcon(Tile.FromApp(app), 25);
+        icon.Margin = new(0);
+        iconBox.Child = icon;
         DockPanel.SetDock(iconBox, Dock.Left);
         panel.Children.Add(iconBox);
         panel.Children.Add(new TextBlock { Text = app.Name, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center });
@@ -701,13 +691,21 @@ public partial class MainWindow : Window
     private void OpenAlphabet()
     {
         AlphabetButtons.Children.Clear();
-        foreach (var section in _sections)
+        var sections = new[] { "#" }.Concat(Enumerable.Range('A', 26).Select(c => ((char)c).ToString()))
+            .Concat(_sections.Keys.Where(s => s != "#" && !(s.Length == 1 && char.IsAsciiLetter(s[0]))));
+        foreach (var section in sections)
         {
-            var button = new Button { Content = section.Key, Width = 75, Height = 60, FontSize = 22, HorizontalContentAlignment = HorizontalAlignment.Center };
-            button.Click += (_, _) => { AlphabetOverlay.Visibility = Visibility.Collapsed; section.Value.BringIntoView(); };
+            var button = new Button { Content = section, IsEnabled = _sections.ContainsKey(section), Width = 75, Height = 60, FontSize = 22, HorizontalContentAlignment = HorizontalAlignment.Center };
+            button.Click += (_, _) =>
+            {
+                AlphabetOverlay.Visibility = Visibility.Collapsed;
+                // Icon loading can rebuild the rows while this picker is open.
+                if (_sections.TryGetValue(section, out var header)) { header.BringIntoView(); header.Focus(); }
+            };
             AlphabetButtons.Children.Add(button);
         }
         AlphabetOverlay.Visibility = Visibility.Visible;
+        AlphabetButtons.Children.OfType<Button>().FirstOrDefault(b => b.IsEnabled)?.Focus();
     }
     private void CloseAlphabet(object sender, RoutedEventArgs e) => AlphabetOverlay.Visibility = Visibility.Collapsed;
 
@@ -826,15 +824,20 @@ public partial class MainWindow : Window
             if (app != null) Launch(app);
             e.Handled = true;
         }
-        else if (e.Key == Key.Down && SearchBox.IsKeyboardFocused && ResultsPanel.Children.Count > 1)
+        else if (e.Key == Key.Down && SearchBox.IsKeyboardFocused)
         {
-            ((Button)ResultsPanel.Children[1]).Focus(); e.Handled = true;
+            var first = SearchBox.Text.Length > 0 ? ResultsPanel.Children.OfType<Button>().FirstOrDefault()
+                : _allApps ? AppsPanel.Children.OfType<Button>().FirstOrDefault(b => b.Tag is AppEntry || b is AppFolderButton)
+                : GroupsPanel.Children.OfType<StackPanel>().SelectMany(p => p.Children.OfType<TilePanel>())
+                    .SelectMany(p => p.Children.OfType<Button>()).FirstOrDefault();
+            if (first != null) { first.Focus(); first.BringIntoView(); e.Handled = true; }
         }
     }
     private void OnPreviewTextInput(object sender, TextCompositionEventArgs e)
     {
         if (_dragging) return;
         if (e.OriginalSource is TextBox || Ancestor<TextBox>(e.OriginalSource as DependencyObject) != null || Keyboard.Modifiers.HasFlag(ModifierKeys.Control) || e.Text.Length == 0 || e.Text.All(char.IsControl)) return;
+        if (FocusAppInitial(e.Text)) { e.Handled = true; return; }
         UpdateSearchChrome(true); SearchBox.Focus(); SearchBox.AppendText(e.Text); SearchBox.CaretIndex = SearchBox.Text.Length; e.Handled = true;
     }
     private void OnDeactivated(object? sender, EventArgs e)
