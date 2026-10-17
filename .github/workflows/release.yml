@@ -1,8 +1,6 @@
 name: Release
 
 on:
-  push:
-    tags: ['v*']
   workflow_dispatch:
     inputs:
       tag:
@@ -36,7 +34,6 @@ jobs:
         run: |
           $version = ([xml](Get-Content Directory.Build.props)).Project.PropertyGroup.Version
           if ($env:RELEASE_TAG -ne "v$version") { throw 'Tag and project version differ.' }
-          if ((Get-Content docs/release-notes.md -TotalCount 1) -ne "# ReStart v$version") { throw 'Release notes and project version differ.' }
           git merge-base --is-ancestor HEAD origin/main
           if ($LASTEXITCODE -ne 0) { throw 'Release must come from main.' }
       - run: dotnet restore ReStart.slnx --locked-mode
@@ -85,15 +82,21 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: gh run download "$GITHUB_RUN_ID" --pattern 'ReStart-*' --dir packages
-      - name: Create release
+      - name: Publish reviewed draft
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           mapfile -t assets < <(find packages -type f \( -name '*.zip' -o -name '*.sha256' \))
-          awk '/^---$/{exit} {print}' docs/release-notes.md > release-notes.md
+          if [ "${#assets[@]}" -ne 4 ]; then echo 'Expected two ZIPs and two checksum files.' >&2; exit 1; fi
+          release=$(gh release view "$RELEASE_TAG" --json isDraft,body)
+          if ! jq -e '.isDraft == true and (.body | length > 40)' <<< "$release" >/dev/null; then
+            echo 'Create a draft with reviewed English release notes before running publication.' >&2
+            exit 1
+          fi
+          gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
           visibility=$(gh repo view --json visibility --jq .visibility)
-          options=()
-          if [ "$visibility" != "PUBLIC" ]; then options+=(--draft); fi
-          gh release create "$RELEASE_TAG" "${assets[@]}" --verify-tag --title "ReStart $RELEASE_TAG" --notes-file release-notes.md "${options[@]}"
+          if [ "$visibility" = "PUBLIC" ]; then
+            gh release edit "$RELEASE_TAG" --draft=false --prerelease=false --latest --title "ReStart $RELEASE_TAG"
+          fi

@@ -13,7 +13,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-0078d4" alt="MIT license" /></a>
 </p>
 
-![ReStart が描画した12種類の同梱ライブタイル](docs/images/live-tiles.png)
+![アプリ・グループ・フォルダ・ライブタイルを含む全画面の ReStart](docs/images/start.png)
 
 ReStart は、Windows 10 のフルスクリーンスタートを目指す独立した Windows デスクトップランチャーです。アプリを並べ、フォルダをその場で開き、文字を打って検索。JavaScript のライブタイルで、自分のための画面にできます。
 
@@ -33,18 +33,20 @@ ReStart は、Windows 10 のフルスクリーンスタートを目指す独立�
 - **8言語に対応。** 英語、日本語、ドイツ語、フランス語、スペイン語、韓国語、簡体字・繁体字中国語。ライブタイルの既定名は言語に追従し、変更した名前は維持します。
 - **更新を見通せる。** 単一起動、サインイン時の起動、設定移行のバックアップ、バージョン・ライセンス表示、APIキー不要の公開リリース確認。
 
-上のギャラリーはサンプルの計測値と単色の写真素材で描画しています。実際のタイルは許可した機能からPCの情報を読み取ります。[ライブタイル API とスタイリング例](docs/ja/javascript-tiles.md)を参照してください。
+スクリーンショットはデモ配置、サンプル計測値、単色の写真素材を使っています。実際のタイルは許可した機能からPCの情報を読み取ります。[ライブタイル API とスタイリング例](docs/ja/javascript-tiles.md)を参照してください。
 
 <details>
-<summary>ランチャーとアプリ一覧を見る</summary>
+<summary>ライトテーマ・ライブタイル・アプリ一覧を見る</summary>
 
-![ReStart のピン留め画面](docs/images/start.png)
+![ライトテーマの全画面表示](docs/images/start-light.png)
+
+![同梱ライブタイル](docs/images/live-tiles.png)
 
 デモデータでの表示：[アプリ一覧](docs/images/app-list.png)、[アプリフォルダ](docs/images/app-folders.png)、[グループ配置](docs/images/group-placement.png)、[インラインフォルダ](docs/images/inline-folder.png)。通常モードではこのPCのアプリ名とアイコンを読み込みます。
 
 </details>
 
-Microsoft とは独立したプロジェクトです。Explorer のパッチは行わず、解除可能な連携を使います。従来の UWP タイル通知、Windows Search 全体、Cortana、ジャンプリスト、使用頻度による推薦は対象外です。[動作の調査](docs/ja/behavior-audit.md)と[検証記録](docs/ja/validation.md)に根拠と実行済みの確認を記載しています。
+Microsoft とは独立したプロジェクトです。Explorer のパッチは行わず、解除可能な連携を使います。従来の UWP タイル通知、Windows Search 全体、Cortana、ジャンプリスト、使用頻度による推薦は対象外です。[互換性](docs/ja/fidelity.md)と[検証手順](docs/ja/testing.md)を参照してください。
 
 ## 使い始める
 
@@ -92,7 +94,7 @@ v1.0 は schema 4 です。旧 schema 1～3 と同じ形式内のアプリ更新
 
 設定 → 情報で版・ビルド・ライセンス全文、設定 → 更新で API キー不要の公開リリース確認を使えます。自動インストールは行いません。[更新チェック](docs/ja/updates.md)を参照してください。
 
-横スクロールと Shift＋ホイールに対応し、端へドラッグした場合だけ作業領域を広げます。[全体の動作確認](docs/ja/behavior-audit.md)で、本家に基づく動作・要望による拡張・未検証を整理しています。
+横スクロールと Shift＋ホイールに対応し、端へドラッグした場合だけ作業領域を広げます。[全体の動作確認](docs/ja/fidelity.md)で、本家に基づく動作・要望による拡張・未検証を整理しています。
 
 レイアウトにはアプリ名、起動先、ファイルやフォルダーのパスが含まれます。エクスポートする際は共有内容を確認してください。インポートしても自動起動やキーフックの設定は引き継ぎません。
 
@@ -154,11 +156,11 @@ dotnet build ReStart.slnx -c Release
 
 詳しくは [開発への参加](CONTRIBUTING.ja.md)、[アーキテクチャ](docs/ja/architecture.md)、[検証方法](docs/ja/testing.md)、[リリース手順](docs/ja/releasing.md) を参照してください。
 
-バージョンごとの変更は [CHANGELOG](CHANGELOG.ja.md)、実施済みの確認は [検証記録](docs/ja/validation.md) にまとめています。
+バージョンごとの変更は [GitHub Releases](https://github.com/LastResolution/ReStart/releases) に英語で記載します。
 
 ## 参考とライセンス
 
-参考にした Microsoft の一次資料は [調査記録](docs/ja/research.md) にまとめています。Microsoft のバイナリ、旧 Start のコードや画像は同梱していません。Windows および各アプリの名称・アイコンは各権利者に帰属します。ReStart は Microsoft とは独立したプロジェクトです。
+参考にした Microsoft の一次資料は [互換性](docs/fidelity.md#reference-material) に記載しています。Microsoft のバイナリ、旧 Start のコードや画像は同梱していません。Windows および各アプリの名称・アイコンは各権利者に帰属します。ReStart は Microsoft とは独立したプロジェクトです。
 
 ReStart のコードは [MIT License](LICENSE) です。
 

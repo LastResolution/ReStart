@@ -13,7 +13,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-0078d4" alt="MIT license" /></a>
 </p>
 
-![Twelve bundled live tiles rendered by ReStart](docs/images/live-tiles.png)
+![ReStart: apps, groups, folders and live tiles in a full-screen launcher](docs/images/start.png)
 
 ReStart brings the Windows 10 full-screen Start experience to an independent Windows desktop launcher. Arrange your apps, open a folder in place, type to search, and make the space yours with JavaScript live tiles.
 
@@ -33,18 +33,20 @@ ReStart brings the Windows 10 full-screen Start experience to an independent Win
 - **Speak your language.** English, Japanese, German, French, Spanish, Korean, Simplified Chinese and Traditional Chinese. Default live-tile names follow the selected language; custom names stay yours.
 - **Upgrade with confidence.** A single instance, optional sign-in startup, migration backups, in-app version/licenses and public update checks without an API key.
 
-The gallery above uses demonstration metrics and generated photo colors. Real tiles read your PC's selected capabilities. Explore [the live tile API and styling examples](docs/javascript-tiles.md).
+Screenshots use a demonstration app layout, synthetic metrics and generated photo colors. Real tiles read your PC's selected capabilities. Explore [the live tile API and styling examples](docs/javascript-tiles.md).
 
 <details>
-<summary>See the launcher and app list</summary>
+<summary>Light theme, live tiles and app list</summary>
 
-![Pinned apps in ReStart](docs/images/start.png)
+![The complete launcher in light mode](docs/images/start-light.png)
+
+![Twelve bundled live tiles](docs/images/live-tiles.png)
 
 Demonstration data: [app columns](docs/images/app-list.png), [app directories](docs/images/app-folders.png), [group placement](docs/images/group-placement.png), [inline folders](docs/images/inline-folder.png). Normal mode reads this PC's app names and icons.
 
 </details>
 
-ReStart is independent of Microsoft. It uses reversible shell integration; it does not patch Explorer. Legacy UWP tile notifications, the full Windows Search index, Cortana, Jump Lists and usage-based recommendations are outside the current implementation. The [behavior audit](docs/behavior-audit.md) and [validation record](docs/validation.md) document the baseline and executed checks.
+ReStart is independent of Microsoft. It uses reversible shell integration; it does not patch Explorer. Legacy UWP tile notifications, the full Windows Search index, Cortana, Jump Lists and usage-based recommendations are outside the current implementation. See [compatibility](docs/fidelity.md) and the [test guide](docs/testing.md).
 
 ## Install and run
 
@@ -123,9 +125,8 @@ Output: `artifacts/packages/ReStart-win-x64.zip` or `ReStart-win-arm64.zip`. Alw
 Work on short feature/fix branches, commit cohesive changes in English, open a PR, require all Windows CI/package checks to pass, then squash merge and delete the branch. Release tags come from main. Future release notes are English.
 
 - [Contributing](CONTRIBUTING.md) · [Architecture](docs/architecture.md) · [API contracts](docs/api-contracts.md)
-- [Testing](docs/testing.md) · [Validation record](docs/validation.md) · [Releasing](docs/releasing.md)
-- [Research](docs/research.md) · [Fidelity](docs/fidelity.md) · [Changelog](CHANGELOG.md)
-- [Release notes](docs/release-notes.md) · [Historical Japanese notes](docs/ja/release-notes.md)
+- [Testing](docs/testing.md) · [Releasing](docs/releasing.md)
+- [Compatibility](docs/fidelity.md) · [Releases](https://github.com/LastResolution/ReStart/releases)
 
 English is the primary documentation language; Japanese counterparts are linked from each document. UI strings use typed resource keys and eight complete language catalogs. Public/protected API comments are checked at build time.
 

@@ -184,6 +184,8 @@ public partial class MainWindow
                         "The small clock clips its second line instead of displaying both time components.");
             }
             fixture.SaveTileShowcase(Path.Combine(Path.GetDirectoryName(snapshotPath)!, "responsive-sizes.png"));
+            stage = "complete launcher showcase";
+            await fixture.SaveLauncherShowcaseAsync(tiles, this, Path.GetDirectoryName(snapshotPath)!);
             return new(12, 4, 2, 1, 1, 1, 1, 2, 2, 8);
         }
         catch (InvalidOperationException ex) { throw new InvalidOperationException($"Bundled tile verification ({stage}): {ex.Message}", ex); }

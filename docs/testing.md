@@ -58,4 +58,4 @@ Core tests include semantic release ordering, bounded/invalid feeds, unauthentic
 | Startup | Enable/disable, moved installation, actual sign-in, Windows policy override |
 | Accessibility | Narrator, focus visibility, touch/long press |
 
-Do not execute power, uninstall or elevation commands as a routine smoke check. Respect desktop-helper input restrictions; never treat domain tests as proof of physical shortcut behavior. Current hardware and known gaps are in [validation](validation.md) and [fidelity](fidelity.md).
+Do not execute power, uninstall or elevation commands as a routine smoke check. Automated events do not establish physical shortcut behavior. See [compatibility](fidelity.md) for platform coverage.
