@@ -15,7 +15,7 @@ try {
     [IO.File]::WriteAllText($temporary, ($payload | ConvertTo-Json -Depth 5), [Text.UTF8Encoding]::new($false))
     & gh api --method PATCH "repos/$Repository" --input $temporary | Out-Null
     if ($LASTEXITCODE -ne 0) { throw 'Cannot enable secret scanning and push protection.' }
-    $codeql = @{ state = 'configured'; languages = @('csharp', 'javascript-typescript'); query_suite = 'default' }
+    $codeql = @{ state = 'configured'; languages = @('actions', 'csharp', 'javascript-typescript'); query_suite = 'default' }
     [IO.File]::WriteAllText($temporary, ($codeql | ConvertTo-Json), [Text.UTF8Encoding]::new($false))
     & gh api --method PATCH "repos/$Repository/code-scanning/default-setup" --input $temporary
     if ($LASTEXITCODE -ne 0) { throw 'Cannot configure CodeQL default setup.' }
