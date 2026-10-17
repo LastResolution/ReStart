@@ -92,6 +92,13 @@ internal sealed class SettingsWindow : Window
         content.Children.Add(dataButtons);
         Note(content, L.T("保存先: ") + _store.FilePath);
         Note(content, L.T("通信・広告・利用状況の送信はありません。インストール済みアプリとショートカットはこの PC だけで読み取ります。"));
+        content = Section(L.T("JavaScript タイル"));
+        Note(content, L.T("JavaScript で独自のライブタイルを作れます。サンプルを作成し、メモ帳で tile.js を編集してください。保存後、次の更新で反映します。"));
+        var scriptButtons = new WrapPanel();
+        DataButton(scriptButtons, L.T("サンプルを作成"), () => { _main.CreateScriptTile(); _feedback.Text = L.T("タイルを追加しました。設定を閉じると表示されます。"); });
+        DataButton(scriptButtons, L.T("JavaScript タイルをインポート"), () => { _main.ImportScriptTile(); });
+        content.Children.Add(scriptButtons);
+        Note(content, L.T("スクリプトには時刻・言語・設定・前回の状態を渡します。ネットワーク、ファイル、Node.js、DOM、CLR は公開しません。詳細は README のタイル開発ガイドを参照してください。"));
         content = Section(L.T("情報"));
         Note(content, "ReStart v" + typeof(App).Assembly.GetName().Version?.ToString(3));
         Heading(content, L.T("再現範囲"));

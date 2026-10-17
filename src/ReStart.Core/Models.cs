@@ -22,6 +22,7 @@ public sealed class Tile
     public int? Row { get; set; }
     public string Color { get; set; } = "";
     public string Widget { get; set; } = "";
+    public string ScriptId { get; set; } = "";
     public bool Live { get; set; } = true;
     public List<Tile> Children { get; set; } = [];
     public bool IsFolder => Children.Count > 0;
@@ -104,6 +105,7 @@ public sealed class LayoutDocument
             tile.AppId ??= "";
             tile.Target ??= "";
             tile.Widget ??= "";
+            tile.ScriptId ??= "";
             tile.Color ??= "";
             tile.Children ??= [];
             if (!Enum.IsDefined(tile.Size)) tile.Size = TileSize.Medium;

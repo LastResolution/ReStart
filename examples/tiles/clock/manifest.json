@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "title": "JavaScript Clock",
+  "refreshSeconds": 1,
+  "settings": { "caption": "Local time", "color": "#325B8C" }
+}

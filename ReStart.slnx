@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/ReStart.App/ReStart.App.csproj" />
     <Project Path="src/ReStart.Core/ReStart.Core.csproj" />
+    <Project Path="src/ReStart.TileHost/ReStart.TileHost.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/ReStart.Core.Tests/ReStart.Core.Tests.csproj" />

@@ -20,3 +20,5 @@ Shift を押しながらタイルにドロップするとフォルダーにな�
 
 README・制限・ソース: https://github.com/LastResolution/ReStart
 MIT License。Windows と各アプリの名前・アイコンは各権利者に帰属します。
+
+JavaScriptタイル: TileHost と Examples も ReStart.exe と一緒に置いてください。設定のJavaScriptタイルからサンプルを作成できます。編集・保存で更新します。

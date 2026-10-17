@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "title": "Countdown",
+  "refreshSeconds": 1,
+  "settings": { "target": "2027-01-01T00:00:00+09:00", "caption": "Until 2027" }
+}

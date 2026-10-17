@@ -98,16 +98,16 @@ public partial class App : Application
         timer.Tick += (_, _) =>
         {
             if (_window == null) return;
-            if ((!_window.IsReady || !_window.IconsReady) && watch.Elapsed < TimeSpan.FromSeconds(45)) return;
+            if ((!_window.IsReady || !_window.IconsReady || !_window.ScriptsReady) && watch.Elapsed < TimeSpan.FromSeconds(45)) return;
             if (!settled) { settled = true; return; }
             timer.Stop();
             var pathIndex = Array.IndexOf(args, "--snapshot");
             var path = pathIndex >= 0 && pathIndex + 1 < args.Length ? Path.GetFullPath(args[pathIndex + 1]) : Path.Combine(AppContext.BaseDirectory, "smoke.png");
-            var success = _window.IsReady && _window.IconsReady && _window.CatalogCount > 0 && _window.IconCount > 0;
+            var success = _window.IsReady && _window.IconsReady && _window.ScriptsReady && _window.CatalogCount > 0 && _window.IconCount > 0;
             try
             {
                 _window.SaveScreenshot(path);
-                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, groups = _window.Document.Groups.Count, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
+                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
             }
             catch (Exception ex) when (ex is IOException or InvalidOperationException) { success = false; }
             _window.Exit(); Shutdown(success ? 0 : 1);

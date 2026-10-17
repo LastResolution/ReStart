@@ -30,3 +30,7 @@ Microsoft の資料と当時の画像は、構造・操作の根拠です。Wind
 
 - [Run / RunOnce registry keys](https://learn.microsoft.com/en-us/windows/win32/setupapi/run-and-runonce-registry-keys): ユーザー単位のサインイン時起動、コマンド260文字制限、起動時刻の保証がない点を確認。
 - [Mutex constructors](https://learn.microsoft.com/en-us/dotnet/api/system.threading.mutex.-ctor?view=net-10.0): 名前付きオブジェクトの新規作成判定と寿命を利用。実行ファイルの場所によらず同じ名前を使用。
+
+### JavaScriptタイル
+
+- [Jint v4.17.0](https://github.com/sebastienros/jint/tree/v4.17.0) と [制約の説明](https://sebastienros.github.io/jint/guide/constraints): エンジン制限だけではBCL処理を強制停止できないため、外側にプロセス期限を設ける。採用版はNuGetの安定版に固定。

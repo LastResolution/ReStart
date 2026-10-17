@@ -30,6 +30,7 @@ ReStart は、Windows 10 の「全画面表示のスタート」を Windows 11 �
 - 入力してアプリを検索。大文字・小文字、全角英数、ひらがな・カタカナの差を吸収。
 - ファイル、フォルダー、Web サイトをピン留め。
 - ローカルで更新する時計・日付タイル。
+- 自分でJavaScriptを書くライブタイル。作成・インポート・編集、時計 / カウントダウンのサンプル。[開発ガイド](docs/javascript-tiles.md)を参照。
 - 日本語 / English / システム言語に対応。設定の保存後すぐに切り替わり、アプリ名や自分で付けた名前は保持します。
 - ダーク / ライト / システムテーマ、色付きタイル、壁紙背景、タイル倍率、グループ幅の変更。
 - レイアウトの自動保存、バックアップ、JSON のインポート・エクスポート。
@@ -83,7 +84,7 @@ ReStart 自体に広告・解析・自動更新通信はありません。クリ
 
 ## ソースから開発する
 
-必要なものは Windows と [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) です。SDK は `global.json` に固定し、プレビュー版を使いません。アプリ本体に外部 NuGet パッケージはありません。テストには xUnit を使います。
+必要なものは Windows と [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) です。SDK は `global.json` に固定し、プレビュー版を使いません。JavaScript 実行用の別プロセスに Jint を使用します。テストには xUnit を使います。
 
 ```powershell
 git clone https://github.com/LastResolution/ReStart.git

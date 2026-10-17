@@ -161,5 +161,20 @@
   "プレビューでは自動起動の登録を変更しません。": "Preview mode does not change Windows startup registration.",
   "サインイン時は通知領域に常駐します。画面はキー操作で開きます。": "Starts in the notification area when you sign in. Use the shortcut to open Start.",
   "登録済みの起動コマンド: ": "Registered startup command: ",
-  "自動起動の登録を戻せませんでした: ": "Could not restore startup registration: "
+  "自動起動の登録を戻せませんでした: ": "Could not restore startup registration: ",
+  "JavaScript タイル": "JavaScript tiles",
+  "JavaScript タイルを作成": "Create a JavaScript tile",
+  "JavaScript タイルをインポート": "Import a JavaScript tile",
+  "JavaScript タイルの manifest.json を選択": "Select the JavaScript tile manifest.json",
+  "JavaScript を編集": "Edit JavaScript",
+  "タイルの設定を編集": "Edit tile settings",
+  "タイルのフォルダーを開く": "Open tile folder",
+  "タイルを再読み込み": "Reload tile",
+  "タイルのエラー: ": "Tile error: ",
+  "タイルのエラー": "Tile error",
+  "JavaScript タイルは同時に8個まで更新できます。": "Up to eight JavaScript tiles can update at once.",
+  "サンプルを作成": "Create sample",
+  "タイルを追加しました。設定を閉じると表示されます。": "Tile added. Close settings to see it.",
+  "JavaScript で独自のライブタイルを作れます。サンプルを作成し、メモ帳で tile.js を編集してください。保存後、次の更新で反映します。": "Build your own live tiles with JavaScript. Create a sample and edit tile.js in Notepad. Saved changes appear on the next refresh.",
+  "スクリプトには時刻・言語・設定・前回の状態を渡します。ネットワーク、ファイル、Node.js、DOM、CLR は公開しません。詳細は README のタイル開発ガイドを参照してください。": "Scripts receive the time, language, settings and previous state. Network, file, Node.js, DOM and CLR APIs are not exposed. See the tile development guide linked in the README."
 }

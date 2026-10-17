@@ -13,8 +13,18 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../ReStart.Core/ReStart.Core.csproj" />
+    <ProjectReference Include="../ReStart.TileHost/ReStart.TileHost.csproj" ReferenceOutputAssembly="false" />
+    <Content Include="../../examples/tiles/**/*" Link="Examples/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Using Remove="System.Windows.Forms" />
     <Using Remove="System.Drawing" />
     <Using Include="System.IO" />
   </ItemGroup>
+  <Target Name="CopyTileHost" AfterTargets="Build">
+    <MSBuild Projects="../ReStart.TileHost/ReStart.TileHost.csproj" Targets="GetTargetPath" Properties="Configuration=$(Configuration)">
+      <Output TaskParameter="TargetOutputs" ItemName="_WorkerOutput" />
+    </MSBuild>
+    <PropertyGroup><_WorkerDirectory>@(_WorkerOutput->'%(RootDir)%(Directory)')</_WorkerDirectory></PropertyGroup>
+    <ItemGroup><_WorkerFiles Include="$(_WorkerDirectory)ReStart.TileHost.exe;$(_WorkerDirectory)ReStart.TileHost.dll;$(_WorkerDirectory)ReStart.TileHost.deps.json;$(_WorkerDirectory)ReStart.TileHost.runtimeconfig.json;$(_WorkerDirectory)ReStart.Core.dll;$(_WorkerDirectory)Jint.dll;$(_WorkerDirectory)Acornima.dll" /></ItemGroup>
+    <Copy SourceFiles="@(_WorkerFiles)" DestinationFolder="$(OutDir)TileHost" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

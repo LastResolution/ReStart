@@ -49,6 +49,8 @@ public partial class MainWindow : Window
     {
         _store = store;
         _preview = preview;
+        _scriptPackages = new(Path.GetDirectoryName(store.FilePath)!);
+        IsVisibleChanged += (_, _) => { if (!IsVisible) PauseScripts(); };
         InitializeComponent();
         ThemeWindow.Attach(this);
         PinnedNav.AllowDrop = true;
@@ -73,7 +75,7 @@ public partial class MainWindow : Window
         };
         SizeChanged += (_, _) => FitPanels();
         _clock = new(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(1) };
-        _clock.Tick += (_, _) => UpdateLiveTiles();
+        _clock.Tick += async (_, _) => { UpdateLiveTiles(); await UpdateScriptTilesAsync(); };
         _clock.Start();
     }
 
@@ -239,6 +241,9 @@ public partial class MainWindow : Window
     {
         GroupsPanel.Children.Clear();
         _liveLabels.Clear();
+        _scriptViews.Clear();
+        var activeScriptIds = Document.Groups.SelectMany(g => g.Tiles).SelectMany(t => new[] { t }.Concat(t.Children)).Where(t => t.Widget == "script" && t.Live).Select(t => t.Id).ToHashSet();
+        foreach (var id in _scriptSessions.Keys.Where(id => !activeScriptIds.Contains(id)).ToArray()) { _scriptSessions[id].Dispose(); _scriptSessions.Remove(id); }
         foreach (var group in Document.Groups)
         {
             var stack = new StackPanel { Background = Brushes.Transparent, Width = Document.Preferences.Columns * Cell, Margin = new(0, 0, 24, 28), Tag = group, AllowDrop = true };
@@ -307,6 +312,12 @@ public partial class MainWindow : Window
             foreach (var child in tile.Children.Take(4)) mini.Children.Add(CreateIcon(child, 21));
             grid.Children.Add(mini);
         }
+        else if (tile.Widget == "script" && tile.Live)
+        {
+            var body = new StackPanel { Margin = new(5, 2, 5, tile.Size == TileSize.Small ? 0 : 20), VerticalAlignment = VerticalAlignment.Center };
+            grid.Children.Add(body); _scriptViews.Add((tile, body, button));
+            if (_scriptFrames.TryGetValue(tile.Id, out var cached)) ApplyScriptFrame(body, button, tile, cached);
+        }
         else if (tile.Widget.Length > 0 && tile.Live && !(tile.Widget == "clock" && tile.Size == TileSize.Small))
         {
             var live = new TextBlock { FontWeight = FontWeights.Light, FontSize = tile.Size == TileSize.Small ? 17 : tile.Widget == "clock" ? 31 : 21, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Left, Margin = new(5, 0, 0, tile.Size == TileSize.Small ? 0 : 16) };
@@ -321,7 +332,8 @@ public partial class MainWindow : Window
         button.Click += (_, _) =>
         {
             if (_dragging) return;
-            if (tile.IsFolder) OpenFolder(tile);
+            if (tile.Widget == "script") EditScript(tile);
+            else if (tile.IsFolder) OpenFolder(tile);
             else Launch(new(tile.AppId, tile.Label, tile.Target, tile.IsShellApp));
         };
         WireDrag(button, "ReStart.Tile", tile.Id);
@@ -357,6 +369,7 @@ public partial class MainWindow : Window
         menu.Items.Add(resize);
         Add(menu, L.T("名前を変更"), () => { var value = Prompt(L.T("タイルの名前"), tile.Label); if (value != null) { tile.Label = value; CommitLayout(); } });
         if (tile.Widget.Length > 0) Add(menu, tile.Live ? L.T("ライブタイルをオフにする") : L.T("ライブタイルをオンにする"), () => { tile.Live = !tile.Live; CommitLayout(); });
+        if (tile.Widget == "script") AddScriptMenu(menu, tile);
         var move = new MenuItem { Header = L.T("グループへ移動") };
         foreach (var group in Document.Groups)
         {
@@ -516,7 +529,8 @@ public partial class MainWindow : Window
         RenderGroups();
         if (_openFolder != null)
         {
-            if (_openFolder.Children.Count > 0) OpenFolder(_openFolder);
+            var current = FindTile(_openFolder.Id);
+            if (current?.IsFolder == true) OpenFolder(current);
             else { _openFolder = null; FolderOverlay.Visibility = Visibility.Collapsed; }
         }
     }
@@ -614,6 +628,8 @@ public partial class MainWindow : Window
             var label = Prompt(L.T("タイルの名前"), uri.Host);
             if (label != null) PinCustom(new() { AppId = url, Label = label, Target = url, IsShellApp = false, Size = TileSize.Wide });
         });
+        Add(menu, L.T("JavaScript タイルを作成"), CreateScriptTile);
+        Add(menu, L.T("JavaScript タイルをインポート"), ImportScriptTile);
         Add(menu, L.T("時計タイル"), () => PinCustom(new() { AppId = "restart:clock", Label = L.T("クロック"), Widget = "clock", Target = "ms-clock:", IsShellApp = false }));
         Add(menu, L.T("カレンダータイル"), () => PinCustom(new() { AppId = "restart:calendar", Label = L.T("カレンダー"), Widget = "calendar", Target = "", IsShellApp = false, Size = TileSize.Wide }));
         OpenMenu(menu, (Button)sender);
@@ -642,6 +658,7 @@ public partial class MainWindow : Window
 
     private void OpenFolder(Tile tile)
     {
+        RemoveFolderLiveViews();
         _openFolder = tile;
         FolderTitle.Text = tile.Label;
         FolderTiles.Children.Clear();
@@ -655,7 +672,14 @@ public partial class MainWindow : Window
         UpdateLiveTiles();
     }
 
-    private void CloseFolder(object sender, RoutedEventArgs e) { FolderOverlay.Visibility = Visibility.Collapsed; _openFolder = null; }
+    private void RemoveFolderLiveViews()
+    {
+        if (_openFolder == null) return;
+        var ids = _openFolder.Children.Select(t => t.Id).ToHashSet();
+        _scriptViews.RemoveAll(v => ids.Contains(v.Tile.Id));
+        _liveLabels.RemoveAll(v => ids.Contains(v.Tile.Id));
+    }
+    private void CloseFolder(object sender, RoutedEventArgs e) { RemoveFolderLiveViews(); FolderOverlay.Visibility = Visibility.Collapsed; _openFolder = null; }
     private void CloseFolderBackground(object sender, MouseButtonEventArgs e) => CloseFolder(sender, e);
     private void KeepFolderOpen(object sender, MouseButtonEventArgs e) => e.Handled = true;
     private void OpenAlphabet()
@@ -775,7 +799,7 @@ public partial class MainWindow : Window
     }
     private static bool IsAnyMenuOpen() => Mouse.Captured is ContextMenu || Mouse.Captured is System.Windows.Controls.Primitives.MenuBase;
     private void OnClosing(object? sender, CancelEventArgs e) { if (!_exit) { e.Cancel = true; Hide(); } }
-    public void Exit() { _exit = true; _clock.Stop(); Close(); }
+    public void Exit() { _exit = true; _clock.Stop(); PauseScripts(); Close(); }
 
     public void SaveScreenshot(string path)
     {
