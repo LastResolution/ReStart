@@ -1,4 +1,4 @@
-# ReStart v0.6.0
+# ReStart v1.0.0
 
 ReStart's first public release adds a twelve-tile JavaScript gallery, eight UI languages and keyless public update checks, with fixes to placement, startup input and desktop integration.
 

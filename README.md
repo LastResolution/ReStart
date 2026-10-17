@@ -81,7 +81,7 @@ Win+letter shortcuts are forwarded to Windows. Physical Windows-key, taskbar and
 
 Data lives in `%LOCALAPPDATA%\ReStart\layout.json`. The previous save is `layout.json.bak`; invalid files are preserved and future schemas are protected.
 
-v0.6 uses **schema 4**. Schemas 1–3 are migrated with their original bytes preserved in `layout.json.schema<version>-<id>.bak` before writing. Same-schema app upgrades also retain a durable backup. Settings → Layout and data shows the recorded source version, schema, date and rollback file. See [migration and rollback](docs/migration.md).
+v1.0 uses **schema 4**. Schemas 1–3 are migrated with their original bytes preserved in `layout.json.schema<version>-<id>.bak` before writing. Same-schema app upgrades also retain a durable backup. Settings → Layout and data shows the recorded source version, schema, date and rollback file. See [migration and rollback](docs/migration.md).
 
 Settings → About displays the running version/build, settings schema and full license texts. Settings → Updates provides manual and optional startup checks against public GitHub releases, without an API key. Updates are downloaded and installed manually. See [updates](docs/updates.md).
 

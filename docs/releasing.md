@@ -2,7 +2,7 @@
 
 [日本語](ja/releasing.md)
 
-Use short feat/fix/docs/chore branches, cohesive English commits and PRs. Wait for Windows build/tests and both clean portable checks, squash merge and delete the branch. Release notes from v0.6 onward are English only; historical Japanese notes remain archived. General documentation keeps Japanese counterparts.
+Use short feat/fix/docs/chore branches, cohesive English commits and PRs. Wait for Windows build/tests and both clean portable checks, squash merge and delete the branch. Release notes from v1.0 onward are English only; historical Japanese notes remain archived. General documentation keeps Japanese counterparts.
 
 ## Main protection
 
@@ -15,8 +15,8 @@ Update Directory.Build.props, docs/release-notes.md, CHANGELOG.md and current gu
 ```powershell
 git switch main
 git pull --ff-only
-git tag -a v0.6.0 -m "ReStart v0.6.0"
-git push origin v0.6.0
+git tag -a v1.0.0 -m "ReStart v1.0.0"
+git push origin v1.0.0
 gh run list --workflow release.yml
 ```
 

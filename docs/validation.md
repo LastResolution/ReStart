@@ -4,7 +4,7 @@
 
 Environment: Windows 11 x64 build 26200, stable .NET SDK 10.0.113. Records describe executed checks; cross-compilation and automated WPF input are distinguished from hardware interaction.
 
-## v0.6 candidate — October 18, 2026
+## v1.0 candidate — October 18, 2026
 
 - Release build: zero warnings/errors; 203 Core tests passed locally.
 - All twelve JS packages render eight languages, four sizes, available/missing host data and local click states. A sixteen-request worker-pool test verifies reuse beyond the previous eight-tile limit and cancellation during disposal.

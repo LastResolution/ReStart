@@ -2,7 +2,7 @@
 
 [日本語](CHANGELOG.ja.md)
 
-## 0.6.0 — 2026-10-18
+## 1.0.0 — 2026-10-18
 
 - First public release; public update checks without tokens, eight complete UI catalogs and English release notes.
 - Watched local package library for one-click additions without JSON selection.
