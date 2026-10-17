@@ -12,7 +12,7 @@ ReStart independently recreates Windows 10 full-screen Start. State the Windows 
 4. Open a PR describing the trigger, resulting behavior, validation and limitations.
 5. Wait for every CI check, review the diff, squash merge and remove the branch.
 
-Do not rewrite protected main during ordinary development. The maintainer-authorized English history migration is a one-time documented exception with an offline backup and commit map. Rebase a published personal PR branch only with `--force-with-lease` and coordinate any shared branch.
+Do not rewrite protected main during ordinary development. Rebase a published personal PR branch only with `--force-with-lease` and coordinate any shared branch.
 
 Use your GitHub noreply address from Settings → Emails, and enable the repository's commit check:
 

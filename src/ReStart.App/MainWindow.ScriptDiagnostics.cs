@@ -184,7 +184,11 @@ public partial class MainWindow
                         "The small clock clips its second line instead of displaying both time components.");
             }
             fixture.SaveTileShowcase(Path.Combine(Path.GetDirectoryName(snapshotPath)!, "responsive-sizes.png"));
-            return new(12, 4, 2, 1, 1, 1, 1, 2, 2, 8);
+            stage = "position-independent tile geometry";
+            var placementChecks = fixture.VerifyScriptGeometry(tiles[8], Path.GetDirectoryName(snapshotPath)!);
+            stage = "complete launcher showcase";
+            await fixture.SaveLauncherShowcaseAsync(tiles, this, Path.GetDirectoryName(snapshotPath)!);
+            return new(12, 4, 2, 1, 1, 1, 1, 2, 2, 8, placementChecks);
         }
         catch (InvalidOperationException ex) { throw new InvalidOperationException($"Bundled tile verification ({stage}): {ex.Message}", ex); }
         finally { fixture.Exit(); L.SetLanguage(language); ApplyAppearance(); }
@@ -215,4 +219,4 @@ public partial class MainWindow
     }
 }
 
-internal sealed record BundledTilesSmokeResult(int Packages, int Sizes, int LocalClickChecks, int StateRetentionChecks, int ImageBindingChecks, int CustomColorChecks, int NativeMetricsChecks, int LibraryChecks, int MenuChecks, int LanguageChecks);
+internal sealed record BundledTilesSmokeResult(int Packages, int Sizes, int LocalClickChecks, int StateRetentionChecks, int ImageBindingChecks, int CustomColorChecks, int NativeMetricsChecks, int LibraryChecks, int MenuChecks, int LanguageChecks, int PlacementChecks);

@@ -2,7 +2,7 @@
 
 [日本語](ja/migration.md)
 
-Normal data is %LOCALAPPDATA%\ReStart\layout.json; preview data is isolated beside its executable. v0.6 writes schema 4 with producer version and the last upgrade record.
+Normal data is %LOCALAPPDATA%\ReStart\layout.json; preview data is isolated beside its executable. v1.0 writes schema 4 with producer version and the last upgrade record.
 
 Schemas 1–3 preserve settings, IDs, names, launch targets and tile ownership. Earlier unnamed single-item groups become independent entries. Schema 4 aligns independent tiles to the same visible tile baseline as named groups. Schema-3 independent row anchors subtract the former approximate header offset, rounded to a half-cell; named groups are unchanged. Schemas 1/2 use the original child position directly. Migration is applied once. X anchors and individual colors round-trip. Imported layouts retain this PC's preferences.
 

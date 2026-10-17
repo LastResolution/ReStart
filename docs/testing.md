@@ -44,6 +44,12 @@ Fixtures use isolated preview state, disable hooks/startup/network/credential wr
 
 Core tests include semantic release ordering, bounded/invalid feeds, unauthenticated feed/rate/network distinctions, schema 1–3 originals retained through later saves, future producer protection and repeated group collisions without internal tile movement. Startup tests use `HKCU/Software/ReStart.Tests/<GUID>`, never the production Run value.
 
+For local coverage, build portable symbols and allow the neutral mapped source paths. Keep coverage reports and symbols outside release packages:
+
+```powershell
+dotnet test tests/ReStart.Core.Tests/ReStart.Core.Tests.csproj -c Release -p:DebugType=portable -p:DebugSymbols=true --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeAssembliesWithoutSources=None
+```
+
 ## Manual coverage still required
 
 | Area | Check |
@@ -58,4 +64,4 @@ Core tests include semantic release ordering, bounded/invalid feeds, unauthentic
 | Startup | Enable/disable, moved installation, actual sign-in, Windows policy override |
 | Accessibility | Narrator, focus visibility, touch/long press |
 
-Do not execute power, uninstall or elevation commands as a routine smoke check. Respect desktop-helper input restrictions; never treat domain tests as proof of physical shortcut behavior. Current hardware and known gaps are in [validation](validation.md) and [fidelity](fidelity.md).
+Do not execute power, uninstall or elevation commands as a routine smoke check. Automated events do not establish physical shortcut behavior. See [compatibility](fidelity.md) for platform coverage.

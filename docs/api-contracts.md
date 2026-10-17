@@ -30,6 +30,6 @@ Screen coordinates use WPF DIPs; persisted tile cells are logical integers; grou
 
 Changes to schemas or protocols require round-trip and backward-input tests, documented migration/rollback behavior, and an explicit compatibility decision. UI strings must never determine whether a file is safe to overwrite.
 
-## Live-tile host additions (v0.6)
+## Live-tile host additions (v1.0)
 
 See [the complete JS contract](javascript-tiles.md) for optional capability-gated metrics, opaque image binding, PC time, local click events and validated native visuals. Four workers serve every visible tile. Source/manifest import never copies host-bindings.json. New custom pins are placed in free independent board space.
