@@ -18,6 +18,8 @@ public sealed class Tile
     public string Target { get; set; } = "";
     public bool IsShellApp { get; set; } = true;
     public TileSize Size { get; set; } = TileSize.Medium;
+    public int? Column { get; set; }
+    public int? Row { get; set; }
     public string Color { get; set; } = "";
     public string Widget { get; set; } = "";
     public bool Live { get; set; } = true;
@@ -104,6 +106,8 @@ public sealed class LayoutDocument
             tile.Color ??= "";
             tile.Children ??= [];
             if (!Enum.IsDefined(tile.Size)) tile.Size = TileSize.Medium;
+            if (tile.Column is < 0 or > 15 || tile.Row is < 0 or > 200 || tile.Column.HasValue != tile.Row.HasValue)
+            { tile.Column = null; tile.Row = null; }
             if (depth >= 1 && tile.Children.Count != 0)
                 throw new InvalidDataException("フォルダーの入れ子には対応していません。");
             NormalizeTiles(tile.Children, ids, depth + 1);

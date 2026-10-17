@@ -12,13 +12,32 @@ public static class TileLayout
         _ => (2, 2)
     };
 
-    // First-fit packing in the Windows 10 logical 1x1 grid. Small tiles fill gaps.
+    // Reserve user-positioned tiles first. Legacy tiles and collisions fill free cells.
     public static IReadOnlyList<TilePlacement> Pack(IEnumerable<Tile> tiles, int columns)
     {
         if (columns < 4 || columns > 16) throw new ArgumentOutOfRangeException(nameof(columns));
+        var items = tiles.ToArray();
         var occupied = new HashSet<(int X, int Y)>();
-        var result = new List<TilePlacement>();
-        foreach (var tile in tiles)
+        var positions = new Dictionary<Tile, TilePlacement>();
+        void Place(Tile tile, int col, int row, int width, int height)
+        {
+            for (var y = 0; y < height; y++)
+                for (var x = 0; x < width; x++) occupied.Add((col + x, row + y));
+            positions[tile] = new(tile, col, row, width, height);
+        }
+        bool Free(int col, int row, int width, int height)
+        {
+            for (var y = 0; y < height; y++)
+                for (var x = 0; x < width; x++) if (occupied.Contains((col + x, row + y))) return false;
+            return true;
+        }
+        foreach (var tile in items)
+        {
+            var (width, height) = Dimensions(tile.Size);
+            if (tile.Column is int col && tile.Row is int row && col >= 0 && col + width <= columns && row is >= 0 and <= 200 && Free(col, row, width, height))
+                Place(tile, col, row, width, height);
+        }
+        foreach (var tile in items.Where(t => !positions.ContainsKey(t)))
         {
             var (width, height) = Dimensions(tile.Size);
             for (var row = 0; ; row++)
@@ -26,20 +45,21 @@ public static class TileLayout
                 var placed = false;
                 for (var col = 0; col <= columns - width; col++)
                 {
-                    var free = true;
-                    for (var y = 0; y < height && free; y++)
-                        for (var x = 0; x < width; x++)
-                            if (occupied.Contains((col + x, row + y))) { free = false; break; }
-                    if (!free) continue;
-                    for (var y = 0; y < height; y++)
-                        for (var x = 0; x < width; x++) occupied.Add((col + x, row + y));
-                    result.Add(new(tile, col, row, width, height));
+                    if (!Free(col, row, width, height)) continue;
+                    Place(tile, col, row, width, height);
                     placed = true;
                     break;
                 }
                 if (placed) break;
             }
         }
-        return result;
+        return items.Select(t => positions[t]).ToArray();
+    }
+
+    public static (int Column, int Row) Snap(double x, double y, double cell, TileSize size, int columns)
+    {
+        var (width, _) = Dimensions(size);
+        return (Math.Clamp((int)Math.Round(x / cell, MidpointRounding.AwayFromZero), 0, columns - width),
+            Math.Clamp((int)Math.Round(y / cell, MidpointRounding.AwayFromZero), 0, 200));
     }
 }

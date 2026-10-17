@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -28,6 +29,9 @@ public partial class MainWindow : Window
     private List<AppEntry> _apps = [];
     private bool _allApps, _dragging, _ready;
     private Point _dragOrigin;
+    private Point _dragOffset;
+    private DropAdorner? _dropAdorner;
+    private long _lastDragScroll;
     private int _dialogDepth;
     private Tile? _openFolder;
     private bool _exit;
@@ -50,6 +54,19 @@ public partial class MainWindow : Window
         Add(backgroundMenu, "タイルを追加", () => OpenAddMenu(AddButton, new()));
         Add(backgroundMenu, "ReStart の設定", ShowSettings);
         Root.ContextMenu = backgroundMenu;
+        PinnedNav.AllowDrop = true;
+        PinnedNav.PreviewDragOver += (_, e) => { if (HasDrag(e)) { ShowPinned(this, new()); e.Effects = DragDropEffects.Move; e.Handled = true; } };
+        ContentScroll.AllowDrop = true;
+        ContentScroll.PreviewDragOver += (_, e) =>
+        {
+            if (!HasDrag(e)) return;
+            var now = Environment.TickCount64;
+            if (now - _lastDragScroll < 80) return;
+            _lastDragScroll = now;
+            var point = e.GetPosition(ContentScroll);
+            if (point.Y < 42) ContentScroll.ScrollToVerticalOffset(ContentScroll.VerticalOffset - 26);
+            else if (point.Y > ContentScroll.ActualHeight - 42) ContentScroll.ScrollToVerticalOffset(ContentScroll.VerticalOffset + 26);
+        };
         UserButton.Content = "◉     " + (_preview ? "ReStart" : Environment.UserName);
         Loaded += async (_, _) => await InitializeAsync();
         SourceInitialized += (_, _) =>
@@ -203,23 +220,32 @@ public partial class MainWindow : Window
         _liveLabels.Clear();
         foreach (var group in Document.Groups)
         {
-            var stack = new StackPanel { Width = Document.Preferences.Columns * Cell, Margin = new(0, 0, 24, 28), Tag = group, AllowDrop = true };
+            var stack = new StackPanel { Background = Brushes.Transparent, Width = Document.Preferences.Columns * Cell, Margin = new(0, 0, 24, 28), Tag = group, AllowDrop = true };
             var header = new Button { Content = group.Name, FontSize = 15, Padding = new(0, 8, 0, 12), HorizontalAlignment = HorizontalAlignment.Stretch, Tag = group };
             AutomationProperties.SetName(header, "グループ: " + group.Name);
             header.Click += (_, _) => { if (!_dragging) RenameGroup(group); };
             header.ContextMenu = GroupMenu(group);
-            header.PreviewMouseLeftButtonDown += (_, e) => _dragOrigin = e.GetPosition(this);
-            header.MouseMove += (_, e) => BeginDrag(header, e, "ReStart.Group", group.Id);
+            WireDrag(header, "ReStart.Group", group.Id);
             var panel = new TilePanel { Columns = Document.Preferences.Columns, Cell = Cell, Placements = TileLayout.Pack(group.Tiles, Document.Preferences.Columns) };
             foreach (var placement in panel.Placements) panel.Children.Add(CreateTileButton(placement.Tile));
             stack.Children.Add(header);
             stack.Children.Add(panel);
-            stack.DragOver += (_, e) =>
+            stack.PreviewDragOver += (_, e) =>
             {
-                e.Effects = e.Data.GetDataPresent("ReStart.Tile") || e.Data.GetDataPresent("ReStart.Group") || e.Data.GetDataPresent("ReStart.App") ? DragDropEffects.Move : DragDropEffects.None;
+                e.Effects = HasDrag(e) ? DragDropEffects.Move : DragDropEffects.None;
+                if (HasDrag(e) && !e.Data.GetDataPresent("ReStart.Group"))
+                {
+                    var tile = DragTile(e);
+                    if (tile != null)
+                    {
+                        var point = e.GetPosition(panel);
+                        var (col, row) = TileLayout.Snap(point.X - _dragOffset.X, point.Y - _dragOffset.Y, Cell, tile.Size, Document.Preferences.Columns);
+                        ShowDropPreview(panel, tile, col, row);
+                    }
+                }
                 e.Handled = true;
             };
-            stack.Drop += (_, e) => DropInGroup(group, e);
+            stack.PreviewDrop += (_, e) => DropInGroup(group, panel, e);
             stack.ContextMenu = GroupMenu(group);
             GroupsPanel.Children.Add(stack);
         }
@@ -275,8 +301,7 @@ public partial class MainWindow : Window
             if (tile.IsFolder) OpenFolder(tile);
             else Launch(new(tile.AppId, tile.Label, tile.Target, tile.IsShellApp));
         };
-        button.PreviewMouseLeftButtonDown += (_, e) => _dragOrigin = e.GetPosition(this);
-        button.MouseMove += (_, e) => BeginDrag(button, e, "ReStart.Tile", tile.Id);
+        WireDrag(button, "ReStart.Tile", tile.Id);
         return button;
     }
 
@@ -376,13 +401,45 @@ public partial class MainWindow : Window
         var point = e.GetPosition(this);
         if (Math.Abs(point.X - _dragOrigin.X) < SystemParameters.MinimumHorizontalDragDistance && Math.Abs(point.Y - _dragOrigin.Y) < SystemParameters.MinimumVerticalDragDistance) return;
         _dragging = true;
+        button.ReleaseMouseCapture();
+        e.Handled = true;
         try { DragDrop.DoDragDrop(button, new DataObject(format, id), DragDropEffects.Move); }
-        finally { Dispatcher.BeginInvoke(() => _dragging = false, DispatcherPriority.Background); }
+        finally { ClearDropPreview(); Dispatcher.BeginInvoke(() => _dragging = false, DispatcherPriority.Background); }
     }
 
-    private void DropInGroup(TileGroup group, DragEventArgs e)
+    private void WireDrag(Button button, string format, string id)
+    {
+        button.PreviewMouseLeftButtonDown += (_, e) => { _dragOrigin = e.GetPosition(this); _dragOffset = e.GetPosition(button); };
+        // ButtonBase consumes bubbling mouse movement; listen in the tunneling phase, including handled events.
+        button.AddHandler(Mouse.PreviewMouseMoveEvent, new MouseEventHandler((_, e) => BeginDrag(button, e, format, id)), true);
+    }
+
+    private static bool HasDrag(DragEventArgs e) => e.Data.GetDataPresent("ReStart.Tile") || e.Data.GetDataPresent("ReStart.App") || e.Data.GetDataPresent("ReStart.Group");
+    private Tile? DragTile(DragEventArgs e) => e.Data.GetData("ReStart.Tile") is string id ? FindTile(id) :
+        e.Data.GetData("ReStart.App") is string appId && _apps.FirstOrDefault(a => a.Id == appId) is AppEntry app ? Tile.FromApp(app) : null;
+    private void ShowDropPreview(TilePanel panel, Tile tile, int col, int row)
+    {
+        if (_dropAdorner?.AdornedElement != panel)
+        {
+            ClearDropPreview();
+            _dropAdorner = new(panel) { IsHitTestVisible = false };
+            AdornerLayer.GetAdornerLayer(panel)?.Add(_dropAdorner);
+        }
+        var (width, height) = TileLayout.Dimensions(tile.Size);
+        _dropAdorner.CellBounds = new(col * Cell, row * Cell, width * Cell - 4, height * Cell - 4);
+        _dropAdorner.InvalidateVisual();
+    }
+    private void ClearDropPreview()
+    {
+        if (_dropAdorner == null) return;
+        AdornerLayer.GetAdornerLayer(_dropAdorner.AdornedElement)?.Remove(_dropAdorner);
+        _dropAdorner = null;
+    }
+
+    private void DropInGroup(TileGroup group, TilePanel panel, DragEventArgs e)
     {
         e.Handled = true;
+        ClearDropPreview();
         if (e.Data.GetData("ReStart.Group") is string groupId)
         {
             var source = Document.Groups.FirstOrDefault(g => g.Id == groupId);
@@ -393,23 +450,27 @@ public partial class MainWindow : Window
         }
         else
         {
-            var target = Ancestor<Button>(e.OriginalSource as DependencyObject)?.Tag as Tile;
+            var point = e.GetPosition(panel);
+            var target = Ancestor<Button>(panel.InputHitTest(point) as DependencyObject)?.Tag as Tile;
+            var tile = DragTile(e);
+            if (tile == null) return;
+            var (col, row) = TileLayout.Snap(point.X - _dragOffset.X, point.Y - _dragOffset.Y, Cell, tile.Size, Document.Preferences.Columns);
             if (e.Data.GetData("ReStart.Tile") is string id)
             {
                 var source = FindTile(id);
-                if (source == null || source == target) return;
+                if (source == null) return;
                 if (target != null && (Keyboard.Modifiers & ModifierKeys.Shift) != 0 && !source.IsFolder && target.Widget.Length == 0)
                     MergeFolder(source, target);
                 else
                 {
-                    LayoutEditor.Move(Document, source, group, target);
+                    LayoutEditor.MoveToCell(Document, source, group, col, row);
                 }
             }
             else if (e.Data.GetData("ReStart.App") is string appId)
             {
                 var app = _apps.FirstOrDefault(a => a.Id == appId);
                 if (app == null) return;
-                group.Tiles.Add(Tile.FromApp(app));
+                LayoutEditor.MoveToCell(Document, tile, group, col, row);
             }
             else return;
         }
@@ -483,8 +544,7 @@ public partial class MainWindow : Window
                 if (name != null) { Document.Groups.Add(new() { Name = name, Tiles = [Tile.FromApp(app)] }); CommitLayout(); }
             });
         };
-        button.PreviewMouseLeftButtonDown += (_, e) => _dragOrigin = e.GetPosition(this);
-        button.MouseMove += (_, e) => BeginDrag(button, e, "ReStart.App", app.Id);
+        WireDrag(button, "ReStart.App", app.Id);
         return button;
     }
 

@@ -6,6 +6,7 @@ namespace ReStart.App.Controls;
 
 public sealed class TilePanel : Panel
 {
+    public TilePanel() => Background = System.Windows.Media.Brushes.Transparent;
     public int Columns { get; set; } = 6;
     public double Cell { get; set; } = 52;
     public IReadOnlyList<TilePlacement> Placements { get; set; } = [];
@@ -19,7 +20,7 @@ public sealed class TilePanel : Panel
             InternalChildren[i].Measure(new(p.Width * Cell - 4, p.Height * Cell - 4));
             rows = Math.Max(rows, p.Row + p.Height);
         }
-        return new(Columns * Cell, Math.Max(2, rows) * Cell);
+        return new(Columns * Cell, Math.Max(4, rows + 2) * Cell);
     }
 
     protected override System.Windows.Size ArrangeOverride(System.Windows.Size finalSize)
