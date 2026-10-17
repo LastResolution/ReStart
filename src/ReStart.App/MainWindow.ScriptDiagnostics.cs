@@ -110,10 +110,25 @@ public partial class MainWindow
             {
                 settings.Show(); settings.SelectSection(L.T(K.SettingsScriptTiles));
                 var library = Path.Combine(fixture._scriptPackages.LibraryRoot, "local-clock"); Directory.CreateDirectory(library);
-                foreach (var name in new[] { "manifest.json", "tile.js" }) File.Copy(Path.Combine(Path.GetDirectoryName(ScriptTilePackages.BundledManifestPath("clock"))!, name), Path.Combine(library, name));
-                for (var attempt = 0; attempt < 100 && !settings.LibraryTiles.Children.OfType<Button>().Any(b => b.IsEnabled); attempt++) await Task.Delay(100);
-                Require(settings.LibraryTiles.Children.OfType<Button>().Count(b => b.IsEnabled) == 1, "The watched library did not discover the complete package.");
+                async Task WaitForLibrary(Func<bool> ready, string message)
+                {
+                    for (var attempt = 0; attempt < 100 && !ready(); attempt++) await Task.Delay(100);
+                    if (ready()) return;
+                    settings.UpdateLayout(); SaveFixtureElement(settings, Path.Combine(Path.GetDirectoryName(snapshotPath)!, "tile-library-failure.png"));
+                    throw new InvalidOperationException($"{message} Scans: {settings.LibraryRefreshCount}; settings visible: {settings.IsVisible}; library visible: {settings.LibraryTiles.IsVisible}; error: {settings.LibraryRefreshError ?? "none"}; packages: {string.Join(" | ", fixture._scriptPackages.DiscoverLibrary().Select(entry => entry.Error ?? "valid"))}");
+                }
+                // A package can arrive one file at a time while its Settings page
+                // is not selected. It must recover without a manual refresh.
+                settings.SelectSection(L.T(K.SettingsStartup));
+                File.Copy(ScriptTilePackages.BundledManifestPath("clock"), Path.Combine(library, "manifest.json"));
+                await WaitForLibrary(() => settings.LibraryTiles.Children.OfType<Button>().Any(b => !b.IsEnabled), "An incomplete library package was not reported.");
+                File.Copy(Path.Combine(Path.GetDirectoryName(ScriptTilePackages.BundledManifestPath("clock"))!, "tile.js"), Path.Combine(library, "tile.js"));
+                await WaitForLibrary(() => settings.LibraryTiles.Children.OfType<Button>().Count(b => b.IsEnabled) == 1, "The watched library did not discover the complete package.");
+                settings.SelectSection(L.T(K.SettingsScriptTiles));
                 var add = settings.LibraryTiles.Children.OfType<Button>().Single(b => b.IsEnabled);
+                var scans = settings.LibraryRefreshCount;
+                await WaitForLibrary(() => settings.LibraryRefreshCount > scans, "Library reconciliation did not run.");
+                Require(ReferenceEquals(add, settings.LibraryTiles.Children.OfType<Button>().Single(b => b.IsEnabled)), "An unchanged library scan replaced the focused button.");
                 settings.UpdateLayout(); SaveFixtureElement(settings, Path.Combine(Path.GetDirectoryName(snapshotPath)!, "tile-library.png"));
                 var before = GroupLayout.Pack(fixture.Document.Groups, fixture.GroupsPanel.Columns, 8, fixture.Cell, preserveColumns: true).ToArray();
                 add.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); fixture.UpdateLayout();
