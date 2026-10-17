@@ -2,25 +2,12 @@
 
 [日本語](ja/localization.md)
 
-Settings → Language offers English, Japanese and system language. Saving switches main UI text and date formatting; reopen Settings to see its new language. Systems outside Japanese use English. App names, saved tile/group names and JavaScript output remain unchanged.
+Settings offers system language and en, ja, de, fr, es, ko, zh-Hans, zh-Hant. Regional tags resolve to the supported language; zh-TW/HK/MO/Hant select Traditional Chinese, other Chinese regions select Simplified Chinese. Unsupported languages fall back to English. Save switches main UI and formatting; reopen Settings for its new language. OS names and custom tile/group names remain user-owned. Default live-tile names follow language changes, while explicitly renamed tiles retain their custom label. Active script workers refresh their language context immediately.
 
-Translations are embedded `src/ReStart.Core/Locales/en.json` and `ja.json`. `TextKey` contains stable semantic identifiers, not source-language sentences.
+TextKey defines stable semantic identifiers. All eight embedded Locales/*.json catalogs must contain the exact same keys and matching placeholders. Use TextCatalog.T / F and the Loc XAML extension. Unknown enum identifiers fail compilation; tests validate keys, nonempty translations, regional resolution and format arguments. No Japanese UI literals belong in C#/XAML. Developer/API comments are English; Japanese docs are counterparts. Translations have automated coverage, not professional linguistic review.
 
-~~~csharp
-TextCatalog.T(TextKey.NavSettings);
-TextCatalog.F(TextKey.StatusPinned, appName);
-~~~
+Settings uses a fixed footer with wrapping navigation and scrollable content. Checkboxes, combo boxes, sliders, scrollbars, dialogs and calendar share palette resources. Start system mode follows the Windows system theme. High contrast overrides wallpaper, effects and custom colors.
 
-~~~xml
-<TextBlock Text="{local:Loc Key=NavSettings}" />
-~~~
+Classic app tiles share the global accent unless customized per tile. Modern backplates are uniform/translucent; app-list icons have transparent plates. Start accent surfaces are optional in dark mode. Per-tile colors and independent pins are ReStart extensions; per-group color is not provided. Wallpaper changes follow desktop notifications and refresh on opening, including same-file replacements and per-monitor images.
 
-Add the enum member and both JSON entries together. Unknown keys fail compilation. Catalog loading checks matching key sets; tests validate nonempty values, format placeholders and fallback. Do not hardcode Japanese UI text in C#/XAML, including generated labels. Do not send user/OS-owned text through translation lookup.
-
-Unsupported layouts are identified by `UnsupportedLayoutVersionException`, never by matching translated error text. Developer comments and primary documentation use English; Japanese documentation lives beside root docs or under `docs/ja`.
-
-Settings navigation separates behavior, appearance, language, JavaScript, updates, layout/data and About; actions stay in a fixed footer. Checkboxes, combo boxes, sliders, scrollbars, dialogs and calendar use shared palette resources. System mode follows the Windows system theme for Start. High contrast takes precedence over wallpaper/effects and tile colors.
-
-Classic app tiles share the selected global accent unless explicitly customized under ReStart → Tile background color. The override survives save/reopen and can be reset to the theme. Modern tiles have uniform translucent backplates and transparent app-list icon backgrounds. The optional accent-colored Start surface is dark-mode only. Individual tile colors are an extension; there is no per-group color setting.
-
-Preview settings are independent fixture windows, with startup, network checks and credential writes disabled. Normal settings are owned by the main window.
+Preview fixtures do not change real startup, shell registration or network settings. Rendered tests cover all sixteen language/theme combinations.

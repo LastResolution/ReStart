@@ -2,24 +2,12 @@
 
 [日本語](ja/updates.md)
 
-Open Settings → Updates to check published GitHub releases manually, enable startup checks or include prereleases. Current 0.x releases are prereleases, so leave that option enabled to receive them.
+Settings → Updates checks public GitHub releases manually or optionally at startup. No API key, account or token is required. Stable releases are selected by default; prereleases can be included explicitly.
 
-ReStart compares semantic versions numerically, ignoring build metadata and respecting prerelease precedence. It excludes drafts and releases without both the selected architecture ZIP and its SHA-256 sidecar. It reads at most five pages of 100 releases; an incomplete or malformed response is not reported as “up to date.”
+Versions are compared numerically with prerelease precedence. Drafts and releases missing the current architecture ZIP or SHA-256 sidecar are excluded. At most five pages of 100 releases are read; incomplete/malformed data is never called up to date. Rate limits, service errors and connection failures are reported separately.
 
-## Private repository access
+Requests use the fixed api.github.com repository endpoint and app version, without an Authorization header. Redirects are disabled. No layouts, application lists, photo selections or usage history are uploaded. Startup checks do not block input or catalog loading. Preview mode disables update networking.
 
-Create a fine-grained GitHub token scoped to `LastResolution/ReStart` with **Contents: read**, then save it under GitHub access in Settings. Use an account with repository access and an appropriate expiry. Saving/removing this credential takes effect immediately, independently of the Settings Save button.
+The checker opens the fixed repository release page. Download, checksum verification and installation are manual: exit the tray app, extract the complete ZIP and restart. No feed-provided executable is launched automatically.
 
-Windows Credential Manager stores the token for the current user under `ReStart/GitHub/LastResolution/ReStart`. It is absent from layout JSON, export files and release artifacts. The password field is never prefilled. Remove it using Settings → Updates → Remove saved token.
-
-Without access, GitHub may return 404 for the private repository. The app displays access required, including expired or invalid credentials, separately from rate limits, service/connection failures, invalid data and a current installation.
-
-## Network and installation
-
-Requests go only to the fixed `api.github.com` release endpoint, with the app version and configured authentication. No app list, layout or usage history is uploaded. Authentication is request-scoped and HTTP redirects are disabled. Startup checks run asynchronously and do not block typing or catalog loading.
-
-The app checks only. It opens the fixed repository's release page; it does not run feed URLs, download installers or replace itself. Exit the app, extract the full ZIP and restart to update. SHA-256 sidecars are available for manual verification.
-
-Preview mode disables update networking and production credential changes. Automated tests use synthetic HTTP responses and an isolated Credential Manager target. A private token is required for a live authenticated in-app check; credentials are never embedded in the executable.
-
-API basis: [GitHub releases](https://docs.github.com/en/rest/releases/releases) supports fine-grained Contents: read tokens; [CredWriteW](https://learn.microsoft.com/en-us/windows/win32/api/wincred/nf-wincred-credwritew) and [CredReadW](https://learn.microsoft.com/en-us/windows/win32/api/wincred/nf-wincred-credreadw) provide Windows credential storage.
+Upgrading from private development builds removes ReStart's obsolete saved credential target without reading its value. The application no longer reads, accepts or stores access tokens.

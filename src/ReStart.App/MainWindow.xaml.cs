@@ -41,6 +41,9 @@ public partial class MainWindow : Window
     private Tile? _openFolder;
     private bool _exit;
     private bool _searchRequested;
+    private bool _focusOnActivation;
+    private bool _verifyNativeActivation;
+    private System.Drawing.Point? _startButtonPoint;
     private Task? _initialization;
     /// <summary>Gets the current local layout document.</summary>
     public LayoutDocument Document { get; private set; } = new();
@@ -74,7 +77,21 @@ public partial class MainWindow : Window
         _scriptPackages = new(Path.GetDirectoryName(store.FilePath)!);
         IsVisibleChanged += (_, _) => { if (!IsVisible) PauseScripts(); };
         InitializeComponent();
+        InstallGroupBoundaries();
         ThemeWindow.Attach(this);
+        WatchDesktopAppearance();
+        Activated += (_, _) =>
+        {
+            if (!_focusOnActivation) return;
+            Dispatcher.BeginInvoke(() =>
+            {
+                if (IsVisible && IsActive && _focusOnActivation && _dialogDepth == 0)
+                {
+                    if (Keyboard.FocusedElement == null || Keyboard.FocusedElement == this || SearchBox.IsKeyboardFocused) FocusSearchInput();
+                    _focusOnActivation = false;
+                }
+            }, DispatcherPriority.Input);
+        };
         PinnedNav.AllowDrop = true;
         PinnedNav.PreviewDragOver += (_, e) => { if (HasDrag(e)) { ShowPinned(this, new()); e.Effects = DragDropEffects.Move; e.Handled = true; } };
         ContentScroll.AllowDrop = true;
@@ -85,6 +102,7 @@ public partial class MainWindow : Window
         };
         GroupsPanel.PreviewDragOver += OnBoardDragOver;
         GroupsPanel.PreviewDrop += OnBoardDrop;
+        GroupsPanel.RequestBringIntoView += (_, e) => { if (_dragging) e.Handled = true; };
         ContentScroll.PreviewDragOver += (_, e) =>
         {
             if (!HasDrag(e)) return;
@@ -151,7 +169,10 @@ public partial class MainWindow : Window
             PreferencesChanged?.Invoke();
             if (IsActive && (Keyboard.FocusedElement == null || Keyboard.FocusedElement == this || SearchBox.IsKeyboardFocused)) FocusSearchInput();
             var pinnedIds = Document.Groups.SelectMany(g => g.Tiles).SelectMany(t => new[] { t }.Concat(t.Children)).Select(t => t.AppId).ToHashSet();
-            await _catalog.LoadIconsAsync(actualApps.OrderByDescending(a => pinnedIds.Contains(a.Id)), () => Dispatcher.BeginInvoke(() =>
+            var pinnedFiles = Document.Groups.SelectMany(g => g.Tiles).SelectMany(t => new[] { t }.Concat(t.Children))
+                .Where(t => !t.IsFolder && t.Widget.Length == 0 && !t.IsShellApp)
+                .Select(t => new AppEntry(t.AppId, t.Label, t.Target, false));
+            await _catalog.LoadIconsAsync(actualApps.Concat(pinnedFiles).DistinctBy(a => a.Id, StringComparer.OrdinalIgnoreCase).OrderByDescending(a => pinnedIds.Contains(a.Id)), () => Dispatcher.BeginInvoke(() =>
             {
                 if (!_dragging) RenderGroups();
             }, DispatcherPriority.Background));
@@ -188,6 +209,13 @@ public partial class MainWindow : Window
         new("terminal", "Windows Terminal", "wt.exe", false), new("code", "Visual Studio Code", "https://code.visualstudio.com", false)
     ];
 
+    internal void ToggleFromStartButton(Native.Point point)
+    {
+        _startButtonPoint = new(point.X, point.Y);
+        try { Toggle(); }
+        finally { _startButtonPoint = null; }
+    }
+
     /// <summary>Hides the active launcher or presents the existing window.</summary>
     public void Toggle()
     {
@@ -203,21 +231,31 @@ public partial class MainWindow : Window
         if (_expandedAppFolders.Count > 0) { _expandedAppFolders.Clear(); RenderApps(); }
         ResetToPinnedView();
         var handle = new WindowInteropHelper(this).EnsureHandle();
+        _focusOnActivation = true;
         if (!IsVisible) Show();
         if (!_preview)
         {
-            var screen = System.Windows.Forms.Screen.FromPoint(System.Windows.Forms.Cursor.Position);
+            var screen = System.Windows.Forms.Screen.FromPoint(_startButtonPoint ?? System.Windows.Forms.Cursor.Position);
             var area = screen.WorkingArea;
+            _wallpaperMonitor = screen.Bounds;
+            RefreshWallpaper();
             Native.SetWindowPos(handle, new nint(-1), area.X, area.Y, area.Width, area.Height, 0x0040);
-            Native.SetForegroundWindow(handle);
         }
+        if (!_preview || _verifyNativeActivation) ForegroundActivation.Request(handle);
         Activate();
         ExpandedRail.Visibility = Visibility.Collapsed;
         if (Document.Preferences.Animate && !SystemParameters.HighContrast && SystemParameters.ClientAreaAnimation)
             Root.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(130)));
         else Root.Opacity = 1;
         FocusSearchInput();
-        Dispatcher.BeginInvoke(() => { if (IsActive && _dialogDepth == 0 && SearchBox.Text.Length == 0) FocusSearchInput(); }, DispatcherPriority.Input);
+        Dispatcher.BeginInvoke(() =>
+        {
+            if (IsActive && _dialogDepth == 0 && SearchBox.Text.Length == 0)
+            {
+                if (Keyboard.FocusedElement == null || Keyboard.FocusedElement == this || SearchBox.IsKeyboardFocused) FocusSearchInput();
+                _focusOnActivation = false;
+            }
+        }, DispatcherPriority.Input);
     }
 
     private void RefreshBackgroundMenu()
@@ -226,6 +264,7 @@ public partial class MainWindow : Window
         Add(backgroundMenu, L.T(K.NewGroup), AddGroup);
         Add(backgroundMenu, L.T(K.PinApp), () => ShowAllApps(this, new()));
         Add(backgroundMenu, L.T(K.AddTile), () => OpenAddMenu(AddButton, new()));
+        AddLiveTileMenu(backgroundMenu);
         Add(backgroundMenu, L.T(K.SettingsTitle), ShowSettings);
         Root.ContextMenu = backgroundMenu;
     }
@@ -235,6 +274,11 @@ public partial class MainWindow : Window
     {
         var p = Document.Preferences;
         LocalizationResources.Apply(p.Language);
+        if (_scriptLanguage != L.Language)
+        {
+            _scriptLanguage = L.Language; PauseScripts(); _scriptFrames.Clear();
+            foreach (var runtime in _scriptSessions.Values) runtime.NextUpdate = DateTimeOffset.MinValue;
+        }
         Language = System.Windows.Markup.XmlLanguage.GetLanguage(L.Culture.IetfLanguageTag);
         RefreshBackgroundMenu();
         if (_preview) Title = L.T(K.PreviewTitle);
@@ -270,16 +314,8 @@ public partial class MainWindow : Window
         foreach (Window window in Application.Current.Windows) ThemeWindow.Apply(window);
         Tint.Background = new SolidColorBrush(Color.FromArgb((byte)(highContrast ? 255 : 255 * p.BackgroundOpacity), startBackground.R, startBackground.G, startBackground.B));
         Root.Background = new SolidColorBrush(startBackground);
-        Wallpaper.Source = null;
-        if (p.ShowWallpaper && !highContrast)
-        {
-            using var desktop = Registry.CurrentUser.OpenSubKey(@"Control Panel\Desktop");
-            if (desktop?.GetValue("WallPaper") is string path && File.Exists(path))
-            {
-                try { Wallpaper.Source = new BitmapImage(new Uri(path)); }
-                catch (Exception ex) when (ex is IOException or NotSupportedException) { }
-            }
-        }
+        UpdateSearchChrome(SearchBox.Text.Trim().Length > 0 || _searchRequested);
+        RefreshWallpaper();
     }
 
     /// <summary>Reapplies preferences and rebuilds visible groups and app views without changing saved labels.</summary>
@@ -316,8 +352,10 @@ public partial class MainWindow : Window
         GroupsPanel.Children.Clear();
         _liveLabels.Clear();
         _scriptViews.Clear();
-        var activeScriptIds = Document.Groups.SelectMany(g => g.Tiles).SelectMany(t => new[] { t }.Concat(t.Children)).Where(t => t.Widget == "script" && t.Live).Select(t => t.Id).ToHashSet();
-        foreach (var id in _scriptSessions.Keys.Where(id => !activeScriptIds.Contains(id)).ToArray()) { _scriptSessions[id].Dispose(); _scriptSessions.Remove(id); }
+        var activeScriptIds = Document.Groups.SelectMany(g => g.Tiles).SelectMany(t => new[] { t }.Concat(t.Children)).Where(t => t.Widget == "script").Select(t => t.Id).ToHashSet();
+        foreach (var id in _scriptSessions.Keys.Where(id => !activeScriptIds.Contains(id)).ToArray()) _scriptSessions.Remove(id);
+        foreach (var id in _scriptFrames.Keys.Where(id => !activeScriptIds.Contains(id)).ToArray()) _scriptFrames.Remove(id);
+        foreach (var id in _slideshowSources.Keys.Where(id => !activeScriptIds.Contains(id)).ToArray()) { _slideshowSources.Remove(id); _slideshowImages.Remove(id); }
         foreach (var group in Document.Groups)
         {
             var placements = TileLayout.Pack(group.Tiles, Document.Preferences.Columns);
@@ -340,7 +378,7 @@ public partial class MainWindow : Window
                 stack.Children.Add(header);
                 stack.ContextMenu = GroupMenu(group);
             }
-            var panel = new TilePanel { Columns = columns, Cell = Cell, Placements = compact ? [placements[0] with { Column = 0, Row = 0 }] : placements, Expansion = expansion };
+            var panel = new TilePanel { Tag = group, Columns = columns, Cell = Cell, Placements = compact ? [placements[0] with { Column = 0, Row = 0 }] : placements, Expansion = expansion };
             foreach (var placement in panel.Placements) panel.Children.Add(CreateTileButton(placement.Tile));
             if (panel.Expansion != null) panel.Children.Add(CreateInlineFolder(panel));
             stack.Children.Add(panel);
@@ -363,7 +401,6 @@ public partial class MainWindow : Window
         if (ContentScroll.ActualWidth < 1) return;
         GroupsPanel.TileColumns = Document.Preferences.Columns;
         GroupsPanel.Cell = Cell;
-        GroupsPanel.ViewportWidth = Math.Max(1, ContentScroll.ActualWidth - (ContentScroll.ComputedVerticalScrollBarVisibility == Visibility.Visible ? 12 : 0));
         GroupsPanel.InvalidateMeasure();
     }
 
@@ -380,7 +417,7 @@ public partial class MainWindow : Window
             var luminance = 0.2126 * Linear(plate.Color.R) + 0.7152 * Linear(plate.Color.G) + 0.0722 * Linear(plate.Color.B);
             button.Foreground = luminance > 0.179 ? Brushes.Black : Brushes.White;
         }
-        var grid = new Grid { Margin = new(7) };
+        var grid = new Grid { Margin = new(tile.Widget == "script" ? tile.Size == TileSize.Small ? 3 * Document.Preferences.TileScale : 5 : 7) };
         if (tile.IsFolder)
         {
             if (_openFolder == tile)
@@ -398,8 +435,11 @@ public partial class MainWindow : Window
         }
         else if (tile.Widget == "script" && tile.Live)
         {
-            var body = new StackPanel { Margin = new(5, 2, 5, tile.Size == TileSize.Small ? 0 : 20), VerticalAlignment = VerticalAlignment.Center };
-            grid.Children.Add(body); _scriptViews.Add((tile, body, button));
+            grid.Children.Add(new SlideshowTileView { IsHitTestVisible = false, Margin = new(-5) });
+            var plot = new Grid { Margin = tile.Size == TileSize.Small ? new(0) : new(5, 2, 5, 20), ClipToBounds = true };
+            plot.Children.Add(new ScriptTileArt { IsHitTestVisible = false });
+            var body = new StackPanel { VerticalAlignment = VerticalAlignment.Center, ClipToBounds = true };
+            plot.Children.Add(body); grid.Children.Add(plot); _scriptViews.Add((tile, body, button));
             if (_scriptFrames.TryGetValue(tile.Id, out var cached)) ApplyScriptFrame(body, button, tile, cached);
         }
         else if (tile.Widget.Length > 0 && tile.Live && !(tile.Widget == "clock" && tile.Size == TileSize.Small))
@@ -410,13 +450,13 @@ public partial class MainWindow : Window
         }
         else grid.Children.Add(CreateIcon(tile, tile.Size == TileSize.Small ? 23 : tile.Size == TileSize.Large ? 60 : 40));
         if (tile.Size != TileSize.Small && !tile.IsFolder)
-            grid.Children.Add(new TextBlock { Text = tile.Label, FontSize = 12, VerticalAlignment = VerticalAlignment.Bottom, TextTrimming = TextTrimming.CharacterEllipsis, Margin = new(2, 0, 1, 0) });
+            grid.Children.Add(new TextBlock { Text = displayName, Tag = tile, FontSize = 12, VerticalAlignment = VerticalAlignment.Bottom, TextTrimming = TextTrimming.CharacterEllipsis, Margin = new(2, 0, 1, 0) });
         button.Content = grid;
         button.ContextMenu = TileMenu(tile);
         button.Click += (_, _) =>
         {
             if (_dragging) return;
-            if (tile.Widget == "script") EditScript(tile);
+            if (tile.Widget == "script") InteractWithScriptTile(tile);
             else if (tile.IsFolder) OpenFolder(tile);
             else Launch(new(tile.AppId, tile.Label, tile.Target, tile.IsShellApp));
         };
@@ -458,8 +498,8 @@ public partial class MainWindow : Window
         Add(extras, L.T(K.RenameTile), () =>
         {
             if (tile.IsFolder) { RenameFolder(tile); return; }
-            var value = Prompt(L.T(K.PromptTileName), tile.Label);
-            if (value != null) { tile.Label = value; CommitLayout(); }
+            var value = Prompt(L.T(K.PromptTileName), TileDisplayName(tile));
+            if (value != null && value != TileDisplayName(tile)) { tile.Label = value; tile.UseLocalizedName = false; CommitLayout(); }
         });
         if (tile.Widget.Length > 0) Add(menu, tile.Live ? L.T(K.DisableLiveTile) : L.T(K.EnableLiveTile), () => { tile.Live = !tile.Live; CommitLayout(); });
         if (tile.Widget == "script") AddScriptMenu(menu, tile);
@@ -495,6 +535,7 @@ public partial class MainWindow : Window
     private ContextMenu GroupMenu(TileGroup group)
     {
         var menu = new ContextMenu();
+        AddLiveTileMenu(menu);
         Add(menu, L.T(K.RenameGroup), () => RenameGroup(group));
         Add(menu, L.T(K.DeleteGroup), () =>
         {
@@ -517,9 +558,11 @@ public partial class MainWindow : Window
         var point = e.GetPosition(this);
         if (Math.Abs(point.X - _dragOrigin.X) < SystemParameters.MinimumHorizontalDragDistance && Math.Abs(point.Y - _dragOrigin.Y) < SystemParameters.MinimumVerticalDragDistance) return;
         _dragging = true;
+        ShowGroupBoundaries(true);
         _folderHover.Reset();
         if (format == "ReStart.Group" && _openFolder != null) { CloseFolder(this, new()); UpdateLayout(); }
         var previousView = PrepareDragView(format);
+        PreserveDragExtent();
         button.ReleaseMouseCapture();
         e.Handled = true;
         try
@@ -531,6 +574,7 @@ public partial class MainWindow : Window
         }
         finally
         {
+            ShowGroupBoundaries(false);
             ClearDropPreview();
             _folderHover.Reset();
             GroupsPanel.DragMinimumHeight = 0;
@@ -568,6 +612,10 @@ public partial class MainWindow : Window
         var y = row * Cell + (panel.Expansion != null && row >= panel.Expansion.Row ? panel.Expansion.ExtraHeight(Cell) : 0);
         _dropAdorner.CellBounds = new(col * Cell, y, width * Cell - 4, height * Cell - 4);
         _dropAdorner.FolderTarget = false;
+        _dropAdorner.GroupBounds = panel.FolderOwner == null && panel.Tag is TileGroup { IsStandalone: false }
+            ? new Rect(0, -GroupLayout.HeaderHeight, Math.Max(panel.ActualWidth, (col + width) * Cell), Math.Max(panel.ActualHeight, y + height * Cell) + GroupLayout.HeaderHeight) : null;
+        _dropAdorner.Caption = panel.FolderOwner != null ? L.T(K.DropIntoFolder) : panel.Tag is TileGroup group && !group.IsStandalone
+            ? L.F(K.DropIntoGroup, group.Name.Length == 0 ? L.T(K.UnnamedGroup) : group.Name) : "";
         _dropAdorner.InvalidateVisual();
     }
     private void ClearDropPreview()
@@ -653,8 +701,8 @@ public partial class MainWindow : Window
         AppsPanel.Visibility = !searching && _allApps ? Visibility.Visible : Visibility.Collapsed;
         ViewTitle.Text = searching ? L.T(K.SearchTitle) : _allApps ? L.T(K.NavAllApps) : L.T(K.NavStart);
         AddButton.Visibility = searching || _allApps ? Visibility.Collapsed : Visibility.Visible;
-        PinnedNav.Background = !_allApps && !searching ? (System.Windows.Media.Brush)FindResource("TileBrush") : Brushes.Transparent;
-        AppsNav.Background = _allApps && !searching ? (System.Windows.Media.Brush)FindResource("TileBrush") : Brushes.Transparent;
+        if (!_allApps && !searching) PinnedNav.SetResourceReference(BackgroundProperty, "TileBrush"); else PinnedNav.Background = Brushes.Transparent;
+        if (_allApps && !searching) AppsNav.SetResourceReference(BackgroundProperty, "TileBrush"); else AppsNav.Background = Brushes.Transparent;
         RefreshSearchResults();
         if (!searching) return;
         ContentScroll.ScrollToTop();
@@ -710,7 +758,8 @@ public partial class MainWindow : Window
         var menu = new ContextMenu();
         Add(menu, L.T(K.NewGroup), AddGroup);
         Add(menu, L.T(K.PinApp), () => ShowAllApps(this, new()));
-        Add(menu, L.T(K.PinFileFolder), AddCustomTile);
+        Add(menu, L.T(K.PinFile), () => ChoosePinPath(false));
+        Add(menu, L.T(K.PinFolder), () => ChoosePinPath(true));
         Add(menu, L.T(K.PinWebsite), () =>
         {
             var url = Prompt(L.T(K.PromptWebsiteUrl), "https://");
@@ -720,6 +769,7 @@ public partial class MainWindow : Window
             if (label != null) PinCustom(new() { AppId = url, Label = label, Target = url, IsShellApp = false, Size = TileSize.Wide });
         });
         Add(menu, L.T(K.CreateScriptTile), CreateScriptTile);
+        AddLiveTileMenu(menu);
         Add(menu, L.T(K.ImportScriptTile), ImportScriptTile);
         Add(menu, L.T(K.AddClock), () => PinCustom(new() { AppId = "restart:clock", Label = L.T(K.AppClock), Widget = "clock", Target = "ms-clock:", IsShellApp = false }));
         Add(menu, L.T(K.AddCalendar), () => PinCustom(new() { AppId = "restart:calendar", Label = L.T(K.AppCalendar), Widget = "calendar", Target = "", IsShellApp = false, Size = TileSize.Wide }));
@@ -742,9 +792,7 @@ public partial class MainWindow : Window
 
     private void PinCustom(Tile tile)
     {
-        var group = Document.Groups.FirstOrDefault(g => !g.IsStandalone);
-        if (group == null) Document.Groups.Add(new() { IsStandalone = true, Name = "", Tiles = [tile] });
-        else group.Tiles.Add(tile);
+        LayoutEditor.PinIndependent(Document, tile, GroupsPanel.Columns, Cell, ContentScroll.ViewportWidth, ContentScroll.VerticalOffset);
         CommitLayout();
     }
 
@@ -822,7 +870,24 @@ public partial class MainWindow : Window
         PreferencesChanged?.Invoke();
     }
     /// <summary>Displays a transient status or recovery message.</summary>
-    public void SetStatus(string message) => StatusText.Text = message;
+    private System.Windows.Threading.DispatcherTimer? _statusTimer;
+
+    /// <summary>Displays a transient operation message, restarting its five-second lifetime on replacement.</summary>
+    public void SetStatus(string message)
+    {
+        _statusTimer ??= CreateStatusTimer();
+        _statusTimer.Stop();
+        StatusText.Text = message;
+        if (message.Length > 0) _statusTimer.Start();
+    }
+
+    private System.Windows.Threading.DispatcherTimer CreateStatusTimer()
+    {
+        var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
+        timer.Tick += (_, _) => { timer.Stop(); StatusText.Text = ""; };
+        Closed += (_, _) => timer.Stop();
+        return timer;
+    }
     /// <summary>Prepares a query for rendering verification only; this does not simulate physical keyboard input.</summary>
     public void SetSmokeSearch(string query) { SearchBox.Text = query; FocusSearchInput(); }
     /// <summary>Gets rendered app-result names for smoke diagnostics.</summary>
@@ -902,15 +967,16 @@ public partial class MainWindow : Window
     }
     private void OnDeactivated(object? sender, EventArgs e)
     {
+        _focusOnActivation = false;
         Dispatcher.BeginInvoke(() =>
         {
-            if (_ready && !IsActive && _dialogDepth == 0 && !_dragging && Document.Preferences.CloseOnDeactivate && !_preview && !IsAnyMenuOpen()) Hide();
+            if (!IsActive && _dialogDepth == 0 && !_dragging && Document.Preferences.CloseOnDeactivate && (!_preview || _verifyNativeActivation) && !IsAnyMenuOpen()) Hide();
         }, DispatcherPriority.Background);
     }
     private static bool IsAnyMenuOpen() => Mouse.Captured is ContextMenu || Mouse.Captured is System.Windows.Controls.Primitives.MenuBase;
     private void OnClosing(object? sender, CancelEventArgs e) { if (!_exit) { e.Cancel = true; Hide(); } }
     /// <summary>Stops timers and isolated script workers before permanently closing the launcher.</summary>
-    public void Exit() { _exit = true; _clock.Stop(); _nameRefreshTimer?.Stop(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); Close(); }
+    public void Exit() { _exit = true; StopWatchingDesktopAppearance(); _clock.Stop(); _nameRefreshTimer?.Stop(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); _systemMetrics?.Dispose(); Close(); }
 
     /// <summary>Renders only the launcher root to a PNG for reproducible UI verification.</summary>
     public void SaveScreenshot(string path)

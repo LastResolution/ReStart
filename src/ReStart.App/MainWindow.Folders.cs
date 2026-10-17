@@ -9,7 +9,15 @@ namespace ReStart.App;
 public partial class MainWindow
 {
     private DispatcherTimer? _nameRefreshTimer;
-    private static string TileDisplayName(Tile tile) => tile.IsFolder && string.IsNullOrEmpty(tile.Label) ? L.T(K.TileFolder) : tile.Label;
+    private string TileDisplayName(Tile tile)
+    {
+        if (tile.IsFolder && string.IsNullOrEmpty(tile.Label)) return L.T(K.TileFolder);
+        if (tile.Widget == "script") return _scriptPackages.DisplayName(tile, L.Language);
+        var key = tile.Widget switch { "clock" => K.AppClock, "calendar" => K.AppCalendar, _ => (K?)null };
+        if (key == null) return tile.Label;
+        tile.UseLocalizedName ??= TextCatalog.SupportedLanguages.Any(language => tile.Label == TextCatalog.Translate(key.Value, language));
+        return tile.UseLocalizedName == true ? L.T(key.Value) : tile.Label;
+    }
 
     private InlineFolderView CreateInlineFolder(TilePanel parent)
     {
@@ -90,7 +98,7 @@ public partial class MainWindow
     {
         if (_openFolder == null) return;
         foreach (var child in _openFolder.Children)
-            if (_scriptSessions.TryGetValue(child.Id, out var session)) { session.Dispose(); session.NextUpdate = DateTimeOffset.MinValue; }
+            if (_scriptSessions.TryGetValue(child.Id, out var session)) session.NextUpdate = DateTimeOffset.MinValue;
         _openFolder = null;
         RenderGroups();
     }

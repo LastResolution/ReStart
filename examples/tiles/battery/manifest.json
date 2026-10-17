@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "title": "Battery",
+  "localizedTitles": {
+    "en": "Battery",
+    "ja": "バッテリー",
+    "de": "Akku",
+    "fr": "Batterie",
+    "es": "Batería",
+    "ko": "배터리",
+    "zh-Hans": "电池",
+    "zh-Hant": "電池"
+  },
+  "refreshSeconds": 1,
+  "capabilities": [
+    "system.metrics"
+  ],
+  "settings": {
+    "color": "#4B6335",
+    "colorEnd": "#203C35",
+    "accent": "#D5F3A1",
+    "labels": {
+      "en": {
+        "caption": "Battery",
+        "charging": "Charging",
+        "noBattery": "No battery"
+      },
+      "ja": {
+        "caption": "バッテリー",
+        "charging": "充電中",
+        "noBattery": "バッテリーなし"
+      },
+      "de": {
+        "caption": "Akku",
+        "charging": "Wird geladen",
+        "noBattery": "Kein Akku"
+      },
+      "fr": {
+        "caption": "Batterie",
+        "charging": "En charge",
+        "noBattery": "Aucune batterie"
+      },
+      "es": {
+        "caption": "Batería",
+        "charging": "Cargando",
+        "noBattery": "Sin batería"
+      },
+      "ko": {
+        "caption": "배터리",
+        "charging": "충전 중",
+        "noBattery": "배터리 없음"
+      },
+      "zh-Hans": {
+        "caption": "电池",
+        "charging": "正在充电",
+        "noBattery": "无电池"
+      },
+      "zh-Hant": {
+        "caption": "電池",
+        "charging": "充電中",
+        "noBattery": "沒有電池"
+      }
+    }
+  }
+}

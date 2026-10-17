@@ -6,14 +6,51 @@ namespace ReStart.App.Services;
 /// <summary>Installs the fixed manifest.json and tile.js pair under generated package identifiers.</summary>
 internal sealed class ScriptTilePackages(string dataDirectory)
 {
+    private readonly Dictionary<string, ScriptTileManifest> _titleManifests = [];
+    internal static IReadOnlyList<string> BundledIds { get; } = Array.AsReadOnly(new[] { "orbit", "calendar", "cpu", "memory", "focus", "year", "clock", "countdown", "network", "battery", "storage", "slideshow" });
+    internal static string BundledManifestPath(string id) => BundledIds.Contains(id, StringComparer.Ordinal)
+        ? Path.Combine(AppContext.BaseDirectory, "Examples", id, "manifest.json") : throw new ArgumentException("Unknown bundled tile.", nameof(id));
+    internal static ScriptTileManifest BundledManifest(string id) => ReadFolder(Path.GetDirectoryName(BundledManifestPath(id))!).Manifest;
     public string Root { get; } = Path.Combine(dataDirectory, "tiles");
+    internal string LibraryRoot { get; } = Path.Combine(dataDirectory, "TileLibrary");
+    internal sealed record LibraryTile(string ManifestPath, ScriptTileManifest? Manifest, string? Error);
+
+    internal IReadOnlyList<LibraryTile> DiscoverLibrary()
+    {
+        if (!Directory.Exists(LibraryRoot)) return [];
+        var entries = new List<LibraryTile>();
+        foreach (var directory in Directory.EnumerateDirectories(LibraryRoot, "*", new EnumerationOptions { IgnoreInaccessible = true, AttributesToSkip = FileAttributes.ReparsePoint }).Take(128).Order(StringComparer.OrdinalIgnoreCase))
+        {
+            var manifest = Path.Combine(directory, "manifest.json");
+            if (!File.Exists(manifest)) continue;
+            try { entries.Add(new(manifest, ReadFolder(directory).Manifest, null)); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or JsonException)
+            { entries.Add(new(manifest, null, ex.Message)); }
+        }
+        return entries;
+    }
     /// <summary>Resolves only an installed GUID identifier; arbitrary paths and traversal are rejected.</summary>
     public string Folder(string id)
     {
         if (!Guid.TryParseExact(id, "N", out _)) throw new InvalidDataException(TextCatalog.T(K.ErrorScriptPackageId));
         return Path.Combine(Root, id);
     }
-    public (ScriptTileManifest Manifest, string Source) Read(string id) => ReadFolder(Folder(id));
+    public (ScriptTileManifest Manifest, string Source) Read(string id)
+    {
+        var package = ReadFolder(Folder(id)); _titleManifests[id] = package.Manifest; return package;
+    }
+    internal void InvalidateTitle(string id) => _titleManifests.Remove(id);
+    internal string DisplayName(Tile tile, string language)
+    {
+        try
+        {
+            if (!_titleManifests.TryGetValue(tile.ScriptId, out var manifest)) manifest = Read(tile.ScriptId).Manifest;
+            tile.UseLocalizedName ??= tile.Label == manifest.Title || manifest.LocalizedTitles.Values.Contains(tile.Label, StringComparer.Ordinal);
+            return tile.UseLocalizedName == true ? manifest.LocalizedTitles.GetValueOrDefault(TextCatalog.Resolve(language), manifest.Title) : tile.Label;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or JsonException) { return tile.Label; }
+    }
+    internal string SlideshowBindingPath(string id) => Path.Combine(Folder(id), "host-bindings.json");
     private static (ScriptTileManifest Manifest, string Source) ReadFolder(string folder)
     {
         var manifestPath = Path.Combine(folder, "manifest.json"); var sourcePath = Path.Combine(folder, "tile.js");
@@ -31,7 +68,8 @@ internal sealed class ScriptTilePackages(string dataDirectory)
         var destination = Folder(id); Directory.CreateDirectory(destination);
         File.WriteAllText(Path.Combine(destination, "manifest.json"), JsonSerializer.Serialize(manifest, ScriptTileProtocol.Json));
         File.WriteAllText(Path.Combine(destination, "tile.js"), source);
-        return new() { AppId = "restart:script:" + id, Label = manifest.Title, Widget = "script", ScriptId = id, IsShellApp = false, Size = TileSize.Wide };
+        _titleManifests[id] = manifest;
+        return new() { AppId = "restart:script:" + id, Label = manifest.LocalizedTitles.GetValueOrDefault(TextCatalog.Language, manifest.Title), UseLocalizedName = true, Widget = "script", ScriptId = id, IsShellApp = false, Size = TileSize.Wide };
     }
     /// <summary>Opens the installed source or settings explicitly in Notepad, never through the .js shell association.</summary>
     public void Edit(string id, string file = "tile.js")

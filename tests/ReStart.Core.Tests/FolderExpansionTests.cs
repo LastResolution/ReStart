@@ -4,6 +4,37 @@ namespace ReStart.Core.Tests;
 
 public sealed class FolderExpansionTests
 {
+    [Theory]
+    [InlineData(false, 0.7, 6)]
+    [InlineData(false, 1.0, 8)]
+    [InlineData(false, 1.5, 6)]
+    [InlineData(true, 0.7, 8)]
+    [InlineData(true, 1.0, 6)]
+    [InlineData(true, 1.5, 8)]
+    public void OpeningAFolderKeepsItsAnchorEvenWhenALowerGroupComesFirst(bool standalone, double scale, int columns)
+    {
+        var cell = 52 * scale;
+        var folder = new Tile { Column = standalone ? 2 : 0, Row = 0, Children = [new(), new(), new(), new()] };
+        var owner = new TileGroup { Column = 0, Row = 0, IsStandalone = standalone, Tiles = [folder] };
+        var below = new TileGroup { Column = 0, Row = 8, Tiles = [new()] };
+        var neighbor = new TileGroup { Column = 2, Row = 0, Tiles = [new()] };
+        var lowerNeighbor = new TileGroup { Column = 2, Row = 4, IsStandalone = true, Tiles = [new()] };
+        var nextNeighbor = new TileGroup { Column = 2, Row = 8, IsStandalone = true, Tiles = [new()] };
+        var groups = new[] { below, owner, neighbor, lowerNeighbor, nextNeighbor };
+        var original = System.Text.Json.JsonSerializer.Serialize(groups);
+        var closed = GroupLayout.Pack(groups, 3, columns, cell);
+        var opened = GroupLayout.Pack(groups, 3, columns, cell, expandedFolderId: folder.Id);
+        Assert.Equal(closed[1].Top, opened[1].Top);
+        // Standalone root tiles keep their local column when their panel expands.
+        Assert.Equal(closed[1].Left, opened[1].Left + (standalone ? 2 * cell : 0));
+        Assert.True(opened[0].Top >= opened[1].Top + opened[1].Height + GroupLayout.Gap);
+        Assert.Equal(closed[2], opened[2]);
+        Assert.Equal(closed[3], opened[3]);
+        Assert.Equal(closed[4], opened[4]);
+        Assert.Equal(original, System.Text.Json.JsonSerializer.Serialize(groups));
+        Assert.Equal(closed, GroupLayout.Pack(groups, 3, columns, cell));
+    }
+
     [Fact]
     public void ExpansionWaitsForTheWholeRowAndNeverSplitsALargeTile()
     {

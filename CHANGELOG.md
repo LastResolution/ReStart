@@ -2,6 +2,18 @@
 
 [日本語](CHANGELOG.ja.md)
 
+## 0.6.0 — 2026-10-18
+
+- First public release; public update checks without tokens, eight complete UI catalogs and English release notes.
+- Watched local package library for one-click additions without JSON selection.
+- Twelve interactive JS packages, four-worker pooling, PC time, aggregate system metrics, native chart styles and selected-folder photo slideshows.
+- Independent placement for newly added custom tiles preserves existing groups and tile coordinates.
+- Stable scrolled group dragging, aligned independent tiles, labeled adjacent-group drops and independent themed scroll axes.
+- Explorer pinning for files/folders/shortcuts through current-user IPC, immediate native activation and accessibility-based Start-button discovery.
+- Automatic per-monitor wallpaper refresh and schema-4 durable migration backups.
+- Content-sized rectangular group boundaries, soft hover surfaces, stable folder expansion and consistent full-size Shell icons for directory pins.
+- Background/group live-tile menus, language-following default names, five-second operation messages, public issue/PR templates and generic commit privacy checks.
+
 ## 0.5.0 — 2026-10-18
 
 - Fix first-character search during cold startup: retain pending input and refresh when the catalog/icons arrive.

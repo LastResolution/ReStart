@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -22,10 +22,16 @@
     <ProjectReference Include="..\..\src\ReStart.Core\ReStart.Core.csproj" />
     <ProjectReference Include="..\..\src\ReStart.TileHost\ReStart.TileHost.csproj" />
     <Compile Include="..\..\src\ReStart.App\Services\StartupRegistration.cs" Link="StartupRegistration.cs" />
-    <Compile Include="..\..\src\ReStart.App\Services\ReleaseCredentialStore.cs" Link="ReleaseCredentialStore.cs" />
+    <Compile Include="..\..\src\ReStart.App\Services\ExplorerPinRegistration.cs" Link="ExplorerPinRegistration.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\ScriptTileSession.cs" Link="ScriptTileSession.cs" />
+    <Compile Include="..\..\src\ReStart.App\Services\ScriptTileWorkerPool.cs" Link="ScriptTileWorkerPool.cs" />
+    <Compile Include="..\..\src\ReStart.App\Services\SystemMetricsSampler.cs" Link="SystemMetricsSampler.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\ScriptTilePackages.cs" Link="ScriptTilePackages.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\WorkerJob.cs" Link="WorkerJob.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="../../examples/tiles/**/*" Link="Examples/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

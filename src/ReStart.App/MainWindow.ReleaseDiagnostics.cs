@@ -72,7 +72,7 @@ public partial class MainWindow
             fixture.SetTileColor(customTile, "#107C10");
             fixture.SaveScreenshot(Path.Combine(Path.GetDirectoryName(snapshotPath)!, "individual-tile-color.png"));
             fixture.Document.Preferences.ShowAccentOnStart = false;
-            foreach (var language in new[] { "en", "ja" })
+            foreach (var language in TextCatalog.SupportedLanguages)
                 foreach (var theme in new[] { ReStart.Core.ThemeMode.Dark, ReStart.Core.ThemeMode.Light })
                 {
                     fixture.Document.Preferences.Language = language; fixture.Document.Preferences.Theme = theme; fixture.ApplyAppearance();
@@ -84,8 +84,8 @@ public partial class MainWindow
                         SaveFixtureElement(settings, Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"about-{language}-{theme}.png"));
                         settings.SelectSection(L.T(K.SettingsUpdates)); settings.UpdateLayout();
                         var updateButton = VisualChildren<Button>(settings).Single(b => b.Content is string label && label == L.T(K.UpdateCheckNow));
-                        Require(!updateButton.IsEnabled && VisualChildren<PasswordBox>(settings).All(p => !p.IsEnabled && p.Password.Length == 0),
-                            "Preview update or credential controls can access the real account.");
+                        Require(!updateButton.IsEnabled && !VisualChildren<PasswordBox>(settings).Any(),
+                            "Preview can make network requests or the retired credential input is still present.");
                         SaveFixtureElement(settings, Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"updates-{language}-{theme}.png"));
                         settings.SelectSection(L.T(K.SettingsLayout)); settings.UpdateLayout();
                         SaveFixtureElement(settings, Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"migration-{language}-{theme}.png"));
@@ -98,13 +98,40 @@ public partial class MainWindow
                     }
                     finally { settings.Close(); }
                 }
+            var wallpaperChecks = VerifyWallpaperRefresh(fixture, directory);
             var licenses = AppBuildInfo.Licenses();
             Require(licenses.TryGetValue("ReStart (MIT)", out var own) && own.Contains("MIT License", StringComparison.Ordinal) && licenses.Count >= 4,
                 "The embedded app and dependency license texts are missing.");
             Require(LayoutStore.Read(path).LastUpgrade?.BackupFile == document.LastUpgrade!.BackupFile, "Reopening lost the durable migration record.");
-            return new(AppBuildInfo.Version, LayoutDocument.CurrentVersion, licenses.Count, 4, 3, 3, 5);
+            return new(AppBuildInfo.Version, LayoutDocument.CurrentVersion, licenses.Count, TextCatalog.SupportedLanguages.Count * 2, 3, 3, 5, wallpaperChecks);
         }
         finally { fixture.Exit(); LocalizationResources.Apply(originalLanguage); ApplyAppearance(); Activate(); }
+    }
+
+    private static int VerifyWallpaperRefresh(MainWindow fixture, string directory)
+    {
+        var path = Path.Combine(directory, "wallpaper.png");
+        static void WriteImage(string path, byte blue, byte red)
+        {
+            var pixels = Enumerable.Range(0, 32 * 32).SelectMany(_ => new byte[] { blue, 0, red, 255 }).ToArray();
+            var image = BitmapSource.Create(32, 32, 96, 96, PixelFormats.Bgra32, null, pixels, 32 * 4);
+            var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(image));
+            using var stream = File.Create(path); encoder.Save(stream);
+        }
+        fixture.Document.Preferences.ShowWallpaper = true;
+        WriteImage(path, 0, 255); fixture.RefreshWallpaper(path);
+        if (SystemParameters.HighContrast) { Require(fixture.Wallpaper.Source == null, "High contrast did not disable wallpaper."); return 1; }
+        var original = fixture.Wallpaper.Source;
+        Require(original is BitmapSource, "Wallpaper did not load without saving settings.");
+        using (File.Open(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None)) { }
+        WriteImage(path, 255, 0); File.SetLastWriteTimeUtc(path, DateTime.UtcNow.AddSeconds(2));
+        fixture.RefreshWallpaper(path);
+        var pixels = new byte[4];
+        ((BitmapSource)fixture.Wallpaper.Source).CopyPixels(new Int32Rect(0, 0, 1, 1), pixels, 4, 0);
+        Require(fixture.Wallpaper.Source != original && pixels[0] == 255 && pixels[2] == 0, "A wallpaper replaced at the same path is still cached.");
+        fixture.Document.Preferences.ShowWallpaper = false; fixture.RefreshWallpaper(path);
+        Require(fixture.Wallpaper.Source == null, "Disabling wallpaper retained the old image.");
+        return 4;
     }
 
     private static IEnumerable<T> VisualChildren<T>(DependencyObject parent) where T : DependencyObject
@@ -135,4 +162,4 @@ public partial class MainWindow
     }
 }
 
-internal sealed record ReleaseInfoSmokeResult(string Version, int Schema, int Licenses, int LanguageThemeCases, int MigrationChecks, int AccentChecks, int TileColorChecks);
+internal sealed record ReleaseInfoSmokeResult(string Version, int Schema, int Licenses, int LanguageThemeCases, int MigrationChecks, int AccentChecks, int TileColorChecks, int WallpaperChecks);

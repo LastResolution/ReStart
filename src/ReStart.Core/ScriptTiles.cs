@@ -11,6 +11,10 @@ public sealed class ScriptTileManifest
     public int Version { get; set; } = 1;
     /// <summary>Gets or sets the initial tile label, limited to 80 characters.</summary>
     public string Title { get; set; } = "JavaScript";
+    /// <summary>Gets or sets optional initial display titles keyed by supported language tag.</summary>
+    public Dictionary<string, string> LocalizedTitles { get; set; } = [];
+    /// <summary>Gets or sets explicitly requested host capabilities; system.metrics exposes aggregate read-only metrics.</summary>
+    public string[] Capabilities { get; set; } = [];
     /// <summary>Gets or sets the visible update interval, from 1 to 3600 seconds.</summary>
     public int RefreshSeconds { get; set; } = 5;
     /// <summary>Gets or sets the JSON object passed as ctx.settings, limited to 8,192 UTF-16 code units of raw JSON.</summary>
@@ -19,7 +23,10 @@ public sealed class ScriptTileManifest
     public void Validate()
     {
         if (Version != 1 || string.IsNullOrWhiteSpace(Title) || Title.Length > 80 || RefreshSeconds is < 1 or > 3600 ||
-            Settings.ValueKind != JsonValueKind.Object || Settings.GetRawText().Length > 8192)
+            Settings.ValueKind != JsonValueKind.Object || Settings.GetRawText().Length > 8192 || LocalizedTitles == null || LocalizedTitles.Count > 16
+            || LocalizedTitles.Any(p => !TextCatalog.SupportedLanguages.Contains(p.Key) || string.IsNullOrWhiteSpace(p.Value) || p.Value.Length > 80)
+            || Capabilities == null || Capabilities.Length > 2 || Capabilities.Distinct(StringComparer.Ordinal).Count() != Capabilities.Length
+            || Capabilities.Any(c => c is not ("system.metrics" or "images.slideshow")))
             throw new InvalidDataException(TextCatalog.T(K.ErrorScriptManifestInvalid));
     }
 }
@@ -33,6 +40,20 @@ public sealed class ScriptTileFrame
     public string Detail { get; set; } = "";
     /// <summary>Gets or sets badge text, limited to 16 characters.</summary>
     public string Badge { get; set; } = "";
+    /// <summary>Gets or sets a short heading above the main value, limited to 48 characters.</summary>
+    public string Kicker { get; set; } = "";
+    /// <summary>Gets or sets an optional second #RRGGBB gradient stop.</summary>
+    public string BackgroundEnd { get; set; } = "";
+    /// <summary>Gets or sets a #RRGGBB accent for native decoration.</summary>
+    public string Accent { get; set; } = "";
+    /// <summary>Gets or sets a native decoration kind: empty, ring, bars, sparkline, or dots.</summary>
+    public string Visual { get; set; } = "";
+    /// <summary>Gets or sets a native arrangement: auto/overlay, centered, split, stacked, or caption.</summary>
+    public string Layout { get; set; } = "auto";
+    /// <summary>Gets or sets an opaque host image reference: empty or current. Paths and URLs are never accepted.</summary>
+    public string Image { get; set; } = "";
+    /// <summary>Gets or sets at most 32 finite chart samples, each between zero and one.</summary>
+    public double[] Series { get; set; } = [];
     /// <summary>Gets or sets an optional #RRGGBB background color.</summary>
     public string Background { get; set; } = "";
     /// <summary>Gets or sets an optional #RRGGBB foreground color.</summary>
@@ -45,11 +66,14 @@ public sealed class ScriptTileFrame
     public void Validate()
     {
         if (Text == null || Text.Length > 256 || Detail == null || Detail.Length > 512 || Badge == null || Badge.Length > 16 ||
-            Background == null || Foreground == null || !ValidColor(Background) || !ValidColor(Foreground) ||
+            Background == null || Foreground == null || !ValidColor(Background) || !ValidColor(Foreground) || Kicker == null || Kicker.Length > 48
+            || !ValidColor(BackgroundEnd) || !ValidColor(Accent) || Visual is not ("" or "ring" or "bars" or "sparkline" or "dots")
+            || Layout is not ("auto" or "overlay" or "centered" or "split" or "stacked" or "caption")
+            || Image is not ("" or "current") || Series == null || Series.Length > 32 || Series.Any(value => !double.IsFinite(value) || value is < 0 or > 1) ||
             Progress is double p && (!double.IsFinite(p) || p is < 0 or > 1) || State.GetRawText().Length > 8192)
             throw new InvalidDataException(TextCatalog.T(K.ErrorScriptFrameInvalid));
     }
-    private static bool ValidColor(string value) => value.Length == 0 || Regex.IsMatch(value, "^#[0-9a-fA-F]{6}$", RegexOptions.CultureInvariant);
+    private static bool ValidColor(string? value) => value != null && (value.Length == 0 || Regex.IsMatch(value, "^#[0-9a-fA-F]{6}$", RegexOptions.CultureInvariant));
 }
 
 /// <summary>Contains script source and JSON-only context sent to an isolated worker.</summary>

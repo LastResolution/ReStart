@@ -37,7 +37,6 @@ jobs:
           $version = ([xml](Get-Content Directory.Build.props)).Project.PropertyGroup.Version
           if ($env:RELEASE_TAG -ne "v$version") { throw 'Tag and project version differ.' }
           if ((Get-Content docs/release-notes.md -TotalCount 1) -ne "# ReStart v$version") { throw 'Release notes and project version differ.' }
-          if ((Get-Content docs/ja/release-notes.md -TotalCount 1) -ne "# ReStart v$version") { throw 'Japanese release notes and project version differ.' }
           git merge-base --is-ancestor HEAD origin/main
           if ($LASTEXITCODE -ne 0) { throw 'Release must come from main.' }
       - run: dotnet restore ReStart.slnx --locked-mode
@@ -71,7 +70,7 @@ jobs:
           retention-days: 30
 
   publish:
-    name: Publish private prerelease
+    name: Publish release
     needs: package
     runs-on: ubuntu-latest
     permissions:
@@ -86,7 +85,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: gh run download "$GITHUB_RUN_ID" --pattern 'ReStart-*' --dir packages
-      - name: Create prerelease
+      - name: Create release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -94,7 +93,7 @@ jobs:
         run: |
           mapfile -t assets < <(find packages -type f \( -name '*.zip' -o -name '*.sha256' \))
           awk '/^---$/{exit} {print}' docs/release-notes.md > release-notes.md
-          printf '\n<details>\n<summary>日本語</summary>\n\n' >> release-notes.md
-          awk '/^---$/{exit} {print}' docs/ja/release-notes.md >> release-notes.md
-          printf '\n</details>\n' >> release-notes.md
-          gh release create "$RELEASE_TAG" "${assets[@]}" --verify-tag --prerelease --title "ReStart $RELEASE_TAG" --notes-file release-notes.md
+          visibility=$(gh repo view --json visibility --jq .visibility)
+          options=()
+          if [ "$visibility" != "PUBLIC" ]; then options+=(--draft); fi
+          gh release create "$RELEASE_TAG" "${assets[@]}" --verify-tag --title "ReStart $RELEASE_TAG" --notes-file release-notes.md "${options[@]}"

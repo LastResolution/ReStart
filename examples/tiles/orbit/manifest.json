@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "title": "Orbit clock",
+  "localizedTitles": {
+    "en": "Orbit clock",
+    "ja": "オービット時計",
+    "de": "Orbit-Uhr",
+    "fr": "Horloge orbitale",
+    "es": "Reloj orbital",
+    "ko": "궤도 시계",
+    "zh-Hans": "轨道时钟",
+    "zh-Hant": "軌道時鐘"
+  },
+  "refreshSeconds": 1,
+  "capabilities": [],
+  "settings": {
+    "color": "#0A5968",
+    "colorEnd": "#101C3B",
+    "accent": "#75F8DF",
+    "labels": {
+      "en": {
+        "caption": "Orbit clock"
+      },
+      "ja": {
+        "caption": "オービット時計"
+      },
+      "de": {
+        "caption": "Orbit-Uhr"
+      },
+      "fr": {
+        "caption": "Horloge orbitale"
+      },
+      "es": {
+        "caption": "Reloj orbital"
+      },
+      "ko": {
+        "caption": "궤도 시계"
+      },
+      "zh-Hans": {
+        "caption": "轨道时钟"
+      },
+      "zh-Hant": {
+        "caption": "軌道時鐘"
+      }
+    }
+  }
+}

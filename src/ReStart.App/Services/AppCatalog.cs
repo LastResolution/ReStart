@@ -21,6 +21,15 @@ public sealed class AppCatalog
     /// <summary>Gets the number of applications returned by the last completed enumeration.</summary>
     public int Count { get; private set; }
 
+    /// <summary>Gets the actual directory behind a displayed Start-menu folder without treating its children as the pin target.</summary>
+    internal AppEntry? FolderEntry(string displayPath)
+    {
+        if (!_folderIconPaths.TryGetValue(displayPath, out var path) || !Directory.Exists(path)) return null;
+        var entry = FilePinning.FromPath(path) with { Name = displayPath.Split('\\').Last() };
+        if (FolderIcons.TryGetValue(displayPath, out var icon)) Icons[entry.Id] = icon;
+        return entry;
+    }
+
     /// <summary>Enumerates real app names and launch identities on a background STA thread.</summary>
     public Task<List<AppEntry>> LoadAsync()
     {
@@ -219,7 +228,10 @@ public sealed class AppCatalog
         {
             var iid = typeof(IShellItemImageFactory).GUID;
             if (SHCreateItemFromParsingName(path, 0, ref iid, out factory) != 0) return null;
-            if (factory.GetImage(new Size { Width = 64, Height = 64 }, 0x100, out bitmap) != 0) return null;
+            // ICONONLY avoids folder/document thumbnail canvases whose actual
+            // icon can occupy only a few pixels. SCALEUP keeps legacy icons usable.
+            const uint iconOnly = 0x4, scaleUp = 0x100;
+            if (factory.GetImage(new Size { Width = 64, Height = 64 }, iconOnly | scaleUp, out bitmap) != 0) return null;
             var image = Imaging.CreateBitmapSourceFromHBitmap(bitmap, 0, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
             image.Freeze();
             return image;

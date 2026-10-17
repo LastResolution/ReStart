@@ -1,69 +1,45 @@
-# JavaScript ライブタイルを作る
+# JavaScript ライブタイル
 
-[English](../javascript-tiles.md)
+[English / API reference](../javascript-tiles.md)
 
-明示したタイル個別色は JS の表示色より優先し、文字のコントラストを自動選択します。「テーマの色を使う」に戻すと JS 側の色を再び適用します。高コントラストは常に優先します。
+背景・グループの右クリック → ライブタイルを追加、または設定のギャラリーから12種類を追加できます。時計・カレンダー・CPU・メモリ・集中タイマー・年間進捗・カウントダウン・通信量・バッテリー・ストレージ・写真などを同梱しています。追加時にエディタは開きません。通常クリックは ctx.event = { type: "click", unixMs } を渡し、一時停止や表示切替、次の写真に使います。JS・設定の編集は右クリックからです。「サンプルを作成」は明示的な開発操作としてメモ帳を開きます。
 
-![時計とカウントダウンのプレビュー](../images/live-tiles.png)
+manifest.json と tile.js の2ファイルを取り込み、以降は保存されたコピーを編集します。version は1、title は80文字、refreshSeconds は1～3,600秒、settings は8,192文字以内の JSON オブジェクトです。localizedTitles は8言語の既定表示名に使い、言語切替にも追従します。明示的に変更した名前は保持します。
 
-設定 → JavaScript タイル → サンプルを作成すると、時計タイルが追加され、`tile.js` がメモ帳で開きます。編集して保存すると次の更新で反映します。コンパイルは不要です。タイルの右クリックから JavaScript・設定の編集、フォルダー表示、状態をリセットして再読み込みができます。
+render(ctx) は同期関数で表示用 JSON を返します。HTML / XAML を実行せずネイティブに描画します。ctx.settings は設定、ctx.state は前回成功時の状態、ctx.size は small / medium / wide / large。状態は再表示で保持し、リロード・終了でリセットされます。集中タイマーにアラームやバックグラウンド通知はありません。
 
-自分でパッケージを用意する場合は、同じフォルダーに `manifest.json` と `tile.js` を置き、「JavaScript タイルをインポート」で manifest を選びます。ReStart がデータフォルダーにコピーします。以降はコピー先を編集してください。配布ZIPの `Examples/clock` と `Examples/countdown` がサンプルです。
+## サイズごとの配置
 
-```json
-{
-  "version": 1,
-  "title": "My tile",
-  "refreshSeconds": 5,
-  "settings": { "caption": "Hello" }
-}
-```
+![同じスクリプトの4サイズ表示](../images/live-tiles-sizes.png)
 
-```js
-function render(ctx) {
-  return {
-    text: ctx.settings.caption,
-    detail: ctx.now,
-    badge: "JS",
-    background: "#0078D7",
-    foreground: "#FFFFFF",
-    progress: 0.5,
-    state: { count: (ctx.state?.count ?? 0) + 1 }
-  };
-}
-```
+`ctx.size` は small / medium / wide / large、`ctx.bounds` は実際の幅・高さ（DIP）と scale です。初回の幅・高さは配置前に0の場合があるため、size を基本にしてください。
 
-`render(ctx)` は同期関数で、JSON に変換できるオブジェクトを返します。HTML や XAML は返しません。表示は ReStart のネイティブコントロールで構成します。
+返り値の `layout` で、auto / overlay（従来の重ね表示）、centered（文字を中央、グラフなし）、split（左に文字、右にグラフ）、stacked（上に文字、下にグラフ）、caption（写真の下部に文字）を選べます。HTML / CSS は実行しません。
 
-| 入力 | 内容 |
-| --- | --- |
-| `ctx.now` | オフセット付きISO日時文字列。`new Date(ctx.now)` で使用 |
-| `ctx.locale` | `ja-JP` または `en-US` |
-| `ctx.size` | `small` / `medium` / `wide` / `large` |
-| `ctx.settings` | manifest の設定オブジェクト |
-| `ctx.state` | 前回成功した結果の state。初回は `{}` |
+同梱例は、小で要点と短い数字、中で値を強調、横長で左右分割、大で詳細と大きなグラフに切り替えます。小では装飾・補助情報を省き、時計は数字を2行にします。写真は下部キャプションです。[英語版のコード例](../javascript-tiles.md#responsive-native-layouts)を参照してください。
 
-| 出力 | 制限 |
-| --- | --- |
-| `text` | 本文、256文字まで |
-| `detail` | 補足、512文字まで。小サイズでは非表示 |
-| `badge` | 16文字まで |
-| `background`, `foreground` | 空文字または `#RRGGBB`。ハイコントラストではシステム色を優先 |
-| `progress` | 0〜1、省略可能 |
-| `state` | JSON表現で8,192文字まで。更新間で保持。アプリ終了・再読み込みでリセット |
+## PC 時刻とメトリクス
 
-タイルが小さい場合、文章は表示可能な範囲で省略します。更新周期は1〜3600秒です。ライブ更新をオフにすると実行を停止します。メニューを閉じている間はワーカーを終了し、再表示で再開します。同時更新は最大8タイルです。
+ctx.now は PC の UTC オフセット付き時刻。ctx.time は unixMs・monotonicMs（稼働時間）・utc・local・offsetMinutes・Windows timeZoneId、ctx.calendar は翻訳済み shortDate・weekday・month と数値の day です。経過時間には monotonicMs を使用します。外部時刻サービスは使わず、OS の時刻・タイムゾーン変更で再描画します。
 
-## 実行の範囲
+capabilities に system.metrics を指定すると ctx.system に CPU 使用率、論理 CPU 数、物理メモリ、稼働時間、固定ドライブ容量、送受信速度、バッテリー状態を渡します。全フィールドと単位は[英語 API 表](../javascript-tiles.md)を参照してください。CPU・通信速度は2回のサンプルが必要で、準備中・取得不能は null。通信速度は有効な非ループバック・非トンネルインターフェースの合計で、仮想アダプターでは重複計上する場合があります。ドライブ容量は約30秒キャッシュし、非表示中はサンプリングを停止します。ファイル内容・プロセス名を渡さず、スクリプト自身の通信 API はありません。
 
-Jint 4.17.0 を専用の `ReStart.TileHost.exe` で動かします。JavaScript には JSON だけを渡し、CLR・Node.js・ファイル・ネットワーク・DOM・シェル起動API・ホスト側コールバックを公開しません。`eval` と文字列からの関数生成は無効です。モジュールの読み込みや `fetch` は使えません。旧 UWP 通知を受信するものではありません。
+## 写真とスタイル
 
-各更新は新しいエンジンで実行し、状態は返したJSONだけを引き継ぎます。20,000文、再帰32段、エンジン割り当て8 MB、100 msの制限を設定します。さらに親プロセスが通常1秒（初回起動4秒）の応答期限を持ち、超過時はワーカーを停止します。Windows Job Object はプロセス当たり192 MB・子プロセス作成不可・親終了時に終了する設定です。エラー時は最後に成功した表示を保持し、ツールチップにエラーを出します。初回から失敗した場合はエラー表示になります。
+images.slideshow を指定すると、ネイティブ UI で選択したフォルダを使えます。ctx.slideshow は available・count・index のみ。パス・ファイル名・画素は渡さず image: "current" で表示します。直下の JPG/JPEG/PNG/BMP/GIF 最大1,000件、各20 MiB以内、幅768pxへデコード、GIF は静止画です。settings.intervalSeconds は5～3,600秒、既定15秒。クリックで次へ送り、そこから自動送りを続けます。非同期読み込み後はファイルを閉じ、アニメーション有効時はクロスフェードします。ハイコントラストと個別背景色を優先します。
 
-ソースファイルは64 KiB、manifestファイルは16 KiBまでです。JSONの設定と状態は8,192文字、通信は入力131,072文字・出力16,384文字までです。文字数は.NETのUTF-16コード単位で数えます。インポートするのは決まった2ファイルだけです。レイアウトJSONにはインストール済みパッケージのIDだけを保存し、任意の外部JSパスを指定できません。レイアウトのエクスポートにはJS本体を含めません。
+フォルダ指定は保存済み host-bindings.json に置き、パッケージから取り込まずレイアウト出力にも含めません。別 PC で再指定してください。
 
-別プロセスとリソース制限は応答性・障害の分離のためです。OSの権限を落としたコンテナではなく、任意の悪意あるコードに対する安全性を保証するものではありません。自分で作成した、または内容を確認したパッケージを使用してください。編集にはメモ帳を明示して使用し、Windows Script Host で `.js` を実行しません。
+text/detail/badge/kicker は最大256/512/16/48文字。background・foreground・backgroundEnd・accent は空または #RRGGBB。visual は空・ring・bars・sparkline・dots、series は0～1の有限値を最大32個、progress は0～1。小タイルは補助テキストを省略します。同梱ソースをスタイルの見本として使ってください。
 
-## 配置
+## 実行と保存
 
-通常は `%LOCALAPPDATA%/ReStart/tiles/<id>/`、プレビューは実行ファイル隣の `preview-data/tiles/<id>/` に保存します。アプリ更新時はZIP全体を展開し、`TileHost` と `Examples` も一緒に置いてください。自動起動の登録は ReStart 本体だけです。
+8タイル制限はなく、4つの分離ワーカーを共有します。各描画は新しい Jint 環境で20,000文・再帰32・割当8 MB・100 msまで。親の応答期限は通常1秒、初回4秒で、ワーカーごと192 MBの Job Object と子プロセス禁止を設定します。失敗時は最後の正常な表示を保ちツールチップにエラーを出します。
+
+CLR・Node・ファイル・ネットワーク・DOM・シェル・eval・モジュールは利用できません。ソース64 KiB、manifest 16 KiB、設定/状態各8,192文字、コンテキスト32,768文字、要求/応答131,072/16,384文字が上限。プロセス分離は応答性の保護で、OS 権限サンドボックスではありません。内容を確認して取り込んでください。
+
+保存先は %LOCALAPPDATA%\ReStart\tiles\<id>。プレビューは別領域です。レイアウト出力に JS ソースは含めません。TileHost と Examples を本体と一緒に保持してください。
+
+## タイルライブラリ
+
+設定の「ライブラリフォルダを開く」で %LOCALAPPDATA%\ReStart\TileLibrary を開き、各パッケージのフォルダ（manifest.json と tile.js）を置きます。設定画面が追加・変更を自動検出し、表示されたタイルをクリックして追加できます。毎回 JSON を選ぶ必要はありません。直下最大128フォルダを検査し、不正パッケージは実行せず無効表示します。「再読み込み」も使えます。追加先は別のインストール済みコピーで、既存グループを動かさず独立した空き場所へ配置します。

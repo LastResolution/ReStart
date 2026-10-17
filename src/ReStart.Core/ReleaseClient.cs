@@ -13,8 +13,8 @@ public enum UpdateCheckStatus
     UpToDate,
     /// <summary>No eligible published release was found.</summary>
     NoReleases,
-    /// <summary>Repository access or credentials are missing or invalid.</summary>
-    AccessRequired,
+    /// <summary>The public release service is unavailable.</summary>
+    ServiceUnavailable,
     /// <summary>GitHub declined the request due to a rate limit.</summary>
     RateLimited,
     /// <summary>The service could not be reached successfully.</summary>
@@ -26,11 +26,11 @@ public enum UpdateCheckStatus
 /// <summary>Describes a published release; its page URL is constructed only within the fixed repository.</summary>
 public sealed record UpdateRelease(string Tag, ReleaseVersion Version, string Notes)
 {
-    /// <summary>Gets the authenticated-browser release page; the app never executes a feed-supplied URL.</summary>
+    /// <summary>Gets the browser release page; the app never executes a feed-supplied URL.</summary>
     public Uri Page => new($"https://github.com/LastResolution/ReStart/releases/tag/{Uri.EscapeDataString(Tag)}");
 }
 
-/// <summary>Contains a release check result without credentials or raw server errors.</summary>
+/// <summary>Contains a release check result without raw server errors.</summary>
 public sealed record UpdateCheckResult(UpdateCheckStatus Status, UpdateRelease? Release = null);
 
 /// <summary>Checks GitHub releases without downloading or installing executables. The caller owns the HTTP client.</summary>
@@ -40,7 +40,7 @@ public sealed class ReleaseClient(HttpClient client)
     public static Uri ReleasesPage { get; } = new("https://github.com/LastResolution/ReStart/releases");
 
     /// <summary>Checks up to 500 releases, respecting prerelease preference, semantic versions and complete architecture assets.</summary>
-    public async Task<UpdateCheckResult> CheckAsync(string currentVersion, string runtime, bool includePrereleases, string? token = null, CancellationToken cancellationToken = default)
+    public async Task<UpdateCheckResult> CheckAsync(string currentVersion, string runtime, bool includePrereleases, CancellationToken cancellationToken = default)
     {
         var current = ReleaseVersion.Parse(currentVersion) ?? throw new ArgumentException("Invalid current version.", nameof(currentVersion));
         if (runtime is not ("win-x64" or "win-arm64")) throw new ArgumentException("Unsupported runtime.", nameof(runtime));
@@ -53,13 +53,12 @@ public sealed class ReleaseClient(HttpClient client)
                 request.Headers.UserAgent.ParseAdd("ReStart/" + current);
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
                 request.Headers.Add("X-GitHub-Api-Version", "2022-11-28");
-                if (!string.IsNullOrWhiteSpace(token)) request.Headers.Authorization = new("Bearer", token);
                 using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
                 if (response.StatusCode == HttpStatusCode.TooManyRequests
                     || response.StatusCode == HttpStatusCode.Forbidden && (response.Headers.RetryAfter != null
                         || response.Headers.TryGetValues("X-RateLimit-Remaining", out var remaining) && remaining.Contains("0")))
                     return new(UpdateCheckStatus.RateLimited);
-                if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden or HttpStatusCode.NotFound) return new(UpdateCheckStatus.AccessRequired);
+                if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden or HttpStatusCode.NotFound) return new(UpdateCheckStatus.ServiceUnavailable);
                 if (!response.IsSuccessStatusCode) return new(UpdateCheckStatus.NetworkError);
                 if (response.Content.Headers.ContentLength > 1024 * 1024) return new(UpdateCheckStatus.InvalidResponse);
                 await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);

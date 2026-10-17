@@ -20,7 +20,7 @@ public partial class MainWindow
             if (AppPinning.IsPinned(Document, app))
             { AppPinning.Unpin(Document, app); CommitLayout(); SetStatus(L.F(K.StatusUnpinned, app.Name)); }
             else
-            { AppPinning.Pin(Document, app); CommitLayout(); SetStatus(L.F(K.StatusPinned, app.Name)); }
+            { PinMenuApplication(app); CommitLayout(); SetStatus(L.F(K.StatusPinned, app.Name)); }
         };
         menu.Items.Add(pin);
         AddAppShellItems(menu, app);
@@ -35,7 +35,7 @@ public partial class MainWindow
                 Add(groups, group.Name.Length == 0 ? L.T(K.UnnamedGroup) : group.Name, () =>
                 {
                     if (!Document.Groups.Contains(group)) return;
-                    AppPinning.Pin(Document, app, group); CommitLayout(); SetStatus(L.F(K.StatusPinned, app.Name));
+                    PinMenuApplication(app, group); CommitLayout(); SetStatus(L.F(K.StatusPinned, app.Name));
                 });
             groups.IsEnabled = groups.Items.Count > 0;
             extras.Items.Add(groups);
@@ -44,13 +44,31 @@ public partial class MainWindow
                 if (AppPinning.IsPinned(Document, app)) return;
                 var group = new TileGroup { Name = "" };
                 Document.Groups.Add(group);
-                AppPinning.Pin(Document, app, group);
+                PinMenuApplication(app, group);
                 ShowPinned(this, new()); CommitLayout(); RenameGroup(group);
             });
         }
         Refresh();
         menu.Opened += (_, _) => Refresh();
         return menu;
+    }
+
+    private Tile PinMenuApplication(AppEntry app, TileGroup? destination = null)
+    {
+        var tile = destination == null ? PinApplication(app) : AppPinning.Pin(Document, app, destination);
+        if (!_catalog.Icons.ContainsKey(app.Id)) _ = RefreshPinnedIconAsync(app);
+        return tile;
+    }
+
+    private async Task RefreshPinnedIconAsync(AppEntry app)
+    {
+        try
+        {
+            await _catalog.LoadIconsAsync([app]);
+            if (!_exit) RenderGroups();
+        }
+        catch (Exception ex) when (ex is COMException or IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException)
+        { if (!_exit) SetStatus(L.T(K.ErrorCatalogLoad) + ex.Message); }
     }
 
     private void AddAppShellItems(ContextMenu menu, AppEntry app, int? index = null)

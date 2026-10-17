@@ -35,6 +35,15 @@ public partial class MainWindow
         GroupsPanel.InvalidateMeasure();
     }
 
+    private void PreserveDragExtent()
+    {
+        // Moving the lowest/rightmost group must not shrink the viewport under
+        // the pointer. Otherwise offset coercion feeds back into the next drag.
+        GroupsPanel.DragMinimumHeight = Math.Max(GroupsPanel.DragMinimumHeight, ContentScroll.ExtentHeight);
+        var occupiedWidth = GroupsPanel.Placements.Count == 0 ? 0 : GroupsPanel.Placements.Max(p => p.Left + p.Width);
+        GroupsPanel.DragMinimumWidth = Math.Max(GroupsPanel.DragMinimumWidth, occupiedWidth);
+    }
+
     private Tile? FolderHoverTarget(Tile source, TilePanel panel, Point point, string sourceId, long? timestamp = null)
     {
         var button = Ancestor<Button>(panel.InputHitTest(point) as DependencyObject);
@@ -60,7 +69,9 @@ public partial class MainWindow
                 return (group, nearest ?? panel);
             hit = VisualTreeHelper.GetParent(hit);
         }
-        return null;
+        var adjacent = GroupLayout.DropRecipient(GroupsPanel.Placements, point.X, point.Y, Cell);
+        var destination = GroupsPanel.Children.OfType<StackPanel>().FirstOrDefault(s => s.Tag == adjacent)?.Children.OfType<TilePanel>().FirstOrDefault();
+        return adjacent != null && destination != null ? (adjacent, destination) : null;
     }
 
     private void OnBoardDragOver(object sender, DragEventArgs e)
@@ -98,6 +109,7 @@ public partial class MainWindow
                 var placement = target.Panel.Placements.Single(p => p.Tile == folderTarget);
                 ShowDropPreview(target.Panel, folderTarget, placement.Column, placement.Row);
                 _dropAdorner!.FolderTarget = true;
+                _dropAdorner.Caption = L.T(K.DropIntoFolder);
                 _dropAdorner.InvalidateVisual();
             }
             else if (target.Group.IsStandalone) PreviewStandalone(tile, point);
@@ -120,6 +132,8 @@ public partial class MainWindow
         }
         _dropAdorner.CellBounds = bounds;
         _dropAdorner.FolderTarget = false;
+        _dropAdorner.GroupBounds = null;
+        _dropAdorner.Caption = L.T(K.DropIndependent);
         _dropAdorner.InvalidateVisual();
     }
 
@@ -151,17 +165,23 @@ public partial class MainWindow
 
     private void MoveGroupOnBoard(TileGroup group, Point point)
     {
-        var (column, row, x) = BoardAnchor(point);
+        var (column, row, x) = BoardAnchor(point, group.IsStandalone);
+        x = GroupDropX(group, x, row);
+        row = GroupDropRow(group, x, row);
         GroupLayout.Move(Document, group, column, row, GroupsPanel.Columns, Cell, x);
         CommitLayout();
     }
 
     private void PreviewGroupOnBoard(TileGroup group, Point point)
     {
-        var (column, row, x) = BoardAnchor(point);
+        var (column, row, x) = BoardAnchor(point, group.IsStandalone);
+        x = GroupDropX(group, x, row);
+        row = GroupDropRow(group, x, row);
         var placements = GroupLayout.PreviewMove(Document, group, column, row, GroupsPanel.Columns, Cell, x);
+        if (GroupsPanel.DragPlacements is { } previous && placements.SequenceEqual(previous)) return;
         var target = placements.Single(p => p.Group == group);
-        ShowBoardPreview(new(target.Left, target.Row * Cell / 2, target.Width, target.Height));
+        ShowBoardPreview(new(target.Left, target.Top, target.Width, target.Height));
+        _dropAdorner!.Caption = L.T(K.DropMoveGroup);
         GroupsPanel.DragPlacements = placements;
         GroupsPanel.InvalidateMeasure();
     }
@@ -175,27 +195,53 @@ public partial class MainWindow
         CommitLayout();
     }
 
-    private (int Column, int Row, double X) BoardAnchor(Point point)
+    private double GroupDropX(TileGroup group, double x, int row)
+    {
+        var placements = GroupLayout.Pack(Document.Groups, GroupsPanel.Columns, Document.Preferences.Columns, Cell, preserveColumns: true);
+        var moving = placements.Single(p => p.Group == group);
+        return GroupLayout.SnapBeside(placements, group, x * Cell, row * Cell / 2, moving.Width, moving.Height, Cell) / Cell;
+    }
+
+    private int GroupDropRow(TileGroup group, double x, int row)
+    {
+        var placements = GroupLayout.Pack(Document.Groups, GroupsPanel.Columns, Document.Preferences.Columns, Cell, preserveColumns: true);
+        var moving = placements.Single(p => p.Group == group);
+        return GroupLayout.SnapRow(placements, group, x * Cell, row, moving.Width, moving.Height, Cell);
+    }
+
+    private (int Column, int Row, double X) BoardAnchor(Point point, bool standalone = false)
     {
         var pitch = Document.Preferences.Columns * Cell + GroupLayout.Gap;
         var x = Math.Clamp(Math.Round((point.X - _dragOffset.X) / Cell * 2, MidpointRounding.AwayFromZero) / 2, 0, 10000);
         var column = Math.Clamp((int)Math.Floor(x * Cell / pitch), 0, 63);
-        var row = Math.Clamp((int)Math.Round((point.Y - _dragOffset.Y) / (Cell / 2), MidpointRounding.AwayFromZero), 0, 20000);
+        var row = Math.Clamp((int)Math.Round((point.Y - _dragOffset.Y - (standalone ? GroupLayout.HeaderHeight : 0)) / (Cell / 2), MidpointRounding.AwayFromZero), 0, 20000);
         return (column, row, x);
     }
 
     private void PreviewStandalone(Tile tile, Point point)
     {
-        var (_, row, x) = BoardAnchor(point);
+        var (_, row, x) = StandaloneAnchor(tile, point);
         var (width, height) = TileLayout.Dimensions(tile.Size);
         ShowBoardPreview(new(x * Cell,
-            row * Cell / 2, width * Cell, height * Cell));
+            GroupLayout.HeaderHeight + row * Cell / 2, width * Cell, height * Cell));
     }
 
     private void MoveTileToStandalone(Tile tile, Point point)
     {
-        var (column, row, x) = BoardAnchor(point);
+        var (column, row, x) = StandaloneAnchor(tile, point);
         LayoutEditor.Detach(Document, tile, column, row, 0, GroupsPanel.Columns, Cell, x);
         CommitLayout();
+    }
+
+    private (int Column, int Row, double X) StandaloneAnchor(Tile tile, Point point)
+    {
+        var (_, row, x) = BoardAnchor(point, true);
+        var moving = Document.Groups.FirstOrDefault(g => g.IsStandalone && g.Tiles.Contains(tile)) ?? new TileGroup { IsStandalone = true };
+        var placements = GroupLayout.Pack(Document.Groups, GroupsPanel.Columns, Document.Preferences.Columns, Cell, preserveColumns: true);
+        var (width, height) = TileLayout.Dimensions(tile.Size);
+        x = GroupLayout.SnapBeside(placements, moving, x * Cell, GroupLayout.HeaderHeight + row * Cell / 2, width * Cell, height * Cell, Cell) / Cell;
+        row = GroupLayout.SnapRow(placements, moving, x * Cell, row, width * Cell, height * Cell, Cell);
+        var column = Math.Clamp((int)(x * Cell / (Document.Preferences.Columns * Cell + GroupLayout.Gap)), 0, 63);
+        return (column, row, x);
     }
 }

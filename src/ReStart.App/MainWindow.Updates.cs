@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.Net.Http;
 using ReStart.App.Services;
 using ReStart.Core;
@@ -22,13 +21,11 @@ public partial class MainWindow
     private async Task<UpdateCheckResult> CheckUpdatesCoreAsync(bool includePrereleases)
     {
         UpdateCheckResult result;
-        if (_preview) return new(UpdateCheckStatus.AccessRequired);
+        if (_preview) return new(UpdateCheckStatus.ServiceUnavailable);
         try
         {
-            var token = ReleaseCredentialStore.Current.Read();
-            result = await new ReleaseClient(_releaseHttp).CheckAsync(AppBuildInfo.Version, AppBuildInfo.Runtime, includePrereleases, token, _updateCancellation.Token);
+            result = await new ReleaseClient(_releaseHttp).CheckAsync(AppBuildInfo.Version, AppBuildInfo.Runtime, includePrereleases, _updateCancellation.Token);
         }
-        catch (Win32Exception) { result = new(UpdateCheckStatus.AccessRequired); }
         catch (OperationCanceledException) { return new(UpdateCheckStatus.NetworkError); }
         LastUpdateCheck = result;
         LastUpdateCheckAt = DateTimeOffset.Now;
@@ -42,7 +39,7 @@ public partial class MainWindow
         UpdateCheckStatus.Available => L.F(K.UpdateAvailable, result.Release!.Version),
         UpdateCheckStatus.UpToDate => L.T(K.UpdateUpToDate),
         UpdateCheckStatus.NoReleases => L.T(K.UpdateNoReleases),
-        UpdateCheckStatus.AccessRequired => L.T(K.UpdateAccessRequired),
+        UpdateCheckStatus.ServiceUnavailable => L.T(K.UpdateServiceUnavailable),
         UpdateCheckStatus.RateLimited => L.T(K.UpdateRateLimited),
         UpdateCheckStatus.NetworkError => L.T(K.UpdateNetworkError),
         _ => L.T(K.UpdateInvalidResponse)

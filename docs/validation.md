@@ -4,6 +4,21 @@
 
 Environment: Windows 11 x64 build 26200, stable .NET SDK 10.0.113. Records describe executed checks; cross-compilation and automated WPF input are distinguished from hardware interaction.
 
+## v0.6 candidate — October 18, 2026
+
+- Release build: zero warnings/errors; 203 Core tests passed locally.
+- All twelve JS packages render eight languages, four sizes, available/missing host data and local click states. A sixteen-request worker-pool test verifies reuse beyond the previous eight-tile limit and cancellation during disposal.
+- Rendered native gallery covers twelve packages/four sizes, timer pause, photo advance, state retention, image handles and custom-color precedence. A separate real host path supplies CPU data to a JS frame; gallery screenshots use synthetic metrics and generated solid images.
+- Twelve theme/axis fixtures verify no spurious horizontal overflow, independent axis movement and 12-DIP themed scrollbars. Thirty-two stationary-pointer previews from the bottom of a tall board retain the offset and reuse unchanged layout.
+- Adding twelve independent widgets at three width/scale combinations preserves every existing visible group rectangle and child cell.
+- Placement: twenty-three placement, six inline-name, sixteen folder and six scale/baseline checks. Rectangular group collision and hit testing work in either child order; reversed-order folder expansion leaves adjacent live-tile columns unchanged. First input: six cold/search/navigation checks, ten native foreground activations and one focus-loss close check.
+- Release info: sixteen language/theme settings views, three migration, three accent, five individual-color and four wallpaper checks. Filesystem pinning covers cold folders, IPC, shortcuts, duplicate identity and invalid targets.
+- Canonical commit-history cleanup, repository publication/protection, final CI and published asset checks are maintenance actions recorded separately; local results alone do not establish their outcome.
+
+- Native Shell icon verification: nine filesystem/shortcut patterns, four sizes and three scales (108 rendered checks), four folder-preview icons and two status-expiry/replacement checks. Folder icons occupy 56 of 64 source pixels horizontally. Both scrollbar thumbs have matching six-DIP visual thickness.
+- Context-menu gallery and eight language-switch checks verify default titles, rendered captions and accessibility names; explicitly renamed titles are retained.
+- App menus: seven pin/destination checks and four shell-availability/read checks, including immediate folder icons for default and explicitly grouped pins. The privacy guard accepts clean staged content and rejects generic token/path patterns and private author/committer addresses using an isolated index.
+
 ## v0.5 candidate — October 18, 2026
 
 - Release build: zero warnings/errors; 151 Core tests passed locally.
@@ -36,3 +51,7 @@ The real catalog has been read successfully; private app names, paths, layouts a
 ## Unverified boundaries
 
 Windows 10 22H2 side-by-side comparison is unavailable. ARM64 hardware, mixed DPI, multiple monitors, physical Windows-key/taskbar sequences, complete IME/Narrator paths and actual re-sign-in remain pending. Elevation, uninstall and power operations were not run. Consult [fidelity](fidelity.md) before making compatibility claims.
+
+Library discovery validates metadata without running sources; a native watcher fixture detects a newly copied package and click-adds it without changing existing group rectangles.
+
+Responsive frames exercise centered/split/stacked/caption layouts, compact values and a native four-size comparison, including a two-line small clock. Local portable inspection caught and removed a stale dependency PE debug path; packaging now inspects every entry for generic credential and user-path patterns.

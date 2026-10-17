@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using ReStart.App.Services;
@@ -71,41 +70,7 @@ internal sealed partial class SettingsWindow
         Refresh();
         _main.UpdateCheckChanged += Refresh;
         Closed += (_, _) => _main.UpdateCheckChanged -= Refresh;
-        Heading(panel, L.T(K.UpdateAuth));
-        Note(panel, L.T(K.UpdateAuthHelp));
-        var credentialStatus = new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new(0, 4, 0, 10) };
-        void RefreshCredential()
-        {
-            if (_main.IsPreview) { credentialStatus.Text = L.T(K.UpdatesDisabledInPreview); return; }
-            try { credentialStatus.Text = L.T(ReleaseCredentialStore.Current.Read() == null ? K.UpdateAuthMissing : K.UpdateAuthSaved); }
-            catch (Win32Exception) { credentialStatus.Text = L.T(K.UpdateCredentialError); }
-        }
-        RefreshCredential(); panel.Children.Add(credentialStatus);
-        Note(panel, L.T(K.TokenLabel));
-        var token = new PasswordBox { MaxLength = 2048, Padding = new(8), Margin = new(0, 0, 0, 10), IsEnabled = !_main.IsPreview };
-        token.SetResourceReference(ForegroundProperty, "TextBrush"); token.SetResourceReference(BackgroundProperty, "ControlBrush");
-        token.SetResourceReference(BorderBrushProperty, "BorderBrush");
-        System.Windows.Automation.AutomationProperties.SetName(token, L.T(K.TokenLabel));
-        panel.Children.Add(token);
-        var credentials = new WrapPanel();
-        var saveToken = DataButton(credentials, L.T(K.UpdateSaveToken), () =>
-        {
-            if (_main.IsPreview) return;
-            try { ReleaseCredentialStore.Current.Save(token.Password); token.Clear(); RefreshCredential(); _feedback.Text = L.T(K.TokenSaved); }
-            catch (Exception ex) when (ex is Win32Exception or ArgumentException) { _feedback.Text = L.T(K.UpdateCredentialError); }
-        });
-        saveToken.IsEnabled = !_main.IsPreview;
-        DataButton(credentials, L.T(K.UpdateRemoveToken), () =>
-        {
-            if (_main.IsPreview) return;
-            try { ReleaseCredentialStore.Current.Delete(); token.Clear(); RefreshCredential(); _feedback.Text = L.T(K.TokenRemoved); }
-            catch (Win32Exception) { _feedback.Text = L.T(K.UpdateCredentialError); }
-        }).IsEnabled = !_main.IsPreview;
-        token.PreviewKeyDown += (_, e) =>
-        {
-            if (e.Key == System.Windows.Input.Key.Enter) { saveToken.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); e.Handled = true; }
-        };
-        panel.Children.Add(credentials);
+
     }
 }
 

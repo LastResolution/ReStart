@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "title": "Year in motion",
+  "localizedTitles": {
+    "en": "Year in motion",
+    "ja": "今年の進捗",
+    "de": "Jahresfortschritt",
+    "fr": "Progression de l’année",
+    "es": "Progreso del año",
+    "ko": "올해의 진행률",
+    "zh-Hans": "年度进度",
+    "zh-Hant": "年度進度"
+  },
+  "refreshSeconds": 1,
+  "capabilities": [],
+  "settings": {
+    "color": "#4551A0",
+    "colorEnd": "#1B284B",
+    "accent": "#B3C5FF",
+    "labels": {
+      "en": {
+        "caption": "Year in motion"
+      },
+      "ja": {
+        "caption": "今年の進捗"
+      },
+      "de": {
+        "caption": "Jahresfortschritt"
+      },
+      "fr": {
+        "caption": "Progression de l’année"
+      },
+      "es": {
+        "caption": "Progreso del año"
+      },
+      "ko": {
+        "caption": "올해의 진행률"
+      },
+      "zh-Hans": {
+        "caption": "年度进度"
+      },
+      "zh-Hant": {
+        "caption": "年度進度"
+      }
+    }
+  }
+}

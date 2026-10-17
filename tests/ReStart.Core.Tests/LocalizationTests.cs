@@ -16,8 +16,17 @@ public sealed class LocalizationTests
     [InlineData("ja", "en-US", "ja")]
     [InlineData("en", "ja-JP", "en")]
     [InlineData("system", "ja-JP", "ja")]
-    [InlineData("system", "de-DE", "en")]
+    [InlineData("system", "it-IT", "en")]
     [InlineData("unknown", "en-US", "en")]
+    [InlineData("system", "de-DE", "de")]
+    [InlineData("system", "fr-CA", "fr")]
+    [InlineData("system", "es-MX", "es")]
+    [InlineData("system", "ko-KR", "ko")]
+    [InlineData("system", "zh-CN", "zh-Hans")]
+    [InlineData("system", "zh-HK", "zh-Hant")]
+    [InlineData("system", "zh-TW", "zh-Hant")]
+    [InlineData("zh-hant", "en-US", "zh-Hant")]
+    [InlineData("fr-FR", "en-US", "fr")]
     public void ResolvesPreferenceAndSystemFallback(string preference, string system, string expected)
         => Assert.Equal(expected, TextCatalog.Resolve(preference, system));
 
@@ -27,13 +36,16 @@ public sealed class LocalizationTests
         Assert.True(TextCatalog.Keys.Count > 100);
         foreach (var key in TextCatalog.Keys)
         {
-            var japanese = TextCatalog.Translate(key, "ja");
             var english = TextCatalog.Translate(key, "en");
-            Assert.False(string.IsNullOrWhiteSpace(japanese));
             Assert.False(string.IsNullOrWhiteSpace(english));
-            var args = Enumerable.Repeat<object>("sample", CompositeFormat.Parse(japanese).MinimumArgumentCount).ToArray();
-            Assert.Equal(CompositeFormat.Parse(japanese).MinimumArgumentCount, CompositeFormat.Parse(english).MinimumArgumentCount);
-            _ = string.Format(CultureInfo.InvariantCulture, english, args);
+            foreach (var language in TextCatalog.SupportedLanguages)
+            {
+                var localized = TextCatalog.Translate(key, language);
+                Assert.False(string.IsNullOrWhiteSpace(localized));
+                var args = Enumerable.Repeat<object>("sample", CompositeFormat.Parse(english).MinimumArgumentCount).ToArray();
+                Assert.Equal(CompositeFormat.Parse(english).MinimumArgumentCount, CompositeFormat.Parse(localized).MinimumArgumentCount);
+                _ = string.Format(CultureInfo.InvariantCulture, localized, args);
+            }
         }
         Assert.Equal("Settings", TextCatalog.Translate(TextKey.NavSettings, "en"));
         Assert.Throws<KeyNotFoundException>(() => TextCatalog.Translate((TextKey)int.MaxValue, "en"));

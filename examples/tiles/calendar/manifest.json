@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "title": "Month dots",
+  "localizedTitles": {
+    "en": "Month dots",
+    "ja": "月のドットカレンダー",
+    "de": "Monatspunkte",
+    "fr": "Points du mois",
+    "es": "Puntos del mes",
+    "ko": "월간 도트 달력",
+    "zh-Hans": "月度点阵",
+    "zh-Hant": "月份點陣"
+  },
+  "refreshSeconds": 1,
+  "capabilities": [],
+  "settings": {
+    "color": "#245645",
+    "colorEnd": "#102E32",
+    "accent": "#B4F3CA",
+    "labels": {
+      "en": {
+        "caption": "Month dots"
+      },
+      "ja": {
+        "caption": "月のドットカレンダー"
+      },
+      "de": {
+        "caption": "Monatspunkte"
+      },
+      "fr": {
+        "caption": "Points du mois"
+      },
+      "es": {
+        "caption": "Puntos del mes"
+      },
+      "ko": {
+        "caption": "월간 도트 달력"
+      },
+      "zh-Hans": {
+        "caption": "月度点阵"
+      },
+      "zh-Hant": {
+        "caption": "月份點陣"
+      }
+    }
+  }
+}

@@ -6,6 +6,83 @@ namespace ReStart.Core.Tests;
 public sealed class StandaloneTileTests
 {
     [Fact]
+    public void AdjacentCellsAcceptATileWithoutChangingTheGroupsCollisionFootprint()
+    {
+        var group = new TileGroup { Column = 0, Row = 0, Tiles = [new()] };
+        var loose = new TileGroup { IsStandalone = true, Column = 2, Row = 0, Tiles = [new()] };
+        var placements = GroupLayout.Pack([group, loose], 3, 6, 52);
+        Assert.Same(group, GroupLayout.DropRecipient(placements, 156, 92, 52));
+        Assert.Same(group, GroupLayout.DropRecipient(placements, 52, 196, 52));
+        Assert.Null(GroupLayout.DropRecipient(placements, 158, 92, 52));
+        Assert.Null(GroupLayout.DropRecipient(placements, 700, 92, 52));
+        Assert.Equal((104d, 144d), (placements[0].Width, placements[0].Height));
+        Assert.Single(group.Tiles);
+    }
+
+    [Theory]
+    [InlineData(0.7)]
+    [InlineData(1.0)]
+    [InlineData(1.5)]
+    public void IndependentTilesShareTheNamedTileBaselineAtEveryScale(double scale)
+    {
+        var cell = 52 * scale;
+        var grouped = new TileGroup { Column = 0, Row = 3, Tiles = [new() { Column = 0, Row = 6 }] };
+        var standalone = new TileGroup { IsStandalone = true, Column = 1, Row = 15, Tiles = [new()] };
+        var placements = GroupLayout.Pack([grouped, standalone], 3, 6, cell);
+        Assert.Equal(placements[0].Top + GroupLayout.HeaderHeight + 6 * cell, placements[1].Top, 6);
+        Assert.Equal(2 * cell, placements[1].Height);
+    }
+
+    [Theory]
+    [InlineData(0.7)]
+    [InlineData(1.0)]
+    [InlineData(1.5)]
+    public void SchemaThreeAlignsOnceAndPreservesTheClosestExistingPosition(double scale)
+    {
+        var standalone = new TileGroup { IsStandalone = true, Column = 1, Row = 13, Tiles = [new()] };
+        var document = new LayoutDocument { Version = 3, Preferences = new() { TileScale = scale }, Groups = [standalone] };
+        var previousTop = 13 * 52 * scale / 2;
+        document.Normalize();
+        var newTop = Assert.Single(GroupLayout.Pack(document.Groups, 3, 6, 52 * scale)).Top;
+        Assert.InRange(Math.Abs(newTop - previousTop), 0, 52 * scale / 4 + 0.001);
+        var row = standalone.Row;
+        document.Normalize();
+        Assert.Equal(row, standalone.Row);
+        var restored = JsonSerializer.Deserialize<LayoutDocument>(JsonSerializer.Serialize(document, LayoutStore.JsonOptions), LayoutStore.JsonOptions)!;
+        restored.Normalize();
+        Assert.Equal(row, restored.Groups[0].Row);
+    }
+
+    [Fact]
+    public void NearbyGroupsSnapToAVisibleGapWithoutReservingCollisionPadding()
+    {
+        var first = new TileGroup { Column = 0, Row = 0, Tiles = [new()] };
+        var moving = new TileGroup { Column = 1, Row = 0, Tiles = [new()] };
+        var placements = GroupLayout.Pack([first, moving], 3, 6, 52);
+        Assert.Equal(104 + GroupLayout.Gap, GroupLayout.SnapBeside(placements, moving, 104, 0, 104, 144, 52));
+        Assert.Equal(104, GroupLayout.SnapBeside(placements, moving, 104, 1000, 104, 144, 52));
+        Assert.Equal(300, GroupLayout.SnapBeside(placements, moving, 300, 0, 104, 144, 52));
+        Assert.Equal((0, 0), (first.Column, first.Row));
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public void GroupAndIndependentNeighborsShareTheSameGap(bool firstStandalone, bool movingStandalone)
+    {
+        var first = new TileGroup { Column = 0, Row = 0, IsStandalone = firstStandalone, Tiles = [new()] };
+        var moving = new TileGroup { Column = 1, Row = 0, IsStandalone = movingStandalone, Tiles = [new()] };
+        var placements = GroupLayout.Pack([first, moving], 3, 6, 52);
+        var expected = 104 + (firstStandalone && movingStandalone ? 0 : GroupLayout.Gap);
+        Assert.Equal(expected, GroupLayout.SnapBeside(placements, moving, 104, 40, 104, 144, 52));
+        Assert.Equal(104, GroupLayout.SnapBeside(placements, moving, 104, 1000, 104, 144, 52));
+        var lower = GroupLayout.SnapRow(placements, moving, 0, 6, 104, movingStandalone ? 104 : 144, 52);
+        if (firstStandalone && movingStandalone) Assert.Equal(6, lower);
+        else Assert.True((movingStandalone ? 40 : 0) + lower * 26 >= placements[0].Top + placements[0].Height + GroupLayout.Gap);
+    }
+
+    [Fact]
     public void DetachedTileHasOnlyItsOwnFootprintAndPreservesOtherItems()
     {
         var tile = new Tile { Size = TileSize.Small, Column = 2, Row = 4 };
@@ -67,10 +144,10 @@ public sealed class StandaloneTileTests
         document.Normalize();
         Assert.True(loose.IsStandalone);
         Assert.Equal((3, 0), (loose.Tiles[0].Column, loose.Tiles[0].Row));
-        Assert.Equal(10, loose.Row);
+        Assert.Equal(8, loose.Row);
         Assert.False(named.IsStandalone);
         document.Normalize();
-        Assert.Equal(10, loose.Row);
+        Assert.Equal(8, loose.Row);
     }
 
     [Fact]

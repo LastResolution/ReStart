@@ -12,7 +12,18 @@ ReStart independently recreates Windows 10 full-screen Start. State the Windows 
 4. Open a PR describing the trigger, resulting behavior, validation and limitations.
 5. Wait for every CI check, review the diff, squash merge and remove the branch.
 
-Never rewrite main. Rebase a published personal PR branch only with `--force-with-lease` and coordinate any shared branch.
+Do not rewrite protected main during ordinary development. The maintainer-authorized English history migration is a one-time documented exception with an offline backup and commit map. Rebase a published personal PR branch only with `--force-with-lease` and coordinate any shared branch.
+
+Use your GitHub noreply address from Settings → Emails, and enable the repository's commit check:
+
+~~~powershell
+git config user.name "YourGitHubLogin"
+git config user.email "YOUR_ID+YourGitHubLogin@users.noreply.github.com"
+git config core.hooksPath .githooks
+./scripts/check-privacy.ps1
+~~~
+
+The pre-commit hook checks the author address and staged files for credential patterns and personal Windows paths. CI scans tracked files as well. Matches show only the file and category. Pattern checks are an additional guard; inspect screenshots, logs and diffs before sharing them.
 
 ~~~powershell
 dotnet restore ReStart.slnx --locked-mode
@@ -36,10 +47,10 @@ Use [native fixture checks](docs/testing.md) for changed interactions. Test mean
 
 ## Text, comments and documentation
 
-Use semantic `TextKey` identifiers with `Locales/en.json` and `ja.json`; no Japanese source strings as translation keys. Add both translations and formatting tests. OS names, user labels and script output are not translated.
+Use semantic `TextKey` identifiers with all eight `Locales/*.json` catalogs; no Japanese source strings as translation keys. Update all translations and formatting tests together. OS names and user labels are not translated.
 
 Write English XML comments for public/protected APIs. CS1591 is treated as an error in App, Core and TileHost. Explain units, side effects, invariants and caller responsibilities where they matter.
 
-English documentation is primary. Maintain the linked Japanese counterparts when changing user-facing behavior or release instructions. See [localization](docs/localization.md) and [API contracts](docs/api-contracts.md).
+English documentation is primary. Maintain linked Japanese counterparts for behavior/procedures; future release notes are English only. See [localization](docs/localization.md) and [API contracts](docs/api-contracts.md).
 
 Report ordinary defects through Issues, removing personal information from attachments. Use the [security policy](SECURITY.md) for vulnerabilities.

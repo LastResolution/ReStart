@@ -43,6 +43,7 @@ public partial class MainWindow
                         FocusAppFolder(node.Key);
                     });
                     folder.Tag = expanded ? "section" : null;
+                    if (_catalog.FolderEntry(node.FolderPath) is AppEntry directory) folder.ContextMenu = CreateAppMenu(directory);
                     _appFolderRows[node.Key] = folder;
                     button = folder;
                 }

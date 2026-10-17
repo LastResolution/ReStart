@@ -6,6 +6,19 @@ public sealed class AppPinningTests
 {
     private static readonly AppEntry App = new("app-id", "Sample app", "sample-target");
     [Fact]
+    public void DefaultPinLeavesExistingGroupsUnchangedAndExplicitDestinationStillWorks()
+    {
+        var group = new TileGroup { Name = "Existing", Column = 0, Row = 0, Tiles = [new() { Column = 2, Row = 6 }] };
+        var document = new LayoutDocument { Groups = [group] };
+        var before = GroupLayout.Pack(document.Groups, 3, 6, 52)[0];
+        var pin = AppPinning.Pin(document, App, availableColumns: 3, viewportWidth: 1000);
+        Assert.Single(group.Tiles);
+        Assert.Equal(before, GroupLayout.Pack(document.Groups, 3, 6, 52)[0]);
+        Assert.Same(pin, Assert.Single(Assert.Single(document.Groups, g => g.IsStandalone).Tiles));
+        var explicitPin = AppPinning.Pin(document, App with { Id = "second" }, group);
+        Assert.Contains(explicitPin, group.Tiles);
+    }
+    [Fact]
     public void PinCreatesAnUnnamedGroupAndPreservesLaunchIdentity()
     {
         var document = new LayoutDocument();

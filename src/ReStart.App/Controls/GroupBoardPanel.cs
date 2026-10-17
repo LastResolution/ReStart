@@ -18,7 +18,10 @@ public sealed class GroupBoardPanel : Panel
     /// <summary>Gets or sets a transient minimum height for scrolling a drag into previously empty board space.</summary>
     public double DragMinimumHeight { get; set; }
     /// <summary>Gets or sets the viewport width when horizontal scrolling measures the board with infinite available width.</summary>
-    public double ViewportWidth { get; set; } = 800;
+    public double ViewportWidth { get => (double)GetValue(ViewportWidthProperty); set => SetValue(ViewportWidthProperty, value); }
+    /// <summary>Invalidates the extent whenever either scrollbar changes the actual viewport width.</summary>
+    public static readonly DependencyProperty ViewportWidthProperty = DependencyProperty.Register(nameof(ViewportWidth), typeof(double), typeof(GroupBoardPanel),
+        new FrameworkPropertyMetadata(0d, FrameworkPropertyMetadataOptions.AffectsMeasure));
     /// <summary>Gets or sets a temporary horizontal runway extended only when a drag reaches the right edge.</summary>
     public double DragMinimumWidth { get; set; }
     /// <summary>Gets the number of group columns available at the last measure pass.</summary>
@@ -27,6 +30,8 @@ public sealed class GroupBoardPanel : Panel
     public IReadOnlyList<GroupPlacement> Placements { get; private set; } = [];
     /// <summary>Gets or sets a transient proposed group layout; null renders the persisted anchors.</summary>
     public IReadOnlyList<GroupPlacement>? DragPlacements { get; set; }
+    /// <summary>Notifies overlays that the arranged group geometry has changed.</summary>
+    public event EventHandler? PlacementChanged;
 
     /// <summary>Measures group content and the union of its logical positions, including blank gaps.</summary>
     protected override Size MeasureOverride(Size availableSize)
@@ -36,7 +41,7 @@ public sealed class GroupBoardPanel : Panel
         Placements = DragPlacements ?? GroupLayout.Pack(InternalChildren.OfType<FrameworkElement>().Select(e => e.Tag).OfType<TileGroup>(), Columns, TileColumns, Cell, expandedFolderId: ExpandedFolderId, preserveColumns: true);
         foreach (FrameworkElement child in InternalChildren)
             child.Measure(new(child.Tag is TileGroup group ? Placements.First(p => p.Group == group).Width : TileColumns * Cell, double.PositiveInfinity));
-        var height = Placements.Count == 0 ? Cell * 4 : Placements.Max(p => p.Row * Cell / 2 + p.Height);
+        var height = Placements.Count == 0 ? Cell * 4 : Placements.Max(p => p.Top + p.Height);
         var occupiedWidth = Placements.Count == 0 ? 0 : Placements.Max(p => p.Left + p.Width);
         return new(Math.Max(width, Math.Max(occupiedWidth, DragMinimumWidth)), Math.Max(height, Math.Max(MinHeight, DragMinimumHeight)));
     }
@@ -49,10 +54,11 @@ public sealed class GroupBoardPanel : Panel
             if (child.Tag is TileGroup group)
             {
                 var p = Placements.First(p => p.Group == group);
-                child.Arrange(new(p.Left, p.Row * Cell / 2, p.Width, child.DesiredSize.Height));
+                child.Arrange(new(p.Left, p.Top, p.Width, child.DesiredSize.Height));
             }
             else child.Arrange(new Rect(new Point(), child.DesiredSize));
         }
+        PlacementChanged?.Invoke(this, EventArgs.Empty);
         return finalSize;
     }
 }

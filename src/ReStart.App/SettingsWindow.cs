@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Windows;
@@ -48,7 +49,7 @@ internal sealed partial class SettingsWindow : Window
         StackPanel Section(string name)
         {
             var section = new StackPanel(); Heading(section, name);
-            var button = new Button { Content = name, HorizontalContentAlignment = HorizontalAlignment.Left, Margin = new(0, 0, 0, 4), Padding = new(12, 12, 8, 12) };
+            var button = new Button { Content = new TextBlock { Text = name, TextWrapping = TextWrapping.Wrap }, HorizontalContentAlignment = HorizontalAlignment.Stretch, Margin = new(0, 0, 0, 4), Padding = new(12, 12, 8, 12) };
             button.Click += (_, _) => { view.Content = section; view.ScrollToTop(); foreach (var b in navigationButtons) b.Background = Brushes.Transparent; button.Background = Resource("TileBrush"); };
             navigation.Children.Add(button); navigationButtons.Add(button);
             _sectionButtons[name] = button;
@@ -58,13 +59,15 @@ internal sealed partial class SettingsWindow : Window
         var content = Section(L.T(K.SettingsStartup));
         Check(content, L.T(K.SettingsWindowsKey), _draft.CaptureWindowsKey, v => _draft.CaptureWindowsKey = v);
         Note(content, L.T(K.SettingsShortcutHelp));
-        Check(content, L.T(K.SettingsStartButton), _draft.CaptureStartButton, v => _draft.CaptureStartButton = v);
-        Note(content, L.T(K.SettingsStartButtonHelp));
+        Check(content, L.T(K.SettingsStartButton), _draft.CaptureStartButton, value => _draft.CaptureStartButton = value);
         var autostart = Check(content, L.T(K.SettingsAutostart), _draft.StartWithWindows, v => _draft.StartWithWindows = v);
         autostart.IsEnabled = !main.IsPreview;
         Note(content, L.T(main.IsPreview ? K.PreviewAutostartHelp : K.StartupBackgroundHelp));
         if (!main.IsPreview && StartupRegistration.Current.Command is string command) Note(content, L.T(K.StartupCommandPrefix) + command);
         Check(content, L.T(K.SettingsCloseOnDeactivate), _draft.CloseOnDeactivate, v => _draft.CloseOnDeactivate = v);
+        var explorer = Check(content, L.T(K.ExplorerPinSetting), _draft.ExplorerContextMenu, v => _draft.ExplorerContextMenu = v);
+        explorer.IsEnabled = !main.IsPreview;
+        Note(content, L.T(K.ExplorerPinHelp));
         content = Section(L.T(K.SettingsAppearance));
         Select(content, L.T(K.SettingsTheme), new[] { L.T(K.ThemeSystem), L.T(K.ThemeDark), L.T(K.ThemeLight) }, (int)_draft.Theme, i => _draft.Theme = (ReStart.Core.ThemeMode)i);
         Check(content, L.T(K.SettingsStartAccent), _draft.ShowAccentOnStart, v => _draft.ShowAccentOnStart = v);
@@ -85,7 +88,9 @@ internal sealed partial class SettingsWindow : Window
         }
         content.Children.Add(new TextBlock { Text = L.T(K.SettingsAccent), Margin = new(0, 8, 0, 0) }); content.Children.Add(colors);
         content = Section(L.T(K.SettingsLanguage));
-        Select(content, L.T(K.SettingsDisplayLanguage), new[] { L.T(K.ThemeSystem), L.T(K.LanguageJapanese), "English" }, _draft.Language == "ja" ? 1 : _draft.Language == "en" ? 2 : 0, i => _draft.Language = i == 1 ? "ja" : i == 2 ? "en" : "system");
+        var languages = new[] { "system" }.Concat(TextCatalog.SupportedLanguages).ToArray();
+        Select(content, L.T(K.SettingsDisplayLanguage), new[] { L.T(K.ThemeSystem) }.Concat(TextCatalog.SupportedLanguages.Select(tag => CultureInfo.GetCultureInfo(tag).NativeName)).ToArray(),
+            Math.Max(0, Array.IndexOf(languages, _draft.Language)), i => _draft.Language = languages[i]);
         Note(content, L.T(K.SettingsLanguageHelp));
         content = Section(L.T(K.SettingsLayout));
         Note(content, L.T(K.SettingsLayoutHelp));
@@ -98,6 +103,41 @@ internal sealed partial class SettingsWindow : Window
         Note(content, L.T(K.SettingsPrivacy));
         BuildMigrationInfo(content);
         content = Section(L.T(K.SettingsScriptTiles));
+        Heading(content, L.T(K.BundledTiles));
+        var bundled = new WrapPanel { Margin = new(0, 0, 0, 16) };
+        foreach (var id in ScriptTilePackages.BundledIds)
+        {
+            try
+            {
+                var manifest = ScriptTilePackages.BundledManifest(id);
+                var titleText = manifest.LocalizedTitles.GetValueOrDefault(L.Language, manifest.Title);
+                var button = new Button
+                {
+                    Content = new TextBlock { Text = titleText, TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center },
+                    Width = 152,
+                    Height = 70,
+                    Margin = new(0, 0, 8, 8),
+                    Foreground = Brushes.White,
+                    ToolTip = L.F(K.AddBundledTile, titleText)
+                };
+                var color = manifest.Settings.TryGetProperty("color", out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
+                if (color?.Length != 7 || color[0] != '#' || !color.Skip(1).All(Uri.IsHexDigit)) color = "#0078D7";
+                button.Background = (Brush)new BrushConverter().ConvertFromString(color!)!;
+                if (SystemParameters.HighContrast) { button.Background = SystemColors.WindowBrush; button.Foreground = SystemColors.WindowTextBrush; }
+                button.Click += (_, _) =>
+                {
+                    var tile = _main.AddBundledScriptTile(id);
+                    if (tile == null) return;
+                    if (manifest.Capabilities.Contains("images.slideshow")) _main.ChooseSlideshowFolder(tile, this);
+                    _feedback.Text = L.T(K.StatusScriptAdded);
+                };
+                bundled.Children.Add(button);
+            }
+            catch (Exception ex) when (ex is IOException or InvalidDataException or System.Text.Json.JsonException) { }
+        }
+        content.Children.Add(bundled);
+        BuildTileLibrary(content);
+        Note(content, L.T(K.SystemMetricsHelp));
         Note(content, L.T(K.ScriptAuthoringHelp));
         var scriptButtons = new WrapPanel();
         DataButton(scriptButtons, L.T(K.CreateScriptSample), () => { _main.CreateScriptTile(); _feedback.Text = L.T(K.StatusScriptAdded); });
@@ -108,8 +148,6 @@ internal sealed partial class SettingsWindow : Window
         BuildUpdates(content);
         content = Section(L.T(K.SettingsAbout));
         BuildAbout(content);
-        Heading(content, L.T(K.AboutScope));
-        Note(content, L.T(K.AboutCompatibility));
         var links = new WrapPanel { Margin = new(0, 10, 0, 0) };
         DataButton(links, "GitHub / README", () => ShellLauncher.Launch("https://github.com/LastResolution/ReStart"));
         DataButton(links, L.T(K.OpenWindowsSettings), () => ShellLauncher.Launch("ms-settings:"));
@@ -132,7 +170,7 @@ internal sealed partial class SettingsWindow : Window
     private static void Select(Panel panel, string label, string[] options, int index, Action<int> changed)
     {
         var row = new DockPanel { Margin = new(0, 10, 0, 7) };
-        row.Children.Add(new TextBlock { Text = label, Width = 170, VerticalAlignment = VerticalAlignment.Center });
+        row.Children.Add(new TextBlock { Text = label, Width = 170, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center });
         var select = new ComboBox { ItemsSource = options, SelectedIndex = index, MinWidth = 180, HorizontalAlignment = HorizontalAlignment.Left, Padding = new(6) };
         select.SelectionChanged += (_, _) => changed(select.SelectedIndex); row.Children.Add(select); panel.Children.Add(row);
     }

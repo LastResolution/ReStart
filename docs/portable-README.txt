@@ -1,38 +1,27 @@
 ReStart v@VERSION@
-Full-screen Start, again.
-Japanese instructions: README.ja.txt
+Full-screen Start, again. Japanese: README.ja.txt
 
-Run ReStart.exe. No separate .NET install or administrator permission is needed.
-Keep TileHost, Examples and third-party with the main executable.
-Open with the bare Windows key, Ctrl+Alt+Space or the tray icon.
-Settings: gear on the left rail. Exit: ReStart tray menu.
-Sign-in startup is optional and initially disabled.
+Run ReStart.exe. Keep TileHost, Examples, third-party and license notices.
+The portable package includes .NET; normal use needs no administrator rights.
+Open with Windows key, taskbar Start button, Ctrl+Alt+Space or tray icon.
+Settings: left gear. Exit: tray menu. Sign-in startup is optional.
 
-Drag tiles within/between groups. Dropping in empty board space detaches an
-independent tile without a group header. Drag headers to move whole groups.
-Double-click a group name to edit inline. Hover over a tile center for about
-one second before dropping to create a folder; contents open inline.
-Right-click an app in All apps to pin it. Type from home to search.
+Drag tiles/groups; empty-space drops create independent pins. Double-click
+group names to edit. Hover about one second over a tile to make a folder.
+Type immediately to search. Explorer: Pin to ReStart (Windows 11: Show more options).
+Settings -> JavaScript tiles: twelve bundled examples. Normal click operates
+the tile; use right-click to edit JS/settings or choose a photo folder.
+Host APIs provide PC time and aggregate metrics, without script file/network access.
 
-Settings -> About: version/build and license texts.
-Settings -> Layout and data: upgrade record and rollback backup.
-Settings -> Updates: manual/startup checks. Private releases require a
-repository-scoped GitHub Contents:read token saved in Windows Credential Manager.
-Checks do not install updates. Exit, extract the complete ZIP and restart.
+Eight UI languages; dark/light/system/high-contrast themes.
+Settings -> About: version and licenses. Layout/data: migration and rollback.
+Updates: public GitHub checks without API keys; download/install manually.
+Data: %LOCALAPPDATA%\ReStart\layout.json; schema 1-3 upgrade to 4 with backups.
+Layout export excludes JS sources and photo-folder bindings; keep tiles separately.
 
-Data: %LOCALAPPDATA%\ReStart\layout.json
-Schema 1/2 upgrade to schema 3 with durable original backups.
-Before downgrading, exit and restore a backup matching the older schema.
-Keep custom tile sources separately; layout export does not include them.
-
-Remove: disable sign-in startup, remove any saved update token if desired,
-exit ReStart and delete its extracted installation. Local data is separate.
-
-This is an unsigned development prerelease and independent implementation.
-Legacy UWP notifications, full Windows Search and Jump Lists are unavailable.
-Start-button capture is experimental. Physical Win-key/taskbar sequences,
-Windows 10 22H2 comparison, ARM64 hardware and mixed DPI remain unverified.
-
-Source, build instructions and limitations:
+Remove: disable startup and Explorer integration, exit, delete installation.
+Local data remains separately. Packages are unsigned. MIT License.
+ReStart is independent of Microsoft. Source, build and implementation details:
 https://github.com/LastResolution/ReStart
-MIT License. Windows/app names and icons belong to their respective owners.
+
+Tile library: place package folders in %LOCALAPPDATA%\ReStart\TileLibrary; Settings discovers them automatically.

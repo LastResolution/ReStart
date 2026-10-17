@@ -5,6 +5,8 @@ namespace ReStart.App.Services;
 internal static class Native
 {
     internal delegate nint HookProc(int code, nint wParam, nint lParam);
+    internal delegate bool EnumWindowProc(nint window, nint parameter);
+    [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] internal static extern bool EnumWindows(EnumWindowProc callback, nint parameter);
     [StructLayout(LayoutKind.Sequential)] internal struct Point { public int X; public int Y; }
     [StructLayout(LayoutKind.Sequential)] internal struct KeyboardData { public uint VkCode, ScanCode, Flags, Time; public nuint Extra; }
     [StructLayout(LayoutKind.Sequential)] internal struct MouseData { public Point Point; public uint Mouse, Flags, Time; public nuint Extra; }
@@ -41,4 +43,9 @@ internal static class Native
     [DllImport("user32.dll")] internal static extern nint GetAncestor(nint window, uint flags);
     [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] internal static extern bool LockWorkStation();
     [DllImport("user32.dll")] internal static extern nint GetForegroundWindow();
+    [DllImport("user32.dll")] internal static extern uint GetWindowThreadProcessId(nint window, out uint processId);
+    [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] internal static extern bool AttachThreadInput(uint from, uint to, bool attach);
+    [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] internal static extern bool IsHungAppWindow(nint window);
+    [DllImport("user32.dll")] internal static extern nint SendMessageTimeout(nint window, uint message, nuint wp, nint lp, uint flags, uint timeout, out nuint result);
+    [DllImport("user32.dll")] internal static extern nint SetFocus(nint window);
 }

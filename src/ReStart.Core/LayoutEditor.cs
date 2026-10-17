@@ -3,6 +3,38 @@ namespace ReStart.Core;
 /// <summary>Applies layout mutations while preserving tile identifiers and folder ownership.</summary>
 public static class LayoutEditor
 {
+    /// <summary>Adds a new independent pin in free board space without resizing groups or displacing existing entries.</summary>
+    /// <param name="document">Document receiving the new pin.</param>
+    /// <param name="tile">New tile, not already present in the document.</param>
+    /// <param name="availableColumns">Number of group columns in the current viewport.</param>
+    /// <param name="cell">Tile-cell size in DIPs.</param>
+    /// <param name="viewportWidth">Available board width in DIPs.</param>
+    /// <param name="preferredTop">Current vertical scroll offset in DIPs.</param>
+    /// <returns>The newly created independent entry.</returns>
+    public static TileGroup PinIndependent(LayoutDocument document, Tile tile, int availableColumns, double cell, double viewportWidth, double preferredTop = 0)
+    {
+        if (Find(document, tile.Id) != null) throw new ArgumentException("The tile is already pinned.", nameof(tile));
+        var placed = GroupLayout.Pack(document.Groups, availableColumns, document.Preferences.Columns, cell, preserveColumns: true);
+        var (w, h) = TileLayout.Dimensions(tile.Size); var width = w * cell; var height = h * cell;
+        var half = cell / 2; var gap = GroupLayout.Gap;
+        var preferred = Math.Max(0, Math.Ceiling((preferredTop - GroupLayout.HeaderHeight) / half));
+        var rows = placed.Select(p => Math.Max(preferred, Math.Ceiling((p.Top + p.Height + gap - GroupLayout.HeaderHeight) / half))).Append(preferred).Distinct().Order();
+        var xs = placed.Select(p => Math.Ceiling((p.Left + p.Width + gap) / half) * half).Append(0).Distinct().Order()
+            .Where(x => x + width <= Math.Max(width, viewportWidth)).ToArray();
+        foreach (var row in rows)
+            foreach (var left in xs)
+            {
+                var top = GroupLayout.HeaderHeight + row * half;
+                if (placed.Any(p => left < p.Left + p.Width + gap && left + width + gap > p.Left && top < p.Top + p.Height + gap && top + height + gap > p.Top)) continue;
+                foreach (var p in placed) { p.Group.Column = p.Column; p.Group.Row = p.Row; }
+                tile.Column = 0; tile.Row = 0;
+                var column = Math.Clamp((int)(left / (document.Preferences.Columns * cell + gap)), 0, 63);
+                var entry = new TileGroup { IsStandalone = true, Name = "", Column = column, Row = (int)row, X = left / cell, Tiles = [tile] };
+                document.Groups.Add(entry); return entry;
+            }
+        throw new InvalidOperationException("No free board position was found.");
+    }
+
     /// <summary>Detaches a root or folder child as one independent board tile, preserving its identity and freezing existing visible anchors.</summary>
     public static TileGroup Detach(LayoutDocument document, Tile tile, int column, int row, int tileColumn, int availableColumns, double cell, double? x = null)
     {

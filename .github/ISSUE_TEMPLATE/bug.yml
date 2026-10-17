@@ -1,28 +1,53 @@
 name: Bug report
 description: Report a reproducible problem. English or Japanese is welcome.
+title: "[Bug]: "
 labels: [bug]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues first. Do not post access tokens, personal paths, app lists or a complete layout file.
+        Report vulnerabilities privately through [Security advisories](https://github.com/LastResolution/ReStart/security/advisories/new).
+  - type: input
+    id: version
+    attributes:
+      label: ReStart version
+      description: Copy version/build from Settings → About. For source builds, include the commit ID.
+      placeholder: 0.6.0 / portable win-x64
+    validations:
+      required: true
   - type: textarea
     id: behavior
     attributes:
       label: Expected and actual behavior
+      description: Include frequency and whether reopening ReStart changes the result.
     validations:
       required: true
   - type: textarea
     id: steps
     attributes:
       label: Steps to reproduce
+      description: Include the starting view, input method and exact sequence. For layout issues, include tile sizes and neighboring groups.
+      placeholder: |
+        1. Open ReStart.
+        2. ...
+        3. ...
     validations:
       required: true
   - type: input
     id: environment
     attributes:
       label: Environment
-      description: ReStart version/build, Windows build, DPI and monitor configuration
+      description: Windows version/build (winver), x64 or ARM64, display scaling, monitor count and primary monitor.
     validations:
       required: true
   - type: textarea
     id: evidence
     attributes:
       label: Screenshots or logs
-      description: Remove personal app names, usernames, paths, layouts and credentials.
+      description: Optional. Crop unrelated windows; remove personal app names, usernames, paths, layouts and credentials.
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Optional. Theme, language, relevant settings or last working version.

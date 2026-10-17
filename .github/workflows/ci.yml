@@ -24,6 +24,10 @@ jobs:
         with:
           dotnet-version: 10.0.x
       - run: dotnet restore ReStart.slnx --locked-mode
+      - name: Check tracked files for credentials and personal paths
+        run: ./scripts/check-privacy.ps1
+      - name: Verify privacy guard rejection cases
+        run: ./scripts/test-privacy.ps1
       - run: dotnet format whitespace ReStart.slnx --verify-no-changes --no-restore
       - run: dotnet build ReStart.slnx -c Release --no-restore
       - run: dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory artifacts/test-results
@@ -35,10 +39,18 @@ jobs:
         run: ./scripts/test-first-input.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
       - name: Verify app menus and read canonical shell commands
         run: ./scripts/test-app-menus.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
-      - name: Verify version, licenses, migration and bilingual settings
+      - name: Verify version, licenses, migration and multilingual settings
         run: ./scripts/test-release-info.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
       - name: Verify group placement and inline naming
         run: ./scripts/test-placement.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+      - name: Verify independent scroll axes and themed scrollbars
+        run: ./scripts/test-scrolling.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+      - name: Verify cold and running-instance filesystem pinning
+        run: ./scripts/test-file-pinning.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+      - name: Verify bundled tile rendering and local interactions
+        run: ./scripts/test-bundled-tiles.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+      - name: Verify Shell icon sizes and transient status messages
+        run: ./scripts/test-icons.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
@@ -53,6 +65,12 @@ jobs:
             artifacts/release-info/start.json
             artifacts/placement/*/*.png
             artifacts/placement/*/placement.json
+            artifacts/scrolling/*/*.png
+            artifacts/scrolling/*/scroll.json
+            artifacts/bundled-tiles/*/*.png
+            artifacts/bundled-tiles/*/start.json
+            artifacts/icons/*/icons-*.png
+            artifacts/icons/*/start.json
           retention-days: 14
           if-no-files-found: warn
 

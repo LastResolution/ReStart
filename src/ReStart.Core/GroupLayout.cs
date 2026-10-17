@@ -1,7 +1,7 @@
 namespace ReStart.Core;
 
 /// <summary>Describes a group anchor, logical height and exact visible height, excluding trailing spacing.</summary>
-public readonly record struct GroupPlacement(TileGroup Group, int Column, int Row, int Rows, double Height, double Left, double Width);
+public readonly record struct GroupPlacement(TileGroup Group, int Column, int Row, int Rows, double Height, double Left, double Width, double Top);
 
 /// <summary>Places groups independently in columns, preserving explicit gaps and displacing only overlapping groups.</summary>
 public static class GroupLayout
@@ -20,52 +20,123 @@ public static class GroupLayout
         (Math.Clamp((int)Math.Round(x / (tileColumns * cell + Gap), MidpointRounding.AwayFromZero), 0, columns - 1),
          Math.Clamp((int)Math.Round(y / (cell / 2), MidpointRounding.AwayFromZero), 0, 20000));
 
-    /// <summary>Returns group bounds without mutating stored anchors; narrow screens reflow off-screen columns for display.</summary>
+    /// <summary>Snaps a named group beside a nearby visible edge, leaving an explicit gap without enlarging collision bounds.</summary>
+    public static double SnapBeside(IEnumerable<GroupPlacement> placements, TileGroup moving, double left, double top, double width, double height, double cell)
+    {
+        var candidates = placements.Where(p => p.Group != moving && !(moving.IsStandalone && p.Group.IsStandalone) && top < p.Top + p.Height && top + height > p.Top)
+            .SelectMany(p => new[] { p.Left + p.Width + Gap, p.Left - width - Gap })
+            .Where(x => x >= 0 && Math.Abs(x - left) <= Gap + cell / 4)
+            .OrderBy(x => Math.Abs(x - left)).ThenBy(x => x).ToArray();
+        return candidates.Length == 0 ? left : candidates[0];
+    }
+
+    /// <summary>Snaps above or below a nearby group boundary, rounding outward to retain at least the group gap.</summary>
+    public static int SnapRow(IEnumerable<GroupPlacement> placements, TileGroup moving, double left, int row, double width, double height, double cell)
+    {
+        var offset = moving.IsStandalone ? HeaderHeight : 0; var half = cell / 2;
+        var top = offset + row * half;
+        var candidates = placements.Where(p => p.Group != moving && !(moving.IsStandalone && p.Group.IsStandalone)
+                && left < p.Left + p.Width && left + width > p.Left)
+            .SelectMany(p => new[] { (int)Math.Ceiling((p.Top + p.Height + Gap - offset) / half),
+                (int)Math.Floor((p.Top - height - Gap - offset) / half) })
+            .Where(r => r is >= 0 and <= 20000 && Math.Abs(offset + r * half - top) <= Gap + half)
+            .OrderBy(r => Math.Abs(r - row)).ThenBy(r => r).ToArray();
+        return candidates.Length == 0 ? row : candidates[0];
+    }
+
+    /// <summary>Finds a named group within one small cell of its visible edges for a transient adjacent-cell insertion target.</summary>
+    public static TileGroup? DropRecipient(IEnumerable<GroupPlacement> placements, double x, double y, double cell)
+    {
+        return placements.Where(p => !p.Group.IsStandalone)
+            .Select(p => (p.Group, Dx: Math.Max(0, Math.Max(p.Left - x, x - p.Left - p.Width)),
+                Dy: Math.Max(0, Math.Max(p.Top - y, y - p.Top - p.Height))))
+            .Where(p => p.Dx <= cell && p.Dy <= cell)
+            .OrderBy(p => p.Dx * p.Dx + p.Dy * p.Dy).ThenBy(p => p.Group.Id, StringComparer.Ordinal)
+            .Select(p => p.Group).FirstOrDefault();
+    }
+
+    /// <summary>Returns the content-sized rectangular group footprint, including its header and any expanded folder.</summary>
+    public static IReadOnlyList<GroupArea> OccupiedAreas(TileGroup group, int tileColumns, double cell, string? expandedFolderId = null)
+    {
+        var tiles = TileLayout.Pack(group.Tiles, tileColumns);
+        var expansion = FolderExpansion.Create(tiles, tileColumns, expandedFolderId);
+        if (group.IsStandalone && tiles.Count == 1 && expansion == null)
+            return [new(0, 0, tiles[0].Width * cell, tiles[0].Height * cell)];
+        var width = (expansion != null ? tileColumns : Math.Max(1, tiles.Count == 0 ? 0 : tiles.Max(t => t.Column + t.Width))) * cell;
+        var rows = Math.Max(1, tiles.Count == 0 ? 0 : tiles.Max(t => t.Row + t.Height));
+        var height = (group.IsStandalone ? 0 : HeaderHeight) + rows * cell + (expansion?.ExtraHeight(cell) ?? 0);
+        return [new(0, 0, width, height)];
+    }
+
+    /// <summary>Returns group bounds without mutating anchors; folder expansion temporarily pushes neighbors around its fixed opening anchor.</summary>
     public static IReadOnlyList<GroupPlacement> Pack(IEnumerable<TileGroup> groups, int columns, int tileColumns, double cell, TileGroup? priority = null, string? expandedFolderId = null, bool preserveColumns = false)
     {
         if (columns is < 1 or > 64 || !double.IsFinite(cell) || cell <= 0) throw new ArgumentOutOfRangeException(nameof(columns));
         var items = groups.ToArray();
+        var owner = expandedFolderId == null ? null : items.FirstOrDefault(g => g.Tiles.Any(t => t.Id == expandedFolderId && t.IsFolder));
+        if (owner == null) return PackCore(items, columns, tileColumns, cell, priority, null, preserveColumns);
+        var baseline = PackCore(items, columns, tileColumns, cell, null, null, preserveColumns);
+        var shadows = baseline.Select(p => new TileGroup
+        {
+            IsStandalone = p.Group.IsStandalone,
+            Tiles = p.Group.Tiles,
+            Column = p.Column,
+            Row = p.Row,
+            X = p.Group.X ?? p.Column * (tileColumns * cell + Gap) / cell
+        }).ToArray();
+        var originals = shadows.Select((shadow, i) => (shadow, original: baseline[i].Group)).ToDictionary(p => p.shadow, p => p.original);
+        var opening = shadows[Array.FindIndex(items, g => g == owner)];
+        return PackCore(shadows, columns, tileColumns, cell, opening, expandedFolderId, true)
+            .Select(p => p with { Group = originals[p.Group] }).ToArray();
+    }
+
+    private static IReadOnlyList<GroupPlacement> PackCore(TileGroup[] items, int columns, int tileColumns, double cell, TileGroup? priority, string? expandedFolderId, bool preserveColumns)
+    {
         var placed = new Dictionary<TileGroup, GroupPlacement>();
+        var regions = items.ToDictionary(g => g, g => OccupiedAreas(g, tileColumns, cell, expandedFolderId));
         (double Offset, double Width, double Height) Bounds(TileGroup group)
         {
             var tiles = TileLayout.Pack(group.Tiles, tileColumns);
-            var expansion = FolderExpansion.Create(tiles, tileColumns, expandedFolderId);
-            if (group.IsStandalone && tiles.Count == 1 && expansion == null)
-                return (tiles[0].Column * cell, tiles[0].Width * cell, tiles[0].Height * cell);
-            var width = expansion != null ? tileColumns : Math.Max(1, tiles.Count == 0 ? 0 : tiles.Max(t => t.Column + t.Width));
-            return (0, width * cell, Height(group));
+            var compact = group.IsStandalone && tiles.Count == 1 && FolderExpansion.Create(tiles, tileColumns, expandedFolderId) == null;
+            var areas = regions[group];
+            return (compact ? tiles[0].Column * cell : 0, areas.Max(a => a.Right), areas.Max(a => a.Bottom));
         }
-        double Height(TileGroup group)
+        int FreeRow(TileGroup group, double left, int row, double topOffset, bool automatic = false)
         {
-            var tiles = TileLayout.Pack(group.Tiles, tileColumns);
-            var rows = Math.Max(1, tiles.Count == 0 ? 0 : tiles.Max(t => t.Row + t.Height));
-            var expansion = FolderExpansion.Create(tiles, tileColumns, expandedFolderId);
-            return (group.IsStandalone ? 0 : HeaderHeight) + rows * cell + (expansion?.ExtraHeight(cell) ?? 0);
-        }
-        int FreeRow(double left, double width, int row, double height, bool automatic = false)
-        {
-            var spacing = automatic ? Gap : 0;
+            var localAreas = automatic ? new[] { new GroupArea(0, 0, Bounds(group).Width, Bounds(group).Height) } : regions[group];
+            var expanding = expandedFolderId != null && group.Tiles.Any(t => t.Id == expandedFolderId);
             while (true)
             {
-                var overlap = placed.Values.Where(p => left < p.Left + p.Width && left + width > p.Left && row * cell / 2 < p.Row * cell / 2 + p.Height + spacing
-                    && row * cell / 2 + height + spacing > p.Row * cell / 2).ToArray();
-                if (overlap.Length == 0) return row;
-                row = (int)Math.Ceiling(overlap.Max(p => p.Row * cell / 2 + p.Height + spacing) / (cell / 2));
+                var top = topOffset + row * cell / 2;
+                var collisions = from a in localAreas
+                                 from p in placed.Values
+                                 from b in automatic ? new[] { new GroupArea(0, 0, p.Width, p.Height) } : regions[p.Group]
+                                 let spacing = automatic || expanding || expandedFolderId != null && p.Group.Tiles.Any(t => t.Id == expandedFolderId) ? Gap : 0
+                                 where left + a.Left < p.Left + b.Right && left + a.Right > p.Left + b.Left
+                                    && top + a.Top < p.Top + b.Bottom + spacing && top + a.Bottom + spacing > p.Top + b.Top
+                                 select (int)Math.Ceiling((p.Top + b.Bottom + spacing - a.Top - topOffset) / (cell / 2));
+                var next = collisions.DefaultIfEmpty(row).Max();
+                if (next <= row) return row;
+                row = next;
             }
         }
-        foreach (var group in items.Where(g => g.Column.HasValue && g.Row.HasValue).OrderByDescending(g => g == priority))
+        foreach (var group in items.Where(g => g.Column.HasValue && g.Row.HasValue).OrderByDescending(g => g == priority)
+                     .ThenBy(g => (g.IsStandalone ? HeaderHeight : 0) + g.Row!.Value * cell / 2))
         {
             var column = Math.Clamp(group.Column!.Value, 0, preserveColumns ? 63 : columns - 1);
             var (offset, width, height) = Bounds(group);
             var left = (group.X * cell ?? column * (tileColumns * cell + Gap)) + offset;
-            placed[group] = new(group, column, FreeRow(left, width, Math.Max(0, group.Row!.Value), height), (int)Math.Ceiling(height / (cell / 2)), height, left, width);
+            var topOffset = group.IsStandalone ? HeaderHeight : 0;
+            var row = FreeRow(group, left, Math.Max(0, group.Row!.Value), topOffset);
+            placed[group] = new(group, column, row, (int)Math.Ceiling(height / (cell / 2)), height, left, width, topOffset + row * cell / 2);
         }
         foreach (var group in items.Where(g => !placed.ContainsKey(g)))
         {
             var (offset, width, height) = Bounds(group);
+            var topOffset = group.IsStandalone ? HeaderHeight : 0;
             var target = Enumerable.Range(0, columns).Select(c => (Column: c, Left: c * (tileColumns * cell + Gap) + offset))
-                .Select(p => (p.Column, p.Left, Row: FreeRow(p.Left, width, 0, height, true))).OrderBy(p => p.Row).ThenBy(p => p.Column).First();
-            placed[group] = new(group, target.Column, target.Row, (int)Math.Ceiling(height / (cell / 2)), height, target.Left, width);
+                .Select(p => (p.Column, p.Left, Row: FreeRow(group, p.Left, 0, topOffset, true))).OrderBy(p => p.Row).ThenBy(p => p.Column).First();
+            placed[group] = new(group, target.Column, target.Row, (int)Math.Ceiling(height / (cell / 2)), height, target.Left, width, topOffset + target.Row * cell / 2);
         }
         return items.Select(g => placed[g]).ToArray();
     }
@@ -97,4 +168,13 @@ public static class GroupLayout
         { p.Group.Column = p.Column; p.Group.Row = p.Row; }
         group.X = x;
     }
+}
+
+/// <summary>One occupied local rectangle used consistently for group collision and native hit testing.</summary>
+public readonly record struct GroupArea(double Left, double Top, double Width, double Height)
+{
+    /// <summary>Gets the exclusive right edge.</summary>
+    public double Right => Left + Width;
+    /// <summary>Gets the exclusive bottom edge.</summary>
+    public double Bottom => Top + Height;
 }

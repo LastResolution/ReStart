@@ -21,7 +21,6 @@ App, Core and TileHost emit XML documentation. Missing public/protected comments
 | StartIntegration | Short hooks; dispatch WPF work; release registrations on exit |
 | StartupRegistration | Update one current-user Run value; preserve value and kind for rollback |
 | ReleaseVersion / ReleaseClient | Validate versions and bounded release data; require architecture ZIP plus checksum; distinguish access, rate, network and invalid-data failures |
-| ReleaseCredentialStore | Current-user generic credential; never serialize, prefill or log the token |
 | ScriptTilePackages | Resolve installed GUIDs; a layout cannot execute an arbitrary JS path |
 | JsTileRunner | New realm each render; expose JSON only |
 | ScriptTileSession | One request at a time; bounded asynchronous IPC and an independent parent deadline |
@@ -30,3 +29,7 @@ App, Core and TileHost emit XML documentation. Missing public/protected comments
 Screen coordinates use WPF DIPs; persisted tile cells are logical integers; group rows use half-cell steps; JavaScript progress is 0–1. Display-only reflow, preview and folder expansion must not modify persistence.
 
 Changes to schemas or protocols require round-trip and backward-input tests, documented migration/rollback behavior, and an explicit compatibility decision. UI strings must never determine whether a file is safe to overwrite.
+
+## Live-tile host additions (v0.6)
+
+See [the complete JS contract](javascript-tiles.md) for optional capability-gated metrics, opaque image binding, PC time, local click events and validated native visuals. Four workers serve every visible tile. Source/manifest import never copies host-bindings.json. New custom pins are placed in free independent board space.

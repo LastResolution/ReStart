@@ -55,5 +55,6 @@ Copy-Item -LiteralPath (Find-RuntimeNotice "Microsoft.WindowsDesktop.App.Runtime
 Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $zipPath -Force
 $hash = (Get-FileHash -LiteralPath $zipPath -Algorithm SHA256).Hash.ToLowerInvariant()
 [IO.File]::WriteAllText("$zipPath.sha256", "$hash  $([IO.Path]::GetFileName($zipPath))`n", [Text.UTF8Encoding]::new($false))
+& (Join-Path $PSScriptRoot 'check-privacy.ps1') -Package $zipPath
 Write-Output $zipPath
 Write-Output "SHA256: $hash"

@@ -12,24 +12,27 @@ internal sealed class StartIntegration : IDisposable
     private readonly Dispatcher _dispatcher;
     private readonly Action _toggle;
     private readonly Action _dismiss;
+    private readonly Action<Native.Point> _toggleFromStart;
     private readonly Native.HookProc _keyboardCallback;
     private readonly Native.HookProc _mouseCallback;
     private WindowsKeyState _keys = new();
     private nint _keyboard, _mouse;
     private readonly HwndSource _source;
-    private bool _mouseDown;
+    private readonly StartButtonLocator _startButtons = new();
     private volatile bool _captureStart;
+    private readonly StartButtonPress _startPress = new();
     private volatile bool _captureWindows;
     private volatile bool _menuOpen, _dismissOnTaskbar;
     private readonly Thread _hookThread;
     private uint _hookThreadId;
     public string? Status { get; private set; }
 
-    public StartIntegration(nint handle, Dispatcher dispatcher, Action toggle, Action dismiss)
+    public StartIntegration(nint handle, Dispatcher dispatcher, Action toggle, Action dismiss, Action<Native.Point> toggleFromStart)
     {
         _dispatcher = dispatcher;
         _toggle = toggle;
         _dismiss = dismiss;
+        _toggleFromStart = toggleFromStart;
         _keyboardCallback = KeyboardHook;
         _mouseCallback = MouseHook;
         _source = HwndSource.FromHwnd(handle)!;
@@ -65,11 +68,12 @@ internal sealed class StartIntegration : IDisposable
     {
         _captureWindows = preferences.CaptureWindowsKey;
         _captureStart = preferences.CaptureStartButton;
+        _startButtons.SetEnabled(_captureStart);
         _dismissOnTaskbar = preferences.CloseOnDeactivate;
         Native.PostThreadMessage(_hookThreadId, 0x8001, 0, 0);
     }
 
-    /// <summary>Installs taskbar-dismiss detection only while the menu is visible unless Start-button capture also needs it.</summary>
+    /// <summary>Installs taskbar-dismiss detection only while the menu is visible.</summary>
     public void SetMenuOpen(bool visible)
     {
         _menuOpen = visible;
@@ -84,7 +88,7 @@ internal sealed class StartIntegration : IDisposable
             if (_keyboard == 0) Status = L.T(K.ErrorWindowsKeyCapture) + new Win32Exception(Marshal.GetLastWin32Error()).Message;
         }
         if (!_captureWindows && _keyboard != 0) { Native.UnhookWindowsHookEx(_keyboard); _keyboard = 0; _keys = new(); }
-        var needMouse = _captureStart || _dismissOnTaskbar && _menuOpen;
+        var needMouse = _captureStart || _startPress.IsPressed || _dismissOnTaskbar && _menuOpen;
         if (needMouse && _mouse == 0) _mouse = Native.SetWindowsHookEx(14, _mouseCallback, Native.GetModuleHandle(null), 0);
         if (!needMouse && _mouse != 0) { Native.UnhookWindowsHookEx(_mouse); _mouse = 0; }
     }
@@ -115,22 +119,15 @@ internal sealed class StartIntegration : IDisposable
 
     private nint MouseHook(int code, nint wp, nint lp)
     {
-        if (code >= 0 && _captureStart && wp is 0x201 or 0x202)
+        if (code >= 0 && wp is 0x201 or 0x202)
         {
-            var data = Marshal.PtrToStructure<Native.MouseData>(lp);
-            if (wp == 0x202 && _mouseDown) { _mouseDown = false; QueueToggle(); return 1; }
-            if (wp == 0x201)
+            var point = Marshal.PtrToStructure<Native.MouseData>(lp).Point;
+            switch (_startPress.Process(wp == 0x201, _captureStart && _startButtons.Contains(point), _captureStart))
             {
-                // Only Explorer's actual native Start button; never guess a screen coordinate.
-                var window = Native.WindowFromPoint(data.Point);
-                var name = new System.Text.StringBuilder(128);
-                Native.GetClassName(window, name, 128);
-                if (name.ToString() == "Start")
-                {
-                    var rootName = new System.Text.StringBuilder(128);
-                    Native.GetClassName(Native.GetAncestor(window, 2), rootName, 128);
-                    if (rootName.ToString() is "Shell_TrayWnd" or "Shell_SecondaryTrayWnd") { _mouseDown = true; return 1; }
-                }
+                case StartButtonAction.Toggle:
+                    _dispatcher.BeginInvoke(() => _toggleFromStart(point), DispatcherPriority.Send);
+                    return 1;
+                case StartButtonAction.Suppress: return 1;
             }
         }
         if (code >= 0 && _menuOpen && _dismissOnTaskbar && wp is 0x201 or 0x204 or 0x207)
@@ -145,10 +142,11 @@ internal sealed class StartIntegration : IDisposable
         return Native.CallNextHookEx(_mouse, code, wp, lp);
     }
 
-    private void QueueToggle() => _dispatcher.BeginInvoke(_toggle, DispatcherPriority.Input);
+    private void QueueToggle() => _dispatcher.BeginInvoke(_toggle, DispatcherPriority.Send);
 
     public void Dispose()
     {
+        _startButtons.Dispose();
         Native.PostThreadMessage(_hookThreadId, 0x12, 0, 0);
         _hookThread.Join(TimeSpan.FromSeconds(1));
         Native.UnregisterHotKey(_source.Handle, 0x5253);

@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "title": "Memory flow",
+  "localizedTitles": {
+    "en": "Memory flow",
+    "ja": "メモリモニター",
+    "de": "Arbeitsspeicher",
+    "fr": "Mémoire vive",
+    "es": "Memoria",
+    "ko": "메모리 모니터",
+    "zh-Hans": "内存流量",
+    "zh-Hant": "記憶體用量"
+  },
+  "refreshSeconds": 1,
+  "capabilities": [
+    "system.metrics"
+  ],
+  "settings": {
+    "color": "#4D307B",
+    "colorEnd": "#201D3C",
+    "accent": "#D8B4FE",
+    "labels": {
+      "en": {
+        "caption": "Memory flow",
+        "waiting": "Waiting for a sample"
+      },
+      "ja": {
+        "caption": "メモリモニター",
+        "waiting": "データ取得中"
+      },
+      "de": {
+        "caption": "Arbeitsspeicher",
+        "waiting": "Messung wird geladen"
+      },
+      "fr": {
+        "caption": "Mémoire vive",
+        "waiting": "Mesure en cours"
+      },
+      "es": {
+        "caption": "Memoria",
+        "waiting": "Esperando una muestra"
+      },
+      "ko": {
+        "caption": "메모리 모니터",
+        "waiting": "데이터 수집 중"
+      },
+      "zh-Hans": {
+        "caption": "内存流量",
+        "waiting": "正在获取数据"
+      },
+      "zh-Hant": {
+        "caption": "記憶體用量",
+        "waiting": "正在取得資料"
+      }
+    }
+  }
+}

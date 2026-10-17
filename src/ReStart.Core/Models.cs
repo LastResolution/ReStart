@@ -46,8 +46,10 @@ public sealed class Tile
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     /// <summary>Gets or sets the source application identity or built-in tile identity.</summary>
     public string AppId { get; set; } = "";
-    /// <summary>Gets or sets the user-owned display label; language changes never rewrite saved labels.</summary>
+    /// <summary>Gets or sets the saved fallback or custom label; explicit custom names are never translated.</summary>
     public string Label { get; set; } = "";
+    /// <summary>Gets or sets whether a live tile follows its localized default name; null infers legacy defaults without changing custom names.</summary>
+    public bool? UseLocalizedName { get; set; }
     /// <summary>Gets or sets the launch target. A script tile does not execute this target.</summary>
     public string Target { get; set; } = "";
     /// <summary>Gets or sets whether the launch target is an AppsFolder shell identity.</summary>
@@ -96,7 +98,7 @@ public sealed class TileGroup
     public string Name { get; set; } = L.T(K.NewGroup);
     /// <summary>Gets or sets a horizontal group-column anchor; null uses automatic placement for legacy layouts.</summary>
     public int? Column { get; set; }
-    /// <summary>Gets or sets the vertical anchor in half-cell steps; null uses automatic placement.</summary>
+    /// <summary>Gets or sets the vertical anchor in half-cell steps; independent tiles share the named groups' tile baseline.</summary>
     public int? Row { get; set; }
     /// <summary>Gets or sets the root tiles in this group.</summary>
     public List<Tile> Tiles { get; set; } = [];
@@ -105,16 +107,18 @@ public sealed class TileGroup
 /// <summary>Stores local UI and integration choices; imported layouts do not replace these settings.</summary>
 public sealed class Preferences
 {
+    /// <summary>Gets or sets whether a per-user Explorer command pins files, directories and shortcuts to ReStart.</summary>
+    public bool ExplorerContextMenu { get; set; } = true;
     /// <summary>Gets or sets whether one read-only update check runs at normal startup.</summary>
     public bool CheckUpdatesOnStartup { get; set; } = true;
     /// <summary>Gets or sets whether published prereleases are eligible for update notifications.</summary>
-    public bool IncludePrereleaseUpdates { get; set; } = true;
-    /// <summary>Gets or sets ja, en, or system for UI resource selection.</summary>
+    public bool IncludePrereleaseUpdates { get; set; }
+    /// <summary>Gets or sets a supported language tag or system for UI resource selection.</summary>
     public string Language { get; set; } = "system";
     /// <summary>Gets or sets whether a bare Windows-key press toggles ReStart.</summary>
     public bool CaptureWindowsKey { get; set; } = true;
-    /// <summary>Gets or sets experimental native Start-button interception.</summary>
-    public bool CaptureStartButton { get; set; }
+    /// <summary>Gets or sets whether clicks on an identified native Windows Start button toggle ReStart.</summary>
+    public bool CaptureStartButton { get; set; } = true;
     /// <summary>Gets or sets the saved startup preference; settings reconcile it with the real Run registration.</summary>
     public bool StartWithWindows { get; set; }
     /// <summary>Gets or sets whether switching apps or clicking the taskbar closes the menu.</summary>
@@ -143,7 +147,7 @@ public sealed class Preferences
 public sealed class LayoutDocument
 {
     /// <summary>Current supported layout schema version.</summary>
-    public const int CurrentVersion = 3;
+    public const int CurrentVersion = 4;
     /// <summary>Current supported layout schema version.</summary>
     public int Version { get; set; } = CurrentVersion;
     /// <summary>Gets the legacy version migrated by normalization; omitted from saved layouts.</summary>
@@ -162,6 +166,7 @@ public sealed class LayoutDocument
     public void Normalize()
     {
         var migrateStandalone = Version is >= 1 and < 3;
+        var alignStandalone = Version == 3;
         if (Version is >= 1 and < CurrentVersion) { MigratedFromVersion = Version; Version = CurrentVersion; }
         else if (Version != CurrentVersion)
             throw new UnsupportedLayoutVersionException(Version);
@@ -194,9 +199,10 @@ public sealed class LayoutDocument
             {
                 // Earlier versions represented every detached tile as an unnamed group.
                 group.IsStandalone = true;
-                if (group.Row.HasValue) group.Row = Math.Min(20000, group.Row.Value + 2 * (group.Tiles[0].Row ?? 0) +
-                    (int)Math.Round(GroupLayout.HeaderHeight / (52 * Preferences.TileScale / 2)));
+                if (group.Row.HasValue) group.Row = Math.Min(20000, group.Row.Value + 2 * (group.Tiles[0].Row ?? 0));
             }
+            if (alignStandalone && group.IsStandalone && group.Row.HasValue)
+                group.Row = Math.Max(0, (int)Math.Round(group.Row.Value - GroupLayout.HeaderHeight / (52 * Preferences.TileScale / 2), MidpointRounding.AwayFromZero));
             if (group.IsStandalone) { group.Name = ""; group.Tiles[0].Row = 0; }
         }
     }

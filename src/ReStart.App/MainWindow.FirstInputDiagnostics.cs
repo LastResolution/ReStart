@@ -1,6 +1,9 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
+using System.Windows.Threading;
+using ReStart.App.Services;
 using ReStart.Core;
 
 namespace ReStart.App;
@@ -58,7 +61,25 @@ public partial class MainWindow
             fixture.ComposeFixtureText("E");
             Require(fixture.SearchBox.Text == "E" && fixture.SearchResultNames.Contains("Microsoft Edge"),
                 "First-character search failed when the navigation button owned keyboard focus.");
-            return new(1, 1, 1, 1, 1, 1);
+            fixture._verifyNativeActivation = true;
+            for (var attempt = 0; attempt < 10; attempt++)
+            {
+                fixture.Hide(); fixture.Present();
+                await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
+                Require(Native.GetForegroundWindow() == new WindowInteropHelper(fixture).Handle && fixture.SearchBox.IsKeyboardFocused,
+                    $"The native activation path failed at {attempt}: hwnd={new WindowInteropHelper(fixture).Handle}, foreground={Native.GetForegroundWindow()}, active={fixture.IsActive}, visible={fixture.IsVisible}, focus={Keyboard.FocusedElement?.GetType().Name}, searchFocused={fixture.SearchBox.IsKeyboardFocused}.");
+                fixture.ComposeFixtureText("E");
+                Require(fixture.SearchResultNames.Contains("Microsoft Edge"), "Native activation lost the first character.");
+            }
+            var other = new Window { Width = 200, Height = 100, ShowInTaskbar = false, Content = new TextBox() };
+            try
+            {
+                other.Show(); other.Activate();
+                await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
+                Require(!fixture.IsVisible, "The launcher remained visible after another window took focus.");
+            }
+            finally { other.Close(); }
+            return new(1, 1, 1, 1, 1, 1, 10, 1);
         }
         finally
         {
@@ -77,4 +98,4 @@ public partial class MainWindow
 }
 
 internal sealed record FirstInputSmokeResult(int ColdStartChecks, int QueryContinuationChecks, int ReopenChecks, int NavigationFocusChecks,
-    int IntegrationBeforeCatalogChecks, int FocusRetentionChecks);
+    int IntegrationBeforeCatalogChecks, int FocusRetentionChecks, int NativeActivationChecks, int DeactivationChecks);

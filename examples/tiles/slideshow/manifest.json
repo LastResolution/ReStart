@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "title": "Photo moments",
+  "localizedTitles": {
+    "en": "Photo moments",
+    "ja": "フォトスライドショー",
+    "de": "Fotomomente",
+    "fr": "Instants photo",
+    "es": "Momentos en fotos",
+    "ko": "사진 슬라이드 쇼",
+    "zh-Hans": "照片时光",
+    "zh-Hant": "相片時光"
+  },
+  "refreshSeconds": 5,
+  "capabilities": [
+    "images.slideshow"
+  ],
+  "settings": {
+    "color": "#2D5369",
+    "colorEnd": "#172A3E",
+    "accent": "#FFFFFF",
+    "labels": {
+      "en": {
+        "caption": "Photo moments",
+        "choose": "Choose a photo folder"
+      },
+      "ja": {
+        "caption": "フォトスライドショー",
+        "choose": "画像フォルダーを選択"
+      },
+      "de": {
+        "caption": "Fotomomente",
+        "choose": "Fotoordner auswählen"
+      },
+      "fr": {
+        "caption": "Instants photo",
+        "choose": "Choisissez un dossier photo"
+      },
+      "es": {
+        "caption": "Momentos en fotos",
+        "choose": "Elija una carpeta de fotos"
+      },
+      "ko": {
+        "caption": "사진 슬라이드 쇼",
+        "choose": "사진 폴더를 선택하세요"
+      },
+      "zh-Hans": {
+        "caption": "照片时光",
+        "choose": "选择照片文件夹"
+      },
+      "zh-Hant": {
+        "caption": "相片時光",
+        "choose": "選取相片資料夾"
+      }
+    },
+    "intervalSeconds": 15
+  }
+}

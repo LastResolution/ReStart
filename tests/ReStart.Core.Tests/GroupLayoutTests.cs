@@ -128,6 +128,39 @@ public sealed class GroupLayoutTests
         Assert.True(placements[0].Height < second.Row * 26);
     }
 
+    [Theory]
+    [InlineData(0.7)]
+    [InlineData(1.0)]
+    [InlineData(1.5)]
+    public void GroupFootprintsRemainRectangularAtEveryScale(double scale)
+    {
+        var cell = 52 * scale;
+        var tall = new TileGroup
+        {
+            Column = 0,
+            Row = 0,
+            Tiles = [
+            new() { Column = 0, Row = 0, Size = TileSize.Large },
+            new() { Column = 4, Row = 0 }, new() { Column = 0, Row = 4, Size = TileSize.Large }]
+        };
+        var above = new TileGroup { Column = 1, X = 6, Row = 0, Tiles = [new(), new(), new()] };
+        var moving = new TileGroup { Column = 1, X = 8, Row = 12, Tiles = [new(), new()] };
+        var doc = new LayoutDocument { Groups = [tall, above, moving] };
+        var saved = JsonSerializer.Serialize(tall.Tiles);
+        var preview = GroupLayout.PreviewMove(doc, moving, 0, 10, 3, cell, 4.5);
+        Assert.True(preview.Single(p => p.Group == tall).Row > 0);
+        var footprint = Assert.Single(GroupLayout.OccupiedAreas(tall, 6, cell));
+        Assert.Equal(6 * cell, footprint.Width);
+        Assert.Equal(GroupLayout.HeaderHeight + 8 * cell, footprint.Height);
+        Assert.Equal(0, preview.Single(p => p.Group == above).Row);
+        Assert.Equal(10, preview.Single(p => p.Group == moving).Row);
+        GroupLayout.Move(doc, moving, 0, 10, 3, cell, 4.5);
+        Assert.Equal(preview, GroupLayout.Pack(doc.Groups, 3, 6, cell));
+        Assert.Equal(saved, JsonSerializer.Serialize(tall.Tiles));
+        var collision = GroupLayout.PreviewMove(doc, moving, 0, 0, 3, cell, 4.5);
+        Assert.True(collision.Single(p => p.Group == tall).Row > 0);
+    }
+
     private static void AssertNoOverlaps(IReadOnlyList<GroupPlacement> placements)
     {
         for (var i = 0; i < placements.Count; i++)

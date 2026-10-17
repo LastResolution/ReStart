@@ -76,7 +76,7 @@ public partial class MainWindow
             UpdateLayout();
             Require(b.Column == 4 && b.Row == 10 && a.Column == 0 && a.Row == 0, "Moving a tile collapsed an unrelated gap.");
             _dragOffset = new(Cell, Cell);
-            var blank = new Point(3 * pitch + Cell, 4 * Cell / 2 + Cell);
+            var blank = new Point(3 * pitch + Cell, GroupLayout.HeaderHeight + 4 * Cell / 2 + Cell);
             Require(GroupAt(blank) == null, "The new-group target is not empty.");
             MoveTileToStandalone(a, blank);
             UpdateLayout();
@@ -119,6 +119,9 @@ public partial class MainWindow
             Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
             Require(left.Name == "Renamed on focus loss" && System.Windows.Media.VisualTreeHelper.GetParent(pendingClick) != null,
                 "Committing a name removed the tile before its pending click.");
+            header.EditButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Require(header.IsEditing && header.EditButton.Visibility == Visibility.Collapsed, "The group edit icon did not enter inline editing.");
+            RaiseEditorKey(editor, Key.Escape);
 
             var saved = LayoutStore.Read(_store.FilePath);
             Require(saved.Version == LayoutDocument.CurrentVersion && saved.Groups.Single(g => g.Id == created.Id).Column == 3
@@ -185,7 +188,8 @@ public partial class MainWindow
             var expandedY = belowElement.TranslatePoint(new Point(), root).Y;
             Require(Math.Abs(root.ToModelPoint(new Point(0, expandedY)).Y - 2 * Cell) <= 1, "Inline expansion changed persisted root coordinates.");
             var folderName = inline.Child is StackPanel body ? body.Children.OfType<GroupHeader>().Single() : throw new InvalidOperationException("Missing folder header.");
-            folderName.Handle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            folderName.EditButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Require(folderName.IsEditing, "The folder edit icon did not enter inline editing.");
             editor = folderName.Children.OfType<TextBox>().Single();
             editor.Text = "Inline folder";
             RaiseEditorKey(editor, Key.Enter);
@@ -202,7 +206,10 @@ public partial class MainWindow
             root = RootPanelFor(left);
             belowElement = root.Children.OfType<Button>().Single(button => button.Tag == below);
             Require(root.Expansion == null && Math.Abs(belowElement.TranslatePoint(new Point(), root).Y - 2 * Cell) <= 1, "Closing the inline folder did not restore root tile positions.");
-            return new(17, 4, 10, saved.Version, Document.Groups.Count);
+            VerifyDetachedBaseline(snapshotPath);
+            VerifyAdjacentDrop(snapshotPath);
+            VerifyRectangularGroupsAndFolderExpansion(snapshotPath);
+            return new(23, 6, 16, 6, saved.Version, Document.Groups.Count);
         }
         finally
         {
@@ -216,6 +223,118 @@ public partial class MainWindow
     }
 
     private GroupHeader HeaderFor(TileGroup group) => GroupsPanel.Children.OfType<StackPanel>().Single(s => s.Tag == group).Children.OfType<GroupHeader>().Single();
+
+    private void VerifyRectangularGroupsAndFolderExpansion(string snapshotPath)
+    {
+        Document = new() { Preferences = new() { Animate = false, ShowWallpaper = false, Language = "en" } };
+        var tall = new TileGroup
+        {
+            Name = "Tall sample",
+            Column = 0,
+            Row = 0,
+            Tiles = [
+            new() { Column = 0, Row = 0, Size = TileSize.Large }, new() { Column = 4, Row = 0 },
+            new() { Column = 0, Row = 4, Size = TileSize.Large }]
+        };
+        var top = new TileGroup { Name = "Top sample", X = 6, Column = 0, Row = 0, Tiles = [new(), new(), new()] };
+        var side = new TileGroup { Name = "Side sample", X = 4.5, Column = 0, Row = 10, Tiles = [new(), new()] };
+        Document.Groups = [tall, top, side]; ApplyAppearance(); RenderGroups(); UpdateLayout();
+        Require(GroupsPanel.Placements.Single(p => p.Group == side).Row > 10, "A group was allowed to overlap a neighbor’s rectangular footprint.");
+        Require(GroupLayout.OccupiedAreas(tall, Document.Preferences.Columns, Cell).Count == 1, "A group boundary is not rectangular.");
+        var sideButton = RootPanelFor(side).Children.OfType<Button>().First();
+        var point = sideButton.TranslatePoint(new Point(Cell, Cell), GroupsPanel);
+        Require(Ancestor<Button>(GroupsPanel.InputHitTest(point) as DependencyObject)?.Tag == side.Tiles[0], "A displaced group cannot receive tile input.");
+        // Reverse child order to verify the clipping works in either z order.
+        Document.Groups.Reverse(); RenderGroups(); UpdateLayout();
+        Require(Ancestor<Button>(GroupsPanel.InputHitTest(point) as DependencyObject)?.Tag == side.Tiles[0], "Group z order changes the visible tile hit target.");
+        Require(_groupBoundaries != null && !_groupBoundaries.IsHitTestVisible, "Group boundaries are missing or intercept tile input.");
+        _groupBoundaries!.HoveredGroup = side; _groupBoundaries.InvalidateVisual();
+        SaveScreenshot(Path.Combine(Path.GetDirectoryName(snapshotPath)!, "placement-rectangular-groups.png"));
+        ShowGroupBoundaries(true);
+        SaveScreenshot(Path.Combine(Path.GetDirectoryName(snapshotPath)!, "placement-group-boundaries.png"));
+        ShowGroupBoundaries(false); _groupBoundaries.HoveredGroup = null; _groupBoundaries.InvalidateVisual();
+        foreach (var standalone in new[] { false, true })
+            foreach (var scale in new[] { .7, 1, 1.5 })
+            {
+                var folder = new Tile { Label = "Folder sample", Column = standalone ? 2 : 0, Row = 0, Children = [new(), new(), new(), new()] };
+                var owner = new TileGroup { Name = "Opening sample", Column = 0, Row = 0, IsStandalone = standalone, Tiles = [folder] };
+                var lower = new TileGroup { Name = "Lower sample", Column = 0, Row = 8, Tiles = [new()] };
+                var adjacent = Enumerable.Range(0, 4).Select(i => new TileGroup
+                {
+                    IsStandalone = true,
+                    X = 7,
+                    Column = 1,
+                    Row = i * 4,
+                    Tiles = [new() { Label = "Unrelated live tile", Size = TileSize.Wide }]
+                }).ToArray();
+                Document = new() { Preferences = new() { Animate = false, ShowWallpaper = false, TileScale = scale, Language = "en" }, Groups = [lower, owner, .. adjacent] };
+                ApplyAppearance(); RenderGroups(); UpdateLayout();
+                var before = GroupsPanel.Placements.ToArray();
+                var root = RootPanelFor(owner).Children.OfType<Button>().Single().TranslatePoint(new Point(), GroupsPanel);
+                var saved = JsonSerializer.Serialize(Document, LayoutStore.JsonOptions);
+                OpenFolder(folder); UpdateLayout();
+                var after = RootPanelFor(owner).Children.OfType<Button>().Single().TranslatePoint(new Point(), GroupsPanel);
+                Require((after - root).Length < 1, "Opening a folder displaced its root when a lower group was first in document order.");
+                var expanded = GroupsPanel.Placements.Single(p => p.Group == owner);
+                Require(before.Where(p => adjacent.Contains(p.Group)).SequenceEqual(GroupsPanel.Placements.Where(p => adjacent.Contains(p.Group))),
+                    "Opening a folder enlarged unrelated live-tile row spacing.");
+                Require(GroupsPanel.Placements.Single(p => p.Group == lower).Top >= expanded.Top + expanded.Height + GroupLayout.Gap,
+                    "An expanded folder overlaps the group below it.");
+                CloseFolder(this, new()); UpdateLayout();
+                Require(before.SequenceEqual(GroupsPanel.Placements) && saved == JsonSerializer.Serialize(Document, LayoutStore.JsonOptions),
+                    "Closing a folder did not restore the original group and tile anchors.");
+            }
+    }
+
+    private void VerifyDetachedBaseline(string snapshotPath)
+    {
+        foreach (var columns in new[] { 6, 8 })
+            foreach (var scale in new[] { 0.7, 1.0, 1.5 })
+            {
+                var tile = new Tile { Label = "Detach sample", Column = 0, Row = 6 };
+                var group = new TileGroup { Name = "Baseline sample", Column = 0, Row = 0, Tiles = [tile, new() { Label = "Neighbor", Column = 2, Row = 6 }] };
+                Document = new() { Preferences = new() { Columns = columns, TileScale = scale, Animate = false, ShowWallpaper = false, Language = "en" }, Groups = [group] };
+                ApplyAppearance(); RenderGroups(); UpdateLayout();
+                var button = RootPanelFor(group).Children.OfType<Button>().Single(b => b.Tag == tile);
+                var top = button.TranslatePoint(new Point(), GroupsPanel).Y;
+                _dragOffset = new(12, 20);
+                var point = new Point(columns * Cell + GroupLayout.Gap + _dragOffset.X, top + _dragOffset.Y);
+                ShowDropPreview(RootPanelFor(group), tile, 0, 6);
+                Require(_dropAdorner!.GroupBounds.HasValue && _dropAdorner.Caption.Contains(group.Name, StringComparison.Ordinal), "A group insertion preview does not identify its destination.");
+                PreviewStandalone(tile, point);
+                Require(Math.Abs(_dropAdorner!.CellBounds.Top - top) <= 1 && !_dropAdorner.GroupBounds.HasValue,
+                    $"The independent preview jumps vertically or retains the group destination highlight: scale={scale}, top={top}, preview={_dropAdorner.CellBounds.Top}.");
+                ClearDropPreview();
+                MoveTileToStandalone(tile, point); UpdateLayout();
+                var independent = Document.Groups.Single(g => g.IsStandalone);
+                button = RootPanelFor(independent).Children.OfType<Button>().Single();
+                Require(Math.Abs(button.TranslatePoint(new Point(), GroupsPanel).Y - top) <= 1,
+                    "Detaching a tile changes its visual baseline.");
+                if (scale == 1) SaveScreenshot(Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"detached-baseline-{columns}.png"));
+            }
+    }
+    private void VerifyAdjacentDrop(string snapshotPath)
+    {
+        var originalTile = new Tile { Label = "Existing tile" };
+        var incoming = new Tile { Label = "Incoming tile" };
+        var group = new TileGroup { Name = "Drop into this group", Column = 0, Row = 0, Tiles = [originalTile] };
+        Document = new() { Preferences = new() { Animate = false, ShowWallpaper = false, Language = "en" }, Groups = [group] };
+        ApplyAppearance(); RenderGroups(); UpdateLayout();
+        var point = new Point(3 * Cell, GroupLayout.HeaderHeight + Cell);
+        _dragOffset = new(Cell, Cell);
+        var target = GroupAt(point);
+        Require(target?.Group == group, "The empty medium-tile cell beside a one-tile group does not accept insertion.");
+        var model = target!.Value.Panel.ToModelPoint(GroupsPanel.TranslatePoint(point, target.Value.Panel));
+        var (column, row) = TileLayout.Snap(model.X - _dragOffset.X, model.Y - _dragOffset.Y, Cell, incoming.Size, Document.Preferences.Columns);
+        ShowDropPreview(target.Value.Panel, incoming, column, row);
+        Require(_dropAdorner!.GroupBounds?.Width == 4 * Cell && column == 2 && row == 0, "The adjacent preview does not show the expanded destination group.");
+        SaveScreenshot(Path.Combine(Path.GetDirectoryName(snapshotPath)!, "adjacent-group-drop.png"));
+        ClearDropPreview();
+        MoveTileIntoGroup(incoming, group, column, row); UpdateLayout();
+        Require(group.Tiles.Count == 2 && originalTile.Column == 0 && originalTile.Row == 0 && incoming.Column == 2 && incoming.Row == 0,
+            "Inserting beside a one-tile group displaced its original tile.");
+    }
+
     private TilePanel RootPanelFor(TileGroup group) => GroupsPanel.Children.OfType<StackPanel>().Single(s => s.Tag == group).Children.OfType<TilePanel>().Single();
 
     private static void RaiseEditorKey(TextBox editor, Key key) => editor.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice,
@@ -234,4 +353,4 @@ public partial class MainWindow
     }
 }
 
-internal sealed record PlacementSmokeResult(int PlacementChecks, int InlineNameChecks, int FolderChecks, int SchemaVersion, int Groups);
+internal sealed record PlacementSmokeResult(int PlacementChecks, int InlineNameChecks, int FolderChecks, int BaselineChecks, int SchemaVersion, int Groups);

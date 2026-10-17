@@ -6,6 +6,7 @@ using ReStart.Core;
 namespace ReStart.Core.Tests;
 
 [SupportedOSPlatform("windows")]
+[Collection("JavaScript runtime")]
 public sealed class ScriptWorkerTests
 {
     [Fact]
@@ -16,7 +17,7 @@ public sealed class ScriptWorkerTests
         try
         {
             var ready = await Task.WhenAll(sessions.Select(session => session.RenderAsync("function render(){return {text:'ready'};}", new { })));
-            Assert.All(ready, frame => Assert.NotNull(frame));
+            Assert.All(sessions.Zip(ready), pair => Assert.True(pair.Second != null, pair.First.Error));
             var watch = Stopwatch.StartNew();
             var results = await Task.WhenAll(sessions.Select(session => session.RenderAsync("function render(){return {text:String(/(a+)+$/.test('a'.repeat(10000)+'!'))};}", new { })));
             Assert.All(results, frame => Assert.Null(frame));

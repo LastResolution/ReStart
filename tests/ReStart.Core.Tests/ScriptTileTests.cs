@@ -4,6 +4,7 @@ using ReStart.TileHost;
 
 namespace ReStart.Core.Tests;
 
+[Collection("JavaScript runtime")]
 public sealed class ScriptTileTests
 {
     private static ScriptTileFrame Render(string source, object? context = null) => JsTileRunner.Render(new(source, JsonSerializer.SerializeToElement(context ?? new { now = "2026-10-18T09:41:00+09:00", state = new { }, settings = new { }, locale = "en-US", size = "wide" })));

@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "title": "Network flow",
+  "localizedTitles": {
+    "en": "Network flow",
+    "ja": "通信量モニター",
+    "de": "Netzwerkdaten",
+    "fr": "Débit réseau",
+    "es": "Tráfico de red",
+    "ko": "네트워크 모니터",
+    "zh-Hans": "网络流量",
+    "zh-Hant": "網路流量"
+  },
+  "refreshSeconds": 1,
+  "capabilities": [
+    "system.metrics"
+  ],
+  "settings": {
+    "color": "#12645C",
+    "colorEnd": "#123741",
+    "accent": "#8BF0CC",
+    "labels": {
+      "en": {
+        "caption": "Network flow",
+        "waiting": "Waiting for a sample"
+      },
+      "ja": {
+        "caption": "通信量モニター",
+        "waiting": "データ取得中"
+      },
+      "de": {
+        "caption": "Netzwerkdaten",
+        "waiting": "Messung wird geladen"
+      },
+      "fr": {
+        "caption": "Débit réseau",
+        "waiting": "Mesure en cours"
+      },
+      "es": {
+        "caption": "Tráfico de red",
+        "waiting": "Esperando una muestra"
+      },
+      "ko": {
+        "caption": "네트워크 모니터",
+        "waiting": "데이터 수집 중"
+      },
+      "zh-Hans": {
+        "caption": "网络流量",
+        "waiting": "正在获取数据"
+      },
+      "zh-Hant": {
+        "caption": "網路流量",
+        "waiting": "正在取得資料"
+      }
+    }
+  }
+}

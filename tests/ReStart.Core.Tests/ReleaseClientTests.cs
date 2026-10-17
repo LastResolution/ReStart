@@ -35,11 +35,10 @@ public sealed class ReleaseClientTests
         using var client = new HttpClient(new Handler(request =>
         {
             Assert.Equal("api.github.com", request.RequestUri!.Host);
-            Assert.Equal("Bearer", request.Headers.Authorization!.Scheme);
-            Assert.Equal("fixture-token", request.Headers.Authorization.Parameter);
+            Assert.Null(request.Headers.Authorization);
             return Json(new[] { Entry("v9.0.0", draft: true), Entry("v0.10.0"), Entry("v1.0.0", preview: true), Entry("v0.9.0") });
         }));
-        var result = await new ReleaseClient(client).CheckAsync("0.9.0", "win-x64", false, "fixture-token");
+        var result = await new ReleaseClient(client).CheckAsync("0.9.0", "win-x64", false);
         Assert.Equal(UpdateCheckStatus.Available, result.Status);
         Assert.Equal("v0.10.0", result.Release!.Tag);
         Assert.Equal("https://github.com/LastResolution/ReStart/releases/tag/v0.10.0", result.Release.Page.AbsoluteUri);
@@ -55,9 +54,9 @@ public sealed class ReleaseClientTests
         Assert.Equal(UpdateCheckStatus.UpToDate, (await checker.CheckAsync("0.6.0", "win-arm64", true)).Status);
     }
     [Theory]
-    [InlineData(401, UpdateCheckStatus.AccessRequired)]
-    [InlineData(404, UpdateCheckStatus.AccessRequired)]
-    [InlineData(403, UpdateCheckStatus.AccessRequired)]
+    [InlineData(401, UpdateCheckStatus.ServiceUnavailable)]
+    [InlineData(404, UpdateCheckStatus.ServiceUnavailable)]
+    [InlineData(403, UpdateCheckStatus.ServiceUnavailable)]
     [InlineData(429, UpdateCheckStatus.RateLimited)]
     [InlineData(503, UpdateCheckStatus.NetworkError)]
     public async Task ErrorsNeverMasqueradeAsUpToDate(int status, UpdateCheckStatus expected)

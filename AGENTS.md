@@ -6,6 +6,7 @@
 - Verify meaningful changes with Release build and relevant core tests. For UI changes, use preview/smoke mode and inspect the rendered result.
 - Run `dotnet format whitespace ReStart.slnx --verify-no-changes --no-restore` before requesting merge.
 - Do not commit `artifacts`, `preview-data`, personal app lists, layouts, logs, signing keys, credentials, or research screenshots from Microsoft.
+- Use the maintainer's GitHub noreply identity for commits in this workspace. Run `scripts/check-privacy.ps1 -Staged` before committing; never copy private author emails or absolute user paths into tracked files.
 - Keep `docs/fidelity.md` honest about implemented, partially reproduced, unverified, and unavailable behaviors. Never describe a feature as identical to Windows 10 without evidence.
 - Preserve the shell: no Explorer patching or injected DLLs. Hooks must be reversible, short, and disposed on exit.
 - Keep primary documentation, README and release notes in English; update the Japanese counterparts when behavior or release procedures change.

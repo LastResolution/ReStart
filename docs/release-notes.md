@@ -1,53 +1,41 @@
-# ReStart v0.5.0
+# ReStart v0.6.0
 
-[日本語](https://github.com/LastResolution/ReStart/blob/v0.5.0/docs/ja/release-notes.md)
+ReStart's first public release adds a twelve-tile JavaScript gallery, eight UI languages and keyless public update checks, with fixes to placement, startup input and desktop integration.
 
-This private development prerelease improves placement and startup search, and adds the information needed to inspect and maintain an installation.
+## Live tiles
 
-## Placement and appearance
+Add Orbit, calendar, CPU, memory, focus timer, year progress, clock, countdown, network, battery, storage and photo slideshow from the background/group right-click menu or Settings. Native gradients, rings, bars, sparklines and month dots provide styling examples. Clocks use PC time and time zone; system tiles use aggregate read-only host metrics. Select a local image folder for photos and click to advance. Normal tile clicks stay inside the tile; JS editing is an explicit right-click action.
 
-Empty-board drops now detach independent tiles without headers or a full group footprint. Groups measure their content instead of reserving a fixed minimum width, move at half-cell horizontal anchors and support a wider horizontally scrollable board (Shift+wheel). Drag space grows only when reaching an edge, and unnecessary vertical padding is removed. These flexible placement choices are explicit ReStart extensions.
+A watched local tile library discovers package folders automatically; click to add without selecting JSON each time. Any number of tiles share four isolated workers. Click events and JSON state support pause/resume and display modes. New JS/custom tiles are placed independently in free space, preserving existing groups and item coordinates. See the JavaScript guide for capabilities, units, bounds and examples.
 
-Empty-board drops now detach independent tiles without headers or a full group footprint. Groups measure their content instead of reserving a fixed minimum width, move at half-cell horizontal anchors and support a wider horizontally scrollable board (Shift+wheel). Drag space grows only when reaching an edge, and unnecessary vertical padding is removed. These flexible placement choices are explicit ReStart extensions.
+Live tiles can choose centered, split, stacked, caption or overlay native layouts using the current size and measured bounds. All twelve examples adapt their content across the four tile sizes. Library reconciliation recovers from coalesced copy notifications without replacing unchanged buttons.
 
-Small-only groups no longer reserve a medium tile's height. Explicit group collisions exclude trailing spacing, and dragging previews the destinations of displaced groups. Preview and commit share one calculation and preserve child tile coordinates. Unnamed group prompts appear on hover/focus.
+## Placement and input
 
-Tile-local renaming and background colors are available under right-click → ReStart. Choose a palette/custom #RRGGBB or reset to the theme; text contrast follows the plate. High contrast takes precedence.
+- Groups use content-sized rectangular footprints with a soft hover surface, drag guides and matching collision previews. Folder expansion keeps its opening anchor and preserves unrelated live-tile column spacing.
+- Pencil buttons rename groups and expanded folders inline. Group-to-independent-tile spacing now snaps consistently in either direction.
+- Folder/file icons use full Shell icons instead of thumbnail badges. Default file/app pins use free space; selecting a group remains explicit. Operation messages clear after five seconds.
+- Vertical scrolling no longer creates a spurious horizontal bar; both axes use themed controls.
+- Detached tile baselines align with grouped tiles. Nearby empty cells can target a group, with a labeled destination preview and clear spacing between groups.
+- Moving a bottom/rightmost group preserves the drag extent so scroll-offset coercion does not feed back into jumping previews. Identical anchors reuse the preview without another layout pass.
+- Opening immediately activates search, including before catalog completion; losing focus closes Start when enabled.
+- The taskbar Start-button option identifies Explorer accessibility bounds on primary/secondary taskbars, without guessed screen positions or Explorer patching.
+- Explorer **Pin to ReStart** handles files, directories and shortcuts, forwards requests to the running instance and preserves shortcut launch behavior. Windows 11 exposes this under **Show more options**.
+- Desktop wallpaper changes, same-file replacements and per-monitor images refresh without saving Settings again.
 
-The D&D folder path checks a continuous one-second center hover. The original expansion animation was reviewed again: the parent becomes an up-chevron and contents expand beneath a complete row. The extra upper divider and small-child row minimum are removed.
+## Languages and maintenance
 
-Classic app tiles share the selected accent unless explicitly overridden. The dark Start surface can also use the accent, while modern tiles use uniform translucent backplates. Exact Windows 10 acrylic composition and animation remain approximations.
+English, Japanese, German, French, Spanish, Korean, Simplified Chinese and Traditional Chinese are included with regional system-language resolution. Default live-tile names and captions follow language changes; explicitly customized names are preserved.
 
-## Search and app menus
+Updates use public GitHub Releases without a key or saved token; legacy ReStart credentials are removed without reading their values. About provides version/build and licenses without development-scope UI. Future release notes are English only.
 
-Typing E before the catalog finishes loading now retains the input and refreshes results when apps arrive. Continued input, reopening and navigation focus have dedicated regression checks. Input integration preferences apply before catalog enumeration.
-
-App menus offer Pin to Start / Unpin from Start, including pins inside folders. More and Uninstall appear only when the app exposes the corresponding enabled canonical shell command. Preview disables external commands; elevation and uninstall were not executed during verification.
-
-## Version, licenses, migration and updates
-
-Settings → About shows the running version/build, architecture and full license texts. Layout and data shows the last upgrade and rollback file.
-
-Settings → Updates supports manual and optional startup checks. Private-release access uses a repository-scoped GitHub read token stored in Windows Credential Manager. Authentication, rate-limit and network failures are distinct from “up to date.” Checks do not send app lists, layouts or usage history. Download and installation are manual.
-
-**Settings move to schema 3.** Before replacing schemas 1/2, ReStart preserves their original bytes in a durable versioned backup. Application upgrades within the same schema are also backed up. The last upgrade is recorded in the document. Older builds reject schema 3; follow [rollback instructions](https://github.com/LastResolution/ReStart/blob/v0.5.0/docs/migration.md) before downgrading.
-
-Documentation is now English-first, with Japanese counterparts and both portable readmes.
+Settings move to **schema 4**. Original schema 1–3 files are retained in durable rollback backups before writing, including the independent-tile alignment migration. Newer schemas/producers remain protected. Layout export excludes installed JS sources and photo-folder bindings; keep the tiles directory separately.
 
 ## Install or update
 
-1. Exit the old app from the tray.
-2. Extract the entire architecture-matching ZIP into a new folder; keep TileHost, Examples, third-party and the notices.
-3. Start ReStart.exe. Settings remain in your local application-data folder.
-4. If the path changed and sign-in startup is enabled, save that setting again to update the registration.
-5. Inspect Settings → Layout and data for the migration record and retained backup.
+1. Download the x64 or ARM64 ZIP and its SHA-256 sidecar.
+2. Exit ReStart through the tray menu and extract the complete ZIP, retaining TileHost, Examples, third-party and notices.
+3. Run ReStart.exe. Normal use requires no administrator rights or separate .NET installation.
+4. Inspect the migration record in Settings. Refresh enabled startup/Explorer registration if you moved the installation.
 
-SHA-256 files accompany both ZIPs. Packages are unsigned.
-
-## Verification and limits
-
-Release build: zero warnings/errors; 151 Core tests. Native fixtures cover 31 placement/name/folder checks, cold-start input, app directories/menus, migration, licenses, both languages/themes and accent behavior. CI also packages x64 and ARM64 from clean checkouts.
-
-Physical dragging is still awaiting confirmation after the desktop helper returned `foreground window did not report a process id`. Physical Windows-key/taskbar sequences, full IME/Narrator coverage, mixed DPI, ARM64 hardware and side-by-side Windows 10 22H2 comparison remain unverified. Legacy UWP notifications, full Windows Search, usage history and Jump Lists are not implemented. See [the behavior audit](https://github.com/LastResolution/ReStart/blob/v0.5.0/docs/behavior-audit.md) and [fidelity](https://github.com/LastResolution/ReStart/blob/v0.5.0/docs/fidelity.md).
-
-[README](https://github.com/LastResolution/ReStart/blob/v0.5.0/README.md) · [Changes since v0.4.0](https://github.com/LastResolution/ReStart/compare/v0.4.0...v0.5.0)
+Packages are unsigned. Updates are checked in-app and installed manually. The repository's testing and validation records distinguish executed Windows 11 x64 checks from ARM64 cross-builds and hardware-specific input coverage.

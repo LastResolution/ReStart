@@ -1,6 +1,56 @@
 {
   "version": 1,
   "title": "Countdown",
+  "localizedTitles": {
+    "en": "Countdown",
+    "ja": "カウントダウン",
+    "de": "Countdown",
+    "fr": "Compte à rebours",
+    "es": "Cuenta atrás",
+    "ko": "카운트다운",
+    "zh-Hans": "倒计时",
+    "zh-Hant": "倒數計時"
+  },
   "refreshSeconds": 1,
-  "settings": { "target": "2027-01-01T00:00:00+09:00", "caption": "Until 2027" }
+  "capabilities": [],
+  "settings": {
+    "color": "#954049",
+    "colorEnd": "#321D3B",
+    "accent": "#FFC2BC",
+    "labels": {
+      "en": {
+        "caption": "Countdown",
+        "days": "days"
+      },
+      "ja": {
+        "caption": "カウントダウン",
+        "days": "日"
+      },
+      "de": {
+        "caption": "Countdown",
+        "days": "Tage"
+      },
+      "fr": {
+        "caption": "Compte à rebours",
+        "days": "jours"
+      },
+      "es": {
+        "caption": "Cuenta atrás",
+        "days": "días"
+      },
+      "ko": {
+        "caption": "카운트다운",
+        "days": "일"
+      },
+      "zh-Hans": {
+        "caption": "倒计时",
+        "days": "天"
+      },
+      "zh-Hant": {
+        "caption": "倒數計時",
+        "days": "天"
+      }
+    },
+    "target": ""
+  }
 }

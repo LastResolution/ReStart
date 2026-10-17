@@ -17,17 +17,36 @@ public partial class App : Application
     private StartIntegration? _integration;
     private System.Windows.Forms.NotifyIcon? _tray;
     private MainWindow? _window;
+    private PinRequestChannel? _pinRequests;
 
     /// <summary>Acquires the instance lease before creating UI or registering shell hooks.</summary>
-    protected override void OnStartup(StartupEventArgs e)
+    protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
         var preview = e.Args.Contains("--preview") || e.Args.Contains("--smoke-test");
         var smoke = e.Args.Contains("--smoke-test");
         var sid = WindowsIdentity.GetCurrent().User?.Value ?? Environment.UserName;
+        var pinIndex = Array.IndexOf(e.Args, "--pin");
+        var pinPath = pinIndex >= 0 && pinIndex + 1 < e.Args.Length ? e.Args[pinIndex + 1] : null;
+        if (pinIndex >= 0 && pinPath == null) { MessageBox.Show(L.T(K.ErrorPinPath), "ReStart"); Shutdown(1); return; }
+        using var process = Process.GetCurrentProcess();
+        var channelIdentity = sid + "." + process.SessionId + (preview ? ".Preview" : "");
         _instance = new(sid, preview);
         if (!_instance.IsPrimary)
         {
+            if (pinPath != null)
+            {
+                try
+                {
+                    using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+                    var reply = await PinRequestChannel.SendAsync(channelIdentity, pinPath, deadline.Token);
+                    if (!reply.Success && !preview) MessageBox.Show(reply.Message, "ReStart", MessageBoxButton.OK, MessageBoxImage.Error);
+                    Shutdown(reply.Success ? 0 : 1);
+                }
+                catch (Exception ex) when (ex is IOException or OperationCanceledException or UnauthorizedAccessException)
+                { if (!preview) MessageBox.Show(L.T(K.ErrorPinConnection), "ReStart", MessageBoxButton.OK, MessageBoxImage.Error); Shutdown(1); }
+                return;
+            }
             if (!smoke && !e.Args.Contains("--background")) _instance.NotifyExisting();
             Shutdown(smoke ? 2 : 0); return;
         }
@@ -35,6 +54,7 @@ public partial class App : Application
         var store = new LayoutStore(Path.Combine(data, "layout.json"), AppBuildInfo.Version);
         _window = new MainWindow(store, preview);
         MainWindow = _window;
+        _pinRequests = new(channelIdentity, path => Dispatcher.InvokeAsync(() => _window.PinPathAsync(path)).Task.Unwrap());
         _wait = ThreadPool.RegisterWaitForSingleObject(_instance.Activation, (_, _) => Dispatcher.BeginInvoke(() => _window?.Present()), null, Timeout.Infinite, false);
         if (preview)
         {
@@ -44,20 +64,26 @@ public partial class App : Application
             _window.ResizeMode = ResizeMode.CanResize; _window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
             if (e.Args.Contains("--background") && !smoke) _ = _window.InitializeAsync();
             else _window.Show();
+            if (pinPath != null) await _window.PinPathAsync(pinPath);
             if (smoke) RunSmoke(e.Args);
             return;
         }
         var handle = new WindowInteropHelper(_window).EnsureHandle();
-        _integration = new StartIntegration(handle, Dispatcher, _window.Toggle, _window.DismissFromTaskbar);
+        LegacySettingsCleanup.Run();
+        _integration = new StartIntegration(handle, Dispatcher, _window.Toggle, _window.DismissFromTaskbar, _window.ToggleFromStartButton);
         _window.IsVisibleChanged += (_, _) => _integration.SetMenuOpen(_window.IsVisible);
         _window.PreferencesChanged = () =>
         {
             _integration.Apply(_window.Document.Preferences);
+            try { ExplorerPinRegistration.Current.SetEnabled(_window.Document.Preferences.ExplorerContextMenu); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException or InvalidOperationException)
+            { _window.SetStatus(L.T(K.ErrorExplorerRegistration) + ex.Message); }
             RefreshTrayLanguage();
             if (_integration.Status is string status) _window.SetStatus(status);
         };
         CreateTray();
-        if (e.Args.Contains("--background")) _ = _window.InitializeAsync();
+        if (pinPath != null) await _window.PinPathAsync(pinPath);
+        else if (e.Args.Contains("--background")) _ = _window.InitializeAsync();
         else _window.Present();
         DispatcherUnhandledException += (_, args) =>
         {
@@ -117,6 +143,9 @@ public partial class App : Application
             FirstInputSmokeResult? firstInput = null;
             AppMenuSmokeResult? appMenus = null;
             ReleaseInfoSmokeResult? releaseInfo = null;
+            ScrollSmokeResult? scrolling = null;
+            BundledTilesSmokeResult? bundledTiles = null;
+            IconSmokeResult? pinIcons = null;
             string? error = null;
             try
             {
@@ -126,12 +155,15 @@ public partial class App : Application
                 if (args.Contains("--first-input-test")) firstInput = await _window.VerifyFirstInputAsync(path);
                 if (args.Contains("--app-menu-test")) appMenus = await _window.VerifyAppMenusAsync(path);
                 if (args.Contains("--release-info-test")) releaseInfo = await _window.VerifyReleaseInfoAsync(path);
+                if (args.Contains("--scroll-test")) scrolling = await _window.VerifyScrollingAsync(path);
+                if (args.Contains("--bundled-tiles-test")) bundledTiles = await _window.VerifyBundledTilesAsync(path);
+                if (args.Contains("--icon-test")) pinIcons = await _window.VerifyIconsAsync(path);
                 _window.SaveScreenshot(path);
             }
             catch (Exception ex) when (ex is IOException or InvalidOperationException) { success = false; error = ex.Message; }
             try
             {
-                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, catalogFolders = _window.CatalogFolderCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, navigation, placement, appFolders, firstInput, appMenus, releaseInfo, error, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
+                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, catalogFolders = _window.CatalogFolderCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, navigation, placement, appFolders, firstInput, appMenus, releaseInfo, scrolling, bundledTiles, pinIcons, error, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
             }
             catch (IOException) { success = false; }
             _window.Exit(); Shutdown(success ? 0 : 1);
@@ -145,6 +177,7 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         _integration?.Dispose();
+        _pinRequests?.Dispose();
         _tray?.Dispose();
         _wait?.Unregister(null);
         _instance?.Dispose();

@@ -57,7 +57,30 @@ public partial class MainWindow
             Require(commands.Contains("runas") && commands.Contains("properties"), "The canonical command reader did not find standard executable verbs.");
             Require((await AppShellCommands.ReadAsync(new("missing", "Missing fixture", Path.Combine(directory, "missing.exe"), false))).Count == 0,
                 "An unavailable app invented shell capabilities.");
-            return new(5, 2, 2);
+            var folderPath = Path.Combine(directory, "Directory pin sample"); Directory.CreateDirectory(folderPath);
+            var folderApp = FilePinning.FromPath(folderPath);
+            foreach (var explicitGroup in new[] { false, true })
+            {
+                fixture._catalog.Icons.TryRemove(folderApp.Id, out _);
+                var destination = new TileGroup { Name = "Explicit destination", Tiles = [new()] };
+                fixture.Document.Groups = [destination]; fixture.RenderGroups(); fixture.UpdateLayout();
+                menu = fixture.CreateAppMenu(folderApp);
+                var action = explicitGroup
+                    ? menu.Items.OfType<MenuItem>().Single(i => i.Header is "ReStart").Items.OfType<MenuItem>().First().Items.OfType<MenuItem>().Single()
+                    : menu.Items.OfType<MenuItem>().First();
+                action.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+                for (var attempt = 0; attempt < 100 && !fixture._catalog.Icons.ContainsKey(folderApp.Id); attempt++) await Task.Delay(50);
+                fixture.UpdateLayout();
+                var tile = AppPinning.Find(fixture.Document, folderApp) ?? throw new InvalidOperationException("The directory pin is missing.");
+                Require(tile.Target == folderPath && !tile.IsFolder, "The app menu pinned folder children instead of the directory.");
+                var owner = fixture.Document.Groups.Single(g => g.Tiles.Contains(tile));
+                Require(explicitGroup ? owner == destination : owner.IsStandalone, "A directory pin did not respect the selected destination.");
+                var button = VisualChildren<Button>(fixture.GroupsPanel).Single(b => b.Tag == tile);
+                Require(fixture._catalog.Icons.TryGetValue(folderApp.Id, out var source) && VisualChildren<Image>(button).SingleOrDefault()?.Source == source,
+                    "Pinning a directory from its app menu leaves the fallback glyph until restart.");
+                fixture.SaveScreenshot(Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"app-menu-directory-{explicitGroup}.png"));
+            }
+            return new(7, 2, 2);
         }
         finally { fixture.Exit(); Activate(); }
     }

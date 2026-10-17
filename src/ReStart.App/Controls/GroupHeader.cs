@@ -12,6 +12,19 @@ internal sealed class GroupHeader : Grid
     private string _name;
     private readonly TextKey _placeholder;
     internal Button Handle { get; } = new() { HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new(0, 6, 0, 6), FontSize = 15 };
+    internal Button EditButton { get; } = new()
+    {
+        Content = "\uE70F",
+        FontFamily = new("Segoe MDL2 Assets"),
+        FontSize = 12,
+        Width = 26,
+        Height = 28,
+        Padding = new(0),
+        Opacity = .6,
+        HorizontalContentAlignment = HorizontalAlignment.Center,
+        VerticalContentAlignment = VerticalAlignment.Center,
+        VerticalAlignment = VerticalAlignment.Center
+    };
     internal bool IsEditing { get; private set; }
     internal event Action? EditStarted;
     internal event Action<string?, bool>? EditEnded;
@@ -21,9 +34,16 @@ internal sealed class GroupHeader : Grid
         Height = ReStart.Core.GroupLayout.HeaderHeight;
         _name = name;
         _placeholder = placeholder;
+        ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
+        ColumnDefinitions.Add(new() { Width = new GridLength(28) });
         Handle.Content = DisplayName;
+        SetColumn(EditButton, 1); SetColumnSpan(_editor, 2);
+        EditButton.ToolTip = L.T(placeholder == K.NameGroup ? K.RenameGroup : K.RenameTile);
+        System.Windows.Automation.AutomationProperties.SetName(EditButton, (string)EditButton.ToolTip);
         Children.Add(Handle);
+        Children.Add(EditButton);
         Children.Add(_editor);
+        EditButton.Click += (_, e) => { BeginEdit(); e.Handled = true; };
         Handle.Click += (_, _) => { if (_name.Length == 0) BeginEdit(); };
         Handle.IsMouseDirectlyOverChanged += (_, _) => { if (!IsEditing) Handle.Content = DisplayName; };
         Handle.IsKeyboardFocusWithinChanged += (_, _) => { if (!IsEditing) Handle.Content = DisplayName; };
@@ -47,6 +67,7 @@ internal sealed class GroupHeader : Grid
         EditStarted?.Invoke();
         _editor.Text = _name;
         Handle.Visibility = Visibility.Collapsed;
+        EditButton.Visibility = Visibility.Collapsed;
         _editor.Visibility = Visibility.Visible;
         _editor.Focus();
         _editor.SelectAll();
@@ -60,6 +81,7 @@ internal sealed class GroupHeader : Grid
         _editor.Visibility = Visibility.Collapsed;
         Handle.Content = DisplayName;
         Handle.Visibility = Visibility.Visible;
+        EditButton.Visibility = Visibility.Visible;
         EditEnded?.Invoke(commit ? _name : null, returnFocus);
     }
 }

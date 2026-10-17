@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "title": "Focus cycle",
+  "localizedTitles": {
+    "en": "Focus cycle",
+    "ja": "集中タイマー",
+    "de": "Fokuszyklus",
+    "fr": "Cycle de concentration",
+    "es": "Ciclo de concentración",
+    "ko": "집중 타이머",
+    "zh-Hans": "专注周期",
+    "zh-Hant": "專注週期"
+  },
+  "refreshSeconds": 1,
+  "capabilities": [],
+  "settings": {
+    "color": "#954731",
+    "colorEnd": "#3E2538",
+    "accent": "#FFD6AA",
+    "labels": {
+      "en": {
+        "caption": "Focus cycle",
+        "focus": "Focus",
+        "paused": "Paused · click to resume",
+        "rest": "Take a breath"
+      },
+      "ja": {
+        "caption": "集中タイマー",
+        "focus": "集中",
+        "paused": "一時停止 · クリックで再開",
+        "rest": "ひと休み"
+      },
+      "de": {
+        "caption": "Fokuszyklus",
+        "focus": "Fokus",
+        "paused": "Pausiert · zum Fortsetzen klicken",
+        "rest": "Durchatmen"
+      },
+      "fr": {
+        "caption": "Cycle de concentration",
+        "focus": "Concentration",
+        "paused": "Pause · cliquez pour reprendre",
+        "rest": "Respirez"
+      },
+      "es": {
+        "caption": "Ciclo de concentración",
+        "focus": "Concentración",
+        "paused": "En pausa · pulse para continuar",
+        "rest": "Respire"
+      },
+      "ko": {
+        "caption": "집중 타이머",
+        "focus": "집중",
+        "paused": "일시 정지 · 클릭하여 재개",
+        "rest": "잠깐 쉬세요"
+      },
+      "zh-Hans": {
+        "caption": "专注周期",
+        "focus": "专注",
+        "paused": "已暂停 · 点击继续",
+        "rest": "休息一下"
+      },
+      "zh-Hant": {
+        "caption": "專注週期",
+        "focus": "專注",
+        "paused": "已暫停 · 按一下繼續",
+        "rest": "休息一下"
+      }
+    },
+    "focusMinutes": 25,
+    "restMinutes": 5
+  }
+}

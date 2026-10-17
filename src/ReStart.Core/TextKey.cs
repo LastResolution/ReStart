@@ -3,6 +3,60 @@ namespace ReStart.Core;
 /// <summary>Stable, language-independent identifiers for all application-owned UI text.</summary>
 public enum TextKey
 {
+    /// <summary>Adds a bundled or library live tile directly from a context menu.</summary>
+    AddLiveTile,
+    /// <summary>Names the user-owned package library.</summary>
+    TileLibrary,
+    /// <summary>Explains automatic package discovery.</summary>
+    TileLibraryHelp,
+    /// <summary>Opens the package library directory.</summary>
+    OpenTileLibrary,
+    /// <summary>Refreshes available packages.</summary>
+    RefreshTiles,
+    /// <summary>Explains an empty package library.</summary>
+    TileLibraryEmpty,
+    /// <summary>Chooses the explicit host folder binding for an image slideshow.</summary>
+    ChooseImageFolder,
+    /// <summary>Confirms the slideshow folder selection.</summary>
+    SlideshowFolderSaved,
+    /// <summary>Labels the installed tile gallery.</summary>
+    BundledTiles,
+    /// <summary>Names the gallery action for one sample.</summary>
+    AddBundledTile,
+    /// <summary>Explains the optional read-only system metrics API.</summary>
+    SystemMetricsHelp,
+    /// <summary>Opens ReStart when an identified Windows Start button is clicked.</summary>
+    SettingsStartButton,
+    /// <summary>Names the Explorer pin verb distinctly from the native Windows Start command.</summary>
+    PinToReStart,
+    /// <summary>Opens a filesystem file picker.</summary>
+    PinFile,
+    /// <summary>Opens a filesystem directory picker.</summary>
+    PinFolder,
+    /// <summary>Labels the file picker's unrestricted filter.</summary>
+    AllFilesFilter,
+    /// <summary>Enables the per-user Explorer pin command.</summary>
+    ExplorerPinSetting,
+    /// <summary>Explains the Explorer menu location and registration lifetime.</summary>
+    ExplorerPinHelp,
+    /// <summary>Reports an invalid pin path.</summary>
+    ErrorPinPath,
+    /// <summary>Reports a missing filesystem pin target.</summary>
+    ErrorPinMissing,
+    /// <summary>Reports a failed pin operation.</summary>
+    ErrorPinFailed,
+    /// <summary>Reports failure to reach the primary instance.</summary>
+    ErrorPinConnection,
+    /// <summary>Reports failure to register the per-user Explorer menu.</summary>
+    ErrorExplorerRegistration,
+    /// <summary>Names the destination group during tile drag/drop.</summary>
+    DropIntoGroup,
+    /// <summary>Identifies a folder drop destination.</summary>
+    DropIntoFolder,
+    /// <summary>Identifies an independent tile drop.</summary>
+    DropIndependent,
+    /// <summary>Identifies a group move preview.</summary>
+    DropMoveGroup,
     /// <summary>The backup was restored.</summary>
     RecoveryBackupRestored,
     /// <summary>folder</summary>
@@ -27,10 +81,6 @@ public enum TextKey
     PinWebsite,
     /// <summary>Windows shortcuts such as Win+E and Win+D remain available. You can also use Ctrl+Alt+Space or the notification area.</summary>
     SettingsShortcutHelp,
-    /// <summary>An independent recreation of Windows 10 full-screen Start. Legacy UWP notifications, Cortana, the full Windows Search index and Explorer internals are not included. Clock and date tiles update locally.</summary>
-    AboutCompatibility,
-    /// <summary>Requires a native Start button exposed by Explorer. Some Windows 11 taskbar configurations are not supported.</summary>
-    SettingsStartButtonHelp,
     /// <summary>Windows settings</summary>
     OpenWindowsSettings,
     /// <summary>Start when I sign in to Windows</summary>
@@ -123,8 +173,6 @@ public enum TextKey
     AddTile,
     /// <summary>Too many tiles.</summary>
     ErrorTooManyTiles,
-    /// <summary>Replace the taskbar Start button (experimental)</summary>
-    SettingsStartButton,
     /// <summary>Dark</summary>
     ThemeDark,
     /// <summary>Tools</summary>
@@ -207,8 +255,6 @@ public enum TextKey
     ErrorSave,
     /// <summary>Storage:</summary>
     StoragePrefix,
-    /// <summary>Compatibility</summary>
-    AboutScope,
     /// <summary>Restart</summary>
     PowerRestart,
     /// <summary>Default layout restored.</summary>
@@ -354,7 +400,6 @@ public enum TextKey
     /// <summary>Tile error</summary>
     ErrorScript,
     /// <summary>Up to eight JavaScript tiles can update at once.</summary>
-    MaxScriptTiles,
     /// <summary>Create sample</summary>
     CreateScriptSample,
     /// <summary>Tile added. Close settings to see it.</summary>
@@ -461,8 +506,8 @@ public enum TextKey
     UpdateUpToDate,
     /// <summary>No complete release is available for this architecture and channel.</summary>
     UpdateNoReleases,
-    /// <summary>Release access is unavailable. For this private repository, save a token with access to ReStart. Check the token's expiry and repository permission if one is already saved.</summary>
-    UpdateAccessRequired,
+    /// <summary>The public release service is unavailable. Try again later or open Releases.</summary>
+    UpdateServiceUnavailable,
     /// <summary>GitHub's request limit was reached. Try again later.</summary>
     UpdateRateLimited,
     /// <summary>The update service could not be reached. Check the connection and try again.</summary>
@@ -479,32 +524,12 @@ public enum TextKey
     UpdateOpenRelease,
     /// <summary>Release notes</summary>
     UpdateReleaseNotes,
-    /// <summary>GitHub access</summary>
-    UpdateAuth,
-    /// <summary>For private releases, create a fine-grained GitHub token for LastResolution/ReStart with Contents: read. Store it in Windows Credential Manager. It is never included in layout exports. Saving or removing it takes effect immediately.</summary>
-    UpdateAuthHelp,
-    /// <summary>A release token is saved.</summary>
-    UpdateAuthSaved,
-    /// <summary>No release token is saved.</summary>
-    UpdateAuthMissing,
-    /// <summary>Save token</summary>
-    UpdateSaveToken,
-    /// <summary>Remove saved token</summary>
-    UpdateRemoveToken,
-    /// <summary>Windows could not access the saved credential.</summary>
-    UpdateCredentialError,
     /// <summary>Updates are checked only. Download and extract the release manually; the app does not replace itself.</summary>
     UpdateNoAutoInstall,
-    /// <summary>Update checks contact api.github.com with the app version and authentication when configured. No app list, layout or usage history is sent.</summary>
+    /// <summary>Update checks contact api.github.com with the app version. No app list, layout or usage history is sent.</summary>
     UpdatePrivacy,
-    /// <summary>Network checks and credential changes are disabled in preview mode.</summary>
+    /// <summary>Network checks are disabled in preview mode.</summary>
     UpdatesDisabledInPreview,
-    /// <summary>GitHub read token</summary>
-    TokenLabel,
-    /// <summary>The token was saved in Windows Credential Manager.</summary>
-    TokenSaved,
-    /// <summary>The saved token was removed.</summary>
-    TokenRemoved,
     /// <summary>Select a license or notice to read and copy.</summary>
     LicenseChoose,
     /// <summary>Show accent color on Start</summary>
