@@ -46,7 +46,8 @@ public partial class App : Application
             return;
         }
         var handle = new WindowInteropHelper(_window).EnsureHandle();
-        _integration = new StartIntegration(handle, Dispatcher, _window.Toggle);
+        _integration = new StartIntegration(handle, Dispatcher, _window.Toggle, _window.DismissFromTaskbar);
+        _window.IsVisibleChanged += (_, _) => _integration.SetMenuOpen(_window.IsVisible);
         _window.PreferencesChanged = () =>
         {
             _integration.Apply(_window.Document.Preferences);
@@ -95,10 +96,14 @@ public partial class App : Application
         var watch = Stopwatch.StartNew();
         var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
         var settled = false;
+        var searchIndex = Array.IndexOf(args, "--search-query");
+        var query = searchIndex >= 0 && searchIndex + 1 < args.Length ? args[searchIndex + 1] : null;
+        var searchPrepared = false;
         timer.Tick += (_, _) =>
         {
             if (_window == null) return;
             if ((!_window.IsReady || !_window.IconsReady || !_window.ScriptsReady) && watch.Elapsed < TimeSpan.FromSeconds(45)) return;
+            if (query != null && !searchPrepared) { _window.SetSmokeSearch(query); searchPrepared = true; return; }
             if (!settled) { settled = true; return; }
             timer.Stop();
             var pathIndex = Array.IndexOf(args, "--snapshot");
@@ -107,7 +112,7 @@ public partial class App : Application
             try
             {
                 _window.SaveScreenshot(path);
-                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
+                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
             }
             catch (Exception ex) when (ex is IOException or InvalidOperationException) { success = false; }
             _window.Exit(); Shutdown(success ? 0 : 1);

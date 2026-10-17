@@ -1,13 +1,22 @@
 [CmdletBinding()]
-param()
+param(
+    [string]$Executable = '',
+    [ValidatePattern('^[\p{L}\p{N} _-]{1,80}$')][string]$SearchQuery = ''
+)
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
-dotnet build (Join-Path $repoRoot 'ReStart.slnx') -c Release
-if ($LASTEXITCODE -ne 0) { throw "Build failed: $LASTEXITCODE" }
-$executable = Join-Path $repoRoot 'src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe'
+if (-not $Executable) {
+    $buildPath = Join-Path $repoRoot 'artifacts/smoke/app'
+    dotnet build (Join-Path $repoRoot 'src/ReStart.App/ReStart.App.csproj') -c Release -o $buildPath
+    if ($LASTEXITCODE -ne 0) { throw "Build failed: $LASTEXITCODE" }
+    $Executable = Join-Path $buildPath 'ReStart.exe'
+}
+$Executable = (Resolve-Path -LiteralPath $Executable).Path
 $snapshot = Join-Path $repoRoot 'artifacts/smoke/start.png'
-$process = Start-Process -FilePath $executable -ArgumentList @('--smoke-test', '--snapshot', ('"' + $snapshot + '"')) -WindowStyle Hidden -PassThru
+$arguments = @('--smoke-test', '--snapshot', ('"' + $snapshot + '"'))
+if ($SearchQuery) { $arguments += @('--search-query', ('"' + $SearchQuery + '"')) }
+$process = Start-Process -FilePath $Executable -ArgumentList $arguments -WindowStyle Hidden -PassThru
 if (-not $process.WaitForExit(60000)) { $process.Kill(); throw 'Smoke test timed out.' }
 if ($process.ExitCode -ne 0) { throw "Smoke test failed: $($process.ExitCode)" }
 $result = Get-Content -LiteralPath ([IO.Path]::ChangeExtension($snapshot, '.json')) -Raw | ConvertFrom-Json

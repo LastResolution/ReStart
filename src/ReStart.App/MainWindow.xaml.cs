@@ -35,6 +35,7 @@ public partial class MainWindow : Window
     private int _dialogDepth;
     private Tile? _openFolder;
     private bool _exit;
+    private bool _searchRequested;
     private Task? _initialization;
     public LayoutDocument Document { get; private set; } = new();
     public Action? PreferencesChanged { get; set; }
@@ -103,7 +104,7 @@ public partial class MainWindow : Window
             SetStatus(_store.RecoveryMessage ?? L.F("{0} 個のアプリ  ·  文字を入力して検索  ·  Esc で閉じる", _apps.Count));
             _ready = true;
             PreferencesChanged?.Invoke();
-            Focus();
+            if (IsActive) FocusSearchInput();
             var pinnedIds = Document.Groups.SelectMany(g => g.Tiles).SelectMany(t => new[] { t }.Concat(t.Children)).Select(t => t.AppId).ToHashSet();
             await _catalog.LoadIconsAsync(actualApps.OrderByDescending(a => pinnedIds.Contains(a.Id)), () => Dispatcher.BeginInvoke(() =>
             {
@@ -159,8 +160,11 @@ public partial class MainWindow : Window
         if (Document.Preferences.Animate && !SystemParameters.HighContrast && SystemParameters.ClientAreaAnimation)
             Root.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(130)));
         else Root.Opacity = 1;
+        _searchRequested = false;
         SearchBox.Clear();
-        Keyboard.Focus(PinnedNav);
+        UpdateSearchChrome(false);
+        FocusSearchInput();
+        Dispatcher.BeginInvoke(() => { if (IsActive && _dialogDepth == 0 && SearchBox.Text.Length == 0) FocusSearchInput(); }, DispatcherPriority.Input);
     }
 
     private void RefreshBackgroundMenu()
@@ -590,7 +594,7 @@ public partial class MainWindow : Window
         SearchPlaceholder.Visibility = query.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
         ResultsPanel.Children.Clear();
         var searching = query.Length > 0;
-        TopBar.Visibility = searching || SearchBox.IsKeyboardFocused ? Visibility.Visible : Visibility.Collapsed;
+        UpdateSearchChrome(searching || _searchRequested);
         ResultsPanel.Visibility = searching ? Visibility.Visible : Visibility.Collapsed;
         GroupsPanel.Visibility = !searching && !_allApps ? Visibility.Visible : Visibility.Collapsed;
         AppsPanel.Visibility = !searching && _allApps ? Visibility.Visible : Visibility.Collapsed;
@@ -607,8 +611,8 @@ public partial class MainWindow : Window
         ContentScroll.ScrollToTop();
     }
 
-    private void ShowPinned(object sender, RoutedEventArgs e) { _allApps = false; SearchBox.Clear(); SearchChanged(SearchBox, new(TextBox.TextChangedEvent, UndoAction.None)); ExpandedRail.Visibility = Visibility.Collapsed; ContentScroll.ScrollToTop(); }
-    private void ShowAllApps(object sender, RoutedEventArgs e) { _allApps = true; SearchBox.Clear(); SearchChanged(SearchBox, new(TextBox.TextChangedEvent, UndoAction.None)); ExpandedRail.Visibility = Visibility.Collapsed; ContentScroll.ScrollToTop(); }
+    private void ShowPinned(object sender, RoutedEventArgs e) { _searchRequested = false; _allApps = false; SearchBox.Clear(); SearchChanged(SearchBox, new(TextBox.TextChangedEvent, UndoAction.None)); ExpandedRail.Visibility = Visibility.Collapsed; ContentScroll.ScrollToTop(); }
+    private void ShowAllApps(object sender, RoutedEventArgs e) { _searchRequested = false; _allApps = true; SearchBox.Clear(); SearchChanged(SearchBox, new(TextBox.TextChangedEvent, UndoAction.None)); ExpandedRail.Visibility = Visibility.Collapsed; ContentScroll.ScrollToTop(); }
     private void ClearSearch(object sender, RoutedEventArgs e) { SearchBox.Clear(); SearchBox.Focus(); }
     private void ToggleRail(object sender, RoutedEventArgs e) => ExpandedRail.Visibility = ExpandedRail.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
     private void RenameGroup(TileGroup group) { var name = Prompt(L.T("グループの名前"), group.Name); if (name != null) { group.Name = name; CommitLayout(); } }
@@ -747,6 +751,9 @@ public partial class MainWindow : Window
         PreferencesChanged?.Invoke();
     }
     public void SetStatus(string message) => StatusText.Text = message;
+    public void SetSmokeSearch(string query) { SearchBox.Text = query; FocusSearchInput(); }
+    public string[] SearchResultNames => ResultsPanel.Children.OfType<Button>().Select(AutomationProperties.GetName).ToArray();
+    public bool SearchInputInVisibleTree => SearchBox.IsVisible;
     private void WithDialog(Action action) { _dialogDepth++; try { action(); } finally { _dialogDepth--; } }
     private bool Confirm(string text)
     {
@@ -762,18 +769,36 @@ public partial class MainWindow : Window
     }
     public void ReplaceDocument(LayoutDocument document) { Document = document; SaveLayout(); RefreshLayout(); }
 
+    private void FocusSearchInput()
+    {
+        // Keep the native TextBox in the visible tree while its idle row is clipped to zero.
+        // Native input handles IME composition, the first character, selection and backspace.
+        FocusManager.SetFocusedElement(this, SearchBox);
+        Keyboard.Focus(SearchBox);
+    }
+    private void UpdateSearchChrome(bool visible)
+    {
+        TopBar.Height = visible ? 52 : 0; TopBar.Opacity = visible ? 1 : 0; TopBar.IsHitTestVisible = visible;
+    }
+    public void DismissFromTaskbar()
+    {
+        if (IsVisible && _dialogDepth == 0 && !_dragging && Document.Preferences.CloseOnDeactivate) Hide();
+    }
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (e.Key == Key.Tab && SearchBox.IsKeyboardFocused && SearchBox.Text.Length == 0 && !_searchRequested)
+        { PinnedNav.Focus(); e.Handled = true; return; }
+
         if (e.Key == Key.Escape)
         {
             if (AlphabetOverlay.Visibility == Visibility.Visible) AlphabetOverlay.Visibility = Visibility.Collapsed;
             else if (FolderOverlay.Visibility == Visibility.Visible) CloseFolder(this, e);
             else if (ExpandedRail.Visibility == Visibility.Visible) ExpandedRail.Visibility = Visibility.Collapsed;
-            else if (SearchBox.Text.Length > 0) SearchBox.Clear();
+            else if (SearchBox.Text.Length > 0 || _searchRequested) { _searchRequested = false; SearchBox.Clear(); UpdateSearchChrome(false); FocusSearchInput(); }
             else Hide();
             e.Handled = true;
         }
-        else if (e.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control) { TopBar.Visibility = Visibility.Visible; SearchBox.Focus(); SearchBox.SelectAll(); e.Handled = true; }
+        else if (e.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control) { _searchRequested = true; UpdateSearchChrome(true); SearchBox.Focus(); SearchBox.SelectAll(); e.Handled = true; }
         else if (e.Key == Key.Enter && SearchBox.IsKeyboardFocused && SearchBox.Text.Trim().Length > 0)
         {
             var app = AppSearch.Find(_apps, SearchBox.Text, 1).FirstOrDefault();
@@ -787,8 +812,8 @@ public partial class MainWindow : Window
     }
     private void OnPreviewTextInput(object sender, TextCompositionEventArgs e)
     {
-        if (e.OriginalSource is TextBox || Ancestor<TextBox>(e.OriginalSource as DependencyObject) != null || Keyboard.Modifiers.HasFlag(ModifierKeys.Control) || e.Text.Length == 0) return;
-        TopBar.Visibility = Visibility.Visible; SearchBox.Focus(); SearchBox.AppendText(e.Text); SearchBox.CaretIndex = SearchBox.Text.Length; e.Handled = true;
+        if (e.OriginalSource is TextBox || Ancestor<TextBox>(e.OriginalSource as DependencyObject) != null || Keyboard.Modifiers.HasFlag(ModifierKeys.Control) || e.Text.Length == 0 || e.Text.All(char.IsControl)) return;
+        UpdateSearchChrome(true); SearchBox.Focus(); SearchBox.AppendText(e.Text); SearchBox.CaretIndex = SearchBox.Text.Length; e.Handled = true;
     }
     private void OnDeactivated(object? sender, EventArgs e)
     {

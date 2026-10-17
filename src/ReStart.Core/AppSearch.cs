@@ -10,7 +10,8 @@ public static class AppSearch
         var words = Fold(query).Split(' ', StringSplitOptions.RemoveEmptyEntries);
         return apps.Select(app => (App: app, Name: Fold(app.Name)))
             .Where(x => words.All(word => x.Name.Contains(word, StringComparison.Ordinal)))
-            .OrderBy(x => words.Length == 0 ? 0 : x.Name == string.Join(' ', words) ? 0 : x.Name.StartsWith(words[0], StringComparison.Ordinal) ? 1 : 2)
+            .OrderBy(x => words.Length == 0 ? 0 : x.Name == string.Join(' ', words) ? 0 : x.Name.StartsWith(words[0], StringComparison.Ordinal) ? 1 :
+                words.All(word => x.Name.Split([' ', '-', '.', '_'], StringSplitOptions.RemoveEmptyEntries).Any(part => part.StartsWith(word, StringComparison.Ordinal))) ? 2 : 3)
             .ThenBy(x => x.App.Name, StringComparer.CurrentCultureIgnoreCase)
             .Take(limit).Select(x => x.App).ToList();
     }

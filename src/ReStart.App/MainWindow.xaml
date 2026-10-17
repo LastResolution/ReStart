@@ -25,7 +25,7 @@
       </Grid>
       <Grid Grid.Column="1" Margin="34,20,34,18">
         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="28" /></Grid.RowDefinitions>
-        <Grid x:Name="TopBar" Height="52" Visibility="Collapsed">
+        <Grid x:Name="TopBar" Height="0" Opacity="0" ClipToBounds="True" IsHitTestVisible="False">
           <TextBlock x:Name="ViewTitle" Text="{local:Loc Key='スタート'}" FontSize="24" FontWeight="Light" VerticalAlignment="Top" />
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
             <Button x:Name="AddButton" Content="{local:Loc Key='＋ グループ'}" ToolTip="{local:Loc Key='グループやタイルを追加'}" Click="OpenAddMenu" Margin="0,0,14,0" />
@@ -41,7 +41,7 @@
           <Grid>
             <WrapPanel x:Name="GroupsPanel" HorizontalAlignment="Left" VerticalAlignment="Top" />
             <controls:AppListPanel x:Name="AppsPanel" HorizontalAlignment="Left" VerticalAlignment="Top" Visibility="Collapsed" />
-            <StackPanel x:Name="ResultsPanel" MaxWidth="720" HorizontalAlignment="Stretch" Visibility="Collapsed" />
+            <StackPanel x:Name="ResultsPanel" MaxWidth="720" HorizontalAlignment="Left" Visibility="Collapsed" />
           </Grid>
         </ScrollViewer>
         <Grid Grid.Row="2">

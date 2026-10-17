@@ -10,6 +10,7 @@ internal sealed class StartIntegration : IDisposable
 {
     private readonly Dispatcher _dispatcher;
     private readonly Action _toggle;
+    private readonly Action _dismiss;
     private readonly Native.HookProc _keyboardCallback;
     private readonly Native.HookProc _mouseCallback;
     private WindowsKeyState _keys = new();
@@ -18,14 +19,16 @@ internal sealed class StartIntegration : IDisposable
     private bool _mouseDown;
     private volatile bool _captureStart;
     private volatile bool _captureWindows;
+    private volatile bool _menuOpen, _dismissOnTaskbar;
     private readonly Thread _hookThread;
     private uint _hookThreadId;
     public string? Status { get; private set; }
 
-    public StartIntegration(nint handle, Dispatcher dispatcher, Action toggle)
+    public StartIntegration(nint handle, Dispatcher dispatcher, Action toggle, Action dismiss)
     {
         _dispatcher = dispatcher;
         _toggle = toggle;
+        _dismiss = dismiss;
         _keyboardCallback = KeyboardHook;
         _mouseCallback = MouseHook;
         _source = HwndSource.FromHwnd(handle)!;
@@ -61,6 +64,13 @@ internal sealed class StartIntegration : IDisposable
     {
         _captureWindows = preferences.CaptureWindowsKey;
         _captureStart = preferences.CaptureStartButton;
+        _dismissOnTaskbar = preferences.CloseOnDeactivate;
+        Native.PostThreadMessage(_hookThreadId, 0x8001, 0, 0);
+    }
+
+    public void SetMenuOpen(bool visible)
+    {
+        _menuOpen = visible;
         Native.PostThreadMessage(_hookThreadId, 0x8001, 0, 0);
     }
 
@@ -72,8 +82,9 @@ internal sealed class StartIntegration : IDisposable
             if (_keyboard == 0) Status = L.T("Windows キーの登録に失敗しました: ") + new Win32Exception(Marshal.GetLastWin32Error()).Message;
         }
         if (!_captureWindows && _keyboard != 0) { Native.UnhookWindowsHookEx(_keyboard); _keyboard = 0; _keys = new(); }
-        if (_captureStart && _mouse == 0) _mouse = Native.SetWindowsHookEx(14, _mouseCallback, Native.GetModuleHandle(null), 0);
-        if (!_captureStart && _mouse != 0) { Native.UnhookWindowsHookEx(_mouse); _mouse = 0; }
+        var needMouse = _captureStart || _dismissOnTaskbar && _menuOpen;
+        if (needMouse && _mouse == 0) _mouse = Native.SetWindowsHookEx(14, _mouseCallback, Native.GetModuleHandle(null), 0);
+        if (!needMouse && _mouse != 0) { Native.UnhookWindowsHookEx(_mouse); _mouse = 0; }
     }
 
     private nint WindowProc(nint hwnd, int msg, nint wp, nint lp, ref bool handled)
@@ -119,6 +130,15 @@ internal sealed class StartIntegration : IDisposable
                     if (rootName.ToString() is "Shell_TrayWnd" or "Shell_SecondaryTrayWnd") { _mouseDown = true; return 1; }
                 }
             }
+        }
+        if (code >= 0 && _menuOpen && _dismissOnTaskbar && wp is 0x201 or 0x204 or 0x207)
+        {
+            var data = Marshal.PtrToStructure<Native.MouseData>(lp);
+            var window = Native.WindowFromPoint(data.Point);
+            var rootName = new System.Text.StringBuilder(128);
+            Native.GetClassName(Native.GetAncestor(window, 2), rootName, 128);
+            if (rootName.ToString() is "Shell_TrayWnd" or "Shell_SecondaryTrayWnd")
+                _dispatcher.BeginInvoke(_dismiss, DispatcherPriority.Input);
         }
         return Native.CallNextHookEx(_mouse, code, wp, lp);
     }
