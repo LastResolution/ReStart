@@ -69,14 +69,18 @@ public partial class MainWindow
                     ? menu.Items.OfType<MenuItem>().Single(i => i.Header is "ReStart").Items.OfType<MenuItem>().First().Items.OfType<MenuItem>().Single()
                     : menu.Items.OfType<MenuItem>().First();
                 action.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
-                for (var attempt = 0; attempt < 100 && !fixture._catalog.Icons.ContainsKey(folderApp.Id); attempt++) await Task.Delay(50);
-                fixture.UpdateLayout();
                 var tile = AppPinning.Find(fixture.Document, folderApp) ?? throw new InvalidOperationException("The directory pin is missing.");
+                bool IconRendered() => fixture._catalog.Icons.TryGetValue(folderApp.Id, out var source) &&
+                    VisualChildren<Button>(fixture.GroupsPanel).FirstOrDefault(b => b.Tag == tile) is { } rendered &&
+                    VisualChildren<Image>(rendered).SingleOrDefault()?.Source == source;
+                // The STA cache can be populated before its UI continuation
+                // rebuilds the button. Wait for the rendered result itself.
+                for (var attempt = 0; attempt < 100 && !IconRendered(); attempt++) await Task.Delay(50);
+                fixture.UpdateLayout();
                 Require(tile.Target == folderPath && !tile.IsFolder, "The app menu pinned folder children instead of the directory.");
                 var owner = fixture.Document.Groups.Single(g => g.Tiles.Contains(tile));
                 Require(explicitGroup ? owner == destination : owner.IsStandalone, "A directory pin did not respect the selected destination.");
-                var button = VisualChildren<Button>(fixture.GroupsPanel).Single(b => b.Tag == tile);
-                Require(fixture._catalog.Icons.TryGetValue(folderApp.Id, out var source) && VisualChildren<Image>(button).SingleOrDefault()?.Source == source,
+                Require(IconRendered(),
                     "Pinning a directory from its app menu leaves the fallback glyph until restart.");
                 fixture.SaveScreenshot(Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"app-menu-directory-{explicitGroup}.png"));
             }
