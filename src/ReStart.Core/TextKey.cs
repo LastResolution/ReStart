@@ -395,4 +395,28 @@ public enum TextKey
     ErrorScriptDeadline,
     /// <summary>Missing request.</summary>
     ErrorScriptRequestMissing,
+    /// <summary>Pin to Start</summary>
+    PinToStart,
+    /// <summary>More</summary>
+    MenuMore,
+    /// <summary>Run as administrator</summary>
+    RunAsAdministrator,
+    /// <summary>Open file location</summary>
+    OpenFileLocation,
+    /// <summary>Uninstall</summary>
+    UninstallApp,
+    /// <summary>Properties</summary>
+    AppProperties,
+    /// <summary>Loading…</summary>
+    MenuLoading,
+    /// <summary>Pin to group</summary>
+    PinToGroupMenu,
+    /// <summary>Unnamed group</summary>
+    UnnamedGroup,
+    /// <summary>Unpinned {0}</summary>
+    StatusUnpinned,
+    /// <summary>This command is no longer available for this app.</summary>
+    ErrorAppCommandUnavailable,
+    /// <summary>Could not run the app command: </summary>
+    ErrorAppCommand,
 }

@@ -115,6 +115,7 @@ public partial class App : Application
             PlacementSmokeResult? placement = null;
             AppFolderSmokeResult? appFolders = null;
             FirstInputSmokeResult? firstInput = null;
+            AppMenuSmokeResult? appMenus = null;
             string? error = null;
             try
             {
@@ -122,12 +123,13 @@ public partial class App : Application
                 if (args.Contains("--placement-test")) placement = _window.VerifyPlacement(path);
                 if (args.Contains("--app-tree-test")) appFolders = _window.VerifyAppFolders(path);
                 if (args.Contains("--first-input-test")) firstInput = await _window.VerifyFirstInputAsync(path);
+                if (args.Contains("--app-menu-test")) appMenus = await _window.VerifyAppMenusAsync(path);
                 _window.SaveScreenshot(path);
             }
             catch (Exception ex) when (ex is IOException or InvalidOperationException) { success = false; error = ex.Message; }
             try
             {
-                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, catalogFolders = _window.CatalogFolderCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, navigation, placement, appFolders, firstInput, error, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
+                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, catalogFolders = _window.CatalogFolderCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, navigation, placement, appFolders, firstInput, appMenus, error, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
             }
             catch (IOException) { success = false; }
             _window.Exit(); Shutdown(success ? 0 : 1);

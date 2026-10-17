@@ -33,6 +33,8 @@ jobs:
         run: ./scripts/test-navigation.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe -AppFolders
       - name: Verify first-character search during cold startup
         run: ./scripts/test-first-input.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+      - name: Verify app menus and read canonical shell commands
+        run: ./scripts/test-app-menus.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
       - name: Verify group placement and inline naming
         run: ./scripts/test-placement.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -44,6 +46,7 @@ jobs:
             artifacts/navigation/*
             artifacts/first-input/*.png
             artifacts/first-input/start.json
+            artifacts/app-menus/start.json
             artifacts/placement/*/*.png
             artifacts/placement/*/placement.json
           retention-days: 14

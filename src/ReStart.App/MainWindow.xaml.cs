@@ -410,7 +410,10 @@ public partial class MainWindow : Window
             resize.Items.Add(item);
         }
         menu.Items.Add(resize);
-        Add(menu, L.T(K.RenameTile), () =>
+        if (!tile.IsFolder && tile.Widget.Length == 0 && tile.Target.Length > 0)
+            AddAppShellItems(menu, _apps.FirstOrDefault(a => a.Id == tile.AppId) ?? new(tile.AppId, tile.Label, tile.Target, tile.IsShellApp));
+        var extras = new MenuItem { Header = "ReStart" };
+        Add(extras, L.T(K.RenameTile), () =>
         {
             if (tile.IsFolder) { RenameFolder(tile); return; }
             var value = Prompt(L.T(K.PromptTileName), tile.Label);
@@ -425,7 +428,7 @@ public partial class MainWindow : Window
             item.Click += (_, _) => { LayoutEditor.Move(Document, tile, group); CommitLayout(); };
             move.Items.Add(item);
         }
-        menu.Items.Add(move);
+        extras.Items.Add(move);
         if (!tile.IsFolder)
         {
             var folders = new MenuItem { Header = L.T(K.CreateFolder) };
@@ -436,9 +439,9 @@ public partial class MainWindow : Window
                 folders.Items.Add(item);
             }
             folders.IsEnabled = folders.Items.Count > 0;
-            menu.Items.Add(folders);
+            extras.Items.Add(folders);
         }
-        else Add(menu, L.T(K.UnpackFolder), () =>
+        else Add(extras, L.T(K.UnpackFolder), () =>
         {
             var group = Document.Groups.First(g => g.Tiles.Contains(tile));
             var index = group.Tiles.IndexOf(tile);
@@ -446,6 +449,7 @@ public partial class MainWindow : Window
             group.Tiles.InsertRange(index, tile.Children);
             CommitLayout();
         });
+        menu.Items.Add(extras);
         return menu;
     }
 
@@ -461,7 +465,7 @@ public partial class MainWindow : Window
         return menu;
     }
 
-    private static void Add(ContextMenu menu, string label, Action action)
+    private static void Add(ItemsControl menu, string label, Action action)
     {
         var item = new MenuItem { Header = label };
         item.Click += (_, _) => action();
@@ -583,26 +587,7 @@ public partial class MainWindow : Window
         panel.Children.Add(new TextBlock { Text = app.Name, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center });
         button.Content = panel;
         button.Click += (_, _) => { if (!_dragging) Launch(app); };
-        var menu = new ContextMenu();
-        button.ContextMenu = menu;
-        button.ContextMenuOpening += (_, _) =>
-        {
-            // Resolve groups when opening, after any rename, removal, or layout import.
-            menu.Items.Clear();
-            foreach (var group in Document.Groups) Add(menu, L.F(K.PinToGroup, group.Name), () =>
-            {
-                if (!Document.Groups.Contains(group)) return;
-                group.Tiles.Add(Tile.FromApp(app)); CommitLayout(); SetStatus(L.F(K.StatusPinned, app.Name));
-            });
-            Add(menu, L.T(K.PinNewGroup), () =>
-            {
-                var group = new TileGroup { Name = "", Tiles = [Tile.FromApp(app)] };
-                ShowPinned(this, new());
-                Document.Groups.Add(group);
-                CommitLayout();
-                RenameGroup(group);
-            });
-        };
+        button.ContextMenu = CreateAppMenu(app);
         WireDrag(button, "ReStart.App", app.Id);
         return button;
     }

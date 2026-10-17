@@ -194,5 +194,17 @@
   "ErrorScriptResponseMissing": "Missing tile response.",
   "ErrorScriptFrameMissing": "Missing tile frame.",
   "ErrorScriptDeadline": "Tile worker exceeded its deadline.",
-  "ErrorScriptRequestMissing": "Missing request."
+  "ErrorScriptRequestMissing": "Missing request.",
+  "PinToStart": "Pin to Start",
+  "MenuMore": "More",
+  "RunAsAdministrator": "Run as administrator",
+  "OpenFileLocation": "Open file location",
+  "UninstallApp": "Uninstall",
+  "AppProperties": "Properties",
+  "MenuLoading": "Loading…",
+  "PinToGroupMenu": "Pin to group",
+  "UnnamedGroup": "Unnamed group",
+  "StatusUnpinned": "Unpinned {0}",
+  "ErrorAppCommandUnavailable": "This command is no longer available for this app.",
+  "ErrorAppCommand": "Could not run the app command: "
 }
