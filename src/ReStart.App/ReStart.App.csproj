@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <!-- WPF owns DPI via the manifest; WinForms is used only for tray/monitor APIs. -->
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>ReStart</AssemblyName>
+    <ApplicationIcon>../../assets/ReStart.ico</ApplicationIcon>
+    <Description>Windows 10 inspired full-screen Start for Windows 11.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../ReStart.Core/ReStart.Core.csproj" />
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+    <Using Include="System.IO" />
+  </ItemGroup>
+</Project>

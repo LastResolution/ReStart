@@ -1,0 +1,28 @@
+name: 不具合報告
+description: 再現できる不具合を報告します
+labels: [bug]
+body:
+  - type: textarea
+    id: behavior
+    attributes:
+      label: 期待した動作と実際の動作
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現手順
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 環境
+      description: ReStart バージョン、Windows ビルド、DPI、モニター構成
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 画面・ログ
+      description: ユーザー名・アプリ名・ファイルパスなどの個人情報は取り除いてください。

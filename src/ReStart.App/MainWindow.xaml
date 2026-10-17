@@ -1,0 +1,80 @@
+<Window x:Class="ReStart.App.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ReStart" Style="{StaticResource {x:Type Window}}" WindowStyle="None" ResizeMode="NoResize" ShowInTaskbar="False" Topmost="True" UseLayoutRounding="True"
+        PreviewKeyDown="OnPreviewKeyDown" PreviewTextInput="OnPreviewTextInput" Deactivated="OnDeactivated" Closing="OnClosing">
+  <Grid x:Name="Root" ClipToBounds="True">
+    <Image x:Name="Wallpaper" Stretch="UniformToFill" IsHitTestVisible="False">
+      <Image.Effect><BlurEffect Radius="35" /></Image.Effect>
+    </Image>
+    <Border x:Name="Tint" Background="#E8202020" IsHitTestVisible="False" />
+    <Grid>
+      <Grid.ColumnDefinitions><ColumnDefinition Width="48" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+      <Border Grid.Column="0" Background="#10000000" />
+      <Grid Grid.Column="0">
+        <StackPanel>
+          <Button Height="48" ToolTip="メニューを展開" AutomationProperties.Name="メニューを展開" Click="ToggleRail" HorizontalContentAlignment="Center" Padding="0"><TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE700;" FontSize="16" /></Button>
+          <Button x:Name="PinnedNav" Height="48" ToolTip="ピン留めタイル" AutomationProperties.Name="ピン留めタイル" Click="ShowPinned" HorizontalContentAlignment="Center" Padding="0"><TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE80A;" FontSize="16" /></Button>
+          <Button x:Name="AppsNav" Height="48" ToolTip="すべてのアプリ" AutomationProperties.Name="すべてのアプリ" Click="ShowAllApps" HorizontalContentAlignment="Center" Padding="0"><TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8A9;" FontSize="16" /></Button>
+        </StackPanel>
+        <StackPanel VerticalAlignment="Bottom" Margin="0,0,0,12">
+          <Button Height="48" ToolTip="アカウント" AutomationProperties.Name="アカウント" Click="OpenAccount" HorizontalContentAlignment="Center" Padding="0"><TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE77B;" FontSize="18" /></Button>
+          <Button Height="48" ToolTip="ドキュメント" AutomationProperties.Name="ドキュメント" Click="OpenDocuments" HorizontalContentAlignment="Center" Padding="0"><TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8A5;" FontSize="18" /></Button>
+          <Button Height="48" ToolTip="ピクチャ" AutomationProperties.Name="ピクチャ" Click="OpenPictures" HorizontalContentAlignment="Center" Padding="0"><TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xEB9F;" FontSize="18" /></Button>
+          <Button Height="48" ToolTip="ReStart の設定" AutomationProperties.Name="ReStart の設定" Click="OpenSettings" HorizontalContentAlignment="Center" Padding="0"><TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE713;" FontSize="18" /></Button>
+          <Button Height="48" ToolTip="電源" AutomationProperties.Name="電源" Click="OpenPower" HorizontalContentAlignment="Center" Padding="0"><TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE7E8;" FontSize="18" /></Button>
+        </StackPanel>
+      </Grid>
+      <Grid Grid.Column="1" Margin="34,20,34,18">
+        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="28" /></Grid.RowDefinitions>
+        <Grid x:Name="TopBar" Height="52" Visibility="Collapsed">
+          <TextBlock x:Name="ViewTitle" Text="スタート" FontSize="24" FontWeight="Light" VerticalAlignment="Top" />
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+            <Button x:Name="AddButton" Content="＋ グループ" ToolTip="グループやタイルを追加" Click="OpenAddMenu" Margin="0,0,14,0" />
+            <Grid Width="280">
+              <TextBox x:Name="SearchBox" AutomationProperties.Name="アプリを検索" TextChanged="SearchChanged" Padding="35,8,30,8" Height="36" />
+              <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" Margin="12,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False" />
+              <TextBlock x:Name="SearchPlaceholder" Text="アプリを検索" Margin="36,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}" IsHitTestVisible="False" />
+              <Button Content="×" AutomationProperties.Name="検索をクリア" Width="30" HorizontalAlignment="Right" Padding="0" HorizontalContentAlignment="Center" Click="ClearSearch" />
+            </Grid>
+          </StackPanel>
+        </Grid>
+        <ScrollViewer x:Name="ContentScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,10,0,24">
+          <Grid>
+            <WrapPanel x:Name="GroupsPanel" HorizontalAlignment="Center" VerticalAlignment="Top" />
+            <WrapPanel x:Name="AppsPanel" HorizontalAlignment="Center" VerticalAlignment="Top" Visibility="Collapsed" />
+            <StackPanel x:Name="ResultsPanel" MaxWidth="720" HorizontalAlignment="Stretch" Visibility="Collapsed" />
+          </Grid>
+        </ScrollViewer>
+        <Grid Grid.Row="2">
+          <TextBlock x:Name="StatusText" Text="アプリを読み込んでいます…" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" FontSize="12" TextTrimming="CharacterEllipsis" Margin="0,0,190,0" />
+        </Grid>
+      </Grid>
+    </Grid>
+    <Border x:Name="ExpandedRail" Width="260" HorizontalAlignment="Left" Background="{DynamicResource PanelBrush}" Visibility="Collapsed">
+      <Grid>
+        <StackPanel>
+          <Button Content="☰     スタート" Height="48" Click="ToggleRail" />
+          <Button Content="▦     ピン留めタイル" Height="48" Click="ShowPinned" />
+          <Button Content="☷     すべてのアプリ" Height="48" Click="ShowAllApps" />
+        </StackPanel>
+        <StackPanel VerticalAlignment="Bottom" Margin="0,0,0,12">
+          <Button x:Name="UserButton" Content="アカウント" Height="48" Click="OpenAccount" />
+          <Button Content="▤     ドキュメント" Height="48" Click="OpenDocuments" />
+          <Button Content="▧     ピクチャ" Height="48" Click="OpenPictures" />
+          <Button Content="⚙     ReStart の設定" Height="48" Click="OpenSettings" />
+          <Button Content="⏻     電源" Height="48" Click="OpenPower" />
+        </StackPanel>
+      </Grid>
+    </Border>
+    <Border x:Name="FolderOverlay" Background="#A0000000" Visibility="Collapsed" MouseDown="CloseFolderBackground">
+      <Border Background="{DynamicResource PanelBrush}" MaxWidth="650" MaxHeight="600" Padding="28" Margin="40" HorizontalAlignment="Center" VerticalAlignment="Center" MouseDown="KeepFolderOpen">
+        <DockPanel>
+          <Grid DockPanel.Dock="Top" Margin="0,0,0,22"><TextBlock x:Name="FolderTitle" FontSize="24" /><Button Content="×" AutomationProperties.Name="フォルダーを閉じる" HorizontalAlignment="Right" Click="CloseFolder" /></Grid>
+          <ScrollViewer VerticalScrollBarVisibility="Auto"><WrapPanel x:Name="FolderTiles" /></ScrollViewer>
+        </DockPanel>
+      </Border>
+    </Border>
+    <Border x:Name="AlphabetOverlay" Background="{DynamicResource PanelBrush}" Visibility="Collapsed" MaxWidth="620" MaxHeight="460" Padding="24" HorizontalAlignment="Center" VerticalAlignment="Center">
+      <DockPanel><Button DockPanel.Dock="Top" Content="文字を選択   × 閉じる" Click="CloseAlphabet" /><WrapPanel x:Name="AlphabetButtons" Margin="0,16,0,0" /></DockPanel>
+    </Border>
+  </Grid>
+</Window>

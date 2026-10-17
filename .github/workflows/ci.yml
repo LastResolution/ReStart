@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Windows build and tests
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet restore ReStart.slnx --locked-mode
+      - run: dotnet format whitespace ReStart.slnx --verify-no-changes --no-restore
+      - run: dotnet build ReStart.slnx -c Release --no-restore
+      - run: dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory artifacts/test-results
+      - name: Validate portable publish
+        run: ./scripts/package.ps1 -Runtime win-x64
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: windows-test-results
+          path: artifacts/test-results/*.trx
+          retention-days: 14
+          if-no-files-found: warn
+
