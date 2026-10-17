@@ -6,7 +6,7 @@
     <Deterministic>true</Deterministic>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <NuGetLockFilePath Condition="'$(RuntimeIdentifier)' != ''">$(MSBuildProjectDirectory)/obj/packages.$(RuntimeIdentifier).lock.json</NuGetLockFilePath>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <Authors>ReStart contributors</Authors>
     <RepositoryUrl>https://github.com/LastResolution/ReStart</RepositoryUrl>
     <LangVersion>latest</LangVersion>

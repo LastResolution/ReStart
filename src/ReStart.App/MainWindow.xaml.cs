@@ -467,13 +467,22 @@ public partial class MainWindow : Window
         button.Content = panel;
         button.Click += (_, _) => { if (!_dragging) Launch(app); };
         var menu = new ContextMenu();
-        foreach (var group in Document.Groups) Add(menu, $"「{group.Name}」にピン留め", () => { group.Tiles.Add(Tile.FromApp(app)); CommitLayout(); SetStatus($"{app.Name} をピン留めしました"); });
-        Add(menu, "新しいグループにピン留め", () =>
-        {
-            var name = Prompt("グループの名前", "新しいグループ");
-            if (name != null) { Document.Groups.Add(new() { Name = name, Tiles = [Tile.FromApp(app)] }); CommitLayout(); }
-        });
         button.ContextMenu = menu;
+        button.ContextMenuOpening += (_, _) =>
+        {
+            // Resolve groups when opening, after any rename, removal, or layout import.
+            menu.Items.Clear();
+            foreach (var group in Document.Groups) Add(menu, $"「{group.Name}」にピン留め", () =>
+            {
+                if (!Document.Groups.Contains(group)) return;
+                group.Tiles.Add(Tile.FromApp(app)); CommitLayout(); SetStatus($"{app.Name} をピン留めしました");
+            });
+            Add(menu, "新しいグループにピン留め", () =>
+            {
+                var name = Prompt("グループの名前", "新しいグループ");
+                if (name != null) { Document.Groups.Add(new() { Name = name, Tiles = [Tile.FromApp(app)] }); CommitLayout(); }
+            });
+        };
         button.PreviewMouseLeftButtonDown += (_, e) => _dragOrigin = e.GetPosition(this);
         button.MouseMove += (_, e) => BeginDrag(button, e, "ReStart.App", app.Id);
         return button;

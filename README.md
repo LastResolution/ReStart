@@ -124,6 +124,8 @@ dotnet run --project src/ReStart.App -c Release -- --preview
 
 詳しくは [開発への参加](CONTRIBUTING.md)、[アーキテクチャ](docs/architecture.md)、[検証方法](docs/testing.md)、[リリース手順](docs/releasing.md) を参照してください。
 
+バージョンごとの変更は [CHANGELOG](CHANGELOG.md)、実施済みの確認は [検証記録](docs/validation.md) にまとめています。
+
 ## 参考とライセンス
 
 参考にした Microsoft の一次資料は [調査記録](docs/research.md) にまとめています。Microsoft のバイナリ、旧 Start のコードや画像は同梱していません。Windows および各アプリの名称・アイコンは各権利者に帰属します。ReStart は Microsoft とは独立したプロジェクトです。

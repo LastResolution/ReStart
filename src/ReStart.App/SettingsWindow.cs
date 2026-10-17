@@ -37,7 +37,7 @@ internal sealed class SettingsWindow : Window
         DockPanel.SetDock(footer, Dock.Bottom); root.Children.Add(footer);
         var content = new StackPanel();
         content.Children.Add(new TextBlock { Text = "ReStart", FontSize = 30, FontWeight = FontWeights.Light });
-        content.Children.Add(new TextBlock { Text = "全画面のスタートを、もう一度。    v0.1.0", Margin = new(0, 6, 0, 20), Foreground = Resource("MutedBrush") });
+        content.Children.Add(new TextBlock { Text = "全画面のスタートを、もう一度。    v" + typeof(App).Assembly.GetName().Version?.ToString(3), Margin = new(0, 6, 0, 20), Foreground = Resource("MutedBrush") });
         Heading(content, "起動と操作");
         Check(content, "Windows キー単押しで ReStart を開く", _draft.CaptureWindowsKey, v => _draft.CaptureWindowsKey = v);
         Note(content, "Win+E / Win+D などのショートカットは Windows に渡します。Ctrl+Alt+Space とトレイからも開けます。");
