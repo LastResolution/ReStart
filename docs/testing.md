@@ -8,10 +8,15 @@ dotnet format whitespace ReStart.slnx --verify-no-changes --no-restore
 dotnet build ReStart.slnx -c Release --no-restore
 dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory artifacts/test-results
 ./scripts/smoke.ps1
+./scripts/test-navigation.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/package.ps1 -Runtime win-x64
 ```
 
 スモークテストは隔離したプレビューで WPF を描画し、シェルの実アプリ数・アイコン数を確認します。タイルの表示名はデモ用に置き換え、Windows キー捕捉・トレイ・自動起動を使いません。`artifacts/smoke/start.png` と JSON を出力して終了します。JSON の success だけで全 UI 操作の成功とは扱いません。
+
+`test-navigation.ps1` はメモリ上の架空アプリ288個を使い、800 / 1280 / 1920 / 2560 DIP幅で一覧の右端、画面外へのはみ出し、文字見出しの分断を検証します。一覧と検索から実際のHide / Presentを8回実行し、タイル表示・先頭位置・検索解除・オーバーレイ終了も確認します。プレビューはサイズを維持し、本番の設定・レイアウトは変更しません。結果JSONと各サイズのPNGは `artifacts/navigation/` に出力し、CIにも保存します。物理Windowsキーやタスクバー操作の代わりにはなりません。
+
+CIのデスクトップより大きい幅も検証できるよう、ネイティブウィンドウの最大サイズには依存せず、実際のWPFルートへ描画幅を指定します。要求幅が反映されたことも検証します。
 
 ## 実機チェックリスト
 

@@ -40,7 +40,7 @@
         <ScrollViewer x:Name="ContentScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,10,0,24">
           <Grid>
             <WrapPanel x:Name="GroupsPanel" HorizontalAlignment="Left" VerticalAlignment="Top" />
-            <controls:AppListPanel x:Name="AppsPanel" HorizontalAlignment="Left" VerticalAlignment="Top" Visibility="Collapsed" />
+            <controls:AppListPanel x:Name="AppsPanel" HorizontalAlignment="Stretch" VerticalAlignment="Top" Visibility="Collapsed" />
             <StackPanel x:Name="ResultsPanel" MaxWidth="720" HorizontalAlignment="Left" Visibility="Collapsed" />
           </Grid>
         </ScrollViewer>

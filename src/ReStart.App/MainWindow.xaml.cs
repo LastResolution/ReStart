@@ -157,25 +157,26 @@ public partial class MainWindow : Window
         else Present();
     }
 
-    /// <summary>Presents the launcher on the pointer monitor and prepares native text input; existing owned dialogs retain focus.</summary>
+    /// <summary>Returns to the pinned home view and presents the launcher; existing owned dialogs retain focus and preview windows retain their size.</summary>
     public void Present()
     {
         var dialog = OwnedWindows.Cast<Window>().LastOrDefault(w => w.IsVisible);
         if (dialog != null) { dialog.Activate(); return; }
+        ResetToPinnedView();
         var handle = new WindowInteropHelper(this).EnsureHandle();
-        var screen = System.Windows.Forms.Screen.FromPoint(System.Windows.Forms.Cursor.Position);
-        var area = screen.WorkingArea;
         if (!IsVisible) Show();
-        Native.SetWindowPos(handle, new nint(-1), area.X, area.Y, area.Width, area.Height, 0x0040);
-        Native.SetForegroundWindow(handle);
+        if (!_preview)
+        {
+            var screen = System.Windows.Forms.Screen.FromPoint(System.Windows.Forms.Cursor.Position);
+            var area = screen.WorkingArea;
+            Native.SetWindowPos(handle, new nint(-1), area.X, area.Y, area.Width, area.Height, 0x0040);
+            Native.SetForegroundWindow(handle);
+        }
         Activate();
         ExpandedRail.Visibility = Visibility.Collapsed;
         if (Document.Preferences.Animate && !SystemParameters.HighContrast && SystemParameters.ClientAreaAnimation)
             Root.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(130)));
         else Root.Opacity = 1;
-        _searchRequested = false;
-        SearchBox.Clear();
-        UpdateSearchChrome(false);
         FocusSearchInput();
         Dispatcher.BeginInvoke(() => { if (IsActive && _dialogDepth == 0 && SearchBox.Text.Length == 0) FocusSearchInput(); }, DispatcherPriority.Input);
     }
@@ -313,9 +314,6 @@ public partial class MainWindow : Window
         var groupWidth = Document.Preferences.Columns * Cell + 24;
         var count = Math.Max(1, Math.Min(Math.Min(4, Document.Groups.Count), (int)(ContentScroll.ActualWidth / groupWidth)));
         GroupsPanel.Width = Math.Min(ContentScroll.ActualWidth, count * groupWidth);
-        AppsPanel.Columns = Math.Clamp((int)(ContentScroll.ActualWidth / 304), 1, 4);
-        AppsPanel.Width = Math.Min(ContentScroll.ActualWidth, AppsPanel.Columns * 304);
-        AppsPanel.InvalidateMeasure();
     }
 
     private Button CreateTileButton(Tile tile)
@@ -561,7 +559,7 @@ public partial class MainWindow : Window
         _sections.Clear();
         foreach (var section in _apps.GroupBy(a => a.Section).OrderBy(g => g.Key, StringComparer.CurrentCulture))
         {
-            var header = new Button { Content = section.Key, Tag = "section", FontSize = 20, FontWeight = FontWeights.Light, Padding = new(8, 8, 0, 8) };
+            var header = new Button { Content = section.Key, Tag = "section", HorizontalContentAlignment = HorizontalAlignment.Left, FontSize = 20, FontWeight = FontWeights.Light, Padding = new(8, 8, 0, 8) };
             header.Click += (_, _) => OpenAlphabet();
             AppsPanel.Children.Add(header);
             foreach (var app in section) AppsPanel.Children.Add(AppButton(app));
@@ -627,7 +625,21 @@ public partial class MainWindow : Window
         ContentScroll.ScrollToTop();
     }
 
-    private void ShowPinned(object sender, RoutedEventArgs e) { _searchRequested = false; _allApps = false; SearchBox.Clear(); SearchChanged(SearchBox, new(TextBox.TextChangedEvent, UndoAction.None)); ExpandedRail.Visibility = Visibility.Collapsed; ContentScroll.ScrollToTop(); }
+    private void ResetToPinnedView()
+    {
+        _allApps = false;
+        _searchRequested = false;
+        SearchBox.Clear();
+        // Clear() raises no event for an already-empty input, so always refresh the view.
+        SearchChanged(SearchBox, new(TextBox.TextChangedEvent, UndoAction.None));
+        ExpandedRail.Visibility = Visibility.Collapsed;
+        AlphabetOverlay.Visibility = Visibility.Collapsed;
+        CloseFolder(this, new());
+        FolderTiles.Children.Clear();
+        ClearDropPreview();
+        ContentScroll.ScrollToTop();
+    }
+    private void ShowPinned(object sender, RoutedEventArgs e) => ResetToPinnedView();
     private void ShowAllApps(object sender, RoutedEventArgs e) { _searchRequested = false; _allApps = true; SearchBox.Clear(); SearchChanged(SearchBox, new(TextBox.TextChangedEvent, UndoAction.None)); ExpandedRail.Visibility = Visibility.Collapsed; ContentScroll.ScrollToTop(); }
     private void ClearSearch(object sender, RoutedEventArgs e) { SearchBox.Clear(); SearchBox.Focus(); }
     private void ToggleRail(object sender, RoutedEventArgs e) => ExpandedRail.Visibility = ExpandedRail.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
@@ -854,8 +866,22 @@ public partial class MainWindow : Window
     public void SaveScreenshot(string path)
     {
         UpdateLayout();
+        var explicitPreviewSize = _preview && double.IsFinite(Root.Width) && double.IsFinite(Root.Height);
+        if (explicitPreviewSize)
+        {
+            // A fixture can exceed the CI desktop. Arrange it at its own size so
+            // WPF does not retain the smaller native window's layout clip.
+            Root.Measure(new(Root.Width, Root.Height));
+            Root.Arrange(new Rect(0, 0, Root.Width, Root.Height));
+        }
         var bitmap = new RenderTargetBitmap((int)Root.ActualWidth, (int)Root.ActualHeight, 96, 96, PixelFormats.Pbgra32);
         bitmap.Render(Root);
+        if (explicitPreviewSize)
+        {
+            var pixel = new byte[4];
+            bitmap.CopyPixels(new Int32Rect(bitmap.PixelWidth - 1, bitmap.PixelHeight - 1, 1, 1), pixel, 4, 0);
+            if (pixel[3] != 255) throw new InvalidOperationException("The preview render was clipped before its bottom-right corner.");
+        }
         var png = new PngBitmapEncoder(); png.Frames.Add(BitmapFrame.Create(bitmap));
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
         using var stream = File.Create(path); png.Save(stream);
