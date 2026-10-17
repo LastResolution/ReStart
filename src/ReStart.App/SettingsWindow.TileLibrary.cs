@@ -8,6 +8,8 @@ namespace ReStart.App;
 internal sealed partial class SettingsWindow
 {
     internal WrapPanel LibraryTiles { get; } = new();
+    internal int LibraryRefreshCount { get; private set; }
+    internal string? LibraryRefreshError { get; private set; }
 
     private void BuildTileLibrary(Panel content)
     {
@@ -20,56 +22,69 @@ internal sealed partial class SettingsWindow
             try { Directory.CreateDirectory(_main.ScriptPackages.LibraryRoot); ShellLauncher.Launch(_main.ScriptPackages.LibraryRoot); }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception or InvalidOperationException) { _feedback.Text = ex.Message; }
         });
-        var closed = false; var generation = 0; string? signature = null;
+        var closed = false; var refreshing = false; var pending = false; string? signature = null;
         async void Refresh()
         {
-            var current = ++generation;
+            if (closed) return;
+            // Coalesce new requests into a follow-up scan. Invalidating every
+            // in-flight result can otherwise starve updates during a long copy.
+            if (refreshing) { pending = true; return; }
+            refreshing = true;
             try
             {
-                var entries = await Task.Run(_main.ScriptPackages.DiscoverLibrary);
-                if (closed || current != generation) return;
-                var currentSignature = string.Join("\0", entries.Select(entry => entry.ManifestPath + "\n" + entry.Error + "\n" +
-                    System.Text.Json.JsonSerializer.Serialize(entry.Manifest, ReStart.Core.ScriptTileProtocol.Json)));
-                if (signature == currentSignature) return;
-                signature = currentSignature;
-                LibraryTiles.Children.Clear();
-                if (entries.Count == 0) Note(LibraryTiles, L.T(K.TileLibraryEmpty));
-                foreach (var entry in entries)
+                do
                 {
-                    var title = entry.Manifest?.LocalizedTitles.GetValueOrDefault(L.Language, entry.Manifest.Title) ?? Path.GetFileName(Path.GetDirectoryName(entry.ManifestPath));
-                    var button = new Button
+                    pending = false;
+                    var entries = await Task.Run(_main.ScriptPackages.DiscoverLibrary);
+                    if (closed) return;
+                    LibraryRefreshCount++;
+                    LibraryRefreshError = null;
+                    var currentSignature = string.Join("\0", entries.Select(entry => entry.ManifestPath + "\n" + entry.Error + "\n" +
+                        System.Text.Json.JsonSerializer.Serialize(entry.Manifest, ReStart.Core.ScriptTileProtocol.Json)));
+                    if (signature == currentSignature) continue;
+                    signature = currentSignature;
+                    LibraryTiles.Children.Clear();
+                    if (entries.Count == 0) Note(LibraryTiles, L.T(K.TileLibraryEmpty));
+                    foreach (var entry in entries)
                     {
-                        Content = new TextBlock { Text = title, TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center },
-                        Width = 152,
-                        Height = 70,
-                        Margin = new(0, 0, 8, 8),
-                        Tag = entry.ManifestPath,
-                        IsEnabled = entry.Manifest != null,
-                        ToolTip = entry.Error ?? L.F(K.AddBundledTile, title),
-                        Background = Resource("TileBrush")
-                    };
-                    button.Click += (_, _) =>
-                    {
-                        var tile = _main.AddScriptPackage(entry.ManifestPath);
-                        if (tile == null) return;
-                        if (entry.Manifest!.Capabilities.Contains("images.slideshow")) _main.ChooseSlideshowFolder(tile, this);
-                        _feedback.Text = L.T(K.StatusScriptAdded);
-                    };
-                    LibraryTiles.Children.Add(button);
-                }
+                        var title = entry.Manifest?.LocalizedTitles.GetValueOrDefault(L.Language, entry.Manifest.Title) ?? Path.GetFileName(Path.GetDirectoryName(entry.ManifestPath));
+                        var button = new Button
+                        {
+                            Content = new TextBlock { Text = title, TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center },
+                            Width = 152,
+                            Height = 70,
+                            Margin = new(0, 0, 8, 8),
+                            Tag = entry.ManifestPath,
+                            IsEnabled = entry.Manifest != null,
+                            ToolTip = entry.Error ?? L.F(K.AddBundledTile, title),
+                            Background = Resource("TileBrush")
+                        };
+                        button.Click += (_, _) =>
+                        {
+                            var tile = _main.AddScriptPackage(entry.ManifestPath);
+                            if (tile == null) return;
+                            if (entry.Manifest!.Capabilities.Contains("images.slideshow")) _main.ChooseSlideshowFolder(tile, this);
+                            _feedback.Text = L.T(K.StatusScriptAdded);
+                        };
+                        LibraryTiles.Children.Add(button);
+                    }
+                } while (pending && !closed);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            { if (!closed) _feedback.Text = ex.Message; }
+            { if (!closed) { LibraryRefreshError = ex.Message; _feedback.Text = ex.Message; } }
+            finally { refreshing = false; }
         }
         DataButton(buttons, L.T(K.RefreshTiles), Refresh);
         content.Children.Add(buttons); content.Children.Add(LibraryTiles);
         var debounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
         debounce.Tick += (_, _) => { debounce.Stop(); Refresh(); };
         // Filesystem notifications can be coalesced or arrive while a package is
-        // still being copied. Reconcile visible content without replacing unchanged buttons.
+        // still being copied. Reconcile while Settings is open, including when
+        // the library is below the scroll viewport or on an unselected page.
         var reconcile = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
-        reconcile.Tick += (_, _) => { if (LibraryTiles.IsVisible) Refresh(); };
+        reconcile.Tick += (_, _) => { if (IsVisible) Refresh(); };
         reconcile.Start();
+        LibraryTiles.IsVisibleChanged += (_, _) => { if (LibraryTiles.IsVisible) Refresh(); };
         FileSystemWatcher? watcher = null;
         try
         {
@@ -85,7 +100,7 @@ internal sealed partial class SettingsWindow
             watcher.EnableRaisingEvents = true;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException) { _feedback.Text = ex.Message; }
-        Closed += (_, _) => { closed = true; ++generation; debounce.Stop(); reconcile.Stop(); watcher?.Dispose(); };
+        Closed += (_, _) => { closed = true; debounce.Stop(); reconcile.Stop(); watcher?.Dispose(); };
         Refresh();
     }
 }
