@@ -15,8 +15,8 @@
 ```powershell
 git switch main
 git pull --ff-only
-git tag -a v0.1.0 -m "ReStart v0.1.0"
-git push origin v0.1.0
+git tag -a v0.2.0 -m "ReStart v0.2.0"
+git push origin v0.2.0
 gh run list --workflow release.yml
 ```
 
@@ -28,7 +28,7 @@ gh run list --workflow release.yml
 
 - CI と [検証](testing.md) を確認し、未検証を成功と記載しない。
 - 実際の app list、ユーザー名、個人レイアウト、ログが含まれていないことを確認する。
-- ZIP のファイルは `ReStart.exe`、LICENSE、README.txt の明示リストだけにする。
+- ZIPは新しいステージングフォルダーに作り、ReStart.exe、TileHost/ReStart.TileHost.exe、Examples、third-party、LICENSE、README.txtだけを収める。ビルドで解決した.NET Runtime / Windows Desktopのライセンスと通知もthird-partyへ同梱する。preview-dataや個人レイアウトを含めない。
 - Releases の可視性はリポジトリに従う。非公開のまま配布する。
 - 配布物の署名は未設定。署名鍵をリポジトリへ追加しない。
 

@@ -13,7 +13,7 @@ public sealed class ScriptTileManifest
     public string Title { get; set; } = "JavaScript";
     /// <summary>Gets or sets the visible update interval, from 1 to 3600 seconds.</summary>
     public int RefreshSeconds { get; set; } = 5;
-    /// <summary>Gets or sets the JSON object passed as ctx.settings, limited to 8 KB.</summary>
+    /// <summary>Gets or sets the JSON object passed as ctx.settings, limited to 8,192 UTF-16 code units of raw JSON.</summary>
     public JsonElement Settings { get; set; } = JsonSerializer.SerializeToElement(new { });
     /// <summary>Rejects an invalid schema or values outside the documented tile API limits.</summary>
     public void Validate()
@@ -39,7 +39,7 @@ public sealed class ScriptTileFrame
     public string Foreground { get; set; } = "";
     /// <summary>Gets or sets an optional finite progress fraction from zero to one.</summary>
     public double? Progress { get; set; }
-    /// <summary>Gets or sets JSON state for the next successful render, limited to 8 KB.</summary>
+    /// <summary>Gets or sets JSON state for the next successful render, limited to 8,192 UTF-16 code units of raw JSON.</summary>
     public JsonElement State { get; set; } = JsonSerializer.SerializeToElement(new { });
     /// <summary>Rejects an invalid schema or values outside the documented tile API limits.</summary>
     public void Validate()

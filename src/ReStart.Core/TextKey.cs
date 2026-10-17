@@ -359,9 +359,9 @@ public enum TextKey
     ScriptAuthoringHelp,
     /// <summary>Scripts receive the time, language, settings and previous state. Network, file, Node.js, DOM and CLR APIs are not exposed. See the tile development guide linked in the README.</summary>
     ScriptCapabilitiesHelp,
-    /// <summary>Invalid tile manifest (version 1, title 1–80, refreshSeconds 1–3600, settings object ≤8 KB).</summary>
+    /// <summary>Invalid tile manifest (version 1, title 1–80, refreshSeconds 1–3600, settings JSON ≤8192 characters).</summary>
     ErrorScriptManifestInvalid,
-    /// <summary>Invalid tile frame. Check text lengths, #RRGGBB colors, progress 0–1 and state ≤8 KB.</summary>
+    /// <summary>Invalid tile frame. Check text lengths, #RRGGBB colors, progress 0–1 and state JSON ≤8192 characters.</summary>
     ErrorScriptFrameInvalid,
     /// <summary>Tile protocol size limit exceeded.</summary>
     ErrorScriptProtocolSize,

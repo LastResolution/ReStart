@@ -3,14 +3,15 @@
 ## 構成
 
 ```text
-src/ReStart.Core        Windows 非依存のモデル、配置、検索、JSON 保存、キー状態
-src/ReStart.App         WPF の画面、シェル連携、入力フック、トレイ、設定
+src/ReStart.Core        モデル、配置、検索、JSON保存、型付き翻訳、JS契約、キー状態
+src/ReStart.App         WPFの画面、シェル連携、入力フック、トレイ、設定、JSプロセス管理
+src/ReStart.TileHost    Jintを使う専用ワーカー。JSON-linesで入力と表示データを交換
 tests/ReStart.Core.Tests 配置の不変条件、保存の復旧、検索とキー状態のテスト
 scripts                スモークテストと配布パッケージ作成
 .github                CI / リリース / 依存関係更新 / PR と Issue テンプレート
 ```
 
-`Core` は OS API を参照しません。WPF の `MainWindow` が表示と編集を扱い、ドメイン上の移動・フォルダー作成を `LayoutEditor` に委譲します。
+`Core` のモデル・配置・検索・保存はWPFに依存しません。SingleInstanceGateのみWindows専用の名前付き同期オブジェクトを使用し、SupportedOSPlatformを明示します。WPF の `MainWindow` が表示と編集を扱い、ドメイン上の移動・フォルダー作成を `LayoutEditor` に委譲します。
 
 ## シェルとアプリ起動
 
@@ -41,3 +42,11 @@ scripts                スモークテストと配布パッケージ作成
 フルスクリーンはモニターの WorkingArea を Win32 の物理座標で指定します。WPF の PerMonitorV2 で描画し、タイル内部は論理セルで配置します。グループは画面幅に応じて折り返します。
 
 壁紙をぼかした背景と色のオーバーレイを使います。これは Windows 10 の Acrylic を直接呼び出す実装ではありません。ハイコントラストではシステム色を優先し、背景効果を抑えます。
+
+## 翻訳と公開API
+
+TextKey列挙型をC# / XAMLから参照し、表示文言はja/enの埋め込みJSONだけに置きます。キー集合の一致と書式を検証し、保存済みのユーザーラベルは翻訳しません。公開APIのXMLコメントをビルドで検証します。[多言語実装](localization.md) と [API契約](api-contracts.md) を参照してください。
+
+## JavaScriptの実行境界
+
+ReStart.TileHostをタイルごとに専用プロセスで起動し、各描画は新しいJintエンジンで実行します。入力と出力は制限付きJSONのみです。通信は現ユーザーだけが接続できる非同期名前付きパイプで行い、応答待ちでThreadPoolのワーカーを占有しません。親側は通常1秒・初回4秒の待機期限を持ち、パイプのキャンセルに依存せずワーカーを終了できます。Job Objectでメモリと子プロセス数を制限し、メニュー非表示・アプリ終了時に終了します。詳細は [JavaScriptタイル](javascript-tiles.md) を参照してください。

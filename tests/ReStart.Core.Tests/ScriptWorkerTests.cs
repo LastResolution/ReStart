@@ -9,6 +9,22 @@ namespace ReStart.Core.Tests;
 public sealed class ScriptWorkerTests
 {
     [Fact]
+    public async Task ConcurrentWorkersMeetDeadlinesWithoutBlockingThePool()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        var sessions = Enumerable.Range(0, 4).Select(_ => new ScriptTileSession(Path.Combine(AppContext.BaseDirectory, "ReStart.TileHost.exe"))).ToArray();
+        try
+        {
+            var ready = await Task.WhenAll(sessions.Select(session => session.RenderAsync("function render(){return {text:'ready'};}", new { })));
+            Assert.All(ready, frame => Assert.NotNull(frame));
+            var watch = Stopwatch.StartNew();
+            var results = await Task.WhenAll(sessions.Select(session => session.RenderAsync("function render(){return {text:String(/(a+)+$/.test('a'.repeat(10000)+'!'))};}", new { })));
+            Assert.All(results, frame => Assert.Null(frame));
+            Assert.True(watch.Elapsed < TimeSpan.FromSeconds(3), $"Concurrent deadlines took {watch.Elapsed.TotalMilliseconds:F0} ms.");
+        }
+        finally { foreach (var session in sessions) session.Dispose(); }
+    }
+    [Fact]
     public async Task WorkerValidationErrorsFollowRequestedLocale()
     {
         if (!OperatingSystem.IsWindows()) return;

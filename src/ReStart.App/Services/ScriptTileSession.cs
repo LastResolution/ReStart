@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.IO.Pipes;
+using System.Text;
 using System.Text.Json;
 using ReStart.Core;
 
@@ -11,6 +13,9 @@ internal sealed class ScriptTileSession(string? workerExecutable = null) : IDisp
 {
     private Process? _process;
     private WorkerJob? _job;
+    private NamedPipeServerStream? _pipe;
+    private StreamReader? _reader;
+    private StreamWriter? _writer;
     public JsonElement State { get; private set; } = JsonSerializer.SerializeToElement(new { });
     public DateTimeOffset NextUpdate { get; set; }
     public string? Error { get; private set; }
@@ -23,18 +28,22 @@ internal sealed class ScriptTileSession(string? workerExecutable = null) : IDisp
             if (cold)
             {
                 Dispose();
-                var info = new ProcessStartInfo(workerExecutable ?? Path.Combine(AppContext.BaseDirectory, "TileHost", "ReStart.TileHost.exe")) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardOutput = true };
+                var pipeName = "ReStart.Tile." + Guid.NewGuid().ToString("N");
+                _pipe = new(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+                var info = new ProcessStartInfo(workerExecutable ?? Path.Combine(AppContext.BaseDirectory, "TileHost", "ReStart.TileHost.exe")) { UseShellExecute = false, CreateNoWindow = true };
+                info.ArgumentList.Add("--pipe"); info.ArgumentList.Add(pipeName);
                 _process = Process.Start(info) ?? throw new InvalidOperationException(TextCatalog.T(K.ErrorScriptWorkerStart));
                 _job = new(_process);
+                _reader = new(_pipe, new UTF8Encoding(false), false, 4096, leaveOpen: true);
+                _writer = new(_pipe, new UTF8Encoding(false), 4096, leaveOpen: true);
             }
             using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(cold ? 4 : 1));
-            var process = _process!;
             var request = new ScriptTileRequest(source, JsonSerializer.SerializeToElement(context, ScriptTileProtocol.Json));
             var line = JsonSerializer.Serialize(request, ScriptTileProtocol.Json);
             if (line.Length > ScriptTileProtocol.MaxRequest) throw new InvalidDataException(TextCatalog.T(K.ErrorScriptRequestSize));
-            var exchange = ExchangeAsync(process, line, deadline.Token);
-            // Cancellation on a Windows anonymous pipe does not necessarily interrupt an
-            // outstanding read. Bound the await itself, then close the worker on timeout.
+            var exchange = ExchangeAsync(_pipe!, _reader!, _writer!, line, deadline.Token);
+            // Overlapped pipe IO leaves ThreadPool workers free for the deadline timer.
+            // Bound the await itself too, then close the job and pipe on timeout.
             _ = exchange.ContinueWith(task => { _ = task.Exception; }, CancellationToken.None,
                 TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
             var result = await exchange.WaitAsync(deadline.Token);
@@ -49,15 +58,20 @@ internal sealed class ScriptTileSession(string? workerExecutable = null) : IDisp
             Dispose(); return null;
         }
     }
-    private static async Task<string?> ExchangeAsync(Process process, string line, CancellationToken token)
+    private static async Task<string?> ExchangeAsync(NamedPipeServerStream pipe, StreamReader reader, StreamWriter writer, string line, CancellationToken token)
     {
-        await process.StandardInput.WriteLineAsync(line.AsMemory(), token).ConfigureAwait(false);
-        await process.StandardInput.FlushAsync(token).ConfigureAwait(false);
-        return await ScriptTileProtocol.ReadLineAsync(process.StandardOutput, ScriptTileProtocol.MaxResponse, token).ConfigureAwait(false);
+        if (!pipe.IsConnected) await pipe.WaitForConnectionAsync(token).ConfigureAwait(false);
+        await writer.WriteLineAsync(line.AsMemory(), token).ConfigureAwait(false);
+        await writer.FlushAsync(token).ConfigureAwait(false);
+        return await ScriptTileProtocol.ReadLineAsync(reader, ScriptTileProtocol.MaxResponse, token).ConfigureAwait(false);
     }
     /// <summary>Stops the worker while retaining JSON state so hiding the menu does not lose the last successful state.</summary>
     public void Dispose()
     {
+        _pipe?.Dispose(); _pipe = null;
+        try { _writer?.Dispose(); } catch (Exception ex) when (ex is IOException or InvalidOperationException) { }
+        _writer = null;
+        _reader?.Dispose(); _reader = null;
         _job?.Dispose(); _job = null;
         if (_process != null)
         {
