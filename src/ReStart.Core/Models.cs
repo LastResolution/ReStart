@@ -7,7 +7,7 @@ public sealed record AppEntry(string Id, string Name, string LaunchTarget, bool 
 {
     public string Section => string.IsNullOrWhiteSpace(Name) ? "#" :
         char.IsAsciiLetter(Name[0]) ? char.ToUpperInvariant(Name[0]).ToString() :
-        char.IsDigit(Name[0]) ? "#" : "あ・他";
+        char.IsDigit(Name[0]) ? "#" : L.T("あ・他");
 }
 
 public sealed class Tile
@@ -38,12 +38,13 @@ public sealed class Tile
 public sealed class TileGroup
 {
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
-    public string Name { get; set; } = "新しいグループ";
+    public string Name { get; set; } = L.T("新しいグループ");
     public List<Tile> Tiles { get; set; } = [];
 }
 
 public sealed class Preferences
 {
+    public string Language { get; set; } = "system";
     public bool CaptureWindowsKey { get; set; } = true;
     public bool CaptureStartButton { get; set; }
     public bool StartWithWindows { get; set; }
@@ -68,7 +69,7 @@ public sealed class LayoutDocument
     public void Normalize()
     {
         if (Version != CurrentVersion)
-            throw new InvalidDataException($"未対応のレイアウト形式です: {Version}");
+            throw new InvalidDataException(L.F("未対応のレイアウト形式です: {0}", Version));
         Preferences ??= new();
         Groups ??= [];
         Preferences.Columns = Preferences.Columns == 8 ? 8 : 6;
@@ -83,7 +84,7 @@ public sealed class LayoutDocument
                 group.Id = Guid.NewGuid().ToString("N");
                 ids.Add(group.Id);
             }
-            group.Name = string.IsNullOrWhiteSpace(group.Name) ? "新しいグループ" : group.Name.Trim();
+            group.Name = string.IsNullOrWhiteSpace(group.Name) ? L.T("新しいグループ") : group.Name.Trim();
             group.Tiles ??= [];
             NormalizeTiles(group.Tiles, ids, 0);
         }
@@ -91,7 +92,7 @@ public sealed class LayoutDocument
 
     private static void NormalizeTiles(List<Tile> tiles, HashSet<string> ids, int depth)
     {
-        if (tiles.Count > 2000) throw new InvalidDataException("タイル数が多すぎます。");
+        if (tiles.Count > 2000) throw new InvalidDataException(L.T("タイル数が多すぎます。"));
         foreach (var tile in tiles)
         {
             if (string.IsNullOrEmpty(tile.Id) || !ids.Add(tile.Id))
@@ -99,7 +100,7 @@ public sealed class LayoutDocument
                 tile.Id = Guid.NewGuid().ToString("N");
                 ids.Add(tile.Id);
             }
-            tile.Label ??= "アプリ";
+            tile.Label ??= L.T("アプリ");
             tile.AppId ??= "";
             tile.Target ??= "";
             tile.Widget ??= "";
@@ -109,7 +110,7 @@ public sealed class LayoutDocument
             if (tile.Column is < 0 or > 15 || tile.Row is < 0 or > 200 || tile.Column.HasValue != tile.Row.HasValue)
             { tile.Column = null; tile.Row = null; }
             if (depth >= 1 && tile.Children.Count != 0)
-                throw new InvalidDataException("フォルダーの入れ子には対応していません。");
+                throw new InvalidDataException(L.T("フォルダーの入れ子には対応していません。"));
             NormalizeTiles(tile.Children, ids, depth + 1);
         }
     }

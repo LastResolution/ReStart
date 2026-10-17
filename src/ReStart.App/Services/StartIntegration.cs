@@ -54,7 +54,7 @@ internal sealed class StartIntegration : IDisposable
         _hookThread.Start();
         ready.Wait();
         if (!Native.RegisterHotKey(handle, 0x5253, 0x4003, 0x20))
-            Status = "Ctrl+Alt+Space は別のアプリが使用しています。トレイから開いてください。";
+            Status = L.T("Ctrl+Alt+Space は別のアプリが使用しています。トレイから開いてください。");
     }
 
     public void Apply(Preferences preferences)
@@ -69,7 +69,7 @@ internal sealed class StartIntegration : IDisposable
         if (_captureWindows && _keyboard == 0)
         {
             _keyboard = Native.SetWindowsHookEx(13, _keyboardCallback, Native.GetModuleHandle(null), 0);
-            if (_keyboard == 0) Status = "Windows キーの登録に失敗しました: " + new Win32Exception(Marshal.GetLastWin32Error()).Message;
+            if (_keyboard == 0) Status = L.T("Windows キーの登録に失敗しました: ") + new Win32Exception(Marshal.GetLastWin32Error()).Message;
         }
         if (!_captureWindows && _keyboard != 0) { Native.UnhookWindowsHookEx(_keyboard); _keyboard = 0; _keys = new(); }
         if (_captureStart && _mouse == 0) _mouse = Native.SetWindowsHookEx(14, _mouseCallback, Native.GetModuleHandle(null), 0);

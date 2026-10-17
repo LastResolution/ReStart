@@ -48,6 +48,7 @@ public partial class App : Application
         _window.PreferencesChanged = () =>
         {
             _integration.Apply(_window.Document.Preferences);
+            RefreshTrayLanguage();
             if (_integration.Status is string status) _window.SetStatus(status);
         };
         CreateTray();
@@ -58,7 +59,7 @@ public partial class App : Application
             args.Handled = true;
             var directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ReStart");
             try { Directory.CreateDirectory(directory); File.AppendAllText(Path.Combine(directory, "error.log"), $"{DateTimeOffset.Now:O} {args.Exception}\n"); } catch (IOException) { }
-            MessageBox.Show("ReStart でエラーが発生したため終了します。保存済みのレイアウトは保持されます。", "ReStart", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(L.T("ReStart でエラーが発生したため終了します。保存済みのレイアウトは保持されます。"), "ReStart", MessageBoxButton.OK, MessageBoxImage.Error);
             ExitApplication();
         };
     }
@@ -66,18 +67,25 @@ public partial class App : Application
     private void CreateTray()
     {
         var menu = new System.Windows.Forms.ContextMenuStrip();
-        menu.Items.Add("ReStart を開く", null, (_, _) => Dispatcher.Invoke(() => _window!.Present()));
-        menu.Items.Add("設定", null, (_, _) => Dispatcher.Invoke(() => { _window!.Present(); _window.ShowSettings(); }));
+        menu.Items.Add(L.T("ReStart を開く"), null, (_, _) => Dispatcher.Invoke(() => _window!.Present()));
+        menu.Items.Add(L.T("設定"), null, (_, _) => Dispatcher.Invoke(() => { _window!.Present(); _window.ShowSettings(); }));
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
-        menu.Items.Add("終了", null, (_, _) => Dispatcher.Invoke(ExitApplication));
+        menu.Items.Add(L.T("終了"), null, (_, _) => Dispatcher.Invoke(ExitApplication));
         _tray = new System.Windows.Forms.NotifyIcon
         {
-            Text = "ReStart — Ctrl+Alt+Space で開く",
+            Text = L.T("ReStart — Ctrl+Alt+Space で開く"),
             Icon = System.Drawing.Icon.ExtractAssociatedIcon(Environment.ProcessPath!) ?? System.Drawing.SystemIcons.Application,
             ContextMenuStrip = menu,
             Visible = true
         };
         _tray.DoubleClick += (_, _) => Dispatcher.Invoke(() => _window!.Toggle());
+    }
+
+    private void RefreshTrayLanguage()
+    {
+        if (_tray?.ContextMenuStrip is not { } menu) return;
+        menu.Items[0].Text = L.T("ReStart を開く"); menu.Items[1].Text = L.T("設定"); menu.Items[3].Text = L.T("終了");
+        _tray.Text = L.T("ReStart — Ctrl+Alt+Space で開く");
     }
 
     private void RunSmoke(string[] args)

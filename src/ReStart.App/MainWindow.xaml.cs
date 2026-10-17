@@ -38,6 +38,7 @@ public partial class MainWindow : Window
     public LayoutDocument Document { get; private set; } = new();
     public Action? PreferencesChanged { get; set; }
     public bool IsReady => _ready;
+    public bool IsPreview => _preview;
     public bool IconsReady { get; private set; }
     public int CatalogCount => _catalog.Count;
     public int IconCount => _catalog.Icons.Count;
@@ -48,12 +49,7 @@ public partial class MainWindow : Window
         _store = store;
         _preview = preview;
         InitializeComponent();
-        var backgroundMenu = new ContextMenu();
-        Add(backgroundMenu, "新しいグループ", AddGroup);
-        Add(backgroundMenu, "アプリをピン留め", () => ShowAllApps(this, new()));
-        Add(backgroundMenu, "タイルを追加", () => OpenAddMenu(AddButton, new()));
-        Add(backgroundMenu, "ReStart の設定", ShowSettings);
-        Root.ContextMenu = backgroundMenu;
+        ThemeWindow.Attach(this);
         PinnedNav.AllowDrop = true;
         PinnedNav.PreviewDragOver += (_, e) => { if (HasDrag(e)) { ShowPinned(this, new()); e.Effects = DragDropEffects.Move; e.Handled = true; } };
         ContentScroll.AllowDrop = true;
@@ -99,7 +95,7 @@ public partial class MainWindow : Window
             ApplyAppearance();
             RenderGroups();
             RenderApps();
-            SetStatus(_store.RecoveryMessage ?? $"{_apps.Count} 個のアプリ  ·  文字を入力して検索  ·  Esc で閉じる");
+            SetStatus(_store.RecoveryMessage ?? L.F("{0} 個のアプリ  ·  文字を入力して検索  ·  Esc で閉じる", _apps.Count));
             _ready = true;
             PreferencesChanged?.Invoke();
             Focus();
@@ -123,7 +119,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            SetStatus("アプリの読み込みに失敗しました: " + ex.Message);
+            SetStatus(L.T("アプリの読み込みに失敗しました: ") + ex.Message);
             _ready = true;
         }
     }
@@ -160,9 +156,22 @@ public partial class MainWindow : Window
         Keyboard.Focus(PinnedNav);
     }
 
+    private void RefreshBackgroundMenu()
+    {
+        var backgroundMenu = new ContextMenu();
+        Add(backgroundMenu, L.T("新しいグループ"), AddGroup);
+        Add(backgroundMenu, L.T("アプリをピン留め"), () => ShowAllApps(this, new()));
+        Add(backgroundMenu, L.T("タイルを追加"), () => OpenAddMenu(AddButton, new()));
+        Add(backgroundMenu, L.T("ReStart の設定"), ShowSettings);
+        Root.ContextMenu = backgroundMenu;
+    }
+
     public void ApplyAppearance()
     {
         var p = Document.Preferences;
+        LocalizationResources.Apply(p.Language);
+        Language = System.Windows.Markup.XmlLanguage.GetLanguage(L.Culture.IetfLanguageTag);
+        RefreshBackgroundMenu();
         var light = p.Theme == ReStart.Core.ThemeMode.Light;
         if (p.Theme == ReStart.Core.ThemeMode.System)
         {
@@ -177,6 +186,12 @@ public partial class MainWindow : Window
         Application.Current.Resources["PanelBrush"] = new SolidColorBrush(background);
         Application.Current.Resources["TileBrush"] = new SolidColorBrush(highContrast ? background : light ? Color.FromRgb(218, 218, 218) : Color.FromRgb(58, 58, 58));
         Application.Current.Resources["AccentBrush"] = Brush(p.Accent, "#0078D7");
+        Application.Current.Resources["ControlBrush"] = new SolidColorBrush(highContrast ? background : light ? Colors.White : Color.FromRgb(43, 43, 43));
+        Application.Current.Resources["BorderBrush"] = new SolidColorBrush(highContrast ? foreground : light ? Color.FromRgb(135, 135, 135) : Color.FromRgb(112, 112, 112));
+        Application.Current.Resources["HoverBrush"] = new SolidColorBrush(highContrast ? background : light ? Color.FromRgb(225, 225, 225) : Color.FromRgb(70, 70, 70));
+        Application.Current.Resources["ScrollThumbBrush"] = new SolidColorBrush(highContrast ? foreground : light ? Color.FromRgb(135, 135, 135) : Color.FromRgb(115, 115, 115));
+        ThemeWindow.IsLight = light;
+        foreach (Window window in Application.Current.Windows) ThemeWindow.Apply(window);
         Tint.Background = new SolidColorBrush(Color.FromArgb((byte)(highContrast ? 255 : 255 * p.BackgroundOpacity), background.R, background.G, background.B));
         Root.Background = new SolidColorBrush(background);
         Wallpaper.Source = null;
@@ -210,7 +225,7 @@ public partial class MainWindow : Window
         try { _store.Save(Document); }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
-            SetStatus("保存できませんでした: " + ex.Message);
+            SetStatus(L.T("保存できませんでした: ") + ex.Message);
         }
     }
 
@@ -221,8 +236,8 @@ public partial class MainWindow : Window
         foreach (var group in Document.Groups)
         {
             var stack = new StackPanel { Background = Brushes.Transparent, Width = Document.Preferences.Columns * Cell, Margin = new(0, 0, 24, 28), Tag = group, AllowDrop = true };
-            var header = new Button { Content = group.Name, FontSize = 15, Padding = new(0, 8, 0, 12), HorizontalAlignment = HorizontalAlignment.Stretch, Tag = group };
-            AutomationProperties.SetName(header, "グループ: " + group.Name);
+            var header = new Button { Content = group.Name, HorizontalContentAlignment = HorizontalAlignment.Left, FontSize = 15, Padding = new(0, 8, 0, 12), HorizontalAlignment = HorizontalAlignment.Stretch, Tag = group };
+            AutomationProperties.SetName(header, L.T("グループ: ") + group.Name);
             header.Click += (_, _) => { if (!_dragging) RenameGroup(group); };
             header.ContextMenu = GroupMenu(group);
             WireDrag(header, "ReStart.Group", group.Id);
@@ -251,7 +266,7 @@ public partial class MainWindow : Window
         }
         if (Document.Groups.Count == 0)
         {
-            var button = new Button { Content = "＋ グループを作成して、アプリをピン留め", Margin = new(0, 80, 0, 0), FontSize = 18 };
+            var button = new Button { Content = L.T("＋ グループを作成して、アプリをピン留め"), Margin = new(0, 80, 0, 0), FontSize = 18 };
             button.Click += (_, _) => AddGroup();
             GroupsPanel.Children.Add(button);
         }
@@ -267,13 +282,15 @@ public partial class MainWindow : Window
         var groupWidth = Document.Preferences.Columns * Cell + 24;
         var count = Math.Max(1, Math.Min(Math.Min(4, Document.Groups.Count), (int)(ContentScroll.ActualWidth / groupWidth)));
         GroupsPanel.Width = Math.Min(ContentScroll.ActualWidth, count * groupWidth);
-        AppsPanel.Width = Math.Max(280, Math.Floor(ContentScroll.ActualWidth / 304) * 304);
+        AppsPanel.Columns = Math.Clamp((int)(ContentScroll.ActualWidth / 304), 1, 4);
+        AppsPanel.Width = Math.Min(ContentScroll.ActualWidth, AppsPanel.Columns * 304);
+        AppsPanel.InvalidateMeasure();
     }
 
     private Button CreateTileButton(Tile tile)
     {
         var button = new Button { Tag = tile, Padding = new(0), HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch, ToolTip = tile.Label };
-        AutomationProperties.SetName(button, tile.Label + (tile.IsFolder ? " フォルダー" : ""));
+        AutomationProperties.SetName(button, tile.Label + (tile.IsFolder ? L.T(" フォルダー") : ""));
         var colorful = Document.Preferences.ColoredTiles || tile.Widget.Length > 0;
         button.Background = colorful && !SystemParameters.HighContrast ? Brush(tile.Color.Length > 0 ? tile.Color : Document.Preferences.Accent, "#0078D7") : (System.Windows.Media.Brush)FindResource("TileBrush");
         if (colorful && !SystemParameters.HighContrast) button.Foreground = Brushes.White;
@@ -317,24 +334,24 @@ public partial class MainWindow : Window
     {
         var now = DateTime.Now;
         foreach (var (text, tile) in _liveLabels)
-            text.Text = tile.Widget == "clock" ? now.ToString("HH:mm") : tile.Size == TileSize.Small ? now.Day.ToString(CultureInfo.CurrentCulture) : $"{now:M月d日}\n{now:dddd}";
+            text.Text = tile.Widget == "clock" ? now.ToString("HH:mm") : tile.Size == TileSize.Small ? now.Day.ToString(CultureInfo.CurrentCulture) : now.ToString("m", L.Culture) + "\n" + now.ToString("dddd", L.Culture);
     }
 
     private ContextMenu TileMenu(Tile tile)
     {
         var menu = new ContextMenu();
-        Add(menu, "スタートからピン留めを外す", () => { RemoveTile(tile.Id); CommitLayout(); });
-        var resize = new MenuItem { Header = "サイズ変更" };
-        foreach (var (size, label) in new[] { (TileSize.Small, "小"), (TileSize.Medium, "中"), (TileSize.Wide, "横長"), (TileSize.Large, "大") })
+        Add(menu, L.T("スタートからピン留めを外す"), () => { RemoveTile(tile.Id); CommitLayout(); });
+        var resize = new MenuItem { Header = L.T("サイズ変更") };
+        foreach (var (size, label) in new[] { (TileSize.Small, L.T("小")), (TileSize.Medium, L.T("中")), (TileSize.Wide, L.T("横長")), (TileSize.Large, L.T("大")) })
         {
             var item = new MenuItem { Header = label, IsCheckable = true, IsChecked = tile.Size == size };
             item.Click += (_, _) => { tile.Size = size; CommitLayout(); };
             resize.Items.Add(item);
         }
         menu.Items.Add(resize);
-        Add(menu, "名前を変更", () => { var value = Prompt("タイルの名前", tile.Label); if (value != null) { tile.Label = value; CommitLayout(); } });
-        if (tile.Widget.Length > 0) Add(menu, tile.Live ? "ライブタイルをオフにする" : "ライブタイルをオンにする", () => { tile.Live = !tile.Live; CommitLayout(); });
-        var move = new MenuItem { Header = "グループへ移動" };
+        Add(menu, L.T("名前を変更"), () => { var value = Prompt(L.T("タイルの名前"), tile.Label); if (value != null) { tile.Label = value; CommitLayout(); } });
+        if (tile.Widget.Length > 0) Add(menu, tile.Live ? L.T("ライブタイルをオフにする") : L.T("ライブタイルをオンにする"), () => { tile.Live = !tile.Live; CommitLayout(); });
+        var move = new MenuItem { Header = L.T("グループへ移動") };
         foreach (var group in Document.Groups)
         {
             var item = new MenuItem { Header = group.Name };
@@ -344,7 +361,7 @@ public partial class MainWindow : Window
         menu.Items.Add(move);
         if (!tile.IsFolder)
         {
-            var folders = new MenuItem { Header = "フォルダーにまとめる" };
+            var folders = new MenuItem { Header = L.T("フォルダーにまとめる") };
             foreach (var target in Document.Groups.SelectMany(g => g.Tiles).Where(t => t.Id != tile.Id && t.Widget.Length == 0))
             {
                 var item = new MenuItem { Header = target.Label };
@@ -354,7 +371,7 @@ public partial class MainWindow : Window
             folders.IsEnabled = folders.Items.Count > 0;
             menu.Items.Add(folders);
         }
-        else Add(menu, "フォルダーを展開して戻す", () =>
+        else Add(menu, L.T("フォルダーを展開して戻す"), () =>
         {
             var group = Document.Groups.First(g => g.Tiles.Contains(tile));
             var index = group.Tiles.IndexOf(tile);
@@ -368,12 +385,12 @@ public partial class MainWindow : Window
     private ContextMenu GroupMenu(TileGroup group)
     {
         var menu = new ContextMenu();
-        Add(menu, "グループ名を変更", () => RenameGroup(group));
-        Add(menu, "グループを前へ", () => MoveGroup(group, -1));
-        Add(menu, "グループを後ろへ", () => MoveGroup(group, 1));
-        Add(menu, "グループを削除", () =>
+        Add(menu, L.T("グループ名を変更"), () => RenameGroup(group));
+        Add(menu, L.T("グループを前へ"), () => MoveGroup(group, -1));
+        Add(menu, L.T("グループを後ろへ"), () => MoveGroup(group, 1));
+        Add(menu, L.T("グループを削除"), () =>
         {
-            if (Confirm($"「{group.Name}」と、そのピン留めを削除しますか？ アプリ自体は削除されません。"))
+            if (Confirm(L.F("「{0}」と、そのピン留めを削除しますか？ アプリ自体は削除されません。", group.Name)))
             { Document.Groups.Remove(group); CommitLayout(); }
         });
         return menu;
@@ -504,13 +521,11 @@ public partial class MainWindow : Window
         _sections.Clear();
         foreach (var section in _apps.GroupBy(a => a.Section).OrderBy(g => g.Key, StringComparer.CurrentCulture))
         {
-            var column = new StackPanel { Width = 280, Margin = new(0, 0, 24, 24) };
-            var header = new Button { Content = section.Key, FontSize = 20, FontWeight = FontWeights.Light, Padding = new(8, 10, 0, 10) };
+            var header = new Button { Content = section.Key, Tag = "section", FontSize = 20, FontWeight = FontWeights.Light, Padding = new(8, 8, 0, 8) };
             header.Click += (_, _) => OpenAlphabet();
-            column.Children.Add(header);
-            foreach (var app in section) column.Children.Add(AppButton(app));
-            _sections[section.Key] = column;
-            AppsPanel.Children.Add(column);
+            AppsPanel.Children.Add(header);
+            foreach (var app in section) AppsPanel.Children.Add(AppButton(app));
+            _sections[section.Key] = header;
         }
         FitPanels();
     }
@@ -533,14 +548,14 @@ public partial class MainWindow : Window
         {
             // Resolve groups when opening, after any rename, removal, or layout import.
             menu.Items.Clear();
-            foreach (var group in Document.Groups) Add(menu, $"「{group.Name}」にピン留め", () =>
+            foreach (var group in Document.Groups) Add(menu, L.F("「{0}」にピン留め", group.Name), () =>
             {
                 if (!Document.Groups.Contains(group)) return;
-                group.Tiles.Add(Tile.FromApp(app)); CommitLayout(); SetStatus($"{app.Name} をピン留めしました");
+                group.Tiles.Add(Tile.FromApp(app)); CommitLayout(); SetStatus(L.F("{0} をピン留めしました", app.Name));
             });
-            Add(menu, "新しいグループにピン留め", () =>
+            Add(menu, L.T("新しいグループにピン留め"), () =>
             {
-                var name = Prompt("グループの名前", "新しいグループ");
+                var name = Prompt(L.T("グループの名前"), L.T("新しいグループ"));
                 if (name != null) { Document.Groups.Add(new() { Name = name, Tiles = [Tile.FromApp(app)] }); CommitLayout(); }
             });
         };
@@ -559,16 +574,16 @@ public partial class MainWindow : Window
         ResultsPanel.Visibility = searching ? Visibility.Visible : Visibility.Collapsed;
         GroupsPanel.Visibility = !searching && !_allApps ? Visibility.Visible : Visibility.Collapsed;
         AppsPanel.Visibility = !searching && _allApps ? Visibility.Visible : Visibility.Collapsed;
-        ViewTitle.Text = searching ? "検索" : _allApps ? "すべてのアプリ" : "スタート";
+        ViewTitle.Text = searching ? L.T("検索") : _allApps ? L.T("すべてのアプリ") : L.T("スタート");
         AddButton.Visibility = searching || _allApps ? Visibility.Collapsed : Visibility.Visible;
         PinnedNav.Background = !_allApps && !searching ? (System.Windows.Media.Brush)FindResource("TileBrush") : Brushes.Transparent;
         AppsNav.Background = _allApps && !searching ? (System.Windows.Media.Brush)FindResource("TileBrush") : Brushes.Transparent;
         if (!searching) return;
         var results = AppSearch.Find(_apps, query);
-        ResultsPanel.Children.Add(new TextBlock { Text = results.Count == 0 ? "一致するアプリはありません" : "最も一致するアプリ", Margin = new(6, 10, 0, 14), Foreground = (System.Windows.Media.Brush)FindResource("MutedBrush") });
+        ResultsPanel.Children.Add(new TextBlock { Text = results.Count == 0 ? L.T("一致するアプリはありません") : L.T("最も一致するアプリ"), Margin = new(6, 10, 0, 14), Foreground = (System.Windows.Media.Brush)FindResource("MutedBrush") });
         foreach (var result in results) ResultsPanel.Children.Add(AppButton(result));
         if (results.Count == 0)
-            ResultsPanel.Children.Add(new TextBlock { Text = "名前の一部を入力して検索してください。", Margin = new(6), FontSize = 13 });
+            ResultsPanel.Children.Add(new TextBlock { Text = L.T("名前の一部を入力して検索してください。"), Margin = new(6), FontSize = 13 });
         ContentScroll.ScrollToTop();
     }
 
@@ -576,38 +591,38 @@ public partial class MainWindow : Window
     private void ShowAllApps(object sender, RoutedEventArgs e) { _allApps = true; SearchBox.Clear(); SearchChanged(SearchBox, new(TextBox.TextChangedEvent, UndoAction.None)); ExpandedRail.Visibility = Visibility.Collapsed; ContentScroll.ScrollToTop(); }
     private void ClearSearch(object sender, RoutedEventArgs e) { SearchBox.Clear(); SearchBox.Focus(); }
     private void ToggleRail(object sender, RoutedEventArgs e) => ExpandedRail.Visibility = ExpandedRail.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
-    private void RenameGroup(TileGroup group) { var name = Prompt("グループの名前", group.Name); if (name != null) { group.Name = name; CommitLayout(); } }
-    private void AddGroup() { var name = Prompt("グループの名前", "新しいグループ"); if (name != null) { Document.Groups.Add(new() { Name = name }); CommitLayout(); RenderApps(); } }
+    private void RenameGroup(TileGroup group) { var name = Prompt(L.T("グループの名前"), group.Name); if (name != null) { group.Name = name; CommitLayout(); } }
+    private void AddGroup() { var name = Prompt(L.T("グループの名前"), L.T("新しいグループ")); if (name != null) { Document.Groups.Add(new() { Name = name }); CommitLayout(); RenderApps(); } }
 
     private void OpenAddMenu(object sender, RoutedEventArgs e)
     {
         var menu = new ContextMenu();
-        Add(menu, "新しいグループ", AddGroup);
-        Add(menu, "アプリをピン留め", () => ShowAllApps(this, new()));
-        Add(menu, "ファイル・フォルダーをピン留め", AddCustomTile);
-        Add(menu, "Web サイトをピン留め", () =>
+        Add(menu, L.T("新しいグループ"), AddGroup);
+        Add(menu, L.T("アプリをピン留め"), () => ShowAllApps(this, new()));
+        Add(menu, L.T("ファイル・フォルダーをピン留め"), AddCustomTile);
+        Add(menu, L.T("Web サイトをピン留め"), () =>
         {
-            var url = Prompt("Web サイトの URL", "https://");
+            var url = Prompt(L.T("Web サイトの URL"), "https://");
             if (url == null) return;
-            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme is not ("http" or "https")) { SetStatus("http または https の URL を指定してください。"); return; }
-            var label = Prompt("タイルの名前", uri.Host);
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme is not ("http" or "https")) { SetStatus(L.T("http または https の URL を指定してください。")); return; }
+            var label = Prompt(L.T("タイルの名前"), uri.Host);
             if (label != null) PinCustom(new() { AppId = url, Label = label, Target = url, IsShellApp = false, Size = TileSize.Wide });
         });
-        Add(menu, "時計タイル", () => PinCustom(new() { AppId = "restart:clock", Label = "クロック", Widget = "clock", Target = "ms-clock:", IsShellApp = false }));
-        Add(menu, "カレンダータイル", () => PinCustom(new() { AppId = "restart:calendar", Label = "カレンダー", Widget = "calendar", Target = "", IsShellApp = false, Size = TileSize.Wide }));
+        Add(menu, L.T("時計タイル"), () => PinCustom(new() { AppId = "restart:clock", Label = L.T("クロック"), Widget = "clock", Target = "ms-clock:", IsShellApp = false }));
+        Add(menu, L.T("カレンダータイル"), () => PinCustom(new() { AppId = "restart:calendar", Label = L.T("カレンダー"), Widget = "calendar", Target = "", IsShellApp = false, Size = TileSize.Wide }));
         OpenMenu(menu, (Button)sender);
     }
 
     private void AddCustomTile()
     {
         var menu = new ContextMenu();
-        Add(menu, "ファイルを選ぶ", () =>
+        Add(menu, L.T("ファイルを選ぶ"), () =>
         {
-            WithDialog(() => { var dialog = new OpenFileDialog { Title = "ピン留めするファイル" }; if (dialog.ShowDialog(this) == true) PinCustom(new() { AppId = dialog.FileName, Target = dialog.FileName, Label = Path.GetFileNameWithoutExtension(dialog.FileName), IsShellApp = false }); });
+            WithDialog(() => { var dialog = new OpenFileDialog { Title = L.T("ピン留めするファイル") }; if (dialog.ShowDialog(this) == true) PinCustom(new() { AppId = dialog.FileName, Target = dialog.FileName, Label = Path.GetFileNameWithoutExtension(dialog.FileName), IsShellApp = false }); });
         });
-        Add(menu, "フォルダーを選ぶ", () =>
+        Add(menu, L.T("フォルダーを選ぶ"), () =>
         {
-            WithDialog(() => { var dialog = new OpenFolderDialog { Title = "ピン留めするフォルダー" }; if (dialog.ShowDialog(this) == true) PinCustom(new() { AppId = dialog.FolderName, Target = dialog.FolderName, Label = Path.GetFileName(dialog.FolderName), IsShellApp = false }); });
+            WithDialog(() => { var dialog = new OpenFolderDialog { Title = L.T("ピン留めするフォルダー") }; if (dialog.ShowDialog(this) == true) PinCustom(new() { AppId = dialog.FolderName, Target = dialog.FolderName, Label = Path.GetFileName(dialog.FolderName), IsShellApp = false }); });
         });
         OpenMenu(menu, AddButton);
     }
@@ -656,16 +671,12 @@ public partial class MainWindow : Window
         {
             WithDialog(() =>
             {
-                var calendar = new Window { Owner = this, Title = "カレンダー", Width = 380, Height = 390, ResizeMode = ResizeMode.NoResize, WindowStartupLocation = WindowStartupLocation.CenterOwner, ShowInTaskbar = false };
-                var panel = new StackPanel { Margin = new(24) };
-                panel.Children.Add(new TextBlock { Text = DateTime.Today.ToString("yyyy年M月d日 dddd"), FontSize = 20, Margin = new(0, 0, 0, 20) });
-                panel.Children.Add(new System.Windows.Controls.Calendar { SelectedDate = DateTime.Today, DisplayDate = DateTime.Today, HorizontalAlignment = HorizontalAlignment.Center });
-                calendar.Content = panel; calendar.ShowDialog();
+                new CalendarWindow(this).ShowDialog();
             });
             return;
         }
         try { ShellLauncher.Launch(app); Hide(); }
-        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or System.IO.FileNotFoundException) { SetStatus("起動できませんでした: " + ex.Message); }
+        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or System.IO.FileNotFoundException) { SetStatus(L.T("起動できませんでした: ") + ex.Message); }
     }
     private void OpenDocuments(object sender, RoutedEventArgs e) => LaunchPath(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
     private void OpenPictures(object sender, RoutedEventArgs e) => LaunchPath(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures));
@@ -673,22 +684,22 @@ public partial class MainWindow : Window
     private void OpenAccount(object sender, RoutedEventArgs e)
     {
         var menu = new ContextMenu();
-        Add(menu, "アカウント設定の変更", () => LaunchPath("ms-settings:yourinfo"));
-        Add(menu, "ロック", () => { Hide(); Native.LockWorkStation(); });
-        Add(menu, "サインアウト", () => RunPower("/l", "サインアウト"));
+        Add(menu, L.T("アカウント設定の変更"), () => LaunchPath("ms-settings:yourinfo"));
+        Add(menu, L.T("ロック"), () => { Hide(); Native.LockWorkStation(); });
+        Add(menu, L.T("サインアウト"), () => RunPower("/l", L.T("サインアウト")));
         OpenMenu(menu, (Button)sender);
     }
     private void OpenPower(object sender, RoutedEventArgs e)
     {
         var menu = new ContextMenu();
-        Add(menu, "スリープ", () => { if (Confirm("PC をスリープしますか？")) { Hide(); System.Windows.Forms.Application.SetSuspendState(System.Windows.Forms.PowerState.Suspend, false, false); } });
-        Add(menu, "シャットダウン", () => RunPower("/s", "シャットダウン"));
-        Add(menu, "再起動", () => RunPower("/r", "再起動"));
+        Add(menu, L.T("スリープ"), () => { if (Confirm(L.T("PC をスリープしますか？"))) { Hide(); System.Windows.Forms.Application.SetSuspendState(System.Windows.Forms.PowerState.Suspend, false, false); } });
+        Add(menu, L.T("シャットダウン"), () => RunPower("/s", L.T("シャットダウン")));
+        Add(menu, L.T("再起動"), () => RunPower("/r", L.T("再起動")));
         OpenMenu(menu, (Button)sender);
     }
     private void RunPower(string operation, string label)
     {
-        if (!Confirm($"PC を{label}しますか？ 作業中のファイルを保存してください。")) return;
+        if (!Confirm(L.F("PC を{0}しますか？ 作業中のファイルを保存してください。", label))) return;
         var info = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "shutdown.exe")) { UseShellExecute = false, CreateNoWindow = true };
         info.ArgumentList.Add(operation);
         if (operation != "/l") { info.ArgumentList.Add("/t"); info.ArgumentList.Add("0"); }
@@ -700,10 +711,10 @@ public partial class MainWindow : Window
     private void OpenSettings(object sender, RoutedEventArgs e) => ShowSettings();
     public void ShowSettings()
     {
-        WithDialog(() => { var settings = new SettingsWindow(this, _store) { Owner = this }; settings.ShowDialog(); });
+        WithDialog(() => { var settings = new SettingsWindow(this, _store) { Owner = _preview ? null : this }; settings.ShowDialog(); });
         if (_exit) return;
-        PreferencesChanged?.Invoke();
         RefreshLayout();
+        PreferencesChanged?.Invoke();
     }
     public void SetStatus(string message) => StatusText.Text = message;
     private void WithDialog(Action action) { _dialogDepth++; try { action(); } finally { _dialogDepth--; } }

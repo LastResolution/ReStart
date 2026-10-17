@@ -39,7 +39,7 @@ public static class LayoutEditor
         else
         {
             var index = group.Tiles.IndexOf(target);
-            group.Tiles[index] = new() { Label = "フォルダー", Size = TileSize.Medium, Column = target.Column, Row = target.Row, Children = [target, source] };
+            group.Tiles[index] = new() { Label = L.T("フォルダー"), Size = TileSize.Medium, Column = target.Column, Row = target.Row, Children = [target, source] };
         }
     }
 
