@@ -463,7 +463,7 @@ public partial class MainWindow : Window
         button.ContextMenu = TileMenu(tile);
         button.Click += (_, _) =>
         {
-            if (_dragging) return;
+            if (_dragging || _dismissing) return;
             if (tile.Widget == "script") InteractWithScriptTile(tile);
             else if (tile.IsFolder) OpenFolder(tile);
             else Launch(new(tile.AppId, tile.Label, tile.Target, tile.IsShellApp));
@@ -827,6 +827,7 @@ public partial class MainWindow : Window
 
     private void Launch(AppEntry app)
     {
+        if (_dismissing) return;
         if (app.Id == "restart:calendar")
         {
             WithDialog(() =>
@@ -936,7 +937,8 @@ public partial class MainWindow : Window
     }
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
-        if (_dragging || _dismissing) return;
+        if (_dismissing) { e.Handled = true; return; }
+        if (_dragging) return;
         CompleteEntrance();
         if (_editingGroupHeader?.IsEditing == true && e.OriginalSource is TextBox) return;
         if (e.Key == Key.Tab && SearchBox.IsKeyboardFocused && SearchBox.Text.Length == 0 && !_searchRequested)
@@ -969,7 +971,8 @@ public partial class MainWindow : Window
     }
     private void OnPreviewTextInput(object sender, TextCompositionEventArgs e)
     {
-        if (_dragging || _dismissing) return;
+        if (_dismissing) { e.Handled = true; return; }
+        if (_dragging) return;
         CompleteEntrance();
         if (e.OriginalSource is TextBox || Ancestor<TextBox>(e.OriginalSource as DependencyObject) != null || Keyboard.Modifiers.HasFlag(ModifierKeys.Control) || e.Text.Length == 0 || e.Text.All(char.IsControl)) return;
         if (FocusAppInitial(e.Text)) { e.Handled = true; return; }

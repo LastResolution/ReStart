@@ -55,6 +55,8 @@ public partial class MainWindow
             fixture.Dismiss();
             Require(fixture.IsVisible && fixture._dismissing && !fixture.Root.IsHitTestVisible,
                 "Dismissal hid immediately or still accepts clicks during exit.");
+            fixture.ComposeFixtureText("E");
+            Require(fixture.SearchBox.Text.Length == 0, "The dismissing launcher still accepts text input.");
             fixture.SeekMotion(80);
             Require(fixture.Opacity > 0 && fixture.Opacity < 1 && fixture.ContentScale.ScaleX < 1,
                 "Exit lacks fade and receding content.");
@@ -106,7 +108,7 @@ public partial class MainWindow
             fixture.Document.Preferences.Animate = true;
             fixture.Present(); fixture.Exit();
             Require(fixture._motion == null && fixture._motionTiles.Count == 0, "Shutdown retained motion clocks.");
-            return new(5, 4, 5, 5, 1, directory);
+            return new(5, 5, 5, 5, 1, directory);
         }
         finally
         {
