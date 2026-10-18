@@ -1,4 +1,6 @@
 {
+  "HoldToCreateGroup": "保持重疊以建立群組",
+  "DropCreateGroup": "建立群組",
   "HoldToCreateFolder": "保持重疊以建立資料夾或加入資料夾",
   "EditLayout": "編輯配置",
   "UndoLayout": "復原",

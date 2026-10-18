@@ -41,15 +41,15 @@ public partial class MainWindow
                         Require(fixture.PreviewSingleTileDrop(source, point, source.Id), "A valid folder overlap was rejected.");
                         Require(fixture._pendingFolderDrop?.Target == target, "The drag did not start the folder dwell timer.");
                         await Task.Delay(TileFolderHover.DelayMilliseconds + 150);
-                        Require(fixture._pendingFolderDrop?.Target == target && fixture._dropAdorner?.FolderTarget == true,
+                        Require(fixture._pendingFolderDrop?.Target == target && (standalone ? fixture._dropAdorner?.GroupTarget == true : fixture._dropAdorner?.FolderTarget == true),
                             $"The stationary OLE hover lost its target before drop: standalone={standalone}, editing={editing}, pending={fixture._pendingFolderDrop != null}.");
                         fixture.SaveScreenshot(Path.Combine(directory, $"ready-{standalone}-{editing}-{sizes.Source}-{sizes.Target}.png"));
                         Require(fixture.CommitSingleTileDrop(source, point, source.Id), "An armed folder drop was rejected.");
                         fixture._dragging = false;
-                        VerifySavedFolder(source, target);
+                        VerifySavedDrop(source, target, standalone);
                         fixture.RestoreLayoutHistory(false);
                         Require(before == JsonSerializer.Serialize(fixture.Document.Groups, LayoutStore.JsonOptions), "Folder creation did not undo in one step.");
-                        fixture.RestoreLayoutHistory(true); VerifySavedFolder(source, target);
+                        fixture.RestoreLayoutHistory(true); VerifySavedDrop(source, target, standalone);
                         timers++;
                     }
 
@@ -65,17 +65,17 @@ public partial class MainWindow
                                 var point = Pointer(panel, target);
                                 Require(fixture.PreviewSingleTileDrop(source, point, source.Id, 0)
                                     && fixture.PreviewSingleTileDrop(source, point, source.Id, TileFolderHover.DelayMilliseconds)
-                                    && fixture._dropAdorner?.FolderTarget == true,
+                                    && (standalone ? fixture._dropAdorner?.GroupTarget == true : fixture._dropAdorner?.FolderTarget == true),
                                     $"A folder preview failed: standalone={standalone}, editing={editing}, source={sourceSize}, target={targetSize}, grab={grab}.");
                                 Require(fixture.CommitSingleTileDrop(source, point, source.Id), "A geometry-verified folder drop was rejected.");
-                                VerifySavedFolder(source, target); geometry++;
+                                VerifySavedDrop(source, target, standalone); geometry++;
                             }
             var (cancelSource, cancelTarget, cancelPanel) = Scene(true, false, TileSize.Medium, TileSize.Medium);
             fixture._dragOffset = new(3, 3); fixture._dragging = true;
             var cancelBefore = JsonSerializer.Serialize(fixture.Document.Groups, LayoutStore.JsonOptions);
             fixture.PreviewSingleTileDrop(cancelSource, Pointer(cancelPanel, cancelTarget), cancelSource.Id);
             await Task.Delay(TileFolderHover.DelayMilliseconds + 150);
-            Require(fixture._dropAdorner?.FolderTarget == true, "Cancellation fixture never armed its folder.");
+            Require(fixture._dropAdorner?.GroupTarget == true, "Cancellation fixture never armed its group.");
             fixture.StopFolderDwell(); fixture._folderHover.Reset(); fixture.ClearDropPreview(); fixture._dragging = false;
             await Task.Delay(75);
             Require(fixture._pendingFolderDrop == null && fixture._dropAdorner == null && !fixture._layoutHistory.CanUndo
@@ -123,6 +123,30 @@ public partial class MainWindow
             var nestedBefore = JsonSerializer.Serialize(fixture.Document.Groups, LayoutStore.JsonOptions);
             Require(!fixture.PreviewSingleTileDrop(nested, childPoint, nested.Id) && !fixture.CommitSingleTileDrop(nested, childPoint, nested.Id)
                 && nestedBefore == JsonSerializer.Serialize(fixture.Document.Groups, LayoutStore.JsonOptions), "A nested folder drop was accepted or changed ownership."); routes++;
+
+            var (lead, independentTarget, independentPanel) = Scene(true, true, TileSize.Medium, TileSize.Medium);
+            var companion = new Tile { Label = "Sample companion", Widget = "clock" }; AddIndependent(companion);
+            fixture._selectedTileIds.Add(companion.Id); fixture.RefreshTileSelection();
+            fixture._selectionDragPositions = fixture.CaptureTileSelection();
+            Require(fixture._selectionDragPositions.Count == 2, "The batch grouping fixture did not capture both selected tiles.");
+            independentPanel = fixture.RootPanelFor(fixture.Document.Groups.Single(g => g.Tiles.Contains(independentTarget)));
+            var groupingPoint = Pointer(independentPanel, independentTarget);
+            fixture._folderHover.Update(lead.Id, independentTarget.Id, 0);
+            var batchPlan = fixture.PlanSelectionDrop(lead.Id, groupingPoint);
+            Require(batchPlan != null, "A batch could not collect around an independent target.");
+            fixture.CommitSelectionPlan(batchPlan!); fixture._selectionDragPositions = null;
+            Require(fixture.Document.Groups.Count == 1, "A batch grouping drop retained independent source containers.");
+            var batchGroup = fixture.Document.Groups.Single();
+            Require(!batchGroup.IsStandalone && batchGroup.Tiles.Count == 3 && batchGroup.Tiles.All(t => !t.IsFolder), "A batch overlap produced independent entries or a folder instead of an ordinary group."); routes++;
+
+            var (folderSource, plainTarget, plainPanel) = Scene(true, false, TileSize.Medium, TileSize.Medium);
+            folderSource.Children = [new() { Label = "Sample child" }]; fixture.RenderGroups(); fixture.UpdateLayout();
+            plainPanel = fixture.RootPanelFor(fixture.Document.Groups.Single(g => g.Tiles.Contains(plainTarget)));
+            var plainPoint = Pointer(plainPanel, plainTarget);
+            fixture.PreviewSingleTileDrop(folderSource, plainPoint, folderSource.Id, 0);
+            fixture.PreviewSingleTileDrop(folderSource, plainPoint, folderSource.Id, 1000);
+            Require(fixture._dropAdorner?.GroupTarget == true && fixture.CommitSingleTileDrop(folderSource, plainPoint, folderSource.Id)
+                && fixture.Document.Groups.Single().Tiles.Single(t => t.Id == folderSource.Id).Children.Count == 1, "A folder could not become a root in a newly collected ordinary group."); routes++;
             return new(timers, geometry, routes, cancellations, directory);
         }
         finally { fixture._dragging = false; fixture.Exit(); }
@@ -151,8 +175,16 @@ public partial class MainWindow
         Point Pointer(ReStart.App.Controls.TilePanel panel, Tile target) => panel.Children.OfType<Button>().Single(b => b.Tag == target)
             .TranslatePoint(fixture._dragOffset, fixture.GroupsPanel);
 
-        void VerifySavedFolder(Tile source, Tile target)
+        void VerifySavedDrop(Tile source, Tile target, bool standalone)
         {
+            if (standalone)
+            {
+                var group = fixture.Document.Groups.Single();
+                Require(!group.IsStandalone && group.Tiles.Count == 2 && group.Tiles.All(t => !t.IsFolder)
+                    && group.Tiles.Select(t => t.Id).ToHashSet().SetEquals([source.Id, target.Id]), "An independent overlap did not create an ordinary group with both original roots.");
+                Require(JsonSerializer.Serialize(store.Load()!.Groups, LayoutStore.JsonOptions) == JsonSerializer.Serialize(fixture.Document.Groups, LayoutStore.JsonOptions), "The group preview and saved ownership disagree.");
+                return;
+            }
             var folder = fixture.Document.Groups.SelectMany(g => g.Tiles).SingleOrDefault(t => t.IsFolder);
             Require(folder != null && folder.Children.Select(t => t.Id).ToHashSet().SetEquals([source.Id, target.Id])
                 && fixture.Document.Groups.SelectMany(g => g.Tiles).Count() == 1, "The actual drop did not create exactly one folder with both original tile identities.");

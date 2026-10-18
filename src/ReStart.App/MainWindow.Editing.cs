@@ -199,10 +199,11 @@ public partial class MainWindow
                 destination.Panel.FolderOwner?.Id ?? closedFolder?.Id, closedFolder == null ? Math.Round((local.X - _dragOffset.X) / Cell, MidpointRounding.AwayFromZero) : 0,
                 closedFolder == null ? Math.Round((local.Y - _dragOffset.Y) / Cell, MidpointRounding.AwayFromZero) : 0);
         }
-        if (target is { } independent && FindTile(anchorId) is Tile lead && selection.All(s => FindTile(s.Id)?.IsFolder == false))
+        if (target is { } independent && FindTile(anchorId) is Tile lead)
         {
-            var closed = FolderHoverTarget(lead, independent.Panel, GroupsPanel.TranslatePoint(point, independent.Panel), anchorId, existingFoldersOnly: true);
-            if (closed != null) return CachedSelectionPlan(selection, anchorId, null, closed.Id, 0, 0);
+            var closed = FolderHoverTarget(lead, independent.Panel, GroupsPanel.TranslatePoint(point, independent.Panel), anchorId);
+            if (closed != null) return closed.IsFolder ? CachedSelectionPlan(selection, anchorId, null, closed.Id, 0, 0)
+                : TileGrouping.Plan(Document, selection.Select(s => FindTile(s.Id)!).ToArray(), closed.Id, GroupsPanel.Columns, Cell);
         }
         else { _folderHover.Reset(); StopFolderDwell(); }
         var (_, row, x) = BoardAnchor(point, true);

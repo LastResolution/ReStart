@@ -38,13 +38,22 @@ public partial class MainWindow
         var placement = pending.Panel.Placements.FirstOrDefault(p => p.Tile == pending.Target);
         if (placement.Tile == null) return;
         var armed = _folderHover.Update(pending.SourceId, pending.Target.Id, Environment.TickCount64);
+        var createsGroup = pending.Panel.Tag is TileGroup { IsStandalone: true } && !pending.Target.IsFolder;
+        if (armed && createsGroup)
+        {
+            var sources = _selectionDragPositions is { } selected
+                ? selected.Select(s => FindTile(s.Id)!).ToArray() : new[] { pending.Source };
+            if (TileGrouping.Plan(Document, sources, pending.Target.Id, GroupsPanel.Columns, Cell) is { } plan)
+                ShowGroupCreationPreview(plan, ((TileGroup)pending.Panel.Tag).Id);
+            return;
+        }
         var fits = true;
-        if (armed && pending.ExistingFoldersOnly && _selectionDragPositions is { } selection)
+        if (armed && _selectionDragPositions is { } selection)
             fits = CachedSelectionPlan(selection, pending.SourceId, pending.Panel.Tag is TileGroup { IsStandalone: false } group ? group.Id : null,
                 pending.Target.Id, 0, 0) != null;
         ShowDropPreview(pending.Panel, pending.Target, placement.Column, placement.Row);
         _dropAdorner!.FolderTarget = armed && fits;
-        _dropAdorner.Caption = L.T(!fits ? K.SelectionDoesNotFit : armed ? K.DropIntoFolder : K.HoldToCreateFolder);
+        _dropAdorner.Caption = L.T(!fits ? K.SelectionDoesNotFit : createsGroup ? K.HoldToCreateGroup : armed ? K.DropIntoFolder : K.HoldToCreateFolder);
         if (pending.Target.IsFolder) _dropAdorner.Caption += " · " + TileDisplayName(pending.Target);
         _dropAdorner.InvalidateVisual();
     }

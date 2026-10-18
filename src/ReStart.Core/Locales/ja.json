@@ -1,4 +1,6 @@
 {
+  "HoldToCreateGroup": "重ねたまま待つとグループを作成",
+  "DropCreateGroup": "グループを作成",
   "HoldToCreateFolder": "重ねたまま待つとフォルダを作成・追加",
   "EditLayout": "配置を編集",
   "UndoLayout": "元に戻す",

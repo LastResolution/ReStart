@@ -1,4 +1,6 @@
 {
+  "HoldToCreateGroup": "겹친 상태로 기다리면 그룹을 만듭니다",
+  "DropCreateGroup": "그룹 만들기",
   "HoldToCreateFolder": "겹친 상태로 기다리면 폴더를 만들거나 추가합니다",
   "EditLayout": "배치 편집",
   "UndoLayout": "실행 취소",

@@ -1,4 +1,6 @@
 {
+  "HoldToCreateGroup": "Mantén para crear un grupo",
+  "DropCreateGroup": "Crear grupo",
   "HoldToCreateFolder": "Mantén para crear una carpeta o añadir a ella",
   "EditLayout": "Editar distribución",
   "UndoLayout": "Deshacer",

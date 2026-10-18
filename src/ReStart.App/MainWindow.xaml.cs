@@ -667,6 +667,7 @@ public partial class MainWindow : Window
         _dropAdorner.CellBounds = new(col * Cell, y, width * Cell - 4, height * Cell - 4);
         _dropAdorner.SelectionBounds = null;
         _dropAdorner.FolderTarget = false;
+        _dropAdorner.GroupTarget = false;
         _dropAdorner.GroupBounds = panel.FolderOwner == null && panel.Tag is TileGroup { IsStandalone: false }
             ? new Rect(0, -GroupLayout.HeaderHeight, Math.Max(panel.ActualWidth, (col + width) * Cell), Math.Max(panel.ActualHeight, y + height * Cell) + GroupLayout.HeaderHeight) : null;
         _dropAdorner.Caption = panel.FolderOwner != null ? L.T(K.DropIntoFolder) + " · " + TileDisplayName(panel.FolderOwner) : panel.Tag is TileGroup group && !group.IsStandalone

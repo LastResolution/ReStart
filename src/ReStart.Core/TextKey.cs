@@ -3,6 +3,10 @@ namespace ReStart.Core;
 /// <summary>Stable, language-independent identifiers for all application-owned UI text.</summary>
 public enum TextKey
 {
+    /// <summary>Explains the pending overlap that collects independent tiles into an ordinary group.</summary>
+    HoldToCreateGroup,
+    /// <summary>Identifies an armed independent-tile grouping destination.</summary>
+    DropCreateGroup,
     /// <summary>Explains the pending tile-over-tile folder dwell before it is armed.</summary>
     HoldToCreateFolder,
     /// <summary>Edit layout</summary>

@@ -1,4 +1,6 @@
 {
+  "HoldToCreateGroup": "保持重叠以创建组",
+  "DropCreateGroup": "创建组",
   "HoldToCreateFolder": "保持重叠以创建文件夹或添加到文件夹",
   "EditLayout": "编辑布局",
   "UndoLayout": "撤销",

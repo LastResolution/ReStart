@@ -8,6 +8,7 @@ internal sealed class DropAdorner(UIElement target) : Adorner(target)
 {
     public Rect CellBounds { get; set; }
     public bool FolderTarget { get; set; }
+    public bool GroupTarget { get; set; }
     public Rect? GroupBounds { get; set; }
     public string Caption { get; set; } = "";
     public IReadOnlyList<Rect>? SelectionBounds { get; set; }
@@ -15,7 +16,7 @@ internal sealed class DropAdorner(UIElement target) : Adorner(target)
     {
         var accent = (Brush)Application.Current.FindResource("AccentBrush");
         var fill = accent.Clone(); fill.Opacity = 0.2;
-        var pen = new Pen(accent, 3) { DashStyle = FolderTarget ? DashStyles.Solid : DashStyles.Dash };
+        var pen = new Pen(accent, 3) { DashStyle = FolderTarget || GroupTarget ? DashStyles.Solid : DashStyles.Dash };
         foreach (var bounds in SelectionBounds ?? [CellBounds]) dc.DrawRectangle(fill, pen, bounds);
         if (GroupBounds is Rect group)
             dc.DrawRectangle(null, new Pen(accent, 2), group);
