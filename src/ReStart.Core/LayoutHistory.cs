@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.Json;
 
 namespace ReStart.Core;
@@ -61,6 +60,9 @@ public sealed class LayoutHistory(int maximumEdits = 100, long maximumBytes = 32
 
     private static string Serialize(IEnumerable<TileGroup> groups) => JsonSerializer.Serialize(groups, LayoutStore.JsonOptions);
     private static List<TileGroup> Deserialize(string json) => JsonSerializer.Deserialize<List<TileGroup>>(json, LayoutStore.JsonOptions)!;
-    private void Append(string state) { _states.Add(state); _bytes += Encoding.UTF8.GetByteCount(state); }
-    private void RemoveAt(int index) { _bytes -= Encoding.UTF8.GetByteCount(_states[index]); _states.RemoveAt(index); }
+    // Count the retained UTF-16 strings and allow for object/list overhead rather
+    // than undercounting ASCII snapshots using their smaller UTF-8 file size.
+    private static long StorageBytes(string state) => (long)state.Length * sizeof(char) + 64;
+    private void Append(string state) { _states.Add(state); _bytes += StorageBytes(state); }
+    private void RemoveAt(int index) { _bytes -= StorageBytes(_states[index]); _states.RemoveAt(index); }
 }

@@ -111,6 +111,12 @@ public partial class MainWindow
             fixture._selectionViews[c.Id].Button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             fixture._selectionViews[d.Id].Button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             Require(fixture._selectedTileIds.SetEquals([c.Id, d.Id]), "Selecting a child did not exclude its selected parent.");
+            fixture.CloseFolder(this, new());
+            Require(fixture._selectedTileIds.Count == 0, "Closing a folder retains invisible child selections.");
+            fixture.SetLayoutEditing(false); fixture.SelectTileForEditing(c.Id); fixture.UpdateLayout();
+            Require(fixture._layoutEditing && fixture._openFolder?.Id == folder.Id && fixture._selectedTileIds.SetEquals([c.Id]),
+                "Selecting a folder child from its context action loses or hides the child.");
+            fixture.ToggleTileSelection(d.Id);
             fixture._selectionDragPositions = fixture.CaptureTileSelection();
             plan = fixture.PlanSelectionDrop(c.Id, new(18 * fixture.Cell + 12, GroupLayout.HeaderHeight + 6 * fixture.Cell + 12));
             Require(plan != null, "Moving folder children onto open space was rejected.");

@@ -74,9 +74,17 @@ public partial class MainWindow
         RefreshTileSelection();
     }
 
+    private void SelectTileForEditing(string id)
+    {
+        var parentId = Document.Groups.SelectMany(g => g.Tiles).FirstOrDefault(t => t.Children.Any(c => c.Id == id))?.Id;
+        SetLayoutEditing(true);
+        if (parentId != null && _openFolder?.Id != parentId && FindTile(parentId) is Tile parent) OpenFolder(parent);
+        if (!_selectedTileIds.Contains(id)) ToggleTileSelection(id);
+    }
+
     private void RefreshTileSelection()
     {
-        _selectedTileIds.RemoveWhere(id => FindTile(id) == null);
+        _selectedTileIds.RemoveWhere(id => FindTile(id) == null || _layoutEditing && !_selectionViews.ContainsKey(id));
         foreach (var (id, view) in _selectionViews)
         {
             var selected = _layoutEditing && _selectedTileIds.Contains(id);

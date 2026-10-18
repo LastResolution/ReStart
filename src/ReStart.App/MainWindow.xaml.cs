@@ -520,7 +520,7 @@ public partial class MainWindow : Window
     {
         var menu = new ContextMenu();
         if (tile.IsFolder) Add(menu, L.T(K.OpenTileFolder), () => OpenFolder(tile));
-        Add(menu, L.T(K.SelectTileForEditing), () => { SetLayoutEditing(true); ToggleTileSelection(tile.Id); });
+        Add(menu, L.T(K.SelectTileForEditing), () => SelectTileForEditing(tile.Id));
         Add(menu, L.T(K.UnpinTile), () => { RemoveTile(tile.Id); CommitLayout(); });
         var resize = new MenuItem { Header = L.T(K.ResizeTile) };
         foreach (var (size, label) in new[] { (TileSize.Small, L.T(K.TileSmall)), (TileSize.Medium, L.T(K.TileMedium)), (TileSize.Wide, L.T(K.TileWide)), (TileSize.Large, L.T(K.TileLarge)) })
