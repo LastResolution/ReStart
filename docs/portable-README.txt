@@ -7,7 +7,7 @@ Open with Windows key, taskbar Start button, Ctrl+Alt+Space or tray icon.
 Settings: left gear. Exit: tray menu. Sign-in startup is optional.
 
 Drag tiles/groups; empty-space drops create independent pins. Double-click
-group names to edit. Overlap an independent tile to collect an ordinary group;
+group names to edit. Partly overlap an independent tile for about 0.3 seconds to collect a group;
 hold about one second over a grouped tile to create a folder. Existing folders
 accept additions; one remaining child stays in its folder until moved out.
 Edit layout / Ctrl+E selects tiles without opening apps. Drag a selection together;

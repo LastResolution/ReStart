@@ -96,7 +96,7 @@ Have a layout to show, an idea for a tile, or a bug to report? [Open an issue](h
 | `Tab` / arrows / `Enter` | Navigate and activate |
 | Drag a tile / group header | Move it |
 | Drop a tile in empty space | Create an independent pin |
-| Overlap an independent tile for about one second, then drop when **Create group** appears | Collect the tiles into an ordinary group |
+| Partly overlap an independent tile for about 0.3 seconds, then drop when **Create group** appears | Collect the tiles into an ordinary group |
 | Overlap a tile inside a group for about one second, then drop when the folder preview is ready | Create a tile folder; dropping onto an existing folder adds to it |
 | **Edit layout** / `Ctrl+E` | Select tiles without launching apps; drag selected tiles together |
 | `Ctrl+A` / `Delete` in edit mode | Select root tiles / unpin the selection |
