@@ -3,7 +3,7 @@ namespace ReStart.Core;
 /// <summary>Plans an ordinary group around an independent tile without mutating the visible layout.</summary>
 public static class TileGrouping
 {
-    /// <summary>Collects sources beside an independent non-folder target, preserving tile identity and the target's visible origin.</summary>
+    /// <summary>Collects sources beside an independent non-folder target, preserving tile identity and earlier neighbors.</summary>
     public static List<TileGroup>? Plan(LayoutDocument document, IReadOnlyList<Tile> sources, string targetId, int availableColumns, double cell)
     {
         if (sources.Count == 0 || sources.Any(t => t.Id == targetId) || sources.Select(t => t.Id).Distinct().Count() != sources.Count
@@ -26,7 +26,11 @@ public static class TileGrouping
         destination.Tiles.AddRange(tiles);
         foreach (var tile in destination.Tiles) { tile.Column = null; tile.Row = null; }
         foreach (var p in TileLayout.Pack(destination.Tiles, copy.Preferences.Columns)) { p.Tile.Column = p.Column; p.Tile.Row = p.Row; }
-        foreach (var p in GroupLayout.Pack(copy.Groups, availableColumns, copy.Preferences.Columns, cell, destination, preserveColumns: true))
+        // The new header occupies space above the old tile. Reserve earlier
+        // neighbors first so a small header collision cannot move them below
+        // the entire new group; let the new group move down only as needed.
+        var earlier = baseline.Where(p => p.Group != destination && p.Top <= anchor.Top).Select(p => p.Group.Id).ToHashSet();
+        foreach (var p in GroupLayout.Pack(copy.Groups, availableColumns, copy.Preferences.Columns, cell, preserveColumns: true, priorityIds: earlier))
         { p.Group.Column = p.Column; p.Group.Row = p.Row; }
         return copy.Groups;
     }

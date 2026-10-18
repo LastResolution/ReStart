@@ -6,6 +6,24 @@ namespace ReStart.Core.Tests;
 public sealed class TileGroupingTests
 {
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CreatingHeaderDoesNotPushAnEarlierNeighborBelowTheNewGroup(bool independentNeighbor)
+    {
+        var source = new Tile(); var target = new Tile();
+        var upper = new TileGroup { IsStandalone = independentNeighbor, Column = 1, X = 8, Row = 0, Tiles = [new()] };
+        var destination = new TileGroup { IsStandalone = true, Column = 1, X = 8, Row = 5, Tiles = [target] };
+        var lower = new TileGroup { Column = 1, X = 8, Row = 30, Tiles = [new()] };
+        var document = new LayoutDocument { Groups = [new() { IsStandalone = true, Column = 0, X = 0, Row = 0, Tiles = [source] }, upper, destination, lower] };
+        var before = GroupLayout.Pack(document.Groups, 3, 6, 52, preserveColumns: true).ToDictionary(p => p.Group.Id);
+        var plan = TileGrouping.Plan(document, [source], target.Id, 3, 52)!;
+        var after = GroupLayout.Pack(plan, 3, 6, 52, preserveColumns: true).ToDictionary(p => p.Group.Id);
+        Assert.Equal(before[upper.Id].Top, after[upper.Id].Top);
+        Assert.Equal(before[lower.Id].Top, after[lower.Id].Top);
+        Assert.True(after[upper.Id].Top + after[upper.Id].Height <= after[destination.Id].Top);
+        Assert.InRange(after[destination.Id].Top + GroupLayout.HeaderHeight - before[destination.Id].Top, 0, 26);
+    }
+    [Theory]
     [InlineData(TileSize.Small, TileSize.Large, .7)]
     [InlineData(TileSize.Medium, TileSize.Medium, 1)]
     [InlineData(TileSize.Wide, TileSize.Small, 1.5)]
