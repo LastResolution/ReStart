@@ -161,6 +161,7 @@ public partial class MainWindow
             Document.Groups.Remove(compactGroup); RenderGroups(); UpdateLayout();
             var targetPanel = RootPanelFor(left);
             var targetButton = targetPanel.Children.OfType<Button>().Single(button => button.Tag == b);
+            _dragOffset = new(targetButton.ActualWidth / 2, targetButton.ActualHeight / 2);
             var center = targetButton.TranslatePoint(new Point(targetButton.ActualWidth / 2, targetButton.ActualHeight / 2), targetPanel);
             _folderHover.Reset();
             Require(FolderHoverTarget(a, targetPanel, center, a.Id, 0) == null
@@ -168,6 +169,28 @@ public partial class MainWindow
                 && FolderHoverTarget(a, targetPanel, center, a.Id, 1000) == b, "Actual tile hit testing does not arm a folder after a continuous one-second center hover.");
             var edge = targetButton.TranslatePoint(new Point(1, 1), targetPanel);
             Require(FolderHoverTarget(a, targetPanel, edge, a.Id, 1001) == null, "The tile edge incorrectly creates a folder instead of moving a tile.");
+            _folderHover.Reset();
+            _dragOffset = new(3, 3);
+            var cornerGrab = targetButton.TranslatePoint(new Point(3, 3), targetPanel);
+            Require(FolderHoverTarget(a, targetPanel, cornerGrab, a.Id, 2000) == null
+                && FolderHoverTarget(a, targetPanel, cornerGrab, a.Id, 3000) == b,
+                "Grabbing a tile near its corner prevents an otherwise complete tile-over-tile folder drop.");
+            var sourceSize = a.Size;
+            foreach (var size in Enum.GetValues<TileSize>())
+            {
+                a.Size = size;
+                var (w, h) = TileLayout.Dimensions(size);
+                foreach (var grab in new[] { new Point(3, 3), new Point(w * Cell / 2, h * Cell / 2), new Point(w * Cell - 7, h * Cell - 7) })
+                {
+                    _dragOffset = grab;
+                    var aligned = targetButton.TranslatePoint(grab, targetPanel);
+                    _folderHover.Reset();
+                    Require(FolderHoverTarget(a, targetPanel, aligned, a.Id, 0) == null
+                        && FolderHoverTarget(a, targetPanel, aligned, a.Id, TileFolderHover.DelayMilliseconds) == b,
+                        "Folder overlap depends on the source tile size or pointer grab corner.");
+                }
+            }
+            a.Size = sourceSize;
             MoveTileIntoGroup(a, left, 4, 10, b);
             var folder = left.Tiles.Single(t => t.IsFolder);
             MoveTileIntoGroup(folder, left, 0, 0);
@@ -209,7 +232,7 @@ public partial class MainWindow
             VerifyDetachedBaseline(snapshotPath);
             VerifyAdjacentDrop(snapshotPath);
             VerifyRectangularGroupsAndFolderExpansion(snapshotPath);
-            return new(23, 6, 16, 6, saved.Version, Document.Groups.Count);
+            return new(23, 6, 29, 6, saved.Version, Document.Groups.Count);
         }
         finally
         {

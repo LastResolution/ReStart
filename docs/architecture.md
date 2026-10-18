@@ -26,6 +26,16 @@ A schema-4 `TileGroup.IsStandalone` entry stores exactly one independent tile. I
 
 `GroupBoardPanel` uses the same rectangles for measure and arrange. `LayoutEditor.Detach` freezes visible anchors and moves ownership once. `FolderExpansion` adds temporary inline content without changing saved root rows. Expanded independent folders temporarily use the column width for their children while keeping the root tile's horizontal position.
 
+`LayoutHistory` retains deep snapshots of groups and one-level children only, bounded to 100 edits and 32 MiB. Successful writes record one operation; identical saves retain redo. Editing after undo drops the redo branch. Preferences, upgrade metadata, live-script runtime state and external files remain outside history. Undo/redo persists through the same atomic store and restores its cursor if writing fails. History lives only in memory and survives hiding Start, not process exit.
+
+Edit mode suppresses tile activation and uses stable IDs for selection across redraws and history restoration. Folder parents and children cannot be selected together. `TileBatchMove.Plan` copies the layout, freezes existing anchors, validates a rigid selection and reserves selected cells before reflowing conflicts. Open-space moves reserve all independent tiles before displacing neighbors. Invalid and cancelled plans leave the source unchanged; preview and commit share the plan. A one-entry cache avoids recomputing the same snapped destination. The group menu explicitly compacts selected tiles; dragging preserves their relative positions.
+
+Drop routing distinguishes root group cells, expanded folder children, tile-over-tile collection, and independent board space. Overlapping an independent non-folder tile creates an ordinary group through `TileGrouping.Plan`; it copies the layout, collects roots compactly and reserves earlier neighbors before placing the new header. The target's tile origin is retained when space permits; a header collision moves the new group down minimally instead of pushing an earlier neighbor below it. Grouped targets create folders; existing folders accept children in either container. Single selections can create folders; batches can enter existing folders or collect around an independent target. Nested folders are rejected. A one-child folder remains a folder until its last child is removed.
+
+Independent grouping starts at 40% overlap of the smaller tile area and arms after 300 ms. A tracked target stays eligible down to 30% overlap so small pointer drift does not restart the timer. Leaving that tolerance resets the dwell. Folder creation/addition retains its 65% overlap and 1000 ms dwell. These are ReStart interaction choices, not measured Windows shell constants.
+
+Single-tile preview and commit share one resolver. Root overlap also resolves compact independent targets whose bounds do not contain a larger dragged tile's center. During OLE dragging, the dwell timer retains the latest drag-event position in viewport coordinates and reprojects it after scrolling. It does not poll WPF's mouse device, which can still report the original grab position while OLE owns pointer tracking. Leaving the content or ending/cancelling a drag retires the timer.
+
 ## Catalog and shell
 
 `AppCatalog` enumerates AppsFolder and user/common Start-menu .lnk/.url files on dedicated STA threads. User entries win for equal relative paths. SHGetFileInfo supplies localized display names; directory paths remain available for `AppListTree`.
@@ -41,6 +51,8 @@ App directories expand inline. Column balancing keeps headings and initial child
 A per-user/session mutex prevents duplicate normal instances across versions and paths. A named event activates the existing instance. Preview has a separate scope. Background duplicate launches do not open the menu.
 
 Low-level hooks run a short Win32 message loop on a dedicated thread. A bare Windows key toggles ReStart; combinations replay the pending Windows-key down. UI work is dispatched. Hooks, hotkeys and workers are released on exit. Native Start-button capture uses recent UI Automation bounds scoped to Explorer's primary/secondary taskbars; no DLL injection or guessed hit regions are used.
+
+While Start is visible and close-on-deactivation is enabled, an out-of-context `EVENT_SYSTEM_FOREGROUND` subscription observes subsequent activations even if a taskbar thumbnail already deactivated WPF. The callback rechecks the current window, ownership, visibility generation and event time before dismissing. Owned dialogs and transient taskbar/menu surfaces are excluded; taskbar thumbnail clicks also use the click-dismiss path. Observation is unregistered when hidden, disabled or disposed. Dialog and drag guards still apply.
 
 Sign-in startup manages one current-user Run value, reconciles its actual state, and restores it if settings saving fails.
 

@@ -94,6 +94,11 @@ public partial class MainWindow : Window
         PinnedNav.AllowDrop = true;
         PinnedNav.PreviewDragOver += (_, e) => { if (HasDrag(e)) { ShowPinned(this, new()); e.Effects = DragDropEffects.Move; e.Handled = true; } };
         ContentScroll.AllowDrop = true;
+        ContentScroll.DragLeave += (_, e) =>
+        {
+            if (new Rect(new Point(), ContentScroll.RenderSize).Contains(e.GetPosition(ContentScroll))) return;
+            _folderHover.Reset(); StopFolderDwell(); ClearDropPreview();
+        };
         ContentScroll.PreviewMouseWheel += (_, e) =>
         {
             if (Keyboard.Modifiers == ModifierKeys.Shift && ContentScroll.ScrollableWidth > 0)
@@ -125,7 +130,7 @@ public partial class MainWindow : Window
         };
         UserButton.Content = "◉     " + (_preview ? "ReStart" : Environment.UserName);
         PreviewMouseDown += (_, _) => CompleteEntrance();
-        IsVisibleChanged += (_, _) => { if (!IsVisible) StopMotion(); };
+        IsVisibleChanged += (_, _) => { if (!IsVisible) { StopMotion(); SetLayoutEditing(false); } };
         Loaded += async (_, _) => await InitializeAsync();
         SourceInitialized += (_, _) =>
         {
@@ -164,8 +169,11 @@ public partial class MainWindow : Window
             ApplyAppearance();
             RenderGroups();
             RenderApps();
+            _layoutHistory.Reset(Document);
+            _historyReady = true;
             SetStatus(_store.RecoveryMessage ?? L.F(K.StatusCatalogReady, _apps.Count));
             _ready = true;
+            UpdateEditingChrome();
             RefreshSearchResults();
             PreferencesChanged?.Invoke();
             if (IsActive && (Keyboard.FocusedElement == null || Keyboard.FocusedElement == this || SearchBox.IsKeyboardFocused)) FocusSearchInput();
@@ -272,6 +280,7 @@ public partial class MainWindow : Window
         Add(backgroundMenu, L.T(K.AddTile), () => OpenAddMenu(AddButton, new()));
         AddLiveTileMenu(backgroundMenu);
         Add(backgroundMenu, L.T(K.SettingsTitle), ShowSettings);
+        AddLayoutEditingMenu(backgroundMenu);
         Root.ContextMenu = backgroundMenu;
     }
 
@@ -343,10 +352,25 @@ public partial class MainWindow : Window
     /// <summary>Persists the current document and reports recoverable write errors in the status area.</summary>
     public void SaveLayout()
     {
-        try { _store.Save(Document); }
+        TrySaveLayout();
+    }
+
+    private bool TrySaveLayout(bool recordHistory = true)
+    {
+        try
+        {
+            _store.Save(Document);
+            _selectionPlanCache = null;
+            if (_historyReady && recordHistory) _layoutHistory.Record(Document);
+            UpdateEditingChrome();
+            return true;
+        }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
+            if (_historyReady && recordHistory) _layoutHistory.RestoreCurrent(Document);
+            Dispatcher.BeginInvoke(RenderGroups);
             SetStatus(L.T(K.ErrorSave) + ex.Message);
+            return false;
         }
     }
 
@@ -357,6 +381,7 @@ public partial class MainWindow : Window
         if (_openFolder != null && (!_openFolder.IsFolder || !Document.Groups.Any(g => g.Tiles.Contains(_openFolder)))) _openFolder = null;
         GroupsPanel.ExpandedFolderId = _openFolder?.Id;
         GroupsPanel.Children.Clear();
+        _selectionViews.Clear();
         _liveLabels.Clear();
         _scriptViews.Clear();
         var activeScriptIds = Document.Groups.SelectMany(g => g.Tiles).SelectMany(t => new[] { t }.Concat(t.Children)).Where(t => t.Widget == "script").Select(t => t.Id).ToHashSet();
@@ -400,6 +425,8 @@ public partial class MainWindow : Window
         UpdateLiveTiles();
         FitPanels();
         RefreshEntranceTargets();
+        RefreshTileSelection();
+        ShowGroupBoundaries(_layoutEditing || _dragging);
     }
 
     private double Cell => 52 * Document.Preferences.TileScale;
@@ -460,10 +487,12 @@ public partial class MainWindow : Window
         if (tile.Size != TileSize.Small && !tile.IsFolder)
             grid.Children.Add(new TextBlock { Text = displayName, Tag = tile, FontSize = 12, VerticalAlignment = VerticalAlignment.Bottom, TextTrimming = TextTrimming.CharacterEllipsis, Margin = new(2, 0, 1, 0) });
         button.Content = grid;
+        InstallTileSelection(button, grid, tile);
         button.ContextMenu = TileMenu(tile);
         button.Click += (_, _) =>
         {
             if (_dragging || _dismissing) return;
+            if (_layoutEditing) { ToggleTileSelection(tile.Id); return; }
             if (tile.Widget == "script") InteractWithScriptTile(tile);
             else if (tile.IsFolder) OpenFolder(tile);
             else Launch(new(tile.AppId, tile.Label, tile.Target, tile.IsShellApp));
@@ -490,6 +519,8 @@ public partial class MainWindow : Window
     private ContextMenu TileMenu(Tile tile)
     {
         var menu = new ContextMenu();
+        if (tile.IsFolder) Add(menu, L.T(K.OpenTileFolder), () => OpenFolder(tile));
+        Add(menu, L.T(K.SelectTileForEditing), () => SelectTileForEditing(tile.Id));
         Add(menu, L.T(K.UnpinTile), () => { RemoveTile(tile.Id); CommitLayout(); });
         var resize = new MenuItem { Header = L.T(K.ResizeTile) };
         foreach (var (size, label) in new[] { (TileSize.Small, L.T(K.TileSmall)), (TileSize.Medium, L.T(K.TileMedium)), (TileSize.Wide, L.T(K.TileWide)), (TileSize.Large, L.T(K.TileLarge)) })
@@ -537,6 +568,7 @@ public partial class MainWindow : Window
             CommitLayout();
         });
         menu.Items.Add(extras);
+        AddLayoutEditingMenu(menu);
         return menu;
     }
 
@@ -550,6 +582,7 @@ public partial class MainWindow : Window
             if (Confirm(L.F(K.ConfirmDeleteGroup, group.Name)))
             { Document.Groups.Remove(group); CommitLayout(); }
         });
+        AddLayoutEditingMenu(menu);
         return menu;
     }
 
@@ -570,6 +603,16 @@ public partial class MainWindow : Window
         _folderHover.Reset();
         if (format == "ReStart.Group" && _openFolder != null) { CloseFolder(this, new()); UpdateLayout(); }
         var previousView = PrepareDragView(format);
+        if (_layoutEditing && format == "ReStart.Tile")
+        {
+            if (!_selectedTileIds.Contains(id)) { _selectedTileIds.Clear(); _selectedTileIds.Add(id); RefreshTileSelection(); }
+            if (_selectedTileIds.Count > 1)
+            {
+                UpdateLayout();
+                _selectionDragPositions = CaptureTileSelection();
+                format = "ReStart.Selection";
+            }
+        }
         PreserveDragExtent();
         button.ReleaseMouseCapture();
         e.Handled = true;
@@ -582,9 +625,12 @@ public partial class MainWindow : Window
         }
         finally
         {
-            ShowGroupBoundaries(false);
+            ShowGroupBoundaries(_layoutEditing);
             ClearDropPreview();
             _folderHover.Reset();
+            StopFolderDwell();
+            _selectionDragPositions = null;
+            _selectionPlanCache = null;
             GroupsPanel.DragMinimumHeight = 0;
             GroupsPanel.DragMinimumWidth = 0;
             GroupsPanel.InvalidateMeasure();
@@ -603,7 +649,7 @@ public partial class MainWindow : Window
         button.AddHandler(Mouse.PreviewMouseMoveEvent, new MouseEventHandler((_, e) => BeginDrag(button, e, format, id)), true);
     }
 
-    private static bool HasDrag(DragEventArgs e) => e.Data.GetDataPresent("ReStart.Tile") || e.Data.GetDataPresent("ReStart.App") || e.Data.GetDataPresent("ReStart.Group");
+    private static bool HasDrag(DragEventArgs e) => e.Data.GetDataPresent("ReStart.Tile") || e.Data.GetDataPresent("ReStart.App") || e.Data.GetDataPresent("ReStart.Group") || e.Data.GetDataPresent("ReStart.Selection");
     private Tile? DragTile(DragEventArgs e) => e.Data.GetData("ReStart.Tile") is string id ? FindTile(id) :
         e.Data.GetData("ReStart.App") is string appId ? TileForAppDrag(appId) : null;
     private Tile? TileForAppDrag(string appId) => _apps.FirstOrDefault(a => a.Id == appId) is AppEntry app
@@ -619,10 +665,12 @@ public partial class MainWindow : Window
         var (width, height) = TileLayout.Dimensions(tile.Size);
         var y = row * Cell + (panel.Expansion != null && row >= panel.Expansion.Row ? panel.Expansion.ExtraHeight(Cell) : 0);
         _dropAdorner.CellBounds = new(col * Cell, y, width * Cell - 4, height * Cell - 4);
+        _dropAdorner.SelectionBounds = null;
         _dropAdorner.FolderTarget = false;
+        _dropAdorner.GroupTarget = false;
         _dropAdorner.GroupBounds = panel.FolderOwner == null && panel.Tag is TileGroup { IsStandalone: false }
             ? new Rect(0, -GroupLayout.HeaderHeight, Math.Max(panel.ActualWidth, (col + width) * Cell), Math.Max(panel.ActualHeight, y + height * Cell) + GroupLayout.HeaderHeight) : null;
-        _dropAdorner.Caption = panel.FolderOwner != null ? L.T(K.DropIntoFolder) : panel.Tag is TileGroup group && !group.IsStandalone
+        _dropAdorner.Caption = panel.FolderOwner != null ? L.T(K.DropIntoFolder) + " · " + TileDisplayName(panel.FolderOwner) : panel.Tag is TileGroup group && !group.IsStandalone
             ? L.F(K.DropIntoGroup, group.Name.Length == 0 ? L.T(K.UnnamedGroup) : group.Name) : "";
         _dropAdorner.InvalidateVisual();
     }
@@ -632,24 +680,6 @@ public partial class MainWindow : Window
         if (_dropAdorner == null) return;
         AdornerLayer.GetAdornerLayer(_dropAdorner.AdornedElement)?.Remove(_dropAdorner);
         _dropAdorner = null;
-    }
-
-    private void DropInGroup(TileGroup group, TilePanel panel, DragEventArgs e)
-    {
-        e.Handled = true;
-        ClearDropPreview();
-        if (!e.Data.GetDataPresent("ReStart.Group"))
-        {
-            var point = e.GetPosition(panel);
-            var tile = DragTile(e);
-            if (tile == null) return;
-            var model = panel.ToModelPoint(point);
-            var (col, row) = TileLayout.Snap(model.X - _dragOffset.X, model.Y - _dragOffset.Y, Cell, tile.Size, Document.Preferences.Columns);
-            var sourceId = (string?)e.Data.GetData("ReStart.Tile") ?? (string?)e.Data.GetData("ReStart.App") ?? tile.Id;
-            var folderTarget = FolderHoverTarget(tile, panel, point, sourceId);
-            if (group.IsStandalone && folderTarget == null) MoveTileToStandalone(tile, e.GetPosition(GroupsPanel));
-            else MoveTileIntoGroup(tile, group, col, row, folderTarget);
-        }
     }
 
     private static T? Ancestor<T>(DependencyObject? source) where T : DependencyObject
@@ -748,7 +778,7 @@ public partial class MainWindow : Window
         ContentScroll.ScrollToTop();
     }
     private void ShowPinned(object sender, RoutedEventArgs e) => ResetToPinnedView();
-    private void ShowAllApps(object sender, RoutedEventArgs e) { _searchRequested = false; _allApps = true; SearchBox.Clear(); SearchChanged(SearchBox, new(TextBox.TextChangedEvent, UndoAction.None)); ExpandedRail.Visibility = Visibility.Collapsed; ContentScroll.ScrollToTop(); }
+    private void ShowAllApps(object sender, RoutedEventArgs e) { SetLayoutEditing(false); _searchRequested = false; _allApps = true; SearchBox.Clear(); SearchChanged(SearchBox, new(TextBox.TextChangedEvent, UndoAction.None)); ExpandedRail.Visibility = Visibility.Collapsed; ContentScroll.ScrollToTop(); }
     private void ClearSearch(object sender, RoutedEventArgs e) { SearchBox.Clear(); SearchBox.Focus(); }
     private void ToggleRail(object sender, RoutedEventArgs e) => ExpandedRail.Visibility = ExpandedRail.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
     private void RenameGroup(TileGroup group) => GroupsPanel.Children.OfType<StackPanel>().Where(s => s.Tag == group).SelectMany(s => s.Children.OfType<GroupHeader>()).FirstOrDefault()?.BeginEdit();
@@ -827,7 +857,7 @@ public partial class MainWindow : Window
 
     private void Launch(AppEntry app)
     {
-        if (_dismissing) return;
+        if (_dismissing || _layoutEditing) return;
         if (app.Id == "restart:calendar")
         {
             WithDialog(() =>
@@ -916,8 +946,15 @@ public partial class MainWindow : Window
         WithDialog(() => answer = TextPrompt.Show(this, title, value));
         return answer;
     }
-    /// <summary>Gets the current local layout document.</summary>
-    public void ReplaceDocument(LayoutDocument document) { Document = document; SaveLayout(); RefreshLayout(); }
+    /// <summary>Atomically saves an imported/reset layout before replacing the visible document and recording one undo step.</summary>
+    public void ReplaceDocument(LayoutDocument document)
+    {
+        _store.Save(document);
+        Document = document;
+        _selectionPlanCache = null;
+        if (_historyReady) _layoutHistory.Record(document);
+        RefreshLayout();
+    }
 
     private void FocusSearchInput()
     {
@@ -941,6 +978,7 @@ public partial class MainWindow : Window
         if (_dragging) return;
         CompleteEntrance();
         if (_editingGroupHeader?.IsEditing == true && e.OriginalSource is TextBox) return;
+        if (HandleLayoutEditingKey(e)) return;
         if (e.Key == Key.Tab && SearchBox.IsKeyboardFocused && SearchBox.Text.Length == 0 && !_searchRequested)
         { PinnedNav.Focus(); e.Handled = true; return; }
 
@@ -974,6 +1012,7 @@ public partial class MainWindow : Window
         if (_dismissing) { e.Handled = true; return; }
         if (_dragging) return;
         CompleteEntrance();
+        if (_layoutEditing && _editingGroupHeader?.IsEditing != true) { e.Handled = true; return; }
         if (e.OriginalSource is TextBox || Ancestor<TextBox>(e.OriginalSource as DependencyObject) != null || Keyboard.Modifiers.HasFlag(ModifierKeys.Control) || e.Text.Length == 0 || e.Text.All(char.IsControl)) return;
         if (FocusAppInitial(e.Text)) { e.Handled = true; return; }
         UpdateSearchChrome(true); SearchBox.Focus(); SearchBox.AppendText(e.Text); SearchBox.CaretIndex = SearchBox.Text.Length; e.Handled = true;
@@ -989,7 +1028,7 @@ public partial class MainWindow : Window
     private static bool IsAnyMenuOpen() => Mouse.Captured is ContextMenu || Mouse.Captured is System.Windows.Controls.Primitives.MenuBase;
     private void OnClosing(object? sender, CancelEventArgs e) { if (!_exit) { e.Cancel = true; Dismiss(); } }
     /// <summary>Stops timers and isolated script workers before permanently closing the launcher.</summary>
-    public void Exit() { _exit = true; StopMotion(); StopWatchingDesktopAppearance(); _clock.Stop(); _nameRefreshTimer?.Stop(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); _systemMetrics?.Dispose(); Close(); }
+    public void Exit() { _exit = true; StopMotion(); StopFolderDwell(); StopWatchingDesktopAppearance(); _clock.Stop(); _nameRefreshTimer?.Stop(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); _systemMetrics?.Dispose(); Close(); }
 
     /// <summary>Renders only the launcher root to a PNG for reproducible UI verification.</summary>
     public void SaveScreenshot(string path)

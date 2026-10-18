@@ -5,6 +5,9 @@ namespace ReStart.App.Services;
 internal static class Native
 {
     internal delegate nint HookProc(int code, nint wParam, nint lParam);
+    internal delegate void WinEventProc(nint hook, uint eventId, nint window, int objectId, int childId, uint thread, uint time);
+    [DllImport("user32.dll")] internal static extern nint SetWinEventHook(uint firstEvent, uint lastEvent, nint module, WinEventProc callback, uint process, uint thread, uint flags);
+    [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] internal static extern bool UnhookWinEvent(nint hook);
     internal delegate bool EnumWindowProc(nint window, nint parameter);
     [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] internal static extern bool EnumWindows(EnumWindowProc callback, nint parameter);
     [StructLayout(LayoutKind.Sequential)] internal struct Point { public int X; public int Y; }

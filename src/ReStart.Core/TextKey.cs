@@ -3,6 +3,42 @@ namespace ReStart.Core;
 /// <summary>Stable, language-independent identifiers for all application-owned UI text.</summary>
 public enum TextKey
 {
+    /// <summary>Explains the pending overlap that collects independent tiles into an ordinary group.</summary>
+    HoldToCreateGroup,
+    /// <summary>Identifies an armed independent-tile grouping destination.</summary>
+    DropCreateGroup,
+    /// <summary>Explains the pending tile-over-tile folder dwell before it is armed.</summary>
+    HoldToCreateFolder,
+    /// <summary>Edit layout</summary>
+    EditLayout,
+    /// <summary>Undo</summary>
+    UndoLayout,
+    /// <summary>Redo</summary>
+    RedoLayout,
+    /// <summary>Select all</summary>
+    SelectAllTiles,
+    /// <summary>Clear selection</summary>
+    ClearTileSelection,
+    /// <summary>Move to group…</summary>
+    MoveSelectedTiles,
+    /// <summary>Unpin selected</summary>
+    UnpinSelectedTiles,
+    /// <summary>Done</summary>
+    FinishLayoutEditing,
+    /// <summary>{0} selected</summary>
+    SelectedTileCount,
+    /// <summary>Click tiles to select; drag a selection to move it. Apps stay closed.</summary>
+    LayoutEditingHint,
+    /// <summary>Selected</summary>
+    TileSelected,
+    /// <summary>Select for editing</summary>
+    SelectTileForEditing,
+    /// <summary>Open folder</summary>
+    OpenTileFolder,
+    /// <summary>The selection does not fit here. Drop it on open space or move it using the group menu.</summary>
+    SelectionDoesNotFit,
+    /// <summary>Move {0} tiles</summary>
+    MoveTileCount,
     /// <summary>Adds a bundled or library live tile directly from a context menu.</summary>
     AddLiveTile,
     /// <summary>Names the user-owned package library.</summary>

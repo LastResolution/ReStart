@@ -233,7 +233,7 @@ internal sealed partial class SettingsWindow : Window
             if (MessageBox.Show(this, L.T(K.ConfirmImport), "ReStart", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
             // Preferences are local to this PC; importing a layout must not enable hooks or autostart.
             imported.Preferences = _main.Document.Preferences;
-            _store.Save(imported); _main.ReplaceDocument(imported); _dataChanged = true; _feedback.Text = L.T(K.StatusImported);
+            _main.ReplaceDocument(imported); _dataChanged = true; _feedback.Text = L.T(K.StatusImported);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or InvalidDataException or InvalidOperationException or NullReferenceException) { _feedback.Text = L.T(K.ErrorRead) + ex.Message; }
     }
@@ -241,6 +241,7 @@ internal sealed partial class SettingsWindow : Window
     {
         if (MessageBox.Show(this, L.T(K.ConfirmReset), "ReStart", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
         var document = _main.CreateInitialLayout(); document.Preferences = _main.Document.Preferences;
-        _main.ReplaceDocument(document); _dataChanged = true; _feedback.Text = L.T(K.StatusLayoutReset);
+        try { _main.ReplaceDocument(document); _dataChanged = true; _feedback.Text = L.T(K.StatusLayoutReset); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException) { _feedback.Text = L.T(K.ErrorSave) + ex.Message; }
     }
 }

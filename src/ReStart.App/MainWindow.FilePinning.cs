@@ -24,6 +24,8 @@ public partial class MainWindow
                 Document = System.Text.Json.JsonSerializer.Deserialize<LayoutDocument>(before, LayoutStore.JsonOptions)!;
                 throw;
             }
+            if (_historyReady) _layoutHistory.Record(Document);
+            _selectionPlanCache = null;
             await _catalog.LoadIconsAsync([app]);
             Present(); RenderGroups(); UpdateLayout();
             var button = VisualChildren<Button>(GroupsPanel).FirstOrDefault(b => b.Tag == tile);

@@ -85,12 +85,12 @@ public static class GroupLayout
     }
 
     /// <summary>Returns group bounds without mutating anchors; folder expansion temporarily pushes neighbors around its fixed opening anchor.</summary>
-    public static IReadOnlyList<GroupPlacement> Pack(IEnumerable<TileGroup> groups, int columns, int tileColumns, double cell, TileGroup? priority = null, string? expandedFolderId = null, bool preserveColumns = false)
+    public static IReadOnlyList<GroupPlacement> Pack(IEnumerable<TileGroup> groups, int columns, int tileColumns, double cell, TileGroup? priority = null, string? expandedFolderId = null, bool preserveColumns = false, IReadOnlySet<string>? priorityIds = null)
     {
         if (columns is < 1 or > 64 || !double.IsFinite(cell) || cell <= 0) throw new ArgumentOutOfRangeException(nameof(columns));
         var items = groups.ToArray();
         var owner = expandedFolderId == null ? null : items.FirstOrDefault(g => g.Tiles.Any(t => t.Id == expandedFolderId && t.IsFolder));
-        if (owner == null) return PackCore(items, columns, tileColumns, cell, priority, null, preserveColumns);
+        if (owner == null) return PackCore(items, columns, tileColumns, cell, priority, null, preserveColumns, priorityIds);
         var baseline = PackCore(items, columns, tileColumns, cell, null, null, preserveColumns);
         var shadows = baseline.Select(p => new TileGroup
         {
@@ -106,7 +106,7 @@ public static class GroupLayout
             .Select(p => p with { Group = originals[p.Group] }).ToArray();
     }
 
-    private static IReadOnlyList<GroupPlacement> PackCore(TileGroup[] items, int columns, int tileColumns, double cell, TileGroup? priority, string? expandedFolderId, bool preserveColumns)
+    private static IReadOnlyList<GroupPlacement> PackCore(TileGroup[] items, int columns, int tileColumns, double cell, TileGroup? priority, string? expandedFolderId, bool preserveColumns, IReadOnlySet<string>? priorityIds = null)
     {
         var placed = new Dictionary<TileGroup, GroupPlacement>();
         var regions = items.ToDictionary(g => g, g => OccupiedAreas(g, tileColumns, cell, expandedFolderId));
@@ -136,7 +136,7 @@ public static class GroupLayout
                 row = next;
             }
         }
-        foreach (var group in items.Where(g => g.Column.HasValue && g.Row.HasValue).OrderByDescending(g => g == priority)
+        foreach (var group in items.Where(g => g.Column.HasValue && g.Row.HasValue).OrderByDescending(g => g == priority || priorityIds?.Contains(g.Id) == true)
                      .ThenBy(g => (g.IsStandalone ? HeaderHeight : 0) + g.Row!.Value * cell / 2))
         {
             var column = Math.Clamp(group.Column!.Value, 0, preserveColumns ? 63 : columns - 1);

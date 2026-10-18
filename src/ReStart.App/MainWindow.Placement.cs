@@ -44,18 +44,38 @@ public partial class MainWindow
         GroupsPanel.DragMinimumWidth = Math.Max(GroupsPanel.DragMinimumWidth, occupiedWidth);
     }
 
-    private Tile? FolderHoverTarget(Tile source, TilePanel panel, Point point, string sourceId, long? timestamp = null)
+    private sealed record FolderOverlap(Tile Tile, double Ratio, double Distance);
+    private static bool CreatesGroup(TilePanel panel, Tile target) => panel.Tag is TileGroup { IsStandalone: true } && !target.IsFolder;
+    private static int HoverDelay(TilePanel panel, Tile? target) => target != null && CreatesGroup(panel, target)
+        ? TileFolderHover.GroupDelayMilliseconds : TileFolderHover.DelayMilliseconds;
+
+    private FolderOverlap? FindFolderOverlap(Tile source, TilePanel panel, Point point, bool existingFoldersOnly = false)
     {
-        var button = Ancestor<Button>(panel.InputHitTest(point) as DependencyObject);
-        var target = button?.Tag as Tile;
-        var allowed = !source.IsFolder && target != null && target != source && target.Widget.Length == 0;
-        if (allowed && button != null)
-        {
-            var inside = panel.TranslatePoint(point, button);
-            allowed = inside.X >= button.ActualWidth * 0.2 && inside.X <= button.ActualWidth * 0.8
-                && inside.Y >= button.ActualHeight * 0.2 && inside.Y <= button.ActualHeight * 0.8;
-        }
-        return _folderHover.Update(sourceId, allowed ? target!.Id : null, timestamp ?? Environment.TickCount64) ? target : null;
+        if (panel.FolderOwner != null) return null;
+        var (width, height) = TileLayout.Dimensions(source.Size);
+        var dragged = new Rect(point.X - _dragOffset.X, point.Y - _dragOffset.Y, width * Cell - 4, height * Cell - 4);
+        return panel.Placements
+            .Where(p => p.Tile.Id != source.Id
+                && (!source.IsFolder || panel.Tag is TileGroup { IsStandalone: true } && !p.Tile.IsFolder)
+                && (_selectionDragPositions == null || !_selectedTileIds.Contains(p.Tile.Id))
+                && (!existingFoldersOnly || p.Tile.IsFolder && !_selectedTileIds.Contains(p.Tile.Id)))
+            .Select(p => (p.Tile, Bounds: new Rect(p.Column * Cell, panel.Expansion?.TileY(p, Cell) ?? p.Row * Cell, p.Width * Cell - 4, p.Height * Cell - 4)))
+            .Select(p =>
+            {
+                var overlap = Rect.Intersect(dragged, p.Bounds);
+                var delta = new Point(dragged.X + dragged.Width / 2, dragged.Y + dragged.Height / 2) - new Point(p.Bounds.X + p.Bounds.Width / 2, p.Bounds.Y + p.Bounds.Height / 2);
+                return new FolderOverlap(p.Tile, overlap.IsEmpty ? 0 : overlap.Width * overlap.Height / Math.Min(dragged.Width * dragged.Height, p.Bounds.Width * p.Bounds.Height), delta.LengthSquared);
+            })
+            .Where(p => p.Ratio >= (CreatesGroup(panel, p.Tile) ? _folderHover.TargetId == p.Tile.Id ? .30 : .40 : .65))
+            .OrderByDescending(p => p.Ratio).ThenBy(p => p.Distance).FirstOrDefault();
+    }
+
+    private Tile? FolderHoverTarget(Tile source, TilePanel panel, Point point, string sourceId, long? timestamp = null, bool existingFoldersOnly = false)
+    {
+        var target = FindFolderOverlap(source, panel, point, existingFoldersOnly)?.Tile;
+        var armed = _folderHover.Update(sourceId, target?.Id, timestamp ?? Environment.TickCount64, HoverDelay(panel, target));
+        if (timestamp == null && _dragging) WatchFolderDwell(source, panel, point, sourceId, target, existingFoldersOnly);
+        return armed ? target : null;
     }
     private (TileGroup Group, TilePanel Panel)? GroupAt(Point point)
     {
@@ -74,15 +94,98 @@ public partial class MainWindow
         return adjacent != null && destination != null ? (adjacent, destination) : null;
     }
 
+    private (TileGroup Group, TilePanel Panel)? TileDropTarget(Tile tile, Point pointer)
+    {
+        var (width, height) = TileLayout.Dimensions(tile.Size);
+        var center = new Point(pointer.X - _dragOffset.X + (width * Cell - 4) / 2,
+            pointer.Y - _dragOffset.Y + (height * Cell - 4) / 2);
+        var centered = GroupAt(center);
+        if (centered?.Panel.FolderOwner != null) return centered;
+        // A wide/large source can completely cover a small independent target
+        // while its center lies outside that target's compact group rectangle.
+        var overlapping = GroupsPanel.Children.OfType<StackPanel>()
+            .Where(s => s.Tag is TileGroup)
+            .Select(s => (Group: (TileGroup)s.Tag, Panel: s.Children.OfType<TilePanel>().FirstOrDefault()))
+            .Where(p => p.Panel != null)
+            .Select(p => (p.Group, Panel: p.Panel!, Overlap: FindFolderOverlap(tile, p.Panel!, GroupsPanel.TranslatePoint(pointer, p.Panel!))))
+            .Where(p => p.Overlap != null).OrderByDescending(p => p.Overlap!.Ratio).ThenBy(p => p.Overlap!.Distance).FirstOrDefault();
+        return overlapping.Panel != null ? (overlapping.Group, overlapping.Panel) : centered;
+    }
+
+    private sealed record SingleTileDrop(TileGroup? Group = null, TilePanel? Panel = null,
+        int Column = 0, int Row = 0, Tile? MergeTarget = null, List<TileGroup>? GroupPlan = null);
+
+    private SingleTileDrop? ResolveSingleTileDrop(Tile tile, Point point, string sourceId, long? timestamp = null)
+    {
+        if (TileDropTarget(tile, point) is not { } target)
+        {
+            _folderHover.Reset(); StopFolderDwell();
+            return new();
+        }
+        var relative = GroupsPanel.TranslatePoint(point, target.Panel);
+        var model = target.Panel.ToModelPoint(relative);
+        var (column, row) = TileLayout.Snap(model.X - _dragOffset.X, model.Y - _dragOffset.Y, Cell, tile.Size, Document.Preferences.Columns);
+        if (target.Panel.FolderOwner != null)
+        {
+            _folderHover.Reset(); StopFolderDwell();
+            return tile.IsFolder ? null : new(target.Group, target.Panel, column, row);
+        }
+        var merge = FolderHoverTarget(tile, target.Panel, relative, sourceId, timestamp);
+        if (merge != null && target.Group.IsStandalone && !merge.IsFolder)
+        {
+            var plan = TileGrouping.Plan(Document, [tile], merge.Id, GroupsPanel.Columns, Cell);
+            return plan == null ? null : new(target.Group, target.Panel, column, row, GroupPlan: plan);
+        }
+        return new(target.Group, target.Panel, column, row, merge);
+    }
+
+    private bool PreviewSingleTileDrop(Tile tile, Point point, string sourceId, long? timestamp = null)
+    {
+        var drop = ResolveSingleTileDrop(tile, point, sourceId, timestamp);
+        if (drop == null) { ClearDropPreview(); return false; }
+        if (drop.GroupPlan is { } plan) ShowGroupCreationPreview(plan, drop.Group!.Id);
+        else if (drop.MergeTarget is Tile merge)
+        {
+            var placement = drop.Panel!.Placements.Single(p => p.Tile == merge);
+            ShowDropPreview(drop.Panel, merge, placement.Column, placement.Row);
+            _dropAdorner!.FolderTarget = true;
+            _dropAdorner.Caption = L.T(K.DropIntoFolder);
+            _dropAdorner.InvalidateVisual();
+        }
+        else if (drop.Panel?.FolderOwner != null || drop.Group is { IsStandalone: false })
+            ShowDropPreview(drop.Panel!, tile, drop.Column, drop.Row);
+        else PreviewStandalone(tile, point);
+        ShowPendingFolderPreview();
+        return true;
+    }
+
+    private bool CommitSingleTileDrop(Tile tile, Point point, string sourceId)
+    {
+        // Resolve before clearing the preview: the same dwell state and OLE
+        // coordinates must decide both the visible destination and ownership.
+        var drop = ResolveSingleTileDrop(tile, point, sourceId);
+        ClearDropPreview(); StopFolderDwell();
+        if (drop == null) return false;
+        if (drop.GroupPlan is { } plan) { Document.Groups = plan; CommitLayout(); }
+        else if (drop.Panel?.FolderOwner is Tile folder) MoveTileIntoOpenFolder(tile, folder, drop.Column, drop.Row);
+        else if (drop.MergeTarget != null || drop.Group is { IsStandalone: false })
+            MoveTileIntoGroup(tile, drop.Group!, drop.Column, drop.Row, drop.MergeTarget);
+        else MoveTileToStandalone(tile, point);
+        return true;
+    }
+
     private void OnBoardDragOver(object sender, DragEventArgs e)
     {
         if (!HasDrag(e)) return;
         e.Handled = true;
         e.Effects = DragDropEffects.Move;
         var point = e.GetPosition(GroupsPanel);
+        if (e.Data.GetData("ReStart.Selection") is string anchorId)
+        { HandleSelectionDrop(e, anchorId, point, false); return; }
         if (e.Data.GetData("ReStart.Group") is string groupId)
         {
             _folderHover.Reset();
+            StopFolderDwell();
             var group = Document.Groups.FirstOrDefault(g => g.Id == groupId);
             if (group == null) { e.Effects = DragDropEffects.None; return; }
             PreviewGroupOnBoard(group, point);
@@ -90,36 +193,8 @@ public partial class MainWindow
         }
         var tile = DragTile(e);
         if (tile == null) { e.Effects = DragDropEffects.None; return; }
-        if (GroupAt(point) is { } target)
-        {
-            var relative = GroupsPanel.TranslatePoint(point, target.Panel);
-            var model = target.Panel.ToModelPoint(relative);
-            var (column, row) = TileLayout.Snap(model.X - _dragOffset.X, model.Y - _dragOffset.Y, Cell, tile.Size, Document.Preferences.Columns);
-            if (target.Panel.FolderOwner != null)
-            {
-                _folderHover.Reset();
-                if (tile.IsFolder) { e.Effects = DragDropEffects.None; ClearDropPreview(); return; }
-                ShowDropPreview(target.Panel, tile, column, row);
-                return;
-            }
-            var sourceId = (string?)e.Data.GetData("ReStart.Tile") ?? (string?)e.Data.GetData("ReStart.App") ?? tile.Id;
-            var folderTarget = FolderHoverTarget(tile, target.Panel, relative, sourceId);
-            if (folderTarget != null)
-            {
-                var placement = target.Panel.Placements.Single(p => p.Tile == folderTarget);
-                ShowDropPreview(target.Panel, folderTarget, placement.Column, placement.Row);
-                _dropAdorner!.FolderTarget = true;
-                _dropAdorner.Caption = L.T(K.DropIntoFolder);
-                _dropAdorner.InvalidateVisual();
-            }
-            else if (target.Group.IsStandalone) PreviewStandalone(tile, point);
-            else ShowDropPreview(target.Panel, tile, column, row);
-        }
-        else
-        {
-            _folderHover.Reset();
-            PreviewStandalone(tile, point);
-        }
+        var sourceId = (string?)e.Data.GetData("ReStart.Tile") ?? (string?)e.Data.GetData("ReStart.App") ?? tile.Id;
+        e.Effects = PreviewSingleTileDrop(tile, point, sourceId) ? DragDropEffects.Move : DragDropEffects.None;
     }
 
     private void ShowBoardPreview(Rect bounds)
@@ -131,9 +206,23 @@ public partial class MainWindow
             System.Windows.Documents.AdornerLayer.GetAdornerLayer(GroupsPanel)?.Add(_dropAdorner);
         }
         _dropAdorner.CellBounds = bounds;
+        _dropAdorner.SelectionBounds = null;
         _dropAdorner.FolderTarget = false;
+        _dropAdorner.GroupTarget = false;
         _dropAdorner.GroupBounds = null;
         _dropAdorner.Caption = L.T(K.DropIndependent);
+        _dropAdorner.InvalidateVisual();
+    }
+
+    private void ShowGroupCreationPreview(List<TileGroup> plan, string groupId)
+    {
+        var group = GroupLayout.Pack(plan, GroupsPanel.Columns, Document.Preferences.Columns, Cell, preserveColumns: true).Single(p => p.Group.Id == groupId);
+        ShowBoardPreview(new(group.Left, group.Top, group.Width, group.Height));
+        _dropAdorner!.GroupTarget = true;
+        _dropAdorner.GroupBounds = _dropAdorner.CellBounds;
+        _dropAdorner.SelectionBounds = TileLayout.Pack(group.Group.Tiles, Document.Preferences.Columns)
+            .Select(p => new Rect(group.Left + p.Column * Cell, group.Top + GroupLayout.HeaderHeight + p.Row * Cell, p.Width * Cell - 4, p.Height * Cell - 4)).ToArray();
+        _dropAdorner.Caption = L.T(K.DropCreateGroup);
         _dropAdorner.InvalidateVisual();
     }
 
@@ -141,26 +230,21 @@ public partial class MainWindow
     {
         if (!HasDrag(e)) return;
         e.Handled = true;
-        ClearDropPreview();
         var point = e.GetPosition(GroupsPanel);
+        if (e.Data.GetData("ReStart.Selection") is string anchorId)
+        { ClearDropPreview(); StopFolderDwell(); HandleSelectionDrop(e, anchorId, point, true); return; }
         if (e.Data.GetData("ReStart.Group") is string id)
         {
+            ClearDropPreview(); StopFolderDwell();
             var group = Document.Groups.FirstOrDefault(g => g.Id == id);
             if (group == null) return;
             MoveGroupOnBoard(group, point);
         }
-        else if (GroupAt(point) is { } target)
+        else if (DragTile(e) is Tile tile)
         {
-            if (target.Panel.FolderOwner is Tile folder)
-            {
-                if (DragTile(e) is not Tile tile || tile.IsFolder) return;
-                var relative = e.GetPosition(target.Panel);
-                var (column, row) = TileLayout.Snap(relative.X - _dragOffset.X, relative.Y - _dragOffset.Y, Cell, tile.Size, Document.Preferences.Columns);
-                MoveTileIntoOpenFolder(tile, folder, column, row);
-            }
-            else DropInGroup(target.Group, target.Panel, e);
+            var sourceId = (string?)e.Data.GetData("ReStart.Tile") ?? (string?)e.Data.GetData("ReStart.App") ?? tile.Id;
+            e.Effects = CommitSingleTileDrop(tile, point, sourceId) ? DragDropEffects.Move : DragDropEffects.None;
         }
-        else if (DragTile(e) is Tile tile) MoveTileToStandalone(tile, point);
     }
 
     private void MoveGroupOnBoard(TileGroup group, Point point)
