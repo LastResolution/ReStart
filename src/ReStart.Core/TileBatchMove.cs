@@ -12,7 +12,8 @@ public static class TileBatchMove
         string anchorId, string? groupId, string? folderId, double x, double y, int availableColumns, double cell)
     {
         if (selection.Count == 0 || selection.Select(s => s.Id).Distinct().Count() != selection.Count
-            || !double.IsFinite(x) || !double.IsFinite(y) || selection.Any(s => !double.IsFinite(s.X) || !double.IsFinite(s.Y))) return null;
+            || !double.IsFinite(x) || !double.IsFinite(y) || x is < -10000 or > 10000 || y is < -10000 or > 10000
+            || selection.Any(s => !double.IsFinite(s.X) || !double.IsFinite(s.Y) || s.X is < -10000 or > 20000 || s.Y is < -10000 or > 20000)) return null;
         var anchor = selection.FirstOrDefault(s => s.Id == anchorId);
         if (anchor.Id == null) return null;
         var copy = new LayoutDocument { Preferences = document.Preferences, Groups = LayoutHistory.CopyGroups(document.Groups) };
@@ -83,7 +84,9 @@ public static class TileBatchMove
                 };
                 copy.Groups.Add(entry); moving.Add(entry.Id);
             }
-            foreach (var p in GroupLayout.Pack(copy.Groups, availableColumns, copy.Preferences.Columns, cell, preserveColumns: true, priorityIds: moving))
+            var placements = GroupLayout.Pack(copy.Groups, availableColumns, copy.Preferences.Columns, cell, preserveColumns: true, priorityIds: moving);
+            if (placements.Any(p => moving.Contains(p.Group.Id) && p.Row != p.Group.Row)) return null;
+            foreach (var p in placements)
             { p.Group.Column = p.Column; p.Group.Row = p.Row; }
         }
         return copy.Groups;

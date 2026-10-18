@@ -25,7 +25,7 @@
       </Grid>
       <Grid x:Name="MainContent" Grid.Column="1" Margin="34,20,34,18" RenderTransformOrigin="0.5,1">
         <Grid.RenderTransform><ScaleTransform /></Grid.RenderTransform>
-        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="28" /></Grid.RowDefinitions>
+        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="28" /></Grid.RowDefinitions>
         <Grid x:Name="TopBar" Height="0" Opacity="0" ClipToBounds="True" IsHitTestVisible="False">
           <TextBlock x:Name="ViewTitle" Text="{local:Loc Key=NavStart}" FontSize="24" FontWeight="Light" VerticalAlignment="Top" />
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
@@ -38,15 +38,31 @@
             </Grid>
           </StackPanel>
         </Grid>
-        <ScrollViewer x:Name="ContentScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" PanningMode="Both">
+        <Border x:Name="EditBar" Grid.Row="1" Visibility="Collapsed" Background="{DynamicResource PanelBrush}" Padding="10" Margin="0,0,0,12">
+          <StackPanel>
+            <WrapPanel>
+              <TextBlock Text="{local:Loc Key=EditLayout}" FontSize="18" VerticalAlignment="Center" Margin="0,0,20,0" />
+              <Button x:Name="UndoButton" Content="{local:Loc Key=UndoLayout}" ToolTip="Ctrl+Z" Click="UndoLayoutClick" Margin="0,0,4,4" />
+              <Button x:Name="RedoButton" Content="{local:Loc Key=RedoLayout}" ToolTip="Ctrl+Y / Ctrl+Shift+Z" Click="RedoLayoutClick" Margin="0,0,12,4" />
+              <Button Content="{local:Loc Key=SelectAllTiles}" ToolTip="Ctrl+A" Click="SelectAllTilesClick" Margin="0,0,4,4" />
+              <Button x:Name="ClearSelectionButton" Content="{local:Loc Key=ClearTileSelection}" Click="ClearTileSelectionClick" Margin="0,0,12,4" />
+              <Button x:Name="MoveSelectionButton" Content="{local:Loc Key=MoveSelectedTiles}" Click="MoveSelectedTilesClick" Margin="0,0,4,4" />
+              <Button x:Name="UnpinSelectionButton" Content="{local:Loc Key=UnpinSelectedTiles}" Click="UnpinSelectedTilesClick" Margin="0,0,12,4" />
+              <Button x:Name="DoneEditingButton" Content="{local:Loc Key=FinishLayoutEditing}" Click="ToggleLayoutEditing" Margin="0,0,0,4" Background="{DynamicResource TileBrush}" />
+            </WrapPanel>
+            <TextBlock x:Name="SelectionSummary" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" Margin="0,4,0,0" />
+          </StackPanel>
+        </Border>
+        <ScrollViewer x:Name="ContentScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" PanningMode="Both">
           <Grid>
             <controls:GroupBoardPanel x:Name="GroupsPanel" HorizontalAlignment="Stretch" VerticalAlignment="Top" ViewportWidth="{Binding ViewportWidth, ElementName=ContentScroll}" MinHeight="{Binding ViewportHeight, ElementName=ContentScroll}" AllowDrop="True" />
             <controls:AppListPanel x:Name="AppsPanel" Width="{Binding ViewportWidth, ElementName=ContentScroll}" HorizontalAlignment="Left" VerticalAlignment="Top" Visibility="Collapsed" />
             <StackPanel x:Name="ResultsPanel" MaxWidth="720" HorizontalAlignment="Left" Visibility="Collapsed" />
           </Grid>
         </ScrollViewer>
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="3">
           <TextBlock x:Name="StatusText" Text="{local:Loc Key=StatusLoading}" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" FontSize="12" TextTrimming="CharacterEllipsis" Margin="0,0,190,0" />
+          <Button x:Name="EditModeButton" Content="{local:Loc Key=EditLayout}" HorizontalAlignment="Right" ToolTip="Ctrl+E" Click="ToggleLayoutEditing" Padding="8,0" IsEnabled="False" />
         </Grid>
       </Grid>
     </Grid>
