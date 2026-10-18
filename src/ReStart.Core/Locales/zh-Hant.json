@@ -128,7 +128,7 @@
   "ConfirmImport": "要取代目前的釘選項目嗎？匯入的動態磚包含啟動目標。請只使用可信任的檔案。",
   "CommonExit": "結束",
   "SettingsOpacity": "背景不透明度",
-  "SettingsAnimation": "開啟時顯示動畫",
+  "SettingsAnimation": "開啟和關閉時顯示動畫",
   "SettingsDisplayLanguage": "顯示語言",
   "SettingsLanguage": "語言",
   "NavSettings": "設定",

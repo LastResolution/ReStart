@@ -15,6 +15,7 @@ dotnet test ReStart.slnx -c Release --no-build
 ./scripts/test-navigation.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-navigation.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe -AppFolders
 ./scripts/test-first-input.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+./scripts/test-motion.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-app-menus.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-release-info.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-placement.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
@@ -42,3 +43,5 @@ Core は繰り返し衝突・保存後の内部位置保持、移行原本、将
 ## v1.0 の現行契約
 
 スキーマ4へ旧1～3から原本を保存して移行します。8言語、12種類のJSタイル、4ワーカー共有、PC時刻・集計メトリクス・選択フォルダ写真・タイル内クリックに対応します。新規カスタムタイルは既存グループに割り込まず空き場所へ独立配置します。下端グループの移動中も盤面範囲を保ち、同一プレビューの再レイアウトを省きます。更新確認は公開APIを認証なしで利用し、資格情報UIはありません。最新の詳細はリンク先の英語版と[JSガイド](javascript-tiles.md)を参照してください。
+
+開閉アニメーションの検証は WPF の実際のクロックを使い、段階的なタイル表示、途中の検索、閉じる途中の再表示、タスクバーからの終了、アニメーション無効時と終了時の後始末を確認します。PNG は HWND の不透明度を同じアルファとして合成した、独立したデモ画面です。

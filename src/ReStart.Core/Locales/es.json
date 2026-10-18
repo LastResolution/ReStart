@@ -128,7 +128,7 @@
   "ConfirmImport": "¿Reemplazar los elementos anclados? Los mosaicos importados incluyen destinos de inicio. Use solo archivos de confianza.",
   "CommonExit": "Salir",
   "SettingsOpacity": "Opacidad del fondo",
-  "SettingsAnimation": "Animar al abrir",
+  "SettingsAnimation": "Animar al abrir y cerrar",
   "SettingsDisplayLanguage": "Idioma de visualización",
   "SettingsLanguage": "Idioma",
   "NavSettings": "Configuración",

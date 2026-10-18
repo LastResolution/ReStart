@@ -108,7 +108,7 @@ public partial class MainWindow
     {
         if (_preview) return;
         var owner = new WindowInteropHelper(this).Handle;
-        Hide();
+        Dismiss();
         try { await AppShellCommands.InvokeAsync(app, verb, owner); }
         catch (Exception ex) when (ex is COMException or Win32Exception or InvalidOperationException or IOException or UnauthorizedAccessException)
         { Present(); SetStatus(L.T(K.ErrorAppCommand) + ex.Message); }

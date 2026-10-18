@@ -128,7 +128,7 @@
   "ConfirmImport": "현재 고정 항목을 바꿀까요? 가져온 타일에는 실행 대상이 포함됩니다. 신뢰하는 파일만 사용하세요.",
   "CommonExit": "종료",
   "SettingsOpacity": "배경 불투명도",
-  "SettingsAnimation": "열 때 애니메이션 사용",
+  "SettingsAnimation": "열고 닫을 때 애니메이션 사용",
   "SettingsDisplayLanguage": "표시 언어",
   "SettingsLanguage": "언어",
   "NavSettings": "설정",

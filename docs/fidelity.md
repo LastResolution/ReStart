@@ -19,6 +19,7 @@ Portable builds target Windows 10/11 on x64 and ARM64. Development and native au
 | Catalog | AppsFolder and Start-menu links with native display names and icons; ambiguous shortcuts may appear twice |
 | Menus | Pin/unpin and available canonical Shell commands; Jump Lists are not implemented |
 | Desktop integration | Reversible Windows-key and Start-button capture, tray, optional sign-in startup and Explorer pin commands; no shell injection |
+| Motion | Separate window fade, bottom-anchored zoom and bottom-to-top tile reveal; animated dismissal, interrupted reopen and reduced-motion support |
 | Appearance | Dark, light, system and high contrast; wallpaper blur/tint approximates the original composition |
 | Live tiles | Local clock/calendar and JavaScript packages; legacy UWP notifications and background delivery are not supported |
 | Recommendations | Windows recent/most-used history is not imported |
@@ -26,6 +27,12 @@ Portable builds target Windows 10/11 on x64 and ARM64. Development and native au
 | Updates | Public GitHub Releases without an API key; manual installation |
 
 The [test guide](testing.md) describes isolated native fixtures and manual checks. Power, elevation and uninstall actions are not executed by routine automated checks.
+
+## Opening and closing
+
+The [Microsoft full-screen Start recording](https://blogs.windows.com/windowsexperience/2017/09/11/windows-10-tip-make-start-full-screen/) shows a gradual, bottom-anchored expansion and a lower-to-upper tile reveal. ReStart uses a 367 ms content entrance, a separate 120 ms window fade and up to 80 ms of row staggering. Exit recedes and fades over 167 ms. These are independently tuned WPF values based on the recording and [Microsoft motion guidance](https://learn.microsoft.com/en-us/windows/apps/design/signature-experiences/motion), not recovered shell constants. The current guidance is newer than Windows 10 and does not establish its exact timing. A Windows 10 22H2 device comparison remains necessary for frame-exact fidelity.
+
+Typing or clicking completes an entrance immediately so input does not wait for animation. Closing blocks further content clicks and hides the HWND only after exit. Reopening cancels the old exit callback and resumes from its visible opacity/scale. The app animation setting, Windows client-area animation setting and high contrast can disable motion; session actions and application shutdown dismiss immediately. Native fixtures seek real WPF clocks for frame checks and also await actual completion to cover stale callbacks and rapid toggles.
 
 ## Reference material
 

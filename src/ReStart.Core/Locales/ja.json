@@ -128,7 +128,7 @@
   "ConfirmImport": "現在のピン留めを置き換えますか？ インポート元のタイルには起動先のパスが含まれます。信頼できるファイルを使用してください。",
   "CommonExit": "終了",
   "SettingsOpacity": "背景の濃さ",
-  "SettingsAnimation": "表示時のアニメーション",
+  "SettingsAnimation": "開閉時のアニメーション",
   "SettingsDisplayLanguage": "表示言語",
   "SettingsLanguage": "言語",
   "NavSettings": "設定",
