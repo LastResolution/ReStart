@@ -681,24 +681,6 @@ public partial class MainWindow : Window
         _dropAdorner = null;
     }
 
-    private void DropInGroup(TileGroup group, TilePanel panel, DragEventArgs e)
-    {
-        e.Handled = true;
-        ClearDropPreview();
-        if (!e.Data.GetDataPresent("ReStart.Group"))
-        {
-            var point = e.GetPosition(panel);
-            var tile = DragTile(e);
-            if (tile == null) return;
-            var model = panel.ToModelPoint(point);
-            var (col, row) = TileLayout.Snap(model.X - _dragOffset.X, model.Y - _dragOffset.Y, Cell, tile.Size, Document.Preferences.Columns);
-            var sourceId = (string?)e.Data.GetData("ReStart.Tile") ?? (string?)e.Data.GetData("ReStart.App") ?? tile.Id;
-            var folderTarget = FolderHoverTarget(tile, panel, point, sourceId);
-            if (group.IsStandalone && folderTarget == null) MoveTileToStandalone(tile, e.GetPosition(GroupsPanel));
-            else MoveTileIntoGroup(tile, group, col, row, folderTarget);
-        }
-    }
-
     private static T? Ancestor<T>(DependencyObject? source) where T : DependencyObject
     {
         while (source != null) { if (source is T target) return target; source = source is Visual ? VisualTreeHelper.GetParent(source) : LogicalTreeHelper.GetParent(source); }

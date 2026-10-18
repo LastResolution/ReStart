@@ -1,5 +1,4 @@
 using System.Windows;
-using System.Windows.Input;
 using System.Windows.Threading;
 using ReStart.App.Controls;
 using ReStart.Core;
@@ -8,21 +7,25 @@ namespace ReStart.App;
 
 public partial class MainWindow
 {
-    private sealed record PendingFolderDrop(Tile Source, TilePanel Panel, string SourceId, Tile Target, bool ExistingFoldersOnly);
+    private sealed record PendingFolderDrop(Tile Source, TilePanel Panel, string SourceId, Tile Target, bool ExistingFoldersOnly, Point ViewportPoint);
     private PendingFolderDrop? _pendingFolderDrop;
     private DispatcherTimer? _folderDwellTimer;
 
-    private void WatchFolderDwell(Tile source, TilePanel panel, string sourceId, Tile? target, bool existingFoldersOnly)
+    private void WatchFolderDwell(Tile source, TilePanel panel, Point point, string sourceId, Tile? target, bool existingFoldersOnly)
     {
         if (target == null) { StopFolderDwell(); return; }
-        _pendingFolderDrop = new(source, panel, sourceId, target, existingFoldersOnly);
+        _pendingFolderDrop = new(source, panel, sourceId, target, existingFoldersOnly, panel.TranslatePoint(point, ContentScroll));
         if (_folderDwellTimer != null) return;
         _folderDwellTimer = new(DispatcherPriority.Input) { Interval = TimeSpan.FromMilliseconds(50) };
         _folderDwellTimer.Tick += (_, _) =>
         {
             if (!_dragging || _pendingFolderDrop is not { } pending) { StopFolderDwell(); return; }
-            var boardPoint = Mouse.GetPosition(GroupsPanel);
-            if (TileDropTarget(pending.Source, boardPoint)?.Panel != pending.Panel) { _folderHover.Reset(); StopFolderDwell(); return; }
+            // OLE owns pointer tracking during DoDragDrop. WPF's mouse device
+            // can still report the grab position, so retain the DragEventArgs
+            // position in viewport coordinates and reproject after scrolling.
+            var boardPoint = ContentScroll.TranslatePoint(pending.ViewportPoint, GroupsPanel);
+            if (!pending.Panel.IsLoaded || TileDropTarget(pending.Source, boardPoint)?.Panel != pending.Panel)
+            { _folderHover.Reset(); StopFolderDwell(); ClearDropPreview(); return; }
             FolderHoverTarget(pending.Source, pending.Panel, GroupsPanel.TranslatePoint(boardPoint, pending.Panel), pending.SourceId, existingFoldersOnly: pending.ExistingFoldersOnly);
             ShowPendingFolderPreview();
         };

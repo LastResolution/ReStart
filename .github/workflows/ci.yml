@@ -45,6 +45,8 @@ jobs:
         run: ./scripts/test-release-info.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
       - name: Verify group placement and inline naming
         run: ./scripts/test-placement.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+      - name: Verify folder drop timers, tile sizes and destination ownership
+        run: ./scripts/test-folder-drops.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
       - name: Verify layout editing, selection and undo/redo
         run: ./scripts/test-editing.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
       - name: Verify independent scroll axes and themed scrollbars
@@ -71,6 +73,8 @@ jobs:
             artifacts/release-info/start.json
             artifacts/placement/*/*.png
             artifacts/placement/*/placement.json
+            artifacts/folder-drops/*/start.json
+            artifacts/folder-drops/*/fixture-*/*.png
             artifacts/editing/*/start.json
             artifacts/editing/*/fixture-*/*.png
             artifacts/scrolling/*/*.png
