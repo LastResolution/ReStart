@@ -146,6 +146,7 @@ public partial class App : Application
             ScrollSmokeResult? scrolling = null;
             BundledTilesSmokeResult? bundledTiles = null;
             IconSmokeResult? pinIcons = null;
+            MotionSmokeResult? motion = null;
             string? error = null;
             try
             {
@@ -158,12 +159,13 @@ public partial class App : Application
                 if (args.Contains("--scroll-test")) scrolling = await _window.VerifyScrollingAsync(path);
                 if (args.Contains("--bundled-tiles-test")) bundledTiles = await _window.VerifyBundledTilesAsync(path);
                 if (args.Contains("--icon-test")) pinIcons = await _window.VerifyIconsAsync(path);
+                if (args.Contains("--motion-test")) motion = await _window.VerifyMotionAsync(path);
                 _window.SaveScreenshot(path);
             }
             catch (Exception ex) when (ex is IOException or InvalidOperationException) { success = false; error = ex.Message; }
             try
             {
-                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, catalogFolders = _window.CatalogFolderCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, navigation, placement, appFolders, firstInput, appMenus, releaseInfo, scrolling, bundledTiles, pinIcons, error, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
+                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, catalogFolders = _window.CatalogFolderCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, navigation, placement, appFolders, firstInput, appMenus, releaseInfo, scrolling, bundledTiles, pinIcons, motion, error, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
             }
             catch (IOException) { success = false; }
             _window.Exit(); Shutdown(success ? 0 : 1);

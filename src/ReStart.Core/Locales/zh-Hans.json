@@ -128,7 +128,7 @@
   "ConfirmImport": "替换当前固定项？导入的磁贴包含启动目标。请仅使用可信文件。",
   "CommonExit": "退出",
   "SettingsOpacity": "背景不透明度",
-  "SettingsAnimation": "打开时显示动画",
+  "SettingsAnimation": "打开和关闭时显示动画",
   "SettingsDisplayLanguage": "显示语言",
   "SettingsLanguage": "语言",
   "NavSettings": "设置",

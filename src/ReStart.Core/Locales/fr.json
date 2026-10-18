@@ -128,7 +128,7 @@
   "ConfirmImport": "Remplacer vos épingles ? Les vignettes importées contiennent des cibles de lancement. Utilisez uniquement des fichiers fiables.",
   "CommonExit": "Quitter",
   "SettingsOpacity": "Opacité du fond",
-  "SettingsAnimation": "Animer à l’ouverture",
+  "SettingsAnimation": "Animer l’ouverture et la fermeture",
   "SettingsDisplayLanguage": "Langue d’affichage",
   "SettingsLanguage": "Langue",
   "NavSettings": "Paramètres",

@@ -1,8 +1,10 @@
-<p align="center"><img src="assets/ReStart.png" width="88" alt="ReStart" /></p>
+<p align="center"><img src="assets/ReStart.png" width="96" alt="ReStart" /></p>
 <h1 align="center">ReStart</h1>
 <p align="center"><strong>フルスクリーンのスタートを、もう一度。</strong><br>いつものアプリと、自分で作るライブタイルのための場所。</p>
 <p align="center">
-  <a href="https://github.com/LastResolution/ReStart/releases/latest">ダウンロード</a> ·
+  <a href="https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-x64.zip"><strong>Windows 版をダウンロード · x64</strong></a> ·
+  <a href="https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip">ARM64</a> ·
+  <a href="https://github.com/LastResolution/ReStart/releases/latest">Release notes</a> ·
   <a href="docs/ja/javascript-tiles.md">タイルを作る</a> ·
   <a href="CONTRIBUTING.ja.md">開発に参加</a> ·
   <a href="README.md">English</a>
@@ -15,9 +17,17 @@
 
 ![アプリ・グループ・フォルダ・ライブタイルを含む全画面の ReStart](docs/images/start.png)
 
-ReStart は、Windows 10 のフルスクリーンスタートを目指す独立した Windows デスクトップランチャーです。アプリを並べ、フォルダをその場で開き、文字を打って検索。JavaScript のライブタイルで、自分のための画面にできます。
+**Windows 10 のフルスクリーンスタートが恋しい人へ。** ReStart は Windows 11 と Windows 10 で使えるデスクトップランチャーです。いつものアプリをピン留めし、画面を自由に並べ、JavaScript で自分のライブタイルを作れます。
 
 **Windows 11 / 10 · x64 / ARM64 · ポータブル · 通常利用に管理者権限は不要**
+
+## 使い始める
+
+1. Intel / AMD の PC は **[x64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-x64.zip)**、Windows on ARM は **[ARM64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip)** を保存します。
+2. 使い続けたい場所に **ZIP 全体を展開**します。`ReStart.exe` と同じ場所に `TileHost`、`Examples`、`third-party` を残してください。
+3. **ReStart.exe** を実行します。**Windows キー**で開いて、そのままアプリ名を入力すると検索できます。**Ctrl+Alt+Space** と通知領域のメニューからも開けます。
+
+歯車からテーマ、サインイン時の起動、Windows キー・Start ボタンとの連携、更新確認を設定できます。配布物は未署名で、[リリースページ](https://github.com/LastResolution/ReStart/releases/latest)にチェックサムを添付しています。
 
 | すぐにアプリへ | 配置を自分のものに | 必要な情報をひと目で |
 | --- | --- | --- |
@@ -25,11 +35,14 @@ ReStart は、Windows 10 のフルスクリーンスタートを目指す独立�
 
 ## 自分のスタートに
 
+![アプリとライブタイルを表示する ReStart の開閉アニメーション](docs/images/start-motion.gif)
+
 - **自由に配置。** グループ間や空白へタイルを移動できます。グループは内容幅に合わせた長方形とし、ホバー時・ドラッグ中に境界を表示。重なり判定も同じ長方形に揃えます。
 - **フォルダをその場で展開。** タイル中央でホバーしてフォルダを作成。開くと影響する隣接項目だけを移動し、閉じると元の位置へ戻ります。
 - **ファイルもピン留め。** Explorer の **Pin to ReStart** からファイル・フォルダ・ショートカットを追加。通常は空きスペースに置き、メニューからグループも指定できます。
 - **ライブタイルをワンクリックで。** 背景やグループの右クリック → ライブタイルを追加、または設定から選択。ローカルライブラリに置いた自作パッケージも自動検出。4サイズに合わせた表示例も同梱します。
 - **好みの外観。** ダーク・ライト・システム・ハイコントラスト、壁紙、アクセント、タイルごとの名前と色。縦横のスクロールバーもテーマに追従します。
+- **開閉の動き。** 背景とタイルを分け、下側からタイルを表示します。閉じる途中でも再表示でき、入力すると表示アニメーションを完了してすぐ操作できます。アプリと Windows のアニメーション設定に従います。
 - **8言語に対応。** 英語、日本語、ドイツ語、フランス語、スペイン語、韓国語、簡体字・繁体字中国語。ライブタイルの既定名は言語に追従し、変更した名前は維持します。
 - **更新を見通せる。** 単一起動、サインイン時の起動、設定移行のバックアップ、バージョン・ライセンス表示、APIキー不要の公開リリース確認。
 
@@ -48,7 +61,16 @@ ReStart は、Windows 10 のフルスクリーンスタートを目指す独立�
 
 Microsoft とは独立したプロジェクトです。Explorer のパッチは行わず、解除可能な連携を使います。従来の UWP タイル通知、Windows Search 全体、Cortana、ジャンプリスト、使用頻度による推薦は対象外です。[互換性](docs/ja/fidelity.md)と[検証手順](docs/ja/testing.md)を参照してください。
 
-## 使い始める
+## 自作タイルとコミュニティ
+
+パッケージは `manifest.json` と `tile.js` の2ファイルです。PC時刻、言語、タイルサイズ、クリック、保持状態を利用でき、能力を明示すると読み取り専用のシステム情報やホストで選んだ写真も使えます。
+
+`%LOCALAPPDATA%\ReStart\TileLibrary` 内のサブフォルダへ置くと自動検出します。[同梱サンプル](examples/tiles)、[作成ガイド](docs/ja/javascript-tiles.md)、[API契約](docs/ja/api-contracts.md)から始められます。
+
+配置例、タイルのアイデア、不具合は [Issue](https://github.com/LastResolution/ReStart/issues/new/choose) へ。タイル、翻訳、アクセシビリティ、ランチャー本体への貢献も歓迎します。[開発参加ガイド](CONTRIBUTING.ja.md)を参照してください。
+
+<details>
+<summary><strong>初回起動と対応環境</strong></summary>
 
 1. [Releases](https://github.com/LastResolution/ReStart/releases) の Windows 用 ZIP をダウンロードします。
 2. `ReStart-win-x64.zip` を保存したいフォルダーに展開します。ARM PC では `win-arm64` を選んでください。
@@ -59,7 +81,10 @@ ZIP 配布は未署名です。組織の実行ポリシーに従ってくださ�
 
 初回はアプリの登録情報を読み取ります。アイコンはバックグラウンドで取得します。既存の Windows スタートや Explorer のファイルを書き換えることはありません。ReStart 終了時にキーの捕捉を解除します。
 
-## 操作
+</details>
+
+<details>
+<summary><strong>キーボード・マウス操作</strong></summary>
 
 | 操作 | 動作 |
 | --- | --- |
@@ -86,7 +111,10 @@ ZIP 配布は未署名です。組織の実行ポリシーに従ってくださ�
 
 `Win+E` などは Windows 側に渡します。キーフックとの組み合わせは、IME・常駐アプリ・管理者アプリなど環境ごとの検証が必要です。困ったときは通知領域から終了するか、設定で Windows キーの捕捉を無効にしてください。
 
-## データと削除
+</details>
+
+<details>
+<summary><strong>データ・プライバシー・更新</strong></summary>
 
 設定・レイアウトは `%LOCALAPPDATA%\ReStart\layout.json` に保存します。直前の保存が `layout.json.bak` に残ります。壊れたファイルは保全し、利用可能ならバックアップを読み込みます。将来の形式を古い ReStart で読み込んだ場合は上書きを禁止します。
 
@@ -102,7 +130,12 @@ v1.0 は schema 4 です。旧 schema 1～3 と同じ形式内のアプリ更新
 
 ReStart に広告・利用状況の解析はありません。更新確認は GitHub API へアプリのバージョンを付けて問い合わせます。認証・アプリ一覧・配置・写真フォルダを送りません。クリックした Web サイトや外部アプリは、それぞれの動作に従います。
 
-## ソースから開発する
+</details>
+
+## 自分でビルドする
+
+<details>
+<summary><strong>Release ビルドとポータブルパッケージのコマンド</strong></summary>
 
 必要なものは Windows と [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) です。SDK は `global.json` に固定し、プレビュー版を使いません。JavaScript 実行用の別プロセスに Jint を使用します。テストには xUnit を使います。
 
@@ -144,6 +177,8 @@ dotnet build ReStart.slnx -c Release
 このビルドは開発PCの.NETランタイムを使用します。配布用の `package.ps1` はランタイムを同梱し、`artifacts/packages/ReStart-win-x64.zip` または `ReStart-win-arm64.zip` を出力します。ZIP全体を展開し、`TileHost`・`Examples` も一緒に置いてください。
 
 生成物は `artifacts/` に作られ、Git の対象外です。プレビューのデータも通常の設定とは分離されます。
+
+</details>
 
 ## リポジトリの運用
 

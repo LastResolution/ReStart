@@ -76,6 +76,7 @@ public partial class MainWindow
             {
                 other.Show(); other.Activate();
                 await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
+                await fixture.WaitForMotionAsync();
                 Require(!fixture.IsVisible, "The launcher remained visible after another window took focus.");
             }
             finally { other.Close(); }

@@ -9,7 +9,7 @@
     <Grid>
       <Grid.ColumnDefinitions><ColumnDefinition Width="48" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
       <Border Grid.Column="0" Background="#10000000" />
-      <Grid Grid.Column="0">
+      <Grid x:Name="NavigationRail" Grid.Column="0">
         <StackPanel>
           <Button Height="48" ToolTip="{local:Loc Key=ExpandMenu}" AutomationProperties.Name="{local:Loc Key=ExpandMenu}" Click="ToggleRail" HorizontalContentAlignment="Center" Padding="0"><TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE700;" FontSize="16" /></Button>
           <Button x:Name="PinnedNav" Height="48" ToolTip="{local:Loc Key=NavPinned}" AutomationProperties.Name="{local:Loc Key=NavPinned}" Click="ShowPinned" HorizontalContentAlignment="Center" Padding="0"><TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE80A;" FontSize="16" /></Button>
@@ -23,7 +23,8 @@
           <Button Height="48" ToolTip="{local:Loc Key=NavPower}" AutomationProperties.Name="{local:Loc Key=NavPower}" Click="OpenPower" HorizontalContentAlignment="Center" Padding="0"><TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE7E8;" FontSize="18" /></Button>
         </StackPanel>
       </Grid>
-      <Grid Grid.Column="1" Margin="34,20,34,18">
+      <Grid x:Name="MainContent" Grid.Column="1" Margin="34,20,34,18" RenderTransformOrigin="0.5,1">
+        <Grid.RenderTransform><ScaleTransform /></Grid.RenderTransform>
         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="28" /></Grid.RowDefinitions>
         <Grid x:Name="TopBar" Height="0" Opacity="0" ClipToBounds="True" IsHitTestVisible="False">
           <TextBlock x:Name="ViewTitle" Text="{local:Loc Key=NavStart}" FontSize="24" FontWeight="Light" VerticalAlignment="Top" />

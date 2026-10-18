@@ -8,7 +8,6 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Microsoft.Win32;
@@ -125,6 +124,8 @@ public partial class MainWindow : Window
             }
         };
         UserButton.Content = "◉     " + (_preview ? "ReStart" : Environment.UserName);
+        PreviewMouseDown += (_, _) => CompleteEntrance();
+        IsVisibleChanged += (_, _) => { if (!IsVisible) StopMotion(); };
         Loaded += async (_, _) => await InitializeAsync();
         SourceInitialized += (_, _) =>
         {
@@ -219,7 +220,7 @@ public partial class MainWindow : Window
     /// <summary>Hides the active launcher or presents the existing window.</summary>
     public void Toggle()
     {
-        if (IsVisible && IsActive && _dialogDepth == 0) Hide();
+        if (IsVisible && IsActive && _dialogDepth == 0 && !_dismissing) Dismiss();
         else Present();
     }
 
@@ -228,10 +229,16 @@ public partial class MainWindow : Window
     {
         var dialog = OwnedWindows.Cast<Window>().LastOrDefault(w => w.IsVisible);
         if (dialog != null) { dialog.Activate(); return; }
+        var wasHidden = !IsVisible;
+        var wasDismissing = _dismissing;
+        var previousOpacity = Opacity;
+        var previousScale = ContentScale.ScaleX;
+        StopMotion();
         if (_expandedAppFolders.Count > 0) { _expandedAppFolders.Clear(); RenderApps(); }
         ResetToPinnedView();
         var handle = new WindowInteropHelper(this).EnsureHandle();
         _focusOnActivation = true;
+        if (wasHidden && MotionEnabled) Opacity = EntranceOpacity;
         if (!IsVisible) Show();
         if (!_preview)
         {
@@ -244,9 +251,8 @@ public partial class MainWindow : Window
         if (!_preview || _verifyNativeActivation) ForegroundActivation.Request(handle);
         Activate();
         ExpandedRail.Visibility = Visibility.Collapsed;
-        if (Document.Preferences.Animate && !SystemParameters.HighContrast && SystemParameters.ClientAreaAnimation)
-            Root.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(130)));
-        else Root.Opacity = 1;
+        if (wasHidden || wasDismissing)
+            BeginMotion(false, wasHidden ? EntranceOpacity : previousOpacity, wasHidden ? 0.9 : previousScale);
         FocusSearchInput();
         Dispatcher.BeginInvoke(() =>
         {
@@ -273,6 +279,7 @@ public partial class MainWindow : Window
     public void ApplyAppearance()
     {
         var p = Document.Preferences;
+        RespectMotionPreference();
         LocalizationResources.Apply(p.Language);
         if (_scriptLanguage != L.Language)
         {
@@ -392,6 +399,7 @@ public partial class MainWindow : Window
         }
         UpdateLiveTiles();
         FitPanels();
+        RefreshEntranceTargets();
     }
 
     private double Cell => 52 * Document.Preferences.TileScale;
@@ -455,7 +463,7 @@ public partial class MainWindow : Window
         button.ContextMenu = TileMenu(tile);
         button.Click += (_, _) =>
         {
-            if (_dragging) return;
+            if (_dragging || _dismissing) return;
             if (tile.Widget == "script") InteractWithScriptTile(tile);
             else if (tile.IsFolder) OpenFolder(tile);
             else Launch(new(tile.AppId, tile.Label, tile.Target, tile.IsShellApp));
@@ -819,6 +827,7 @@ public partial class MainWindow : Window
 
     private void Launch(AppEntry app)
     {
+        if (_dismissing) return;
         if (app.Id == "restart:calendar")
         {
             WithDialog(() =>
@@ -827,7 +836,7 @@ public partial class MainWindow : Window
             });
             return;
         }
-        try { ShellLauncher.Launch(app); Hide(); }
+        try { ShellLauncher.Launch(app); Dismiss(); }
         catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or System.IO.FileNotFoundException) { SetStatus(L.T(K.ErrorLaunch) + ex.Message); }
     }
     private void OpenDocuments(object sender, RoutedEventArgs e) => LaunchPath(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
@@ -837,14 +846,14 @@ public partial class MainWindow : Window
     {
         var menu = new ContextMenu();
         Add(menu, L.T(K.AccountSettings), () => LaunchPath("ms-settings:yourinfo"));
-        Add(menu, L.T(K.AccountLock), () => { Hide(); Native.LockWorkStation(); });
+        Add(menu, L.T(K.AccountLock), () => { Dismiss(immediately: true); Native.LockWorkStation(); });
         Add(menu, L.T(K.AccountSignOut), () => RunPower("/l", L.T(K.AccountSignOut)));
         OpenMenu(menu, (Button)sender);
     }
     private void OpenPower(object sender, RoutedEventArgs e)
     {
         var menu = new ContextMenu();
-        Add(menu, L.T(K.PowerSleep), () => { if (Confirm(L.T(K.ConfirmSleep))) { Hide(); System.Windows.Forms.Application.SetSuspendState(System.Windows.Forms.PowerState.Suspend, false, false); } });
+        Add(menu, L.T(K.PowerSleep), () => { if (Confirm(L.T(K.ConfirmSleep))) { Dismiss(immediately: true); System.Windows.Forms.Application.SetSuspendState(System.Windows.Forms.PowerState.Suspend, false, false); } });
         Add(menu, L.T(K.PowerShutdown), () => RunPower("/s", L.T(K.PowerShutdown)));
         Add(menu, L.T(K.PowerRestart), () => RunPower("/r", L.T(K.PowerRestart)));
         OpenMenu(menu, (Button)sender);
@@ -855,7 +864,7 @@ public partial class MainWindow : Window
         var info = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "shutdown.exe")) { UseShellExecute = false, CreateNoWindow = true };
         info.ArgumentList.Add(operation);
         if (operation != "/l") { info.ArgumentList.Add("/t"); info.ArgumentList.Add("0"); }
-        try { Process.Start(info); Hide(); }
+        try { Process.Start(info); Dismiss(immediately: true); }
         catch (Win32Exception ex) { SetStatus(ex.Message); }
     }
 
@@ -924,11 +933,13 @@ public partial class MainWindow : Window
     /// <summary>Closes the menu after a taskbar click unless a dialog or drag currently owns the interaction.</summary>
     public void DismissFromTaskbar()
     {
-        if (IsVisible && _dialogDepth == 0 && !_dragging && Document.Preferences.CloseOnDeactivate) Hide();
+        if (IsVisible && _dialogDepth == 0 && !_dragging && Document.Preferences.CloseOnDeactivate) Dismiss();
     }
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (_dismissing) { e.Handled = true; return; }
         if (_dragging) return;
+        CompleteEntrance();
         if (_editingGroupHeader?.IsEditing == true && e.OriginalSource is TextBox) return;
         if (e.Key == Key.Tab && SearchBox.IsKeyboardFocused && SearchBox.Text.Length == 0 && !_searchRequested)
         { PinnedNav.Focus(); e.Handled = true; return; }
@@ -939,7 +950,7 @@ public partial class MainWindow : Window
             else if (_openFolder != null) CloseFolder(this, e);
             else if (ExpandedRail.Visibility == Visibility.Visible) ExpandedRail.Visibility = Visibility.Collapsed;
             else if (SearchBox.Text.Length > 0 || _searchRequested) { _searchRequested = false; SearchBox.Clear(); UpdateSearchChrome(false); FocusSearchInput(); }
-            else Hide();
+            else Dismiss();
             e.Handled = true;
         }
         else if (e.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control) { _searchRequested = true; UpdateSearchChrome(true); SearchBox.Focus(); SearchBox.SelectAll(); e.Handled = true; }
@@ -960,7 +971,9 @@ public partial class MainWindow : Window
     }
     private void OnPreviewTextInput(object sender, TextCompositionEventArgs e)
     {
+        if (_dismissing) { e.Handled = true; return; }
         if (_dragging) return;
+        CompleteEntrance();
         if (e.OriginalSource is TextBox || Ancestor<TextBox>(e.OriginalSource as DependencyObject) != null || Keyboard.Modifiers.HasFlag(ModifierKeys.Control) || e.Text.Length == 0 || e.Text.All(char.IsControl)) return;
         if (FocusAppInitial(e.Text)) { e.Handled = true; return; }
         UpdateSearchChrome(true); SearchBox.Focus(); SearchBox.AppendText(e.Text); SearchBox.CaretIndex = SearchBox.Text.Length; e.Handled = true;
@@ -970,16 +983,21 @@ public partial class MainWindow : Window
         _focusOnActivation = false;
         Dispatcher.BeginInvoke(() =>
         {
-            if (!IsActive && _dialogDepth == 0 && !_dragging && Document.Preferences.CloseOnDeactivate && (!_preview || _verifyNativeActivation) && !IsAnyMenuOpen()) Hide();
+            if (!IsActive && _dialogDepth == 0 && !_dragging && Document.Preferences.CloseOnDeactivate && (!_preview || _verifyNativeActivation) && !IsAnyMenuOpen()) Dismiss();
         }, DispatcherPriority.Background);
     }
     private static bool IsAnyMenuOpen() => Mouse.Captured is ContextMenu || Mouse.Captured is System.Windows.Controls.Primitives.MenuBase;
-    private void OnClosing(object? sender, CancelEventArgs e) { if (!_exit) { e.Cancel = true; Hide(); } }
+    private void OnClosing(object? sender, CancelEventArgs e) { if (!_exit) { e.Cancel = true; Dismiss(); } }
     /// <summary>Stops timers and isolated script workers before permanently closing the launcher.</summary>
-    public void Exit() { _exit = true; StopWatchingDesktopAppearance(); _clock.Stop(); _nameRefreshTimer?.Stop(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); _systemMetrics?.Dispose(); Close(); }
+    public void Exit() { _exit = true; StopMotion(); StopWatchingDesktopAppearance(); _clock.Stop(); _nameRefreshTimer?.Stop(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); _systemMetrics?.Dispose(); Close(); }
 
     /// <summary>Renders only the launcher root to a PNG for reproducible UI verification.</summary>
     public void SaveScreenshot(string path)
+    {
+        SaveBitmap(path, RenderScreenshot());
+    }
+
+    private BitmapSource RenderScreenshot()
     {
         UpdateLayout();
         var explicitPreviewSize = _preview && double.IsFinite(Root.Width) && double.IsFinite(Root.Height);
@@ -998,6 +1016,11 @@ public partial class MainWindow : Window
             bitmap.CopyPixels(new Int32Rect(bitmap.PixelWidth - 1, bitmap.PixelHeight - 1, 1, 1), pixel, 4, 0);
             if (pixel[3] != 255) throw new InvalidOperationException("The preview render was clipped before its bottom-right corner.");
         }
+        return bitmap;
+    }
+
+    private static void SaveBitmap(string path, BitmapSource bitmap)
+    {
         var png = new PngBitmapEncoder(); png.Frames.Add(BitmapFrame.Create(bitmap));
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
         using var stream = File.Create(path); png.Save(stream);

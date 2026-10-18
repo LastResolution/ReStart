@@ -1,10 +1,10 @@
-<p align="center"><img src="assets/ReStart.png" width="88" alt="ReStart" /></p>
+<p align="center"><img src="assets/ReStart.png" width="96" alt="ReStart" /></p>
 <h1 align="center">ReStart</h1>
-<p align="center"><strong>Full-screen Start, again.</strong><br>A familiar home for your apps. A canvas for your live tiles.</p>
+<p align="center"><strong>Bring full-screen Start back.</strong><br>Your apps, your layout, your own live tiles.</p>
 <p align="center">
-  <a href="https://github.com/LastResolution/ReStart/releases/latest">Download</a> ·
-  <a href="docs/javascript-tiles.md">Create a tile</a> ·
-  <a href="CONTRIBUTING.md">Contribute</a> ·
+  <a href="https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-x64.zip"><strong>Download for Windows · x64</strong></a> ·
+  <a href="https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip">ARM64</a> ·
+  <a href="https://github.com/LastResolution/ReStart/releases/latest">Release notes</a> ·
   <a href="README.ja.md">日本語</a>
 </p>
 <p align="center">
@@ -13,85 +13,114 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-0078d4" alt="MIT license" /></a>
 </p>
 
-![ReStart: apps, groups, folders and live tiles in a full-screen launcher](docs/images/start.png)
+![The complete ReStart desktop launcher with apps, folders and live tiles](docs/images/start.png)
 
-ReStart brings the Windows 10 full-screen Start experience to an independent Windows desktop launcher. Arrange your apps, open a folder in place, type to search, and make the space yours with JavaScript live tiles.
+**Miss the Windows 10 full-screen Start menu?** ReStart gives your apps a familiar home on Windows 11 and Windows 10. Pin what you use, arrange the screen your way, and add live tiles that you can write in JavaScript.
 
-**Windows 11 / 10 · x64 / ARM64 · Portable · No administrator rights for normal use**
+**Portable · x64 & ARM64 · Eight languages · No separate .NET installation**
 
-| Your apps, within reach | A layout that stays yours | Live at a glance |
-| --- | --- | --- |
-| Open with Windows, the taskbar Start button, `Ctrl+Alt+Space` or the tray. Type immediately to search. | Four tile sizes, independent pins, movable groups, inline folders and individual tile colors. | Twelve bundled tiles, native charts, PC time, read-only system metrics and local photo slideshows. |
+## Start in a minute
 
-## Make it your Start
+1. Download the **[x64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-x64.zip)** for an Intel/AMD PC, or the **[ARM64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip)** for Windows on ARM.
+2. Extract the **entire ZIP** into a folder you want to keep. Leave `TileHost`, `Examples` and `third-party` beside `ReStart.exe`.
+3. Run **ReStart.exe**. Press the **Windows key**, then type an app name to search. **Ctrl+Alt+Space** and the tray menu also open Start.
 
-- **Arrange freely.** Move tiles between groups or into empty board space. Groups use content-sized rectangles. A soft hover surface and drag guides reveal the same boundary used for collision previews.
-- **Keep folders in place.** Hover over a tile center to create a folder. Opening it pushes only affected neighbors; closing restores their positions.
-- **Pin more than apps.** Add files, directories and shortcuts from Explorer's **Pin to ReStart** command. New pins use free space; an explicit group destination is available in ReStart's menus.
-- **Add a live tile in a click.** Right-click the background or a group → **Add live tile**, or browse Settings. A watched local tile library discovers your own packages automatically. Native layouts adapt content to all four tile sizes.
-- **Choose your look.** Dark, light, system and high-contrast themes, wallpaper, accent colors and per-tile names/colors. Both scroll axes follow the theme.
-- **Speak your language.** English, Japanese, German, French, Spanish, Korean, Simplified Chinese and Traditional Chinese. Default live-tile names follow the selected language; custom names stay yours.
-- **Upgrade with confidence.** A single instance, optional sign-in startup, migration backups, in-app version/licenses and public update checks without an API key.
+Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button integration and updates. Normal use needs no administrator rights. Downloads are unsigned; checksums are included on the [release page](https://github.com/LastResolution/ReStart/releases/latest).
 
-Screenshots use a demonstration app layout, synthetic metrics and generated photo colors. Real tiles read your PC's selected capabilities. Explore [the live tile API and styling examples](docs/javascript-tiles.md).
+## A familiar place to begin
+
+![ReStart opening and closing with apps and live tiles](docs/images/start-motion.gif)
+
+- **Make room for your apps.** Four tile sizes, movable groups, independent tiles and folders that expand in place. Drag, resize and rename without leaving Start.
+- **Keep your files close.** Pin a document, directory or shortcut from Explorer's **Pin to ReStart** command.
+- **Open and type.** Search your apps immediately, including while the catalog is loading. Reopening returns to your pinned home.
+- **Set the mood.** Light, dark, system and high-contrast themes; desktop wallpaper, accent colors and individual tile colors. Opening and closing respect your animation settings.
 
 <details>
-<summary>Light theme, live tiles and app list</summary>
+<summary><strong>See the light theme</strong></summary>
 
-![The complete launcher in light mode](docs/images/start-light.png)
-
-![Twelve bundled live tiles](docs/images/live-tiles.png)
-
-Demonstration data: [app columns](docs/images/app-list.png), [app directories](docs/images/app-folders.png), [group placement](docs/images/group-placement.png), [inline folders](docs/images/inline-folder.png). Normal mode reads this PC's app names and icons.
+![The complete ReStart launcher in light mode](docs/images/start-light.png)
 
 </details>
 
-ReStart is independent of Microsoft. It uses reversible shell integration; it does not patch Explorer. Legacy UWP tile notifications, the full Windows Search index, Cortana, Jump Lists and usage-based recommendations are outside the current implementation. See [compatibility](docs/fidelity.md) and the [test guide](docs/testing.md).
+## Give your tiles something to say
 
-## Install and run
+See the time, CPU and memory, network traffic, battery, storage and your chosen photos without opening another app. **Twelve JavaScript tiles are included**, with layouts for all four tile sizes.
 
-1. Download a ZIP from [Releases](https://github.com/LastResolution/ReStart/releases).
-2. Choose `ReStart-win-x64.zip` for x64 or `ReStart-win-arm64.zip` for ARM64.
-3. Exit any running ReStart from its tray menu. Extract the entire ZIP, retaining `TileHost`, `Examples`, `third-party` and the notices.
-4. Run `ReStart.exe`. No separate .NET installation or administrator permission is required for normal operation.
-5. Open Settings from the gear icon. If you moved the installation and use sign-in startup, save that setting again to update the registered path.
+![Bundled JavaScript live tiles](docs/images/live-tiles.png)
 
-Packages are unsigned. Windows 11 x64 is the hardware verification target; Windows 10 22H2, ARM64 hardware, mixed DPI and multiple-monitor combinations require further testing.
+**Orbit clock · Digital clock · Month dots · CPU pulse · Memory flow · Network flow · Battery · Storage · Focus cycle · Year in motion · Countdown · Photo moments**
 
-## Controls
+Right-click the background → **Add live tile** to try one. Click a tile to use its local action, such as pausing a focus timer or advancing a photo.
+
+### Write your own
+
+A tile is a `manifest.json` and a `tile.js`. ReStart supplies PC time, the selected language, tile size, click events and retained state. Optional capabilities provide read-only system metrics or photos chosen through the host.
+
+With `system.metrics` enabled in the manifest, this is a complete CPU display:
+
+```js
+function render(ctx) {
+  const cpu = ctx.system?.cpuPercent;
+  return {
+    text: cpu == null ? "—" : Math.round(cpu) + "%",
+    kicker: "CPU",
+    background: "#12344B", backgroundEnd: "#10202F",
+    foreground: "#FFFFFF", accent: "#70E0CB",
+    layout: ctx.size === "large" ? "stacked" : "split",
+    visual: "ring", progress: (cpu ?? 0) / 100
+  };
+}
+```
+
+ReStart draws the tile natively. Put a package in its own subfolder under `%LOCALAPPDATA%\ReStart\TileLibrary` to discover it automatically, or add it from the right-click menu. Start from the [bundled examples](examples/tiles), follow the [tile guide](docs/javascript-tiles.md), or explore the [API contracts](docs/api-contracts.md).
+
+## Make it yours—and share it
+
+The interface and bundled tiles support **English, Japanese, German, French, Spanish, Korean, Simplified Chinese and Traditional Chinese**.
+
+Have a layout to show, an idea for a tile, or a bug to report? [Open an issue](https://github.com/LastResolution/ReStart/issues/new/choose). Contributions to tiles, translations, accessibility and launcher behavior are welcome. The [contribution guide](CONTRIBUTING.md) explains how to get started.
+
+## Everyday details
+
+<details>
+<summary><strong>Keyboard and mouse controls</strong></summary>
 
 | Action | Result |
 | --- | --- |
 | Bare Windows key / `Ctrl+Alt+Space` | Open or close |
-| Type / `Ctrl+F` | Search apps from the home view |
+| Type / `Ctrl+F` | Search apps |
 | `Enter` in search | Launch the first result |
 | `Esc` | Close the current search, folder or overlay, then Start |
 | `Tab` / arrows / `Enter` | Navigate and activate |
-| `↓` in idle search | Enter the app list or tile grid |
-| Click / `Space` on an app directory | Expand or collapse; `→` expands and `←` collapses |
-| Alphanumeric key while an app row is focused | Jump to a visible initial; `Ctrl+F` opens search |
-| Drag a tile | Move within or between groups |
-| Drop into empty space | Detach an independent tile at that position |
-| Hover over a tile center for about one second, then drop | Create a tile folder |
-| Drag a group header | Preview and move the group without changing its tile cells |
-| Double-click a group name / `Enter` / `F2` | Edit inline; `Enter` commits, `Esc` cancels |
-| Right-click an app or tile | Pin/unpin, resize, supported shell commands and extra layout actions |
+| Drag a tile / group header | Move it |
+| Drop a tile in empty space | Create an independent pin |
+| Hold over a tile center for about one second, then drop | Create a tile folder |
+| Pencil button / double-click a group or folder name | Rename inline |
+| Right-click an app, tile or background | Pin, resize, add tiles and more |
+| `Shift` + mouse wheel | Scroll horizontally |
 
-Win+letter shortcuts are forwarded to Windows. Physical Windows-key, taskbar and IME combinations still need device-level verification.
+Win+letter shortcuts are forwarded to Windows. Settings can disable Windows-key and taskbar Start-button capture. [Compatibility](docs/fidelity.md) describes the desktop integration and platform coverage.
 
-## Settings, upgrades and updates
+</details>
 
-Data lives in `%LOCALAPPDATA%\ReStart\layout.json`. The previous save is `layout.json.bak`; invalid files are preserved and future schemas are protected.
+<details>
+<summary><strong>Settings, privacy and updating</strong></summary>
 
-v1.0 uses **schema 4**. Schemas 1–3 are migrated with their original bytes preserved in `layout.json.schema<version>-<id>.bak` before writing. Same-schema app upgrades also retain a durable backup. Settings → Layout and data shows the recorded source version, schema, date and rollback file. See [migration and rollback](docs/migration.md).
+Settings live in `%LOCALAPPDATA%\ReStart\layout.json`. Saves and upgrades retain backups; see [migration and rollback](docs/migration.md). About displays the running version/build and licenses.
 
-Settings → About displays the running version/build, settings schema and full license texts. Settings → Updates provides manual and optional startup checks against public GitHub releases, without an API key. Updates are downloaded and installed manually. See [updates](docs/updates.md).
+Update checks read public GitHub Releases without an API key. Installation is manual: exit ReStart, then replace the complete extracted installation. If its location changed, save sign-in startup and Explorer integration again. See [updates](docs/updates.md).
 
-No advertising or usage analytics are included. Update checks contact GitHub with the app version; app lists, layouts, photo-folder selections and usage history are not sent. Launching an app or website follows that application's behavior.
+No advertising or usage analytics are included. App lists, layouts and photo-folder selections are not uploaded. JavaScript tiles return bounded display data and do not receive general file, network or CLR access; see [security](SECURITY.md).
 
-To remove ReStart, disable sign-in startup and Explorer integration, exit the tray app and delete the extracted installation. Delete the local data folder only if you also want to remove settings and custom tiles.
+To uninstall, disable sign-in startup and Explorer integration, exit the tray app and delete the extracted installation. Remove the local data folder only if you also want to delete your settings and custom tiles.
 
-## Build Release locally
+</details>
+
+## Build it yourself
+
+<details>
+<summary><strong>Release build and portable packaging commands</strong></summary>
 
 Use Windows and the stable [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) selected by `global.json`. Exit the app if its output files are in use.
 
@@ -120,18 +149,14 @@ Create self-contained portable packages and SHA-256 files with:
 
 Output: `artifacts/packages/ReStart-win-x64.zip` or `ReStart-win-arm64.zip`. Always distribute and extract the entire ZIP. Generated artifacts and preview data are ignored by Git.
 
-## Development and documentation
+</details>
 
-Work on short feature/fix branches, commit cohesive changes in English, open a PR, require all Windows CI/package checks to pass, then squash merge and delete the branch. Release tags come from main. Future release notes are English.
+[Architecture](docs/architecture.md) · [Testing](docs/testing.md) · [Releasing](docs/releasing.md) · [Branch protection](docs/github-protection.md)
 
-- [Contributing](CONTRIBUTING.md) · [Architecture](docs/architecture.md) · [API contracts](docs/api-contracts.md)
-- [Testing](docs/testing.md) · [Releasing](docs/releasing.md)
-- [Compatibility](docs/fidelity.md) · [Releases](https://github.com/LastResolution/ReStart/releases)
+## About the project
 
-English is the primary documentation language; Japanese counterparts are linked from each document. UI strings use typed resource keys and eight complete language catalogs. Public/protected API comments are checked at build time.
+ReStart is an independent, MIT-licensed project inspired by late Windows 10 full-screen Start. It uses reversible desktop integration and does not patch Explorer. It is not affiliated with Microsoft. Read [compatibility](docs/fidelity.md) for implemented behavior, differences and platform testing.
 
-## License and acknowledgments
+Screenshots and the animation show the real launcher with a demonstration layout, synthetic metrics and generated photo colors. Windows/application names and icons belong to their owners. Dependency and .NET notices ship with the app.
 
-ReStart is licensed under the [MIT License](LICENSE). Dependency and .NET redistribution notices are included in packages and available in-app. Windows and application names/icons belong to their respective owners. No Microsoft Start binaries, source implementation or research screenshots are redistributed. ReStart is independent of Microsoft.
-
-[Security policy](SECURITY.md) · [Support](SUPPORT.md) · [Branch protection](docs/github-protection.md)
+[MIT license](LICENSE) · [Security policy](SECURITY.md) · [Support](SUPPORT.md)

@@ -128,7 +128,7 @@
   "ConfirmImport": "Aktuelle Pins ersetzen? Importierte Kacheln enthalten Startziele. Verwenden Sie nur vertrauenswürdige Dateien.",
   "CommonExit": "Beenden",
   "SettingsOpacity": "Hintergrunddeckkraft",
-  "SettingsAnimation": "Beim Öffnen animieren",
+  "SettingsAnimation": "Öffnen und Schließen animieren",
   "SettingsDisplayLanguage": "Anzeigesprache",
   "SettingsLanguage": "Sprache",
   "NavSettings": "Einstellungen",

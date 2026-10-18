@@ -128,7 +128,7 @@
   "ConfirmImport": "Replace your current pins? Imported tiles include launch targets. Only use files you trust.",
   "CommonExit": "Exit",
   "SettingsOpacity": "Background opacity",
-  "SettingsAnimation": "Animate when opening",
+  "SettingsAnimation": "Animate opening and closing",
   "SettingsDisplayLanguage": "Display language",
   "SettingsLanguage": "Language",
   "NavSettings": "Settings",

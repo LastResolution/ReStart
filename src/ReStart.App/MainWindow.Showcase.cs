@@ -87,6 +87,7 @@ public partial class MainWindow
                 "A complete launcher showcase tile has no rendered value.");
             SetStatus("");
             SaveScreenshot(Path.Combine(directory, $"launcher-{theme.ToString().ToLowerInvariant()}.png"));
+            if (theme == ReStart.Core.ThemeMode.Dark) SaveMotionShowcase(directory);
         }
     }
 }
