@@ -15,8 +15,12 @@ internal sealed class StartIntegration : IDisposable
     private readonly Action<Native.Point> _toggleFromStart;
     private readonly Native.HookProc _keyboardCallback;
     private readonly Native.HookProc _mouseCallback;
+    private readonly Native.WinEventProc _foregroundCallback;
     private WindowsKeyState _keys = new();
-    private nint _keyboard, _mouse;
+    private nint _keyboard, _mouse, _foreground;
+    private int _visibilityGeneration;
+    private uint _openedAt;
+    internal bool WatchesForeground => Volatile.Read(ref _foreground) != 0;
     private readonly HwndSource _source;
     private readonly StartButtonLocator _startButtons = new();
     private volatile bool _captureStart;
@@ -35,6 +39,7 @@ internal sealed class StartIntegration : IDisposable
         _toggleFromStart = toggleFromStart;
         _keyboardCallback = KeyboardHook;
         _mouseCallback = MouseHook;
+        _foregroundCallback = ForegroundChanged;
         _source = HwndSource.FromHwnd(handle)!;
         _source.AddHook(WindowProc);
         using var ready = new ManualResetEventSlim();
@@ -55,6 +60,7 @@ internal sealed class StartIntegration : IDisposable
             {
                 if (_keyboard != 0) Native.UnhookWindowsHookEx(_keyboard);
                 if (_mouse != 0) Native.UnhookWindowsHookEx(_mouse);
+                if (_foreground != 0) { Native.UnhookWinEvent(_foreground); _foreground = 0; }
             }
         })
         { IsBackground = true, Name = "ReStart input hooks" };
@@ -76,7 +82,9 @@ internal sealed class StartIntegration : IDisposable
     /// <summary>Installs taskbar-dismiss detection only while the menu is visible.</summary>
     public void SetMenuOpen(bool visible)
     {
+        if (visible) _openedAt = unchecked((uint)Environment.TickCount);
         _menuOpen = visible;
+        Interlocked.Increment(ref _visibilityGeneration);
         Native.PostThreadMessage(_hookThreadId, 0x8001, 0, 0);
     }
 
@@ -91,6 +99,40 @@ internal sealed class StartIntegration : IDisposable
         var needMouse = _captureStart || _startPress.IsPressed || _dismissOnTaskbar && _menuOpen;
         if (needMouse && _mouse == 0) _mouse = Native.SetWindowsHookEx(14, _mouseCallback, Native.GetModuleHandle(null), 0);
         if (!needMouse && _mouse != 0) { Native.UnhookWindowsHookEx(_mouse); _mouse = 0; }
+        var watchForeground = _dismissOnTaskbar && _menuOpen;
+        // Out-of-context callbacks use this thread's message loop; no code is
+        // injected into Explorer or the selected application.
+        if (watchForeground && _foreground == 0) _foreground = Native.SetWinEventHook(3, 3, 0, _foregroundCallback, 0, 0, 0);
+        if (!watchForeground && _foreground != 0) { Native.UnhookWinEvent(_foreground); _foreground = 0; }
+    }
+
+    private void ForegroundChanged(nint hook, uint eventId, nint window, int objectId, int childId, uint thread, uint time)
+    {
+        if (!_menuOpen || !_dismissOnTaskbar || unchecked((int)(time - Volatile.Read(ref _openedAt))) < 0) return;
+        var generation = Volatile.Read(ref _visibilityGeneration);
+        _dispatcher.BeginInvoke(() =>
+        {
+            // A thumbnail can deactivate the launcher first, so WPF may not
+            // raise Deactivated again when its actual application is chosen.
+            // Recheck current ownership to discard queued events after reopen.
+            if (!_menuOpen || !_dismissOnTaskbar || generation != Volatile.Read(ref _visibilityGeneration)) return;
+            var current = Native.GetForegroundWindow();
+            if (current == 0 || current != window || IsOwnedForeground(current)) return;
+            var name = new System.Text.StringBuilder(128);
+            Native.GetClassName(Native.GetAncestor(current, 2), name, 128);
+            if (name.ToString() is "Shell_TrayWnd" or "Shell_SecondaryTrayWnd" or "TaskListThumbnailWnd" or "#32768") return;
+            _dismiss();
+        }, DispatcherPriority.Input);
+    }
+
+    private bool IsOwnedForeground(nint window)
+    {
+        if (window == _source.Handle || Native.GetAncestor(window, 3) == Native.GetAncestor(_source.Handle, 3)) return true;
+        // WPF can use a hidden native owner for windows omitted from the
+        // taskbar. Its managed ownership remains authoritative for dialogs.
+        for (var owned = HwndSource.FromHwnd(window)?.RootVisual as System.Windows.Window; owned != null; owned = owned.Owner)
+            if (new WindowInteropHelper(owned).Handle == _source.Handle) return true;
+        return false;
     }
 
     private nint WindowProc(nint hwnd, int msg, nint wp, nint lp, ref bool handled)
@@ -136,7 +178,7 @@ internal sealed class StartIntegration : IDisposable
             var window = Native.WindowFromPoint(data.Point);
             var rootName = new System.Text.StringBuilder(128);
             Native.GetClassName(Native.GetAncestor(window, 2), rootName, 128);
-            if (rootName.ToString() is "Shell_TrayWnd" or "Shell_SecondaryTrayWnd")
+            if (rootName.ToString() is "Shell_TrayWnd" or "Shell_SecondaryTrayWnd" or "TaskListThumbnailWnd")
                 _dispatcher.BeginInvoke(_dismiss, DispatcherPriority.Input);
         }
         return Native.CallNextHookEx(_mouse, code, wp, lp);
@@ -146,6 +188,8 @@ internal sealed class StartIntegration : IDisposable
 
     public void Dispose()
     {
+        _menuOpen = false;
+        Interlocked.Increment(ref _visibilityGeneration);
         _startButtons.Dispose();
         Native.PostThreadMessage(_hookThreadId, 0x12, 0, 0);
         _hookThread.Join(TimeSpan.FromSeconds(1));

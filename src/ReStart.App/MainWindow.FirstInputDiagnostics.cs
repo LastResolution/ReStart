@@ -69,7 +69,7 @@ public partial class MainWindow
                 Require(Native.GetForegroundWindow() == new WindowInteropHelper(fixture).Handle && fixture.SearchBox.IsKeyboardFocused,
                     $"The native activation path failed at {attempt}: hwnd={new WindowInteropHelper(fixture).Handle}, foreground={Native.GetForegroundWindow()}, active={fixture.IsActive}, visible={fixture.IsVisible}, focus={Keyboard.FocusedElement?.GetType().Name}, searchFocused={fixture.SearchBox.IsKeyboardFocused}.");
                 fixture.ComposeFixtureText("E");
-                Require(fixture.SearchResultNames.Contains("Microsoft Edge"), "Native activation lost the first character.");
+                Require(fixture.SearchResultNames.Contains("Microsoft Edge"), $"Native activation lost the first character: attempt={attempt}, query={fixture.SearchBox.Text}, focus={Keyboard.FocusedElement?.GetType().Name}.");
             }
             var other = new Window { Width = 200, Height = 100, ShowInTaskbar = false, Content = new TextBox() };
             try
@@ -80,7 +80,8 @@ public partial class MainWindow
                 Require(!fixture.IsVisible, "The launcher remained visible after another window took focus.");
             }
             finally { other.Close(); }
-            return new(1, 1, 1, 1, 1, 1, 10, 1);
+            var foregroundChecks = await fixture.VerifyForegroundDismissalAsync();
+            return new(1, 1, 1, 1, 1, 1, 10, 1, foregroundChecks);
         }
         finally
         {
@@ -96,7 +97,61 @@ public partial class MainWindow
         var source = Keyboard.FocusedElement ?? throw new InvalidOperationException("The input fixture has no focused element.");
         TextCompositionManager.StartComposition(new TextComposition(InputManager.Current, source, text));
     }
+
+    private async Task<int> VerifyForegroundDismissalAsync()
+    {
+        // Disable WPF's one-shot Deactivated path: these checks must pass using
+        // the native foreground subscription after an intermediate activation.
+        _verifyNativeActivation = false;
+        Document.Preferences.Animate = false;
+        var first = new Window { Title = "Sample preview", Width = 200, Height = 100, ShowInTaskbar = false };
+        var second = new Window { Title = "Sample application", Width = 200, Height = 100, ShowInTaskbar = false };
+        using var integration = new StartIntegration(new WindowInteropHelper(this).Handle, Dispatcher, () => { }, DismissFromTaskbar, _ => { });
+        var preferences = new Preferences { CaptureWindowsKey = false, CaptureStartButton = false, CloseOnDeactivate = true };
+        var checks = 0;
+        try
+        {
+            integration.Apply(preferences);
+            for (var attempt = 0; attempt < 3; attempt++)
+            {
+                Present(); integration.SetMenuOpen(true);
+                await WaitForWatchAsync(true);
+                _dialogDepth++;
+                first.Show(); first.Activate();
+                await Task.Delay(100);
+                Require(IsVisible && !IsActive, "The intermediate activation fixture did not leave an inactive visible launcher.");
+                _dialogDepth--;
+                second.Show(); second.Activate();
+                await Task.Delay(150);
+                Require(!IsVisible, "A second foreground transition left the inactive launcher visible."); checks++;
+                integration.SetMenuOpen(false); await WaitForWatchAsync(false);
+            }
+            Present(); integration.SetMenuOpen(true); await WaitForWatchAsync(true);
+            var owned = new Window { Owner = this, Width = 180, Height = 100, ShowInTaskbar = false };
+            try
+            {
+                owned.Show(); owned.Activate(); await Task.Delay(100);
+                Require(IsVisible, $"An owned application dialog was treated as a foreign foreground window: owner={Native.GetAncestor(new WindowInteropHelper(this).Handle, 3)}, dialogOwner={Native.GetAncestor(new WindowInteropHelper(owned).Handle, 3)}, foreground={Native.GetForegroundWindow()}, dialog={new WindowInteropHelper(owned).Handle}."); checks++;
+            }
+            finally { owned.Close(); }
+            preferences.CloseOnDeactivate = false; Document.Preferences.CloseOnDeactivate = false;
+            integration.Apply(preferences); await WaitForWatchAsync(false);
+            first.Activate(); await Task.Delay(100);
+            Require(IsVisible, "Disabling close-on-deactivation still dismissed the launcher."); checks++;
+            Document.Preferences.CloseOnDeactivate = true;
+            integration.SetMenuOpen(false);
+            return checks;
+        }
+        finally { first.Close(); second.Close(); _dialogDepth = 0; }
+
+        async Task WaitForWatchAsync(bool enabled)
+        {
+            var until = Environment.TickCount64 + 2000;
+            while (integration.WatchesForeground != enabled && Environment.TickCount64 < until) await Task.Delay(20);
+            Require(integration.WatchesForeground == enabled, "Foreground observation did not follow menu visibility/preferences.");
+        }
+    }
 }
 
 internal sealed record FirstInputSmokeResult(int ColdStartChecks, int QueryContinuationChecks, int ReopenChecks, int NavigationFocusChecks,
-    int IntegrationBeforeCatalogChecks, int FocusRetentionChecks, int NativeActivationChecks, int DeactivationChecks);
+    int IntegrationBeforeCatalogChecks, int FocusRetentionChecks, int NativeActivationChecks, int DeactivationChecks, int ForegroundDismissalChecks);
