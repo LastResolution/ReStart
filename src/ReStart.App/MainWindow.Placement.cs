@@ -45,6 +45,9 @@ public partial class MainWindow
     }
 
     private sealed record FolderOverlap(Tile Tile, double Ratio, double Distance);
+    private static bool CreatesGroup(TilePanel panel, Tile target) => panel.Tag is TileGroup { IsStandalone: true } && !target.IsFolder;
+    private static int HoverDelay(TilePanel panel, Tile? target) => target != null && CreatesGroup(panel, target)
+        ? TileFolderHover.GroupDelayMilliseconds : TileFolderHover.DelayMilliseconds;
 
     private FolderOverlap? FindFolderOverlap(Tile source, TilePanel panel, Point point, bool existingFoldersOnly = false)
     {
@@ -63,13 +66,14 @@ public partial class MainWindow
                 var delta = new Point(dragged.X + dragged.Width / 2, dragged.Y + dragged.Height / 2) - new Point(p.Bounds.X + p.Bounds.Width / 2, p.Bounds.Y + p.Bounds.Height / 2);
                 return new FolderOverlap(p.Tile, overlap.IsEmpty ? 0 : overlap.Width * overlap.Height / Math.Min(dragged.Width * dragged.Height, p.Bounds.Width * p.Bounds.Height), delta.LengthSquared);
             })
-            .Where(p => p.Ratio >= .65).OrderByDescending(p => p.Ratio).ThenBy(p => p.Distance).FirstOrDefault();
+            .Where(p => p.Ratio >= (CreatesGroup(panel, p.Tile) ? _folderHover.TargetId == p.Tile.Id ? .30 : .40 : .65))
+            .OrderByDescending(p => p.Ratio).ThenBy(p => p.Distance).FirstOrDefault();
     }
 
     private Tile? FolderHoverTarget(Tile source, TilePanel panel, Point point, string sourceId, long? timestamp = null, bool existingFoldersOnly = false)
     {
         var target = FindFolderOverlap(source, panel, point, existingFoldersOnly)?.Tile;
-        var armed = _folderHover.Update(sourceId, target?.Id, timestamp ?? Environment.TickCount64);
+        var armed = _folderHover.Update(sourceId, target?.Id, timestamp ?? Environment.TickCount64, HoverDelay(panel, target));
         if (timestamp == null && _dragging) WatchFolderDwell(source, panel, point, sourceId, target, existingFoldersOnly);
         return armed ? target : null;
     }

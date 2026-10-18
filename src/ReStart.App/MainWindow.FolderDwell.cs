@@ -37,8 +37,8 @@ public partial class MainWindow
         if (_pendingFolderDrop is not { } pending) return;
         var placement = pending.Panel.Placements.FirstOrDefault(p => p.Tile == pending.Target);
         if (placement.Tile == null) return;
-        var armed = _folderHover.Update(pending.SourceId, pending.Target.Id, Environment.TickCount64);
-        var createsGroup = pending.Panel.Tag is TileGroup { IsStandalone: true } && !pending.Target.IsFolder;
+        var armed = _folderHover.Update(pending.SourceId, pending.Target.Id, Environment.TickCount64, HoverDelay(pending.Panel, pending.Target));
+        var createsGroup = CreatesGroup(pending.Panel, pending.Target);
         if (armed && createsGroup)
         {
             var sources = _selectionDragPositions is { } selected

@@ -16,7 +16,7 @@ public partial class MainWindow
         var store = new LayoutStore(Path.Combine(directory, "layout.json"));
         var fixture = new MainWindow(store, true, () => Task.FromResult(PreviewApps()))
         { Owner = this, Width = 1280, Height = 800, Topmost = false, ShowInTaskbar = false };
-        var timers = 0; var geometry = 0; var routes = 0; var cancellations = 0;
+        var timers = 0; var geometry = 0; var routes = 0; var cancellations = 0; var thresholds = 0;
         try
         {
             await fixture.InitializeAsync();
@@ -40,7 +40,7 @@ public partial class MainWindow
                         fixture._dragging = true;
                         Require(fixture.PreviewSingleTileDrop(source, point, source.Id), "A valid folder overlap was rejected.");
                         Require(fixture._pendingFolderDrop?.Target == target, "The drag did not start the folder dwell timer.");
-                        await Task.Delay(TileFolderHover.DelayMilliseconds + 150);
+                        await Task.Delay(HoverDelay(panel, target) + 150);
                         Require(fixture._pendingFolderDrop?.Target == target && (standalone ? fixture._dropAdorner?.GroupTarget == true : fixture._dropAdorner?.FolderTarget == true),
                             $"The stationary OLE hover lost its target before drop: standalone={standalone}, editing={editing}, pending={fixture._pendingFolderDrop != null}.");
                         fixture.SaveScreenshot(Path.Combine(directory, $"ready-{standalone}-{editing}-{sizes.Source}-{sizes.Target}.png"));
@@ -64,7 +64,7 @@ public partial class MainWindow
                                 fixture._dragOffset = grab switch { 0 => new(3, 3), 1 => new((w * fixture.Cell - 4) / 2, (h * fixture.Cell - 4) / 2), _ => new(w * fixture.Cell - 7, h * fixture.Cell - 7) };
                                 var point = Pointer(panel, target);
                                 Require(fixture.PreviewSingleTileDrop(source, point, source.Id, 0)
-                                    && fixture.PreviewSingleTileDrop(source, point, source.Id, TileFolderHover.DelayMilliseconds)
+                                    && fixture.PreviewSingleTileDrop(source, point, source.Id, HoverDelay(panel, target))
                                     && (standalone ? fixture._dropAdorner?.GroupTarget == true : fixture._dropAdorner?.FolderTarget == true),
                                     $"A folder preview failed: standalone={standalone}, editing={editing}, source={sourceSize}, target={targetSize}, grab={grab}.");
                                 Require(fixture.CommitSingleTileDrop(source, point, source.Id), "A geometry-verified folder drop was rejected.");
@@ -74,7 +74,7 @@ public partial class MainWindow
             fixture._dragOffset = new(3, 3); fixture._dragging = true;
             var cancelBefore = JsonSerializer.Serialize(fixture.Document.Groups, LayoutStore.JsonOptions);
             fixture.PreviewSingleTileDrop(cancelSource, Pointer(cancelPanel, cancelTarget), cancelSource.Id);
-            await Task.Delay(TileFolderHover.DelayMilliseconds + 150);
+            await Task.Delay(TileFolderHover.GroupDelayMilliseconds + 150);
             Require(fixture._dropAdorner?.GroupTarget == true, "Cancellation fixture never armed its group.");
             fixture.StopFolderDwell(); fixture._folderHover.Reset(); fixture.ClearDropPreview(); fixture._dragging = false;
             await Task.Delay(75);
@@ -131,7 +131,7 @@ public partial class MainWindow
             Require(fixture._selectionDragPositions.Count == 2, "The batch grouping fixture did not capture both selected tiles.");
             independentPanel = fixture.RootPanelFor(fixture.Document.Groups.Single(g => g.Tiles.Contains(independentTarget)));
             var groupingPoint = Pointer(independentPanel, independentTarget);
-            fixture._folderHover.Update(lead.Id, independentTarget.Id, 0);
+            fixture._folderHover.Update(lead.Id, independentTarget.Id, 0, TileFolderHover.GroupDelayMilliseconds);
             var batchPlan = fixture.PlanSelectionDrop(lead.Id, groupingPoint);
             Require(batchPlan != null, "A batch could not collect around an independent target.");
             fixture.CommitSelectionPlan(batchPlan!); fixture._selectionDragPositions = null;
@@ -147,7 +147,47 @@ public partial class MainWindow
             fixture.PreviewSingleTileDrop(folderSource, plainPoint, folderSource.Id, 1000);
             Require(fixture._dropAdorner?.GroupTarget == true && fixture.CommitSingleTileDrop(folderSource, plainPoint, folderSource.Id)
                 && fixture.Document.Groups.Single().Tiles.Single(t => t.Id == folderSource.Id).Children.Count == 1, "A folder could not become a root in a newly collected ordinary group."); routes++;
-            return new(timers, geometry, routes, cancellations, directory);
+            foreach (var editing in new[] { false, true })
+            {
+                var (source, target, panel) = Scene(true, editing, TileSize.Medium, TileSize.Medium);
+                fixture._dragOffset = new(3, 3);
+                var point = Pointer(panel, target);
+                var tileWidth = 2 * fixture.Cell - 4;
+                var halfOverlap = point + new Vector(tileWidth * .5, 0);
+                fixture.PreviewSingleTileDrop(source, halfOverlap, source.Id, 0);
+                fixture.PreviewSingleTileDrop(source, halfOverlap, source.Id, TileFolderHover.GroupDelayMilliseconds - 1);
+                Require(fixture._dropAdorner?.GroupTarget != true, "A pass shorter than the grouping dwell armed a group.");
+                fixture.PreviewSingleTileDrop(source, halfOverlap, source.Id, TileFolderHover.GroupDelayMilliseconds);
+                Require(fixture._dropAdorner?.GroupTarget == true, "A half-overlap did not arm grouping at the short deadline.");
+                var drift = point + new Vector(tileWidth * .65, 0);
+                fixture.PreviewSingleTileDrop(source, drift, source.Id, 350);
+                Require(fixture._dropAdorner?.GroupTarget == true, "Small pointer drift discarded an armed grouping target.");
+                fixture.SaveScreenshot(Path.Combine(directory, $"group-edge-{editing}.png"));
+                fixture.PreviewSingleTileDrop(source, point + new Vector(tileWidth * .8, 0), source.Id, 400);
+                Require(fixture._folderHover.TargetId == null && fixture._dropAdorner?.GroupTarget != true, "Leaving the grouping tolerance retained the armed target.");
+                fixture.PreviewSingleTileDrop(source, drift, source.Id, 450);
+                Require(fixture._folderHover.TargetId == null, "A new hover started inside the retention-only region."); thresholds++;
+
+                (source, target, panel) = Scene(false, editing, TileSize.Medium, TileSize.Medium);
+                point = Pointer(panel, target);
+                fixture.PreviewSingleTileDrop(source, point + new Vector(tileWidth * .5, 0), source.Id, 0);
+                fixture.PreviewSingleTileDrop(source, point + new Vector(tileWidth * .5, 0), source.Id, 1000);
+                Require(fixture._folderHover.TargetId == null && fixture._dropAdorner?.FolderTarget != true, "The larger grouping region accidentally loosened folder creation."); thresholds++;
+
+                (source, target, panel) = Scene(true, editing, TileSize.Medium, TileSize.Medium);
+                var upper = new TileGroup { Name = "Earlier neighbor", X = 8, Column = 1, Row = 11, Tiles = [new() { Label = "Keep above" }] };
+                fixture.Document.Groups.Add(upper); fixture.SaveLayout(); fixture.RenderGroups(); fixture.UpdateLayout();
+                var upperTop = fixture.GroupsPanel.Placements.Single(p => p.Group == upper).Top;
+                panel = fixture.RootPanelFor(fixture.Document.Groups.Single(g => g.Tiles.Contains(target)));
+                point = Pointer(panel, target);
+                fixture.PreviewSingleTileDrop(source, point, source.Id, 0);
+                fixture.PreviewSingleTileDrop(source, point, source.Id, TileFolderHover.GroupDelayMilliseconds);
+                Require(fixture.CommitSingleTileDrop(source, point, source.Id), "The header-collision grouping fixture was rejected.");
+                fixture.UpdateLayout();
+                Require(fixture.GroupsPanel.Placements.Single(p => p.Group.Id == upper.Id).Top == upperTop, "Creating a group pushed its earlier neighbor below the new group.");
+                fixture.SaveScreenshot(Path.Combine(directory, $"group-header-{editing}.png")); routes++;
+            }
+            return new(timers, geometry, routes, cancellations, thresholds, directory);
         }
         finally { fixture._dragging = false; fixture.Exit(); }
 
@@ -200,4 +240,4 @@ public partial class MainWindow
     }
 }
 
-internal sealed record FolderDropSmokeResult(int StationaryTimerCases, int SizeGrabModeCases, int DestinationCases, int CancellationCases, string Screenshots);
+internal sealed record FolderDropSmokeResult(int StationaryTimerCases, int SizeGrabModeCases, int DestinationCases, int CancellationCases, int ThresholdCases, string Screenshots);

@@ -5,6 +5,19 @@ namespace ReStart.Core.Tests;
 public sealed class TileFolderHoverTests
 {
     [Fact]
+    public void GroupDwellArmsQuicklyAndChangingIntentCannotReuseItsElapsedTime()
+    {
+        var hover = new TileFolderHover();
+        Assert.False(hover.Update("a", "b", 10, TileFolderHover.GroupDelayMilliseconds));
+        Assert.False(hover.Update("a", "b", 309, TileFolderHover.GroupDelayMilliseconds));
+        Assert.True(hover.Update("a", "b", 310, TileFolderHover.GroupDelayMilliseconds));
+        Assert.Equal("b", hover.TargetId);
+        Assert.False(hover.Update("a", "b", 311));
+        Assert.False(hover.Update("a", "b", 1310));
+        Assert.True(hover.Update("a", "b", 1311));
+        hover.Reset(); Assert.Null(hover.TargetId);
+    }
+    [Fact]
     public void RequiresAContinuousSecondWithoutModifiers()
     {
         var hover = new TileFolderHover();
