@@ -19,6 +19,7 @@ dotnet test ReStart.slnx -c Release --no-build
 ./scripts/test-app-menus.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-release-info.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-placement.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+./scripts/test-folder-drops.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-editing.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/package.ps1 -Runtime win-x64
 ./scripts/test-lifecycle.ps1 -Executable artifacts/publish/win-x64/ReStart.exe
@@ -33,6 +34,7 @@ dotnet test ReStart.slnx -c Release --no-build
 | app-menus | ピン / 解除、メニュー更新、有効 verb の読み取り。実行しない |
 | release-info | 版・ライセンス・移行原本・記録、日英×テーマ、アクセント |
 | placement | 独立アンカー、押し出しプレビュー / 取消、内部座標、単独タイルの実寸、保存、直接命名、フォルダー |
+| folder-drops | 実タイマー12ケース（単独 / グループ内 × 通常 / 編集 × 同一 / 異なるサイズ）、大小とつかむ位置の192ケースを製品のプレビュー・確定処理に通し、保存したID・Undo / Redo・取消・スクロール・各移動先を確認 |
 | editing | 選択時の起動抑制、複数移動のプレビュー / 取消 / 確定、Undo / Redo、親子の排他選択、フォルダー内外、実ファイルロックによる保存失敗の復元、8言語×2テーマ、Esc・再表示 |
 | lifecycle | コピー先2か所から10回起動して主プロセス1個、重複 smoke はコード2 |
 

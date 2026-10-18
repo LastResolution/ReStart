@@ -32,6 +32,8 @@ Edit mode suppresses tile activation and uses stable IDs for selection across re
 
 Drop routing distinguishes root group cells, expanded folder children, tile-over-tile folder creation/addition, and independent board space. Folder dwell uses tile overlap, including the original grab offset, rather than pointer-centering. Waiting/ready previews and a dispatcher timer keep a stationary hover visible. Single selections can create folders; batches can enter existing folders. Nested folders are rejected.
 
+Single-tile preview and commit share one resolver. Root overlap also resolves compact independent targets whose bounds do not contain a larger dragged tile's center. During OLE dragging, the dwell timer retains the latest drag-event position in viewport coordinates and reprojects it after scrolling. It does not poll WPF's mouse device, which can still report the original grab position while OLE owns pointer tracking. Leaving the content or ending/cancelling a drag retires the timer.
+
 ## Catalog and shell
 
 `AppCatalog` enumerates AppsFolder and user/common Start-menu .lnk/.url files on dedicated STA threads. User entries win for equal relative paths. SHGetFileInfo supplies localized display names; directory paths remain available for `AppListTree`.

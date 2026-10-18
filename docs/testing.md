@@ -17,6 +17,7 @@ dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory 
 ./scripts/test-app-menus.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-release-info.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-placement.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+./scripts/test-folder-drops.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-editing.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-scrolling.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-file-pinning.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
@@ -37,6 +38,7 @@ dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory 
 | app-menus | Pin/unpin/menu refresh, default/explicit directory destinations with immediate Shell icons, preview command availability, canonical verbs read for real/missing files; no shell verb invocation |
 | release-info | Version, licenses, original migration backup, upgrade record, Eight languages × light/dark settings, global tile and Start accent |
 | placement | Independent group anchors, collision preview/cancel, unchanged child cells, standalone footprint/no header, persistence, inline name events and normal/independent folder expansion |
+| folder-drops | Twelve real dispatcher-timer cases (standalone/grouped × normal/edit × same/mixed sizes), 192 source/target-size and grab-position cases through the production preview/drop resolver, saved folder identities, undo/redo, cancellation, scrolling and group/open-folder/closed-folder/board destinations |
 | editing | Native selection clicks suppress launches, rigid previews/cancel/commit, one-step undo/redo/unpin, existing/expanded folder moves, parent-child exclusion, real save-lock rollback, eight languages × two themes, Escape and reopen |
 | scrolling | Twelve axis/theme cases and 32 stationary-pointer scrolled-group previews without offset feedback or repeated layout |
 | bundled-tiles | Twelve packages, four sizes, local clicks, retained state, photo binding/file handles, custom colors and a real host CPU-to-frame path |
