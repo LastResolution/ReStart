@@ -51,6 +51,8 @@ public partial class MainWindow
             var before = JsonSerializer.Serialize(fixture.Document.Groups, LayoutStore.JsonOptions);
             var plan = fixture.PlanSelectionDrop(a.Id, drop);
             Require(plan != null, "A fitting multi-tile group drop was rejected.");
+            Require(ReferenceEquals(plan, fixture.PlanSelectionDrop(a.Id, new(drop.X + .1, drop.Y + .1))),
+                "A stationary snapped drag recalculates the same selection plan.");
             fixture.ShowSelectionPreview(plan!, drop, a.Id); fixture.UpdateLayout();
             Require(fixture._dropAdorner?.SelectionBounds?.Count == 2 && before == JsonSerializer.Serialize(fixture.Document.Groups, LayoutStore.JsonOptions),
                 "The multi-tile preview is incomplete or mutated the layout.");
@@ -118,6 +120,19 @@ public partial class MainWindow
             fixture.UndoButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             Require(fixture.FindTile(folder.Id)?.Children.Count == 2, "Undo did not restore the removed folder and both children.");
             fixture._selectionDragPositions = null;
+            fixture.OpenFolder(fixture.FindTile(folder.Id)!); fixture.ClearTileSelectionClick(this, new());
+            fixture.ToggleTileSelection(a.Id); fixture.ToggleTileSelection(b.Id); fixture.UpdateLayout();
+            fixture._selectionDragPositions = fixture.CaptureTileSelection();
+            var inline = VisualChildren<ReStart.App.Controls.TilePanel>(fixture.GroupsPanel).Single(p => p.FolderOwner?.Id == folder.Id);
+            var inside = inline.TranslatePoint(new(12, 12), fixture.GroupsPanel);
+            plan = fixture.PlanSelectionDrop(a.Id, inside);
+            Require(plan != null && LayoutEditor.Find(new() { Groups = plan }, folder.Id)?.Children.Count == 4,
+                "An expanded folder was classified as its surrounding group.");
+            fixture.CommitSelectionPlan(plan!); fixture.UndoButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            fixture.ClearTileSelectionClick(this, new()); fixture.ToggleTileSelection(folder.Id); fixture.UpdateLayout();
+            fixture._selectionDragPositions = fixture.CaptureTileSelection();
+            Require(fixture.PlanSelectionDrop(folder.Id, inside) == null, "A selected folder can be dropped into its own expanded children.");
+            fixture._selectionDragPositions = null;
 
             fixture.Document.Preferences.Theme = ReStart.Core.ThemeMode.Light; fixture.ApplyAppearance(); fixture.RenderGroups(); fixture.UpdateLayout();
             fixture.ClearTileSelectionClick(this, new());
@@ -147,6 +162,19 @@ public partial class MainWindow
             Require(!fixture._layoutEditing && !fixture.EditBar.IsVisible, "A second Escape did not leave editing.");
             fixture.SetLayoutEditing(true); fixture.Hide(); fixture.Present();
             Require(!fixture._layoutEditing && fixture._selectedTileIds.Count == 0 && fixture._layoutHistory.CanUndo, "Reopening retained editing mode or lost layout history.");
+            var beforeImport = JsonSerializer.Serialize(fixture.Document.Groups, LayoutStore.JsonOptions);
+            var imported = new LayoutDocument { Preferences = fixture.Document.Preferences, Groups = [new() { Name = "Imported fixture", Tiles = [new() { Label = "Sample" }] }] };
+            fixture.ReplaceDocument(imported);
+            Require(store.Load()!.Groups[0].Name == "Imported fixture", "A replacement layout was not saved before activation.");
+            fixture.RestoreLayoutHistory(false);
+            Require(beforeImport == JsonSerializer.Serialize(fixture.Document.Groups, LayoutStore.JsonOptions), "An imported layout cannot be undone in one step.");
+            var previousDocument = fixture.Document;
+            using (var locked = new FileStream(store.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                var rejected = false;
+                try { fixture.ReplaceDocument(imported); } catch (IOException) { rejected = true; }
+                Require(rejected && ReferenceEquals(fixture.Document, previousDocument), "A failed import replaced the visible document.");
+            }
             return new(checks, themes, directory);
         }
         finally { fixture.Exit(); }

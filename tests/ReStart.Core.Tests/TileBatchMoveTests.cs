@@ -6,6 +6,18 @@ namespace ReStart.Core.Tests;
 public sealed class TileBatchMoveTests
 {
     [Fact]
+    public void InvalidSelectionsAreRejectedWithoutChangingOwnership()
+    {
+        var tile = new Tile(); var doc = new LayoutDocument { Groups = [new() { Tiles = [tile] }] };
+        var before = JsonSerializer.Serialize(doc);
+        Assert.Null(TileBatchMove.Plan(doc, [new(tile.Id, 0, 0), new(tile.Id, 2, 0)], tile.Id, null, null, 0, 0, 3, 52));
+        Assert.Null(TileBatchMove.Plan(doc, [new("missing", 0, 0)], "missing", null, null, 0, 0, 3, 52));
+        Assert.Null(TileBatchMove.Plan(doc, [new(tile.Id, double.NaN, 0)], tile.Id, null, null, 0, 0, 3, 52));
+        Assert.Null(TileBatchMove.Plan(doc, [new(tile.Id, 0, 0)], tile.Id, "missing-group", null, 0, 0, 3, 52));
+        Assert.Equal(before, JsonSerializer.Serialize(doc));
+    }
+
+    [Fact]
     public void GroupMovePreservesOffsetsAndSizesAndReflowsOnlyConflicts()
     {
         var a = new Tile { Size = TileSize.Small }; var b = new Tile { Size = TileSize.Wide };

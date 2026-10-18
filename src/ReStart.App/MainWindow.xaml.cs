@@ -360,6 +360,7 @@ public partial class MainWindow : Window
         try
         {
             _store.Save(Document);
+            _selectionPlanCache = null;
             if (_historyReady && recordHistory) _layoutHistory.Record(Document);
             UpdateEditingChrome();
             return true;
@@ -629,6 +630,7 @@ public partial class MainWindow : Window
             _folderHover.Reset();
             StopFolderDwell();
             _selectionDragPositions = null;
+            _selectionPlanCache = null;
             GroupsPanel.DragMinimumHeight = 0;
             GroupsPanel.DragMinimumWidth = 0;
             GroupsPanel.InvalidateMeasure();
@@ -667,7 +669,7 @@ public partial class MainWindow : Window
         _dropAdorner.FolderTarget = false;
         _dropAdorner.GroupBounds = panel.FolderOwner == null && panel.Tag is TileGroup { IsStandalone: false }
             ? new Rect(0, -GroupLayout.HeaderHeight, Math.Max(panel.ActualWidth, (col + width) * Cell), Math.Max(panel.ActualHeight, y + height * Cell) + GroupLayout.HeaderHeight) : null;
-        _dropAdorner.Caption = panel.FolderOwner != null ? L.T(K.DropIntoFolder) : panel.Tag is TileGroup group && !group.IsStandalone
+        _dropAdorner.Caption = panel.FolderOwner != null ? L.T(K.DropIntoFolder) + " · " + TileDisplayName(panel.FolderOwner) : panel.Tag is TileGroup group && !group.IsStandalone
             ? L.F(K.DropIntoGroup, group.Name.Length == 0 ? L.T(K.UnnamedGroup) : group.Name) : "";
         _dropAdorner.InvalidateVisual();
     }
@@ -961,8 +963,15 @@ public partial class MainWindow : Window
         WithDialog(() => answer = TextPrompt.Show(this, title, value));
         return answer;
     }
-    /// <summary>Gets the current local layout document.</summary>
-    public void ReplaceDocument(LayoutDocument document) { Document = document; SaveLayout(); RefreshLayout(); }
+    /// <summary>Atomically saves an imported/reset layout before replacing the visible document and recording one undo step.</summary>
+    public void ReplaceDocument(LayoutDocument document)
+    {
+        _store.Save(document);
+        Document = document;
+        _selectionPlanCache = null;
+        if (_historyReady) _layoutHistory.Record(document);
+        RefreshLayout();
+    }
 
     private void FocusSearchInput()
     {

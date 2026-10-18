@@ -51,8 +51,13 @@ public partial class MainWindow
         var target = source.IsFolder || panel.FolderOwner != null ? null : panel.Placements
             .Where(p => p.Tile != source && p.Tile.Widget.Length == 0 && (!existingFoldersOnly || p.Tile.IsFolder && !_selectedTileIds.Contains(p.Tile.Id)))
             .Select(p => (p.Tile, Bounds: new Rect(p.Column * Cell, panel.Expansion?.TileY(p, Cell) ?? p.Row * Cell, p.Width * Cell - 4, p.Height * Cell - 4)))
-            .Select(p => { var overlap = Rect.Intersect(dragged, p.Bounds); return (p.Tile, Ratio: overlap.IsEmpty ? 0 : overlap.Width * overlap.Height / Math.Min(dragged.Width * dragged.Height, p.Bounds.Width * p.Bounds.Height)); })
-            .Where(p => p.Ratio >= .65).OrderByDescending(p => p.Ratio).Select(p => p.Tile).FirstOrDefault();
+            .Select(p =>
+            {
+                var overlap = Rect.Intersect(dragged, p.Bounds);
+                var delta = new Point(dragged.X + dragged.Width / 2, dragged.Y + dragged.Height / 2) - new Point(p.Bounds.X + p.Bounds.Width / 2, p.Bounds.Y + p.Bounds.Height / 2);
+                return (p.Tile, Ratio: overlap.IsEmpty ? 0 : overlap.Width * overlap.Height / Math.Min(dragged.Width * dragged.Height, p.Bounds.Width * p.Bounds.Height), Distance: delta.LengthSquared);
+            })
+            .Where(p => p.Ratio >= .65).OrderByDescending(p => p.Ratio).ThenBy(p => p.Distance).Select(p => p.Tile).FirstOrDefault();
         var armed = _folderHover.Update(sourceId, target?.Id, timestamp ?? Environment.TickCount64);
         if (timestamp == null && _dragging) WatchFolderDwell(source, panel, sourceId, target, existingFoldersOnly);
         return armed ? target : null;

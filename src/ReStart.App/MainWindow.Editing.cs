@@ -14,6 +14,9 @@ public partial class MainWindow
     private readonly Dictionary<string, (Button Button, FrameworkElement Mark)> _selectionViews = [];
     private bool _historyReady, _layoutEditing;
     private IReadOnlyList<SelectedTilePosition>? _selectionDragPositions;
+    private sealed record SelectionPlanKey(List<TileGroup> Groups, IReadOnlyList<SelectedTilePosition> Selection, string Anchor,
+        string? Group, string? Folder, double X, double Y, int Columns, int TileColumns, double Cell);
+    private (SelectionPlanKey Key, List<TileGroup>? Groups)? _selectionPlanCache;
 
     private void ToggleLayoutEditing(object sender, RoutedEventArgs e) => SetLayoutEditing(!_layoutEditing);
 
@@ -23,6 +26,7 @@ public partial class MainWindow
         _editingGroupHeader?.EndEdit(true);
         if (editing) ResetToPinnedView();
         _layoutEditing = editing;
+        _selectionPlanCache = null;
         _selectedTileIds.Clear();
         EditBar.Visibility = editing ? Visibility.Visible : Visibility.Collapsed;
         ShowGroupBoundaries(editing);
@@ -183,18 +187,27 @@ public partial class MainWindow
             var closedFolder = destination.Panel.FolderOwner == null && FindTile(anchorId) is Tile source && selection.All(s => FindTile(s.Id)?.IsFolder == false)
                 ? FolderHoverTarget(source, destination.Panel, GroupsPanel.TranslatePoint(point, destination.Panel), anchorId, existingFoldersOnly: true) : null;
             if (destination.Panel.FolderOwner != null || selection.Any(s => FindTile(s.Id)?.IsFolder == true)) { _folderHover.Reset(); StopFolderDwell(); }
-            return TileBatchMove.Plan(Document, selection, anchorId, destination.Group.IsStandalone ? null : destination.Group.Id,
-                destination.Panel.FolderOwner?.Id ?? closedFolder?.Id, closedFolder == null ? (local.X - _dragOffset.X) / Cell : 0,
-                closedFolder == null ? (local.Y - _dragOffset.Y) / Cell : 0, GroupsPanel.Columns, Cell);
+            return CachedSelectionPlan(selection, anchorId, destination.Group.IsStandalone ? null : destination.Group.Id,
+                destination.Panel.FolderOwner?.Id ?? closedFolder?.Id, closedFolder == null ? Math.Round((local.X - _dragOffset.X) / Cell, MidpointRounding.AwayFromZero) : 0,
+                closedFolder == null ? Math.Round((local.Y - _dragOffset.Y) / Cell, MidpointRounding.AwayFromZero) : 0);
         }
         if (target is { } independent && FindTile(anchorId) is Tile lead && selection.All(s => FindTile(s.Id)?.IsFolder == false))
         {
             var closed = FolderHoverTarget(lead, independent.Panel, GroupsPanel.TranslatePoint(point, independent.Panel), anchorId, existingFoldersOnly: true);
-            if (closed != null) return TileBatchMove.Plan(Document, selection, anchorId, null, closed.Id, 0, 0, GroupsPanel.Columns, Cell);
+            if (closed != null) return CachedSelectionPlan(selection, anchorId, null, closed.Id, 0, 0);
         }
         else { _folderHover.Reset(); StopFolderDwell(); }
         var (_, row, x) = BoardAnchor(point, true);
-        return TileBatchMove.Plan(Document, selection, anchorId, null, null, x, row / 2d, GroupsPanel.Columns, Cell);
+        return CachedSelectionPlan(selection, anchorId, null, null, x, row / 2d);
+    }
+
+    private List<TileGroup>? CachedSelectionPlan(IReadOnlyList<SelectedTilePosition> selection, string anchor, string? group, string? folder, double x, double y)
+    {
+        var key = new SelectionPlanKey(Document.Groups, selection, anchor, group, folder, x, y, GroupsPanel.Columns, Document.Preferences.Columns, Cell);
+        if (_selectionPlanCache is { } previous && previous.Key == key) return previous.Groups;
+        var groups = TileBatchMove.Plan(Document, selection, anchor, group, folder, x, y, GroupsPanel.Columns, Cell);
+        _selectionPlanCache = (key, groups);
+        return groups;
     }
 
     private void HandleSelectionDrop(DragEventArgs e, string anchorId, Point point, bool commit)
