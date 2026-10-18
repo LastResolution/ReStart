@@ -96,7 +96,8 @@ Have a layout to show, an idea for a tile, or a bug to report? [Open an issue](h
 | `Tab` / arrows / `Enter` | Navigate and activate |
 | Drag a tile / group header | Move it |
 | Drop a tile in empty space | Create an independent pin |
-| Overlap tiles for about one second, then drop when the folder preview is ready | Create or add to a tile folder |
+| Overlap an independent tile for about one second, then drop when **Create group** appears | Collect the tiles into an ordinary group |
+| Overlap a tile inside a group for about one second, then drop when the folder preview is ready | Create a tile folder; dropping onto an existing folder adds to it |
 | **Edit layout** / `Ctrl+E` | Select tiles without launching apps; drag selected tiles together |
 | `Ctrl+A` / `Delete` in edit mode | Select root tiles / unpin the selection |
 | `Ctrl+Z` / `Ctrl+Y` or `Ctrl+Shift+Z` | Undo / redo a layout edit; text fields keep their own text undo |
@@ -106,7 +107,7 @@ Have a layout to show, an idea for a tile, or a bug to report? [Open an issue](h
 
 Win+letter shortcuts are forwarded to Windows. Settings can disable Windows-key and taskbar Start-button capture. [Compatibility](docs/fidelity.md) describes the desktop integration and platform coverage.
 
-Edit mode provides **Move to group…**, **Unpin selected** and **Done**. Dragging keeps relative positions; the group menu collects the selection into a compact block. A single tile can create a folder; multiple selected tiles can enter an existing folder but do not create one accidentally. Use a folder's **Open folder** context action to arrange its children. `Esc` clears selection, then leaves editing. Reopening Start leaves edit mode. Layout history lasts for the running session (up to 100 edits within a 32 MiB memory budget); it preserves current preferences and is never saved to disk. Each successful pin, move, resize, rename, color change, folder edit, import or reset is undoable as one operation.
+Edit mode provides **Move to group…**, **Unpin selected** and **Done**. Dragging keeps relative positions; the group menu collects the selection into a compact block. Overlapping an independent non-folder tile collects the selection into a compact ordinary group. A single tile can create a folder inside a group; multiple selected tiles can enter an existing folder but do not create one accidentally. Use a folder's **Open folder** context action to arrange its children. A folder with one remaining child stays a folder; removing its last child removes the folder. `Esc` clears selection, then leaves editing. Reopening Start leaves edit mode. Layout history lasts for the running session (up to 100 edits within a 32 MiB memory budget); it preserves current preferences and is never saved to disk. Each successful pin, move, resize, rename, color change, folder edit, import or reset is undoable as one operation.
 
 </details>
 

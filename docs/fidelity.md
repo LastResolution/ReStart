@@ -14,7 +14,7 @@ Portable builds target Windows 10/11 on x64 and ARM64. Development and native au
 | --- | --- |
 | Home | Full-screen working area, rail, pinned/all-apps views; reopening resets search, overlays and scroll |
 | Tiles | Four sizes; movable rectangular groups; inline names and expandable tile folders |
-| Placement extensions | Independent tiles, content-sized group width, half-cell horizontal anchors, horizontal scrolling and individual colors |
+| Placement extensions | Independent tiles, overlap-to-collect ordinary groups, content-sized group width, half-cell horizontal anchors, horizontal scrolling and individual colors |
 | Editing extensions | Explicit edit mode, multi-selection moves and session-only layout undo/redo; these are ReStart additions |
 | Search | Immediate app-name search, including during catalog loading; no file/settings index, Web or Cortana |
 | Catalog | AppsFolder and Start-menu links with native display names and icons; ambiguous shortcuts may appear twice |
@@ -30,6 +30,8 @@ Portable builds target Windows 10/11 on x64 and ARM64. Development and native au
 The [test guide](testing.md) describes isolated native fixtures and manual checks. Power, elevation and uninstall actions are not executed by routine automated checks.
 
 ## Opening and closing
+
+ReStart collects tiles into an ordinary group when the overlap target is an independent non-folder tile; grouped targets create tile folders. Existing folders accept children regardless of their surrounding container. This independent-tile collection is a ReStart extension. A folder with one child is retained; it is removed after its last child leaves, following the documented [Windows 10 folder removal procedure](https://support.microsoft.com/en-au/windows/experience/personalization/customize-the-windows-start-menu).
 
 The [Microsoft full-screen Start recording](https://blogs.windows.com/windowsexperience/2017/09/11/windows-10-tip-make-start-full-screen/) shows a gradual, bottom-anchored expansion and a lower-to-upper tile reveal. ReStart uses a 367 ms content entrance, a separate 120 ms window fade and up to 80 ms of row staggering. Exit recedes and fades over 167 ms. These are independently tuned WPF values based on the recording and [Microsoft motion guidance](https://learn.microsoft.com/en-us/windows/apps/design/signature-experiences/motion), not recovered shell constants. The current guidance is newer than Windows 10 and does not establish its exact timing. A Windows 10 22H2 device comparison remains necessary for frame-exact fidelity.
 

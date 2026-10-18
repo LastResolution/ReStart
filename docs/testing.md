@@ -33,12 +33,12 @@ dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory 
 | smoke | WPF render, real catalog/icon counts, sanitized tile labels; optional SearchQuery E or packaged Executable |
 | navigation | 288 fictional apps at 800/1280/1920/2560 DIPs, occupied column width, heading continuity and eight Hide/Present resets |
 | navigation -AppFolders | Inline directory expansion, keyboard/Automation paths, hidden-child search, 1920/3840 widths, themes and initial jump |
-| first-input | New window with delayed catalog; TextCompositionManager sends E, catalog release produces Edge results, then d continues input; reopening/rail focus preserved |
+| first-input | Delayed catalog and first-character search, reopening/rail focus, native activation, then real foreground events with WPF deactivation disabled: repeated intermediate-window transitions, owned dialogs, hook lifetime and disabled preference |
 | motion | Real WPF entrance/exit clocks, staged rows, catalog refresh, input during entrance, rapid reopen, taskbar dismissal, disabled animation and shutdown cleanup |
 | app-menus | Pin/unpin/menu refresh, default/explicit directory destinations with immediate Shell icons, preview command availability, canonical verbs read for real/missing files; no shell verb invocation |
 | release-info | Version, licenses, original migration backup, upgrade record, Eight languages × light/dark settings, global tile and Start accent |
 | placement | Independent group anchors, collision preview/cancel, unchanged child cells, standalone footprint/no header, persistence, inline name events and normal/independent folder expansion |
-| folder-drops | Twelve real dispatcher-timer cases (standalone/grouped × normal/edit × same/mixed sizes), 192 source/target-size and grab-position cases through the production preview/drop resolver, saved folder identities, undo/redo, cancellation, scrolling and group/open-folder/closed-folder/board destinations |
+| folder-drops | Twelve real dispatcher-timer cases (independent → group / grouped → folder × normal/edit × same/mixed sizes), 192 source/target-size and grab-position cases through the production resolver, persisted identities, one-step undo/redo, cancellation, scrolling, batch grouping and folder-as-root grouping |
 | editing | Native selection clicks suppress launches, rigid previews/cancel/commit, one-step undo/redo/unpin, existing/expanded folder moves, parent-child exclusion, real save-lock rollback, eight languages × two themes, Escape and reopen |
 | scrolling | Twelve axis/theme cases and 32 stationary-pointer scrolled-group previews without offset feedback or repeated layout |
 | bundled-tiles | Twelve packages, four sizes, local clicks, retained state, photo binding/file handles, custom colors and a real host CPU-to-frame path |
@@ -64,7 +64,7 @@ dotnet test tests/ReStart.Core.Tests/ReStart.Core.Tests.csproj -c Release -p:Deb
 | Dragging | Header/tile drags, overlap/cancel/edge scroll, standalone neighbors, folder extraction, save/reopen |
 | Editing | Ctrl+E, click/keyboard selection, batch drag from different grab points, group/folder/open-space destinations, hold-to-folder preview, Ctrl+Z/Y, text-field undo, save/reopen |
 | Input | Bare Win then E, Enter, Win+E/D/L/Tab, IME composition, Ctrl+F, Esc, navigation |
-| Taskbar | Blank/app/secondary taskbar clicks close Start and preserve the original click; settings and drags stay open |
+| Taskbar | Blank/app/secondary taskbar and thumbnail clicks close Start and preserve the original click; select a window after hovering a multi-window app, repeat after reopening; settings and drags stay open |
 | Shell | Win32/Store/link/URL launch; only supported app verbs; missing old pins |
 | Settings | All languages/themes, contrast, scale, About/licenses, rollback information |
 | Updates | Public checks without an API key, rate limits, connectivity failure, newer compatible release; no implicit installation |
