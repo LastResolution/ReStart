@@ -1,4 +1,6 @@
 ReStart v@VERSION@
+「配置を編集」/ Ctrl+E で起動せずにタイルを複数選択し、まとめてドラッグできます。
+Ctrl+Z で配置を取り消し、Ctrl+Y / Ctrl+Shift+Z でやり直します。履歴は起動中のみです。
 フルスクリーンのスタートを、もう一度。 English: README.txt
 
 ReStart.exe を起動してください。TileHost・Examples・third-party・ライセンスを保持します。

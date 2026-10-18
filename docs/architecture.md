@@ -26,6 +26,12 @@ A schema-4 `TileGroup.IsStandalone` entry stores exactly one independent tile. I
 
 `GroupBoardPanel` uses the same rectangles for measure and arrange. `LayoutEditor.Detach` freezes visible anchors and moves ownership once. `FolderExpansion` adds temporary inline content without changing saved root rows. Expanded independent folders temporarily use the column width for their children while keeping the root tile's horizontal position.
 
+`LayoutHistory` retains deep snapshots of groups and one-level children only, bounded to 100 edits and 32 MiB. Successful writes record one operation; identical saves retain redo. Editing after undo drops the redo branch. Preferences, upgrade metadata, live-script runtime state and external files remain outside history. Undo/redo persists through the same atomic store and restores its cursor if writing fails. History lives only in memory and survives hiding Start, not process exit.
+
+Edit mode suppresses tile activation and uses stable IDs for selection across redraws and history restoration. Folder parents and children cannot be selected together. `TileBatchMove.Plan` copies the layout, freezes existing anchors, validates a rigid selection and reserves selected cells before reflowing conflicts. Open-space moves reserve all independent tiles before displacing neighbors. Invalid and cancelled plans leave the source unchanged; preview and commit share the plan. A one-entry cache avoids recomputing the same snapped destination. The group menu explicitly compacts selected tiles; dragging preserves their relative positions.
+
+Drop routing distinguishes root group cells, expanded folder children, tile-over-tile folder creation/addition, and independent board space. Folder dwell uses tile overlap, including the original grab offset, rather than pointer-centering. Waiting/ready previews and a dispatcher timer keep a stationary hover visible. Single selections can create folders; batches can enter existing folders. Nested folders are rejected.
+
 ## Catalog and shell
 
 `AppCatalog` enumerates AppsFolder and user/common Start-menu .lnk/.url files on dedicated STA threads. User entries win for equal relative paths. SHGetFileInfo supplies localized display names; directory paths remain available for `AppListTree`.

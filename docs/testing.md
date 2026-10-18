@@ -17,6 +17,7 @@ dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory 
 ./scripts/test-app-menus.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-release-info.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-placement.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+./scripts/test-editing.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-scrolling.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-file-pinning.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-bundled-tiles.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
@@ -36,6 +37,7 @@ dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory 
 | app-menus | Pin/unpin/menu refresh, default/explicit directory destinations with immediate Shell icons, preview command availability, canonical verbs read for real/missing files; no shell verb invocation |
 | release-info | Version, licenses, original migration backup, upgrade record, Eight languages × light/dark settings, global tile and Start accent |
 | placement | Independent group anchors, collision preview/cancel, unchanged child cells, standalone footprint/no header, persistence, inline name events and normal/independent folder expansion |
+| editing | Native selection clicks suppress launches, rigid previews/cancel/commit, one-step undo/redo/unpin, existing/expanded folder moves, parent-child exclusion, real save-lock rollback, eight languages × two themes, Escape and reopen |
 | scrolling | Twelve axis/theme cases and 32 stationary-pointer scrolled-group previews without offset feedback or repeated layout |
 | bundled-tiles | Twelve packages, four sizes, local clicks, retained state, photo binding/file handles, custom colors and a real host CPU-to-frame path |
 | file-pinning | Cold directory pin, single-instance transfers, exact shortcut target, deduplication and rejected missing targets |
@@ -58,6 +60,7 @@ dotnet test tests/ReStart.Core.Tests/ReStart.Core.Tests.csproj -c Release -p:Deb
 | --- | --- |
 | Monitors | Working area, 100/125/150/200% DPI, portrait and mixed-DPI monitors |
 | Dragging | Header/tile drags, overlap/cancel/edge scroll, standalone neighbors, folder extraction, save/reopen |
+| Editing | Ctrl+E, click/keyboard selection, batch drag from different grab points, group/folder/open-space destinations, hold-to-folder preview, Ctrl+Z/Y, text-field undo, save/reopen |
 | Input | Bare Win then E, Enter, Win+E/D/L/Tab, IME composition, Ctrl+F, Esc, navigation |
 | Taskbar | Blank/app/secondary taskbar clicks close Start and preserve the original click; settings and drags stay open |
 | Shell | Win32/Store/link/URL launch; only supported app verbs; missing old pins |

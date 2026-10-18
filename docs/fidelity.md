@@ -15,6 +15,7 @@ Portable builds target Windows 10/11 on x64 and ARM64. Development and native au
 | Home | Full-screen working area, rail, pinned/all-apps views; reopening resets search, overlays and scroll |
 | Tiles | Four sizes; movable rectangular groups; inline names and expandable tile folders |
 | Placement extensions | Independent tiles, content-sized group width, half-cell horizontal anchors, horizontal scrolling and individual colors |
+| Editing extensions | Explicit edit mode, multi-selection moves and session-only layout undo/redo; these are ReStart additions |
 | Search | Immediate app-name search, including during catalog loading; no file/settings index, Web or Cortana |
 | Catalog | AppsFolder and Start-menu links with native display names and icons; ambiguous shortcuts may appear twice |
 | Menus | Pin/unpin and available canonical Shell commands; Jump Lists are not implemented |

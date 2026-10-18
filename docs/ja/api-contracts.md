@@ -12,6 +12,8 @@
 | TileLayout / GroupLayout | 計算・プレビューは非破壊。グループ確定はアンカーだけを変更 |
 | FolderExpansion | 展開は一時状態。保存した行を変更しない |
 | LayoutEditor | ID を保持して所有権を移動。単独タイルはグループの追加先にしない |
+| LayoutHistory | グループだけを深くコピー。メモリ上の上限付き履歴。保存成功後に記録し、同一保存ではやり直しを保持 |
+| TileBatchMove | コピー上の非破壊プラン。ID・相対位置を保ち、無効 / 入れ子を一括拒否。選択全体を先に予約 |
 | LayoutStore | 原本保全後に置換。将来の schema / 保存元アプリ版は上書き禁止 |
 | AppCatalog / ShellCommands | COM は STA。有効な言語非依存 verb を読み、実行時に再照会 |
 | SingleInstanceGate | パス・版に依存しないユーザー / セッション単位 |

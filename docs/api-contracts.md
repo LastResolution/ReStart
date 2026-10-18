@@ -13,6 +13,8 @@ App, Core and TileHost emit XML documentation. Missing public/protected comments
 | GroupLayout | Pure bounds and previews; Move alone commits anchors/collision displacement, never child coordinates |
 | FolderExpansion | Temporary inline geometry; preserve persisted root rows |
 | LayoutEditor | Transfer ownership while preserving IDs; Detach creates an independent entry; no nested folders |
+| LayoutHistory | Deep group-only snapshots; bounded session memory; record after successful writes; no-op saves preserve redo |
+| TileBatchMove | Copy before planning; preserve IDs and relative offsets; reject invalid/nested selections atomically; reserve the selection before reflowing others |
 | LayoutStore | Preserve original migration/upgrade bytes before atomic replacement; protect unsupported/newer producers |
 | AppCatalog | Shell COM stays on STA threads; share only frozen WPF images; dispatch UI updates |
 | AppPinning | One pin per app identity, including folder children; independent tiles cannot accept another app as a group destination |
