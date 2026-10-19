@@ -22,6 +22,7 @@ dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory 
 ./scripts/test-scrolling.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-file-pinning.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-bundled-tiles.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+./scripts/test-tile-data.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/package.ps1 -Runtime win-x64
 ./scripts/test-lifecycle.ps1 -Executable artifacts/publish/win-x64/ReStart.exe
 ~~~
@@ -41,14 +42,15 @@ dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory 
 | folder-drops | Twelve real dispatcher-timer cases (independent → group / grouped → folder × normal/edit × same/mixed sizes), 192 source/target-size and grab-position cases, four deadline/edge/drift cases, earlier-neighbor header collisions, persisted identities, one-step undo/redo, cancellation, scrolling, batch grouping and folder-as-root grouping |
 | editing | Native selection clicks suppress launches, rigid previews/cancel/commit, one-step undo/redo/unpin, existing/expanded folder moves, parent-child exclusion, real save-lock rollback, eight languages × two themes, Escape and reopen |
 | scrolling | Twelve axis/theme cases and 32 stationary-pointer scrolled-group previews without offset feedback or repeated layout |
-| bundled-tiles | Twelve packages, four sizes, local clicks, retained state, photo binding/file handles, custom colors and a real host CPU-to-frame path |
+| bundled-tiles | Fifteen packages, four sizes, local clicks, retained state, photo binding/file handles, custom colors and a real host CPU-to-frame path |
+| tile-data | Actual worker rendering for weather/feed/local JSON, feed clicks, file producer updates, DPAPI round-trip/corruption, no imported bindings, saved-secret handling, eight languages × two themes and hide cleanup; no external requests |
 | file-pinning | Cold directory pin, single-instance transfers, exact shortcut target, deduplication and rejected missing targets |
 | icons | Nine Shell file/folder/shortcut patterns, four sizes × three scales, folder previews and status expiry/replacement |
 | lifecycle | Ten preview launches across two copied paths leave one primary process; duplicate smoke returns code 2 |
 
-Fixtures use isolated preview state, disable hooks/startup/network/credential writes, and output PNG/JSON under artifacts. Placement copies binaries into a fresh directory. The WPF root can exceed the CI desktop's size, and tests verify the requested render width. Inspect images as well as success fields. Native routed/composition events are not physical OS input.
+Fixtures use isolated preview state, disable production hooks/startup/update requests and use temporary local connection files, and output PNG/JSON under artifacts. Placement copies binaries into a fresh directory. The WPF root can exceed the CI desktop's size, and tests verify the requested render width. Inspect images as well as success fields. Native routed/composition events are not physical OS input.
 
-Core tests include semantic release ordering, bounded/invalid feeds, unauthenticated feed/rate/network distinctions, schema 1–3 originals retained through later saves, future producer protection and repeated group collisions without internal tile movement. Startup tests use `HKCU/Software/ReStart.Tests/<GUID>`, never the production Run value.
+Core tests include semantic release ordering, bounded/invalid feeds, unauthenticated feed/rate/network distinctions, schema 1–3 originals retained through later saves, future producer protection and repeated group collisions without internal tile movement. Data-source tests use injected HTTP handlers and temporary files for selectors, RSS/Atom, response/depth bounds, redirects, credentials, timeouts, cancellation, concurrency, conditional reads and stale-cache backoff. Startup tests use `HKCU/Software/ReStart.Tests/<GUID>`, never the production Run value.
 
 For local coverage, build portable symbols and allow the neutral mapped source paths. Keep coverage reports and symbols outside release packages:
 

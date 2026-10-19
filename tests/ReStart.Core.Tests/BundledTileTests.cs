@@ -55,9 +55,27 @@ public sealed class BundledTileTests
     }
 
     [Fact]
+    public void ImportCopiesOnlySourceAndManifestWithoutHostConnections()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "ReStart-import-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var input = Path.Combine(directory, "input"); Directory.CreateDirectory(input);
+            File.WriteAllText(Path.Combine(input, "manifest.json"), "{\"title\":\"Data\",\"capabilities\":[\"data.sources\"],\"dataSources\":{\"service\":{}}}");
+            File.WriteAllText(Path.Combine(input, "tile.js"), "function render(){return {text:'Ready'};}");
+            File.WriteAllBytes(Path.Combine(input, "data-bindings.dat"), [1, 2, 3]);
+            File.WriteAllText(Path.Combine(input, "host-bindings.json"), "{}");
+            var packages = new ScriptTilePackages(Path.Combine(directory, "installed")); var tile = packages.Import(Path.Combine(input, "manifest.json"));
+            Assert.Equal(new[] { "manifest.json", "tile.js" }, Directory.GetFiles(packages.Folder(tile.ScriptId)).Select(Path.GetFileName).Order());
+            Assert.False(File.Exists(packages.DataBindingPath(tile.ScriptId)));
+        }
+        finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
+    }
+
+    [Fact]
     public void EveryPackageRendersAllLanguagesAndSizesWithAndWithoutHostData()
     {
-        Assert.Equal(12, ScriptTilePackages.BundledIds.Count);
+        Assert.Equal(15, ScriptTilePackages.BundledIds.Count);
         foreach (var id in ScriptTilePackages.BundledIds)
         {
             var manifest = ScriptTilePackages.BundledManifest(id);
@@ -69,7 +87,9 @@ public sealed class BundledTileTests
                     {
                         var frame = JsTileRunner.Render(new(source, Context(manifest, language, size, hostData)));
                         frame.Validate(); Assert.NotEmpty(frame.Text); Assert.NotEmpty(frame.BackgroundEnd);
-                        var expectedLayout = id == "slideshow" && size != "small" ? "caption" : size switch { "small" or "medium" => "centered", "large" => "stacked", _ => "split" };
+                        var expectedLayout = id == "slideshow" && size != "small" ? "caption" : id == "weather" && !hostData ? "centered"
+                            : id is "feed" or "json-monitor" ? size is "small" or "medium" ? "centered" : "overlay"
+                            : size switch { "small" or "medium" => "centered", "large" => "stacked", _ => "split" };
                         Assert.Equal(expectedLayout, frame.Layout);
                         if (size == "small") { Assert.Empty(frame.Detail); Assert.Empty(frame.Visual); }
                         var click = JsTileRunner.Render(new(source, Context(manifest, language, size, hostData, frame.State, true)));
@@ -92,6 +112,12 @@ public sealed class BundledTileTests
         calendar = new { shortDate = "10/18/2026", weekday = "Sunday", month = "October", day = 18 },
         state = state ?? JsonSerializer.SerializeToElement(new { }),
         @event = click ? new { type = "click" } : null,
+        data = hostData ? new
+        {
+            weather = new { status = "ready", value = new { temperature_2m = 18, weather_code = 2, wind_speed_10m = 12 }, stale = false },
+            feed = new { status = "ready", value = new { title = "Sample news", items = new[] { new { title = "A headline", summary = "Summary" } } }, stale = false },
+            service = new { status = "ready", value = new { text = "Connected", detail = "Sample service", progress = .75 }, stale = false }
+        } : null,
         system = hostData ? new SystemMetricsSnapshot(DateTimeOffset.Now, 42.5, 16, 32UL << 30, 12UL << 30, 62.5, 91800,
             [new("C:\\", 512L << 30, 214L << 30, 58.2)], 425984, 65536, 74, false) : null,
         slideshow = new { available = hostData, count = hostData ? 2 : 0, index = 0 }

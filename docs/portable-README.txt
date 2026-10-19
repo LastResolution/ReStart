@@ -14,15 +14,17 @@ Edit layout / Ctrl+E selects tiles without opening apps. Drag a selection togeth
 Move to group collects it into a compact block. Done leaves editing.
 Ctrl+Z undoes layout edits; Ctrl+Y or Ctrl+Shift+Z redoes. History is session-only.
 Type immediately to search. Explorer: Pin to ReStart (Windows 11: Show more options).
-Settings -> JavaScript tiles: twelve bundled examples. Normal click operates
+Settings -> JavaScript tiles: fifteen bundled examples. Normal click operates
 the tile; use right-click to edit JS/settings or choose a photo folder.
-Host APIs provide PC time and aggregate metrics, without script file/network access.
+Host APIs provide PC time, aggregate metrics and opt-in cached Web API/feed/file data.
+Configure data sources sets the URL/file and optional credential, encrypted locally.
+Weather defaults to Berlin coordinates, not the PC location; see the online tile guide.
 
 Eight UI languages; dark/light/system/high-contrast themes.
 Settings -> About: version and licenses. Layout/data: migration and rollback.
 Updates: public GitHub checks without API keys; download/install manually.
 Data: %LOCALAPPDATA%\ReStart\layout.json; schema 1-3 upgrade to 4 with backups.
-Layout export excludes JS sources and photo-folder bindings; keep tiles separately.
+Layout export excludes JS sources and photo/data bindings; keep tiles separately.
 
 Remove: disable startup and Explorer integration, exit, delete installation.
 Local data remains separately. Packages are unsigned. MIT License.

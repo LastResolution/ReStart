@@ -52,6 +52,15 @@
       <Setter Property="FontSize" Value="14" />
       <Setter Property="SelectionBrush" Value="{DynamicResource AccentBrush}" />
     </Style>
+    <Style TargetType="PasswordBox">
+      <Setter Property="Background" Value="{DynamicResource TileBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+      <Setter Property="CaretBrush" Value="{DynamicResource TextBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource MutedBrush}" />
+      <Setter Property="Padding" Value="10,8" />
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="SelectionBrush" Value="{DynamicResource AccentBrush}" />
+    </Style>
     <Style TargetType="ContextMenu">
       <Setter Property="Background" Value="{DynamicResource PanelBrush}" />
       <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />

@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "title": "JSON monitor",
+  "localizedTitles": {
+    "en": "JSON monitor",
+    "ja": "JSONモニター",
+    "de": "JSON-Monitor",
+    "fr": "Moniteur JSON",
+    "es": "Monitor JSON",
+    "ko": "JSON 모니터",
+    "zh-Hans": "JSON 监视器",
+    "zh-Hant": "JSON 監視器"
+  },
+  "refreshSeconds": 1,
+  "capabilities": [
+    "data.sources"
+  ],
+  "dataSources": {
+    "service": {
+      "format": "json",
+      "refreshSeconds": 5,
+      "suggestedAccess": "file"
+    }
+  },
+  "settings": {
+    "color": "#274F49",
+    "colorEnd": "#142335",
+    "accent": "#91DDE2",
+    "labels": {
+      "en": {
+        "connect": "Configure source",
+        "loading": "Loading…",
+        "unavailable": "Unavailable",
+        "cached": "Cached"
+      },
+      "ja": {
+        "connect": "接続先を設定",
+        "loading": "読み込み中…",
+        "unavailable": "取得できません",
+        "cached": "前回のデータ"
+      },
+      "de": {
+        "connect": "Quelle einrichten",
+        "loading": "Laden…",
+        "unavailable": "Nicht verfügbar",
+        "cached": "Gespeichert"
+      },
+      "fr": {
+        "connect": "Configurer la source",
+        "loading": "Chargement…",
+        "unavailable": "Indisponible",
+        "cached": "En cache"
+      },
+      "es": {
+        "connect": "Configurar fuente",
+        "loading": "Cargando…",
+        "unavailable": "No disponible",
+        "cached": "En caché"
+      },
+      "ko": {
+        "connect": "연결 설정",
+        "loading": "불러오는 중…",
+        "unavailable": "사용할 수 없음",
+        "cached": "이전 데이터"
+      },
+      "zh-Hans": {
+        "connect": "配置数据源",
+        "loading": "加载中…",
+        "unavailable": "暂不可用",
+        "cached": "缓存"
+      },
+      "zh-Hant": {
+        "connect": "設定資料來源",
+        "loading": "載入中…",
+        "unavailable": "暫時無法使用",
+        "cached": "快取"
+      }
+    }
+  }
+}

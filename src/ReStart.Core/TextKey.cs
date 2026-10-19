@@ -3,6 +3,38 @@ namespace ReStart.Core;
 /// <summary>Stable, language-independent identifiers for all application-owned UI text.</summary>
 public enum TextKey
 {
+    /// <summary>Opens the local data-source connection editor.</summary>
+    ConfigureTileData,
+    /// <summary>Requests an explicit data refresh.</summary>
+    RefreshTileData,
+    /// <summary>Explains host-managed requests and local-only credentials.</summary>
+    TileDataHelp,
+    /// <summary>Enables a chosen connection.</summary>
+    TileDataEnable,
+    /// <summary>Labels the connection type.</summary>
+    TileDataAccess,
+    /// <summary>Names a Web API or RSS connection.</summary>
+    TileDataWeb,
+    /// <summary>Names a local-file connection.</summary>
+    TileDataFile,
+    /// <summary>Labels the user-selected address or path.</summary>
+    TileDataLocation,
+    /// <summary>Chooses a local JSON or feed file.</summary>
+    TileDataChooseFile,
+    /// <summary>Labels an optional JSON Pointer response selector.</summary>
+    TileDataSelector,
+    /// <summary>Labels the credential's request header.</summary>
+    TileDataHeader,
+    /// <summary>Labels a password-protected credential input.</summary>
+    TileDataSecret,
+    /// <summary>Explains credential retention and destination changes.</summary>
+    TileDataSecretHint,
+    /// <summary>Removes a previously saved credential.</summary>
+    TileDataClearSecret,
+    /// <summary>Reports invalid or unavailable local connection settings.</summary>
+    TileDataInvalid,
+    /// <summary>Confirms local connection settings were saved.</summary>
+    TileDataSaved,
     /// <summary>Explains the pending overlap that collects independent tiles into an ordinary group.</summary>
     HoldToCreateGroup,
     /// <summary>Identifies an armed independent-tile grouping destination.</summary>

@@ -21,6 +21,8 @@ dotnet test ReStart.slnx -c Release --no-build
 ./scripts/test-placement.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-folder-drops.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-editing.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+./scripts/test-bundled-tiles.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+./scripts/test-tile-data.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/package.ps1 -Runtime win-x64
 ./scripts/test-lifecycle.ps1 -Executable artifacts/publish/win-x64/ReStart.exe
 ~~~
@@ -36,9 +38,12 @@ dotnet test ReStart.slnx -c Release --no-build
 | placement | 独立アンカー、押し出しプレビュー / 取消、内部座標、単独タイルの実寸、保存、直接命名、フォルダー |
 | folder-drops | 実タイマー12ケース、大小とつかむ位置の192ケース、短い待機・端・揺れの4ケース、名前の領域と上の項目の衝突、ID・Undo / Redo・取消・スクロール・複数選択とフォルダー本体のグループ化を確認 |
 | editing | 選択時の起動抑制、複数移動のプレビュー / 取消 / 確定、Undo / Redo、親子の排他選択、フォルダー内外、実ファイルロックによる保存失敗の復元、8言語×2テーマ、Esc・再表示 |
+| tile-data | 実ワーカーへの天気・フィード・ファイル入力、クリック、生成アプリの更新、DPAPI・破損・保存済み認証の扱い、8言語×2テーマ・非表示の後始末。外部通信なし |
 | lifecycle | コピー先2か所から10回起動して主プロセス1個、重複 smoke はコード2 |
 
 本番の設定・フック・自動起動・更新通信・資格情報を変更しないプレビューを使います。PNG / JSON は artifacts に保存し、画像も確認します。イベントと文字合成は物理 OS 入力の検証ではありません。
+
+データ入力は模擬 HTTP と一時ファイルで選択・RSS/Atom・応答上限・リダイレクト・認証・期限・中止・同時数・条件付き取得・キャッシュを検証します。
 
 Core は繰り返し衝突・保存後の内部位置保持、移行原本、将来版保護、更新データ上限・認証 / 接続障害を確認します。資格情報・Run 登録のテストは専用 GUID の対象だけを使います。
 
@@ -46,8 +51,8 @@ Core は繰り返し衝突・保存後の内部位置保持、移行原本、将
 
 first-input は WPF の非アクティブ通知を無効にし、実際の前面ウィンドウ通知で中間ウィンドウから別ウィンドウへ切り替える検証も行います。所有ダイアログの除外、設定無効時、監視の解除を確認します。実タスクバーでは複数ウィンドウのプレビューから選んだ場合と再表示後の繰り返しも確認してください。
 
-## v1.0 の現行契約
+## 現行契約
 
-スキーマ4へ旧1～3から原本を保存して移行します。8言語、12種類のJSタイル、4ワーカー共有、PC時刻・集計メトリクス・選択フォルダ写真・タイル内クリックに対応します。新規カスタムタイルは既存グループに割り込まず空き場所へ独立配置します。下端グループの移動中も盤面範囲を保ち、同一プレビューの再レイアウトを省きます。更新確認は公開APIを認証なしで利用し、資格情報UIはありません。最新の詳細はリンク先の英語版と[JSガイド](javascript-tiles.md)を参照してください。
+スキーマ4へ旧1～3から原本を保存して移行します。8言語、15種類のJSタイル、4ワーカー共有、PC時刻・集計メトリクス・選択フォルダ写真・タイル内クリック・明示したWeb API/フィード/ローカルファイル入力に対応します。新規カスタムタイルは既存グループに割り込まず空き場所へ独立配置します。データ接続はネイティブ画面で設定し、現ユーザーのDPAPIで暗号化して出力から除外します。更新確認は公開APIを認証なしで利用し、データ接続認証とは分離します。最新の詳細はリンク先の英語版と[JSガイド](javascript-tiles.md)を参照してください。
 
 開閉アニメーションの検証は WPF の実際のクロックを使い、段階的なタイル表示、途中の検索、閉じる途中の再表示、タスクバーからの終了、アニメーション無効時と終了時の後始末を確認します。PNG は HWND の不透明度を同じアルファとして合成した、独立したデモ画面です。

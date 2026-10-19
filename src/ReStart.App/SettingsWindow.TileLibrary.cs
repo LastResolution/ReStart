@@ -64,6 +64,7 @@ internal sealed partial class SettingsWindow
                             var tile = _main.AddScriptPackage(entry.ManifestPath);
                             if (tile == null) return;
                             if (entry.Manifest!.Capabilities.Contains("images.slideshow")) _main.ChooseSlideshowFolder(tile, this);
+                            if (entry.Manifest.Capabilities.Contains("data.sources")) _main.ConfigureTileData(tile, this);
                             _feedback.Text = L.T(K.StatusScriptAdded);
                         };
                         LibraryTiles.Children.Add(button);

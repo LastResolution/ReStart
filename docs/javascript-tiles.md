@@ -4,7 +4,7 @@
 
 ![Bundled gallery](images/live-tiles.png)
 
-Right-click the background or a group → Add live tile, or open Settings → JavaScript tiles, to choose twelve ready-to-use packages. Adding one does not open an editor. Normal clicks send a local event; right-click to edit JS/settings, reload or select a photo folder. Create sample is an explicit authoring action that opens Notepad.
+Right-click the background or a group → Add live tile, or open Settings → JavaScript tiles, to choose fifteen ready-to-use packages. Adding one does not open a code editor. Connected tiles open native connection settings; no requests start until you save an enabled connection. Normal clicks send a local event; right-click to edit JS/settings, reload, configure data or select a photo folder. Create sample is an explicit authoring action that opens Notepad.
 
 | Package | Display / click |
 | --- | --- |
@@ -20,6 +20,9 @@ Right-click the background or a group → Add live tile, or open Settings → Ja
 | battery | Charge and charging state |
 | storage | Used/free capacity / next fixed drive |
 | slideshow | Selected-folder photos / next image |
+| weather | Open-Meteo temperature and conditions for configured coordinates |
+| feed | RSS/Atom headlines / next headline |
+| json-monitor | A Web API or selected local JSON file, with optional progress |
 
 ## Package
 
@@ -58,6 +61,7 @@ render(ctx) is synchronous and returns JSON display data. ReStart draws native v
 | settings / state | Manifest settings / previous successful state |
 | system | Aggregate snapshot with system.metrics, otherwise null |
 | slideshow | { available, count, index } with images.slideshow, otherwise null |
+| data | Named cached snapshots with data.sources, otherwise null; connections and credentials are excluded |
 
 Clocks use the PC, without internet time. Use monotonicMs (system uptime) for elapsed durations, unixMs for wall-clock dates. Date/time/time-zone changes invalidate visible frames. Hiding Start stops updates and retires workers; successful state survives reopening but resets on reload/exit. State is not persisted. The focus timer has no alarm or background notification.
 
@@ -92,7 +96,7 @@ function render(ctx) {
 }
 ```
 
-Use `ctx.bounds.width`, `height` and `scale` for additional content thresholds, with `ctx.size` as the initial fallback. Layouts reserve separate text/chart areas, so scripts do not need pixel coordinates. The twelve sources under `Examples` are complete responsive styling examples.
+Use `ctx.bounds.width`, `height` and `scale` for additional content thresholds, with `ctx.size` as the initial fallback. Layouts reserve separate text/chart areas, so scripts do not need pixel coordinates. The fifteen sources under `Examples` are complete responsive styling examples.
 
 ## Host capabilities
 
@@ -103,6 +107,61 @@ CPU uses a language-neutral Windows PDH total processor-time counter. CPU/networ
 images.slideshow supplies an opaque current image only after a native folder selection. Scripts see availability/count/index, never paths, filenames or pixels. Return image: "current". Supported immediate files: JPG/JPEG/PNG/BMP/GIF, up to 1,000 candidates, 20 MiB each, decoded to 768-pixel width; GIF is a still frame. settings.intervalSeconds is clamped to 5–3,600 (default 15). Click advances and automatic progression continues from there. Background loading closes file handles; animation enables crossfade. High contrast and custom tile colors suppress image overlays.
 
 The folder binding is local installed host-bindings.json, never imported from a package or included in layout exports. Choose a folder again on another PC.
+
+## Weather, feeds, Web APIs and application data
+
+![Connected tiles rendered from fictional local fixture data](images/connected-data.png)
+
+`data.sources` lets the host read explicitly configured inputs asynchronously. JavaScript remains synchronous: use the latest `ctx.data` snapshot, without `fetch`, promises or file APIs. Network access is opt-in for each installed package, independent of update checks.
+
+```json
+{
+  "version": 1, "title": "Service status", "refreshSeconds": 1,
+  "capabilities": ["data.sources"],
+  "dataSources": {
+    "service": { "format": "json", "refreshSeconds": 60, "jsonPointer": "/status" }
+  },
+  "settings": {}
+}
+```
+
+```js
+function render(ctx) {
+  const source = ctx.data?.service;
+  return {
+    text: source?.value?.text || (source?.status === "loading" ? "Loading…" : "Configure source"),
+    detail: source?.stale ? "Showing cached data" : "",
+    background: "#12344B", foreground: "#FFFFFF"
+  };
+}
+```
+
+Right-click the tile → **Configure data sources…**. Choose **Web API / feed** or **Local data file**, enter its address or select a file, and save. HTTP uses GET only. HTTPS and loopback HTTP (`http://localhost:8765/status`, for example) are accepted. No script can start a server, write a file or launch another application. Applications can publish JSON through an existing local endpoint or an atomically replaced file; [write-tile-data.ps1](../examples/integrations/write-tile-data.ps1) demonstrates the file route. Run it yourself, then select the resulting file in **JSON monitor**. No companion script runs automatically.
+
+Each `dataSources` entry declares:
+
+| Field | Contract |
+| --- | --- |
+| Source ID | 1–32 lower-case ASCII letters/digits/underscore/hyphen; first character a letter; at most four sources |
+| format | `json` (default) or `feed` (RSS 2.0 / Atom) |
+| refreshSeconds | 1–86,400; actual minimum 30 seconds for HTTP, 1 second for files |
+| jsonPointer | Optional [RFC 6901](https://www.rfc-editor.org/rfc/rfc6901) selector, at most 256 characters; empty selects the root; use `~1` for `/` and `~0` for `~` |
+| suggestedUrl | Optional public example URL, at most 2,048 characters; a suggestion never enables a connection |
+| suggestedAccess | `http` (default) or `file`; packages cannot select a local file |
+
+The native selector overrides the package selector. Clearing it selects the root. Prefer selecting a small object instead of sending a full API response to a worker. A feed becomes `{ title, items: [{ title, summary, url, published }] }`, with at most 20 items and plain, shortened text; XML entities/DTDs are rejected. Links are display data and are never opened by the host. The bundled feed cycles headlines on click.
+
+`ctx.data.<id>` contains `status` (`unconfigured`, `disabled`, `loading`, `ready`, `error`), `value` (initially `null`), `updatedAt`, `checkedAt` (ISO timestamps or `null`), `stale` and `error` (`null` or `{ code, httpStatus }`). `updatedAt` records the last successful read/revalidation; `checkedAt` also advances on failure. Error codes include `http`, `network`, `timeout`, `io`, `file`, `format`, `selector`, `tooLarge`, `redirect` and `configuration`. Error text, connection addresses and credentials are not supplied. Failed updates retain the last good value and set `stale`; scripts can keep useful content visible while indicating its age.
+
+Reads are capped at 256 KiB before parsing; JSON depth is 12. Selected values share an 8,192-unit serialized JSON budget per tile. At most four host reads run concurrently, each with an eight-second deadline after acquiring a slot. In-flight reads coalesce, ETag/Last-Modified allow HTTP revalidation, and failures back off exponentially up to an hour. **Refresh data now** bypasses the schedule, with a five-second throttle. Hiding Start cancels reads; cached values survive reopening in memory and disappear on reload/exit. Files must have an explicit absolute local path; UNC paths and direct reparse points are rejected.
+
+Optional credentials go in the native password field, usually as `Authorization: Bearer …` or a provider-specific header such as `X-API-Key`. A blank password field keeps the saved value for the same server; changing server or selecting a file clears it. Connection-control headers and cookies cannot be configured. Requests have no ambient credentials or cookie jar, and redirects are limited to three on the same origin. Use the final URL for cross-origin feed redirects. Follow the provider's terms and polling limits.
+
+URLs, selected paths, selectors and credentials are stored together in installed `data-bindings.dat`, encrypted with Windows DPAPI for the current user. They are not imported with a package, included in layout exports or passed to JS. Configure them again on another PC. DPAPI protects storage, not against other programs already running as the same Windows user. Never put keys or personal URLs in a shared manifest or script. A provider can still return sensitive values in its response; choose the selector and package accordingly.
+
+### Weather location
+
+The weather example uses **Berlin (52.52, 13.41)**, not your PC's region. ReStart does not infer location from IP or request device location. Open **Configure data sources…**, change `latitude` and `longitude` in the example URL, and keep the fields `current=temperature_2m,weather_code,wind_speed_10m` with selector `/current`. Then **Edit tile settings** → change `settings.location` to the place name, save and reload. The tile displays that name with Open-Meteo attribution. Units are Celsius and km/h. The [Open-Meteo documentation](https://open-meteo.com/en/docs) provides a coordinate/API builder; its [service terms](https://open-meteo.com/en/terms) apply, including the non-commercial conditions of the public free endpoint.
 
 ## Native styling
 
@@ -122,7 +181,7 @@ Keep medium headlines short, with a dark gradient, white text and brighter accen
 
 Any number of visible tiles share four isolated workers; there is no eight-tile cutoff. Every render uses a fresh Jint realm, limited to 20,000 statements, recursion 32, 8 MB engine allocation and 100 ms. The parent enforces a one-second response deadline (ten seconds for cold process startup). Each worker has a 192 MB Job Object and cannot create child processes. Errors retain the last good frame and appear in the tooltip.
 
-CLR, Node, filesystem, network, DOM, shell launch, callbacks, eval/string code generation and modules are unavailable. Source/manifest limits are 64/16 KiB; settings/state 8,192 UTF-16 units each, context 32,768, request/response 131,072/16,384. Resource isolation protects responsiveness, not OS privileges. Inspect packages before import. Editing explicitly opens Notepad instead of the .js association.
+CLR, Node, direct filesystem/network, DOM, shell launch, callbacks, eval/string code generation and modules are unavailable. Source/manifest limits are 64/16 KiB; settings/state 8,192 UTF-16 units each, context 32,768, request/response 131,072/16,384. Resource isolation protects responsiveness, not OS privileges. Inspect packages before import. Editing explicitly opens Notepad instead of the .js association.
 
 Normal data: %LOCALAPPDATA%\ReStart\tiles\<id>. Preview data is isolated beside its executable. Keep TileHost and Examples with the app. Layout export contains installed IDs, not JS sources or image bindings.
 

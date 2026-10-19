@@ -59,5 +59,6 @@ public partial class MainWindow
     {
         var tile = AddScriptPackage(path);
         if (tile != null && capabilities.Contains("images.slideshow")) ChooseSlideshowFolder(tile, this);
+        if (tile != null && capabilities.Contains("data.sources")) ConfigureTileData(tile, this);
     }
 }

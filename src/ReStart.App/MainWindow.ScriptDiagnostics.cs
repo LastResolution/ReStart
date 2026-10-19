@@ -28,14 +28,14 @@ public partial class MainWindow
             var tiles = ScriptTilePackages.BundledIds.Select(id => fixture._scriptPackages.Import(ScriptTilePackages.BundledManifestPath(id))).ToArray();
             for (var group = 0; group < 3; group++)
             {
-                var contents = tiles.Skip(group * 4).Take(4).ToList();
+                var contents = tiles.Skip(group * 5).Take(5).ToList();
                 for (var i = 0; i < contents.Count; i++) { contents[i].Column = i % 2 * 4; contents[i].Row = i / 2 * 2; }
                 fixture.Document.Groups.Add(new() { Name = new[] { "Everyday", "Rhythm", "System & photos" }[group], Column = group, Row = 0, Tiles = contents });
             }
             var images = Path.Combine(directory, "images"); Directory.CreateDirectory(images);
             WriteFixtureImage(Path.Combine(images, "a.png"), Colors.Teal);
             WriteFixtureImage(Path.Combine(images, "b.png"), Colors.Coral);
-            var photo = tiles[^1]; SlideshowSource.Bind(fixture._scriptPackages.SlideshowBindingPath(photo.ScriptId), images);
+            var photo = tiles[ScriptTilePackages.BundledIds.ToList().IndexOf("slideshow")]; SlideshowSource.Bind(fixture._scriptPackages.SlideshowBindingPath(photo.ScriptId), images);
             fixture.ApplyAppearance(); fixture.RenderGroups(); fixture.UpdateLayout();
             async Task RenderUntil(Func<bool> ready)
             {
@@ -48,8 +48,8 @@ public partial class MainWindow
                 }
                 throw new InvalidOperationException("Bundled tiles did not produce the expected frames: " + string.Join(" | ", fixture._scriptViews.Select(v => v.Button.ToolTip)));
             }
-            await RenderUntil(() => fixture.ScriptFrameCount == 12 && fixture._scriptFrames[photo.Id].Image == "current" && fixture._scriptFrames[tiles[2].Id].Series.Length > 1);
-            Require(fixture._scriptViews.Count == 12, "Not all twelve bundled tiles are visible to the worker pool.");
+            await RenderUntil(() => fixture.ScriptFrameCount == tiles.Length && fixture._scriptFrames[photo.Id].Image == "current" && fixture._scriptFrames[tiles[2].Id].Series.Length > 1);
+            Require(fixture._scriptViews.Count == tiles.Length, "Not all bundled tiles are visible to the worker pool.");
             fixture.SaveScreenshot(Path.Combine(Path.GetDirectoryName(snapshotPath)!, "bundled-wide.png"));
             fixture.SaveTileShowcase(Path.Combine(Path.GetDirectoryName(snapshotPath)!, "tile-showcase.png"));
             var focus = tiles[4];
@@ -68,7 +68,7 @@ public partial class MainWindow
             foreach (var size in new[] { TileSize.Small, TileSize.Medium, TileSize.Large })
             {
                 foreach (var tile in tiles) tile.Size = size;
-                fixture.RenderGroups(); fixture.UpdateLayout(); await RenderUntil(() => fixture.ScriptFrameCount == 12);
+                fixture.RenderGroups(); fixture.UpdateLayout(); await RenderUntil(() => fixture.ScriptFrameCount == tiles.Length);
                 foreach (var view in fixture._scriptViews)
                 {
                     var plot = (Grid)view.Body.Parent;
@@ -139,7 +139,7 @@ public partial class MainWindow
             finally { settings.Close(); }
             var context = new ContextMenu(); var liveMenu = fixture.AddLiveTileMenu(context);
             stage = "context menu library";
-            Require(liveMenu.Items.OfType<MenuItem>().Count(item => item.Tag is string id && ScriptTilePackages.BundledIds.Contains(id)) == 12,
+            Require(liveMenu.Items.OfType<MenuItem>().Count(item => item.Tag is string id && ScriptTilePackages.BundledIds.Contains(id)) == tiles.Length,
                 "The right-click menu does not expose all bundled tiles.");
             var libraryMenu = liveMenu.Items.OfType<MenuItem>().Single(item => Equals(item.Tag, "TileLibrary"));
             await fixture.PopulateScriptLibraryMenuAsync(libraryMenu);
@@ -188,7 +188,7 @@ public partial class MainWindow
             var placementChecks = fixture.VerifyScriptGeometry(tiles[8], Path.GetDirectoryName(snapshotPath)!);
             stage = "complete launcher showcase";
             await fixture.SaveLauncherShowcaseAsync(tiles, this, Path.GetDirectoryName(snapshotPath)!);
-            return new(12, 4, 2, 1, 1, 1, 1, 2, 2, 8, placementChecks);
+            return new(tiles.Length, 4, 2, 1, 1, 1, 1, 2, 2, 8, placementChecks);
         }
         catch (InvalidOperationException ex) { throw new InvalidOperationException($"Bundled tile verification ({stage}): {ex.Message}", ex); }
         finally { fixture.Exit(); L.SetLanguage(language); ApplyAppearance(); }

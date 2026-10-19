@@ -129,6 +129,7 @@ internal sealed partial class SettingsWindow : Window
                     var tile = _main.AddBundledScriptTile(id);
                     if (tile == null) return;
                     if (manifest.Capabilities.Contains("images.slideshow")) _main.ChooseSlideshowFolder(tile, this);
+                    if (manifest.Capabilities.Contains("data.sources")) _main.ConfigureTileData(tile, this);
                     _feedback.Text = L.T(K.StatusScriptAdded);
                 };
                 bundled.Children.Add(button);
