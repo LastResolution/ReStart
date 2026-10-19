@@ -86,7 +86,7 @@ public partial class MainWindow
             if (manifest.Capabilities.Contains("data.sources"))
             {
                 Add(menu, L.T(K.ConfigureTileData), () => ConfigureTileData(tile, this));
-                Add(menu, L.T(K.RefreshTileData), () => { if (_tileData.TryGetValue(tile.Id, out var data)) data.Runtime.Snapshot(DateTimeOffset.Now, true); });
+                Add(menu, L.T(K.RefreshTileData), () => { if (_tileData.TryGetValue(tile.Id, out var data)) data.Runtime.Refresh(DateTimeOffset.Now, true); });
             }
         }
         catch (Exception ex) when (ex is IOException or InvalidDataException or System.Text.Json.JsonException) { }
@@ -147,7 +147,9 @@ public partial class MainWindow
             var current = _scriptViews.Where(v => v.Body.IsVisible).ToArray();
             var pinnedIds = Document.Groups.SelectMany(g => g.Tiles).SelectMany(t => new[] { t }.Concat(t.Children)).Select(t => t.Id).ToHashSet();
             foreach (var id in _tileData.Keys.Where(id => !pinnedIds.Contains(id)).ToArray()) RetireTileData(id);
-            foreach (var data in _tileData.Where(p => !current.Any(v => v.Tile.Id == p.Key))) data.Value.Runtime.Stop();
+            foreach (var data in _tileData)
+                if (current.Any(v => v.Tile.Id == data.Key)) data.Value.Runtime.Refresh(DateTimeOffset.Now);
+                else data.Value.Runtime.Stop();
             if (current.Length == 0) { PauseScripts(); return; }
             var pool = _scriptWorkerPool ??= new();
             await Task.WhenAll(current.Select(async view =>
@@ -190,7 +192,7 @@ public partial class MainWindow
                     if (manifest.Capabilities.Contains("data.sources"))
                     {
                         try { data = ReadTileData(view.Tile, manifest, now); }
-                        catch (Exception ex) when (ex is IOException or InvalidDataException or System.Security.Cryptography.CryptographicException or System.Text.Json.JsonException)
+                        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or System.Security.Cryptography.CryptographicException or System.Text.Json.JsonException)
                         { data = manifest.DataSources.ToDictionary(p => p.Key, _ => new TileDataSnapshot("error", System.Text.Json.JsonSerializer.SerializeToElement<object?>(null), null, null, false, new("configuration"))); }
                     }
                     else RetireTileData(view.Tile.Id);
@@ -307,6 +309,7 @@ public partial class MainWindow
     {
         _scriptWorkerPool?.Dispose(); _scriptWorkerPool = null; _systemMetrics?.SetEnabled(false);
         foreach (var data in _tileData.Values) data.Runtime.Stop();
+        foreach (var session in _scriptSessions.Values) session.NextUpdate = DateTimeOffset.MinValue;
     }
 
     private Dictionary<string, TileDataSnapshot> ReadTileData(Tile tile, ScriptTileManifest manifest, DateTimeOffset now)

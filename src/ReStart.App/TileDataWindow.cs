@@ -35,7 +35,7 @@ internal sealed class TileDataWindow : Window
         body.Children.Add(new TextBlock { Text = L.T(K.TileDataHelp), TextWrapping = TextWrapping.Wrap, Margin = new(0, 0, 0, 18) });
         Dictionary<string, TileDataBinding> saved;
         try { saved = ScriptDataBindings.Read(path); }
-        catch (Exception ex) when (ex is IOException or InvalidDataException or CryptographicException or System.Text.Json.JsonException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or CryptographicException or System.Text.Json.JsonException)
         { saved = []; _feedback.Text = L.T(K.TileDataInvalid); }
         foreach (var (id, definition) in manifest.DataSources)
         {

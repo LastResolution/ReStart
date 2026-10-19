@@ -22,9 +22,11 @@ internal sealed class ScriptDataRuntime : IDisposable
     }
     internal Dictionary<string, TileDataSnapshot> Snapshot(DateTimeOffset now, bool force = false)
     {
-        foreach (var provider in _sources.Values) _ = provider.RefreshAsync(now, force);
+        Refresh(now, force);
         return _sources.ToDictionary(p => p.Key, p => p.Value.Snapshot);
     }
+    internal void Refresh(DateTimeOffset now, bool force = false)
+    { foreach (var provider in _sources.Values) _ = provider.RefreshAsync(now, force); }
     internal void Stop() { foreach (var provider in _sources.Values) provider.Stop(); }
     public void Dispose() { Updated = null; foreach (var provider in _sources.Values) provider.Dispose(); }
 }

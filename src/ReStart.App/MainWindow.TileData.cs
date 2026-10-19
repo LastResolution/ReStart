@@ -19,7 +19,7 @@ public partial class MainWindow
                 if (_scriptSessions.TryGetValue(tile.Id, out var session)) session.NextUpdate = DateTimeOffset.MinValue;
                 SetStatus(L.T(K.TileDataSaved));
             }
-            catch (Exception ex) when (ex is IOException or InvalidDataException or System.Text.Json.JsonException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or System.Text.Json.JsonException)
             { SetStatus(L.T(K.TileDataInvalid)); }
         });
     }

@@ -50,6 +50,11 @@ public partial class MainWindow
             File.WriteAllText(Path.Combine(directory, files[2]), "{\"text\":\"Updated\",\"progress\":0.9}");
             await Until(() => fixture._scriptFrames[tiles[2].Id].Text == "Updated");
             Check(fixture._scriptFrames[tiles[2].Id].Progress == .9, "A local producer update did not reach the native frame.");
+            fixture._scriptSessions[tiles[2].Id].NextUpdate = DateTimeOffset.Now.AddHours(1);
+            File.WriteAllText(Path.Combine(directory, files[2]), "{\"text\":\"Published\",\"progress\":0.9}");
+            for (var attempt = 0; attempt < 100 && fixture._scriptFrames[tiles[2].Id].Text != "Published"; attempt++)
+            { await fixture.UpdateScriptTilesAsync(); await Task.Delay(100); }
+            Check(fixture._scriptFrames[tiles[2].Id].Text == "Published", "Data polling waited for an unrelated script render interval.");
             fixture.SaveScreenshot(Path.Combine(directory, "connected-tiles.png"));
             fixture.SaveTileShowcase(Path.Combine(directory, "connected-gallery.png"));
             var context = new ContextMenu(); fixture.AddScriptMenu(context, tiles[0]);
@@ -93,6 +98,7 @@ public partial class MainWindow
             try { ScriptDataBindings.Read(credentialPath); } catch (CryptographicException) { rejected = true; }
             Check(rejected, "Corrupt encrypted bindings were accepted.");
             fixture.Hide(); Check(fixture._scriptWorkerPool == null, "Hiding Start retained a worker pool.");
+            Check(fixture._scriptSessions.Values.All(s => s.NextUpdate == DateTimeOffset.MinValue), "Reopening would wait for an old frame deadline.");
             return new(checks, themes, directory);
         }
         finally { fixture.Exit(); L.SetLanguage(language); ApplyAppearance(); }
