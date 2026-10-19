@@ -15,6 +15,8 @@ public sealed class ScriptTileManifest
     public Dictionary<string, string> LocalizedTitles { get; set; } = [];
     /// <summary>Gets or sets explicitly requested host capabilities; system.metrics exposes aggregate read-only metrics.</summary>
     public string[] Capabilities { get; set; } = [];
+    /// <summary>Gets or sets at most four named host-managed data inputs; connections and credentials are never imported.</summary>
+    public Dictionary<string, TileDataDefinition> DataSources { get; set; } = [];
     /// <summary>Gets or sets the visible update interval, from 1 to 3600 seconds.</summary>
     public int RefreshSeconds { get; set; } = 5;
     /// <summary>Gets or sets the JSON object passed as ctx.settings, limited to 8,192 UTF-16 code units of raw JSON.</summary>
@@ -25,8 +27,10 @@ public sealed class ScriptTileManifest
         if (Version != 1 || string.IsNullOrWhiteSpace(Title) || Title.Length > 80 || RefreshSeconds is < 1 or > 3600 ||
             Settings.ValueKind != JsonValueKind.Object || Settings.GetRawText().Length > 8192 || LocalizedTitles == null || LocalizedTitles.Count > 16
             || LocalizedTitles.Any(p => !TextCatalog.SupportedLanguages.Contains(p.Key) || string.IsNullOrWhiteSpace(p.Value) || p.Value.Length > 80)
-            || Capabilities == null || Capabilities.Length > 2 || Capabilities.Distinct(StringComparer.Ordinal).Count() != Capabilities.Length
-            || Capabilities.Any(c => c is not ("system.metrics" or "images.slideshow")))
+            || Capabilities == null || Capabilities.Length > 3 || Capabilities.Distinct(StringComparer.Ordinal).Count() != Capabilities.Length
+            || Capabilities.Any(c => c is not ("system.metrics" or "images.slideshow" or "data.sources"))
+            || DataSources == null || DataSources.Count > 4 || DataSources.Any(p => !Regex.IsMatch(p.Key, "^[a-z][a-z0-9_-]{0,31}$", RegexOptions.CultureInvariant) || p.Value == null || !p.Value.IsValid())
+            || DataSources.Count > 0 && !Capabilities.Contains("data.sources"))
             throw new InvalidDataException(TextCatalog.T(K.ErrorScriptManifestInvalid));
     }
 }
