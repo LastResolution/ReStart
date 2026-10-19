@@ -12,6 +12,9 @@ public partial class MainWindow
     private async Task SaveLauncherShowcaseAsync(Tile[] liveTiles, MainWindow iconSource, string directory)
     {
         if (!_preview) throw new InvalidOperationException("Showcase rendering requires preview mode.");
+        // Keep the complete-launcher composition at two curated six-tile lanes;
+        // connected examples have their own offline data showcase.
+        liveTiles = liveTiles.Take(12).ToArray();
         _verifyHostMetrics = false;
         Root.Width = 1920; Root.Height = 1080;
         Document = new() { Preferences = new() { Language = "en", Columns = 8, TileScale = 1.1, Theme = ReStart.Core.ThemeMode.Dark, ShowWallpaper = false, Animate = false } };
@@ -82,7 +85,7 @@ public partial class MainWindow
                     _scriptViews.All(view => view.Body.Children.OfType<TextBlock>().Any(text => Equals(text.Tag, "ScriptValue") && text.Text.Length > 0 && text.ActualHeight > 0))) break;
                 await Task.Delay(100);
             }
-            Require(ScriptFrameCount == 12, "The complete launcher showcase is missing live tiles.");
+            Require(ScriptFrameCount == liveTiles.Length, "The complete launcher showcase is missing live tiles.");
             Require(_scriptViews.All(view => view.Body.Children.OfType<TextBlock>().Any(text => Equals(text.Tag, "ScriptValue") && text.Text.Length > 0 && text.ActualHeight > 0)),
                 "A complete launcher showcase tile has no rendered value.");
             SetStatus("");

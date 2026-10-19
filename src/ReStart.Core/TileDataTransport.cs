@@ -15,8 +15,13 @@ public sealed class TileDataTransport : IDisposable
     /// <summary>Creates a shared transport. An injected handler supports deterministic offline verification.</summary>
     public TileDataTransport(HttpMessageHandler? handler = null)
     {
-        _http = new(handler ?? new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false,
-            AutomaticDecompression = DecompressionMethods.All }) { Timeout = Timeout.InfiniteTimeSpan };
+        _http = new(handler ?? new HttpClientHandler
+        {
+            AllowAutoRedirect = false,
+            UseCookies = false,
+            AutomaticDecompression = DecompressionMethods.All
+        })
+        { Timeout = Timeout.InfiniteTimeSpan };
     }
     internal sealed record Result(JsonElement Value, string? ETag = null, DateTimeOffset? Modified = null, bool NotModified = false);
     internal sealed class Failure(string code, int? status = null) : Exception(code)
@@ -51,7 +56,7 @@ public sealed class TileDataTransport : IDisposable
                 if ((int)response.StatusCode is 301 or 302 or 303 or 307 or 308)
                 {
                     if (response.Headers.Location == null || redirects == 3) throw new Failure("redirect");
-                    var next = new Uri(address, response.Headers.Location);
+                    if (!Uri.TryCreate(address, response.Headers.Location, out var next)) throw new Failure("redirect");
                     if (!TileDataBinding.ValidHttpAddress(next.AbsoluteUri) || next.GetLeftPart(UriPartial.Authority) != original.GetLeftPart(UriPartial.Authority))
                         throw new Failure("redirect");
                     address = next; continue;
@@ -86,13 +91,14 @@ public sealed class TileDataTransport : IDisposable
         if (bytes.AsSpan().StartsWith(new byte[] { 0xEF, 0xBB, 0xBF })) jsonBytes = jsonBytes[3..];
         using var document = JsonDocument.Parse(jsonBytes, new JsonDocumentOptions { MaxDepth = 12 });
         var value = document.RootElement;
-        var pointer = binding.JsonPointer.Length == 0 ? definition.JsonPointer : binding.JsonPointer;
+        var pointer = binding.JsonPointer ?? definition.JsonPointer;
         if (pointer.Length > 0)
             foreach (var raw in pointer[1..].Split('/'))
             {
                 var part = raw.Replace("~1", "/").Replace("~0", "~");
                 if (value.ValueKind == JsonValueKind.Object && value.TryGetProperty(part, out var property)) value = property;
-                else if (value.ValueKind == JsonValueKind.Array && int.TryParse(part, out var index) && index >= 0 && index < value.GetArrayLength()) value = value[index];
+                else if (value.ValueKind == JsonValueKind.Array && int.TryParse(part, out var index) && index >= 0 && index < value.GetArrayLength()
+                    && part == index.ToString(System.Globalization.CultureInfo.InvariantCulture)) value = value[index];
                 else throw new Failure("selector");
             }
         // Compact before measuring; whitespace in a server response must not consume the worker budget.
@@ -104,8 +110,13 @@ public sealed class TileDataTransport : IDisposable
     private static JsonElement ParseFeed(byte[] bytes, int budget)
     {
         using var stream = new MemoryStream(bytes);
-        using var reader = XmlReader.Create(stream, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit,
-            XmlResolver = null, MaxCharactersInDocument = MaxResponseBytes, MaxCharactersFromEntities = 0 });
+        using var reader = XmlReader.Create(stream, new XmlReaderSettings
+        {
+            DtdProcessing = DtdProcessing.Prohibit,
+            XmlResolver = null,
+            MaxCharactersInDocument = MaxResponseBytes,
+            MaxCharactersFromEntities = 0
+        });
         var root = XDocument.Load(reader).Root ?? throw new Failure("format");
         var atom = root.Name.LocalName == "feed";
         var container = atom ? root : root.Name.LocalName == "rss" ? root.Elements().FirstOrDefault(e => e.Name.LocalName == "channel") : null;
@@ -125,8 +136,13 @@ public sealed class TileDataTransport : IDisposable
             var link = atom ? item.Elements().FirstOrDefault(e => e.Name.LocalName == "link" && (e.Attribute("rel") == null || (string?)e.Attribute("rel") == "alternate"))?.Attribute("href")?.Value
                 : Field(item, "link")?.Value;
             if (link == null || link.Length > 1024 || !Uri.TryCreate(link, UriKind.Absolute, out var uri) || uri.Scheme is not ("http" or "https")) link = "";
-            items.Add(new { title = Text(Field(item, "title"), 160), summary = Text(Field(item, atom ? "summary" : "description"), 256),
-                url = link, published = Text(Field(item, atom ? "updated" : "pubDate"), 80) });
+            items.Add(new
+            {
+                title = Text(Field(item, "title"), 160),
+                summary = Text(Field(item, atom ? "summary" : "description"), 256),
+                url = link,
+                published = Text(Field(item, atom ? "updated" : "pubDate"), 80)
+            });
             if (JsonSerializer.SerializeToElement(new { title, items }).GetRawText().Length > budget) { items.RemoveAt(items.Count - 1); break; }
         }
         return JsonSerializer.SerializeToElement(new { title, items });

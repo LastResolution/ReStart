@@ -28,6 +28,8 @@ public partial class MainWindow
     private bool _scriptRendering;
     private string? _scriptLanguage;
     private SystemMetricsSampler? _systemMetrics;
+    private TileDataTransport? _tileDataTransport;
+    private readonly Dictionary<string, (string Package, ScriptDataRuntime Runtime)> _tileData = [];
     private readonly Dictionary<string, (string Package, SlideshowSource Source)> _slideshowSources = [];
     private readonly Dictionary<string, BitmapSource> _slideshowImages = [];
     /// <summary>Gets the number of live root JavaScript tiles in the current document.</summary>
@@ -65,7 +67,11 @@ public partial class MainWindow
         {
             var dialog = new OpenFileDialog { Title = L.T(K.PromptScriptManifest), Filter = "manifest.json|manifest.json" };
             if (dialog.ShowDialog(this) != true) return;
-            try { PinCustom(_scriptPackages.Import(dialog.FileName)); }
+            try
+            {
+                var tile = _scriptPackages.Import(dialog.FileName); PinCustom(tile);
+                if (_scriptPackages.Read(tile.ScriptId).Manifest.Capabilities.Contains("data.sources")) ConfigureTileData(tile, this);
+            }
             catch (Exception ex) when (ex is IOException or InvalidDataException or InvalidOperationException or System.Text.Json.JsonException) { SetStatus(ex.Message); }
         });
     }
@@ -74,8 +80,14 @@ public partial class MainWindow
     {
         try
         {
-            if (_scriptPackages.Read(tile.ScriptId).Manifest.Capabilities.Contains("images.slideshow"))
+            var manifest = _scriptPackages.Read(tile.ScriptId).Manifest;
+            if (manifest.Capabilities.Contains("images.slideshow"))
                 Add(menu, L.T(K.ChooseImageFolder), () => ChooseSlideshowFolder(tile, this));
+            if (manifest.Capabilities.Contains("data.sources"))
+            {
+                Add(menu, L.T(K.ConfigureTileData), () => ConfigureTileData(tile, this));
+                Add(menu, L.T(K.RefreshTileData), () => { if (_tileData.TryGetValue(tile.Id, out var data)) data.Runtime.Snapshot(DateTimeOffset.Now, true); });
+            }
         }
         catch (Exception ex) when (ex is IOException or InvalidDataException or System.Text.Json.JsonException) { }
         Add(menu, L.T(K.EditScript), () => EditScript(tile));
@@ -87,6 +99,7 @@ public partial class MainWindow
         });
         Add(menu, L.T(K.ReloadScript), () =>
         {
+            RetireTileData(tile.Id);
             _scriptSessions.Remove(tile.Id);
             _scriptFrames.Remove(tile.Id);
             _scriptPackages.InvalidateTitle(tile.ScriptId);
@@ -132,6 +145,9 @@ public partial class MainWindow
         try
         {
             var current = _scriptViews.Where(v => v.Body.IsVisible).ToArray();
+            var pinnedIds = Document.Groups.SelectMany(g => g.Tiles).SelectMany(t => new[] { t }.Concat(t.Children)).Select(t => t.Id).ToHashSet();
+            foreach (var id in _tileData.Keys.Where(id => !pinnedIds.Contains(id)).ToArray()) RetireTileData(id);
+            foreach (var data in _tileData.Where(p => !current.Any(v => v.Tile.Id == p.Key))) data.Value.Runtime.Stop();
             if (current.Length == 0) { PauseScripts(); return; }
             var pool = _scriptWorkerPool ??= new();
             await Task.WhenAll(current.Select(async view =>
@@ -170,6 +186,14 @@ public partial class MainWindow
                         if (slideshow.Image != null) _slideshowImages[view.Tile.Id] = slideshow.Image; else _slideshowImages.Remove(view.Tile.Id);
                     }
                     else _slideshowImages.Remove(view.Tile.Id);
+                    Dictionary<string, TileDataSnapshot>? data = null;
+                    if (manifest.Capabilities.Contains("data.sources"))
+                    {
+                        try { data = ReadTileData(view.Tile, manifest, now); }
+                        catch (Exception ex) when (ex is IOException or InvalidDataException or System.Security.Cryptography.CryptographicException or System.Text.Json.JsonException)
+                        { data = manifest.DataSources.ToDictionary(p => p.Key, _ => new TileDataSnapshot("error", System.Text.Json.JsonSerializer.SerializeToElement<object?>(null), null, null, false, new("configuration"))); }
+                    }
+                    else RetireTileData(view.Tile.Id);
                     var (frame, error) = await pool.RenderAsync(source, new
                     {
                         now = now.ToString("O"),
@@ -179,6 +203,7 @@ public partial class MainWindow
                         calendar = new { shortDate = now.ToString("d", L.Culture), weekday = now.ToString("dddd", L.Culture), month = now.ToString("MMMM", L.Culture), day = now.Day },
                         @event = input,
                         system = metrics,
+                        data,
                         slideshow = slideshow == null ? null : new { available = slideshow.Image != null, count = slideshow.Count, index = slideshow.Index },
                         size = view.Tile.Size.ToString().ToLowerInvariant(),
                         bounds = new { width = view.Button.ActualWidth, height = view.Button.ActualHeight, scale = Document.Preferences.TileScale },
@@ -242,7 +267,7 @@ public partial class MainWindow
         });
         if (tile.Size != TileSize.Small)
         {
-            body.Children.Add(new TextBlock { Text = frame.Detail, FontSize = 12, Opacity = 0.85, TextWrapping = TextWrapping.Wrap, MaxHeight = tile.Size == TileSize.Large ? 60 : 18, TextTrimming = TextTrimming.CharacterEllipsis });
+            if (frame.Detail.Length > 0) body.Children.Add(new TextBlock { Text = frame.Detail, FontSize = 12, Opacity = 0.85, TextWrapping = TextWrapping.Wrap, MaxHeight = tile.Size == TileSize.Large ? 60 : 18, TextTrimming = TextTrimming.CharacterEllipsis });
             if (frame.Badge.Length > 0) body.Children.Add(new TextBlock { Text = frame.Badge, FontSize = 11, HorizontalAlignment = HorizontalAlignment.Right });
             if (frame.Visual.Length == 0 && frame.Progress is double progress)
             {
@@ -278,5 +303,31 @@ public partial class MainWindow
             Grid.SetRow(art, 1); art.Margin = new(0, 6, 0, 0);
         }
     }
-    private void PauseScripts() { _scriptWorkerPool?.Dispose(); _scriptWorkerPool = null; _systemMetrics?.SetEnabled(false); }
+    private void PauseScripts()
+    {
+        _scriptWorkerPool?.Dispose(); _scriptWorkerPool = null; _systemMetrics?.SetEnabled(false);
+        foreach (var data in _tileData.Values) data.Runtime.Stop();
+    }
+
+    private Dictionary<string, TileDataSnapshot> ReadTileData(Tile tile, ScriptTileManifest manifest, DateTimeOffset now)
+    {
+        var signature = System.Text.Json.JsonSerializer.Serialize(manifest.DataSources, ScriptTileProtocol.Json);
+        if (!_tileData.TryGetValue(tile.Id, out var current) || current.Package != tile.ScriptId || current.Runtime.Signature != signature)
+        {
+            RetireTileData(tile.Id);
+            var runtime = new ScriptDataRuntime(_scriptPackages.DataBindingPath(tile.ScriptId), manifest, _tileDataTransport ??= new());
+            runtime.Updated += () => Dispatcher.BeginInvoke(() =>
+            {
+                if (!_exit && IsVisible && _tileData.TryGetValue(tile.Id, out var latest) && latest.Runtime == runtime
+                    && _scriptSessions.TryGetValue(tile.Id, out var session)) session.NextUpdate = DateTimeOffset.MinValue;
+            });
+            _tileData[tile.Id] = current = (tile.ScriptId, runtime);
+        }
+        return current.Runtime.Snapshot(now);
+    }
+
+    private void RetireTileData(string tileId)
+    {
+        if (_tileData.Remove(tileId, out var current)) current.Runtime.Dispose();
+    }
 }

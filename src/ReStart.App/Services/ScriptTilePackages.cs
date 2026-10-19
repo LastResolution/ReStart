@@ -7,7 +7,7 @@ namespace ReStart.App.Services;
 internal sealed class ScriptTilePackages(string dataDirectory)
 {
     private readonly Dictionary<string, ScriptTileManifest> _titleManifests = [];
-    internal static IReadOnlyList<string> BundledIds { get; } = Array.AsReadOnly(new[] { "orbit", "calendar", "cpu", "memory", "focus", "year", "clock", "countdown", "network", "battery", "storage", "slideshow" });
+    internal static IReadOnlyList<string> BundledIds { get; } = Array.AsReadOnly(new[] { "orbit", "calendar", "cpu", "memory", "focus", "year", "clock", "countdown", "network", "battery", "storage", "slideshow", "weather", "feed", "json-monitor" });
     internal static string BundledManifestPath(string id) => BundledIds.Contains(id, StringComparer.Ordinal)
         ? Path.Combine(AppContext.BaseDirectory, "Examples", id, "manifest.json") : throw new ArgumentException("Unknown bundled tile.", nameof(id));
     internal static ScriptTileManifest BundledManifest(string id) => ReadFolder(Path.GetDirectoryName(BundledManifestPath(id))!).Manifest;
@@ -51,6 +51,7 @@ internal sealed class ScriptTilePackages(string dataDirectory)
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or JsonException) { return tile.Label; }
     }
     internal string SlideshowBindingPath(string id) => Path.Combine(Folder(id), "host-bindings.json");
+    internal string DataBindingPath(string id) => Path.Combine(Folder(id), "data-bindings.dat");
     private static (ScriptTileManifest Manifest, string Source) ReadFolder(string folder)
     {
         var manifestPath = Path.Combine(folder, "manifest.json"); var sourcePath = Path.Combine(folder, "tile.js");

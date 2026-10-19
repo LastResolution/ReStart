@@ -72,12 +72,69 @@ public sealed class TileDataTests
     [Theory]
     [InlineData("{\"a/b\":{\"~name\":[42]}}", "/a~1b/~0name/0", null)]
     [InlineData("{\"value\":42}", "/missing", "selector")]
+    [InlineData("[42]", "/00", "selector")]
+    [InlineData("[42]", "/+0", "selector")]
     public async Task SelectsEscapedJsonPointersAndReportsMissingFields(string json, string pointer, string? error)
     {
         using var handler = Respond(json); using var transport = new TileDataTransport(handler);
         using var source = new TileDataSource(transport, new() { JsonPointer = pointer }, Connection()); await source.RefreshAsync(Start);
         Assert.Equal(error, source.Snapshot.Error?.Code);
         if (error == null) Assert.Equal(42, source.Snapshot.Value.GetInt32());
+    }
+
+    [Fact]
+    public async Task EmptyLocalPointerOverridesThePackageSelectorWithTheRoot()
+    {
+        using var handler = Respond("{\"value\":42}"); using var transport = new TileDataTransport(handler);
+        var binding = Connection(); binding.JsonPointer = "";
+        using var source = new TileDataSource(transport, new() { JsonPointer = "/missing" }, binding);
+        await source.RefreshAsync(Start);
+        Assert.Null(source.Snapshot.Error); Assert.Equal(42, source.Snapshot.Value.GetProperty("value").GetInt32());
+    }
+
+    [Fact]
+    public void DeclarationsRequireCapabilityAndBoundedSourcesAndSelectors()
+    {
+        var manifest = new ScriptTileManifest { DataSources = new() { ["weather"] = new() } };
+        Assert.Throws<InvalidDataException>(manifest.Validate);
+        manifest.Capabilities = ["data.sources"]; manifest.Validate();
+        manifest.DataSources["weather"].JsonPointer = "/invalid~escape";
+        Assert.Throws<InvalidDataException>(manifest.Validate);
+        manifest.DataSources["weather"].JsonPointer = "/valid~0~1"; manifest.Validate();
+        for (var i = 0; i < 4; i++) manifest.DataSources["extra" + i] = new();
+        Assert.Throws<InvalidDataException>(manifest.Validate);
+        var binding = Connection(); binding.HeaderName = "Cookie"; Assert.False(binding.IsValid());
+        binding.HeaderName = "Authorization"; binding.Secret = "bad\r\nvalue"; Assert.False(binding.IsValid());
+    }
+
+    [Fact]
+    public async Task DeadlinePublishesASafeTimeoutWithoutBlockingSnapshotReads()
+    {
+        using var handler = new Handler(async (_, token) => { await Task.Delay(Timeout.Infinite, token); return new(HttpStatusCode.OK); });
+        using var transport = new TileDataTransport(handler); using var source = new TileDataSource(transport, new(), Connection());
+        var request = source.RefreshAsync(Start);
+        Assert.Equal("loading", source.Snapshot.Status);
+        await request.WaitAsync(TimeSpan.FromSeconds(12));
+        Assert.Equal("timeout", source.Snapshot.Error?.Code); Assert.False(source.Snapshot.Stale);
+    }
+
+    [Fact]
+    public async Task SharedTransportBoundsConcurrencyAndCancelsQueuedRequests()
+    {
+        var occupied = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously); var started = 0;
+        using var handler = new Handler(async (_, token) =>
+        { if (Interlocked.Increment(ref started) == 4) occupied.SetResult(); await Task.Delay(Timeout.Infinite, token); return new(HttpStatusCode.OK); });
+        using var transport = new TileDataTransport(handler);
+        var sources = Enumerable.Range(0, 8).Select(_ => new TileDataSource(transport, new(), Connection())).ToArray();
+        try
+        {
+            var requests = sources.Select(s => s.RefreshAsync(Start)).ToArray();
+            await occupied.Task.WaitAsync(TimeSpan.FromSeconds(5)); Assert.Equal(4, handler.Calls);
+            foreach (var source in sources) source.Stop();
+            await Task.WhenAll(requests).WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.All(sources, s => Assert.Null(s.Snapshot.Error));
+        }
+        finally { foreach (var source in sources) source.Dispose(); }
     }
 
     [Theory]

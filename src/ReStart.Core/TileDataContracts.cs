@@ -18,9 +18,11 @@ public sealed class TileDataDefinition
     public string SuggestedAccess { get; set; } = "http";
     /// <summary>Validates the bounded package declaration, which never includes credentials.</summary>
     public bool IsValid() => Format is "json" or "feed" && RefreshSeconds is >= 1 and <= 86400
-        && JsonPointer is { Length: <= 256 } && (JsonPointer.Length == 0 || JsonPointer.StartsWith('/'))
+        && JsonPointer != null && ValidPointer(JsonPointer)
         && SuggestedAccess is "http" or "file" && SuggestedUrl is { Length: <= 2048 }
         && (SuggestedUrl.Length == 0 || TileDataBinding.ValidHttpAddress(SuggestedUrl));
+    internal static bool ValidPointer(string? pointer) => pointer == null || pointer.Length <= 256 && (pointer.Length == 0 || pointer.StartsWith('/'))
+        && !Regex.IsMatch(pointer, "~(?![01])", RegexOptions.CultureInvariant);
 }
 
 /// <summary>Contains a locally chosen connection. Hosts must protect this object at rest and never send it to JavaScript.</summary>
@@ -32,15 +34,15 @@ public sealed class TileDataBinding
     public string Access { get; set; } = "http";
     /// <summary>Gets or sets an explicitly configured URL or absolute file path.</summary>
     public string Location { get; set; } = "";
-    /// <summary>Gets or sets an optional response selector, overriding the package's JSON Pointer.</summary>
-    public string JsonPointer { get; set; } = "";
+    /// <summary>Gets or sets a response selector: null inherits the package pointer, while an empty string selects the root.</summary>
+    public string? JsonPointer { get; set; }
     /// <summary>Gets or sets the HTTP header carrying a local credential.</summary>
     public string HeaderName { get; set; } = "Authorization";
     /// <summary>Gets or sets the credential header value; it is never part of script context or package exports.</summary>
     public string Secret { get; set; } = "";
     /// <summary>Validates a configured address and prevents malformed or connection-control request headers.</summary>
-    public bool IsValid() => Access is "http" or "file" && Location is { Length: <= 4096 } && !Location.Any(char.IsControl) && JsonPointer is { Length: <= 256 }
-        && (JsonPointer.Length == 0 || JsonPointer.StartsWith('/')) && Secret is { Length: <= 4096 } && !Secret.Any(char.IsControl)
+    public bool IsValid() => Access is "http" or "file" && Location is { Length: <= 4096 } && !Location.Any(char.IsControl) && TileDataDefinition.ValidPointer(JsonPointer)
+        && Secret is { Length: <= 4096 } && !Secret.Any(char.IsControl)
         && HeaderName is { Length: <= 64 } && Regex.IsMatch(HeaderName, "^[A-Za-z][A-Za-z0-9-]*$", RegexOptions.CultureInvariant)
         && !new[] { "Host", "Content-Length", "Connection", "Transfer-Encoding", "Proxy-Authorization", "Accept-Encoding", "Upgrade", "TE", "Cookie" }.Contains(HeaderName, StringComparer.OrdinalIgnoreCase)
         && (!Enabled || (Access == "http" ? ValidHttpAddress(Location) : Path.IsPathFullyQualified(Location) && !Location.StartsWith("\\\\", StringComparison.Ordinal)));

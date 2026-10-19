@@ -55,6 +55,8 @@ jobs:
         run: ./scripts/test-file-pinning.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
       - name: Verify bundled tile rendering and local interactions
         run: ./scripts/test-bundled-tiles.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+      - name: Verify encrypted tile data connections and native configuration
+        run: ./scripts/test-tile-data.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
       - name: Verify Shell icon sizes and transient status messages
         run: ./scripts/test-icons.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -81,6 +83,8 @@ jobs:
             artifacts/scrolling/*/scroll.json
             artifacts/bundled-tiles/*/*.png
             artifacts/bundled-tiles/*/start.json
+            artifacts/tile-data/*/start.json
+            artifacts/tile-data/*/fixture-*/*.png
             artifacts/icons/*/icons-*.png
             artifacts/icons/*/start.json
           retention-days: 14
