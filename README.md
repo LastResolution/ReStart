@@ -46,17 +46,19 @@ Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button
 
 ## Give your tiles something to say
 
-See the time, CPU and memory, network traffic, battery, storage and your chosen photos without opening another app. **Twelve JavaScript tiles are included**, with layouts for all four tile sizes.
+See PC metrics, your chosen photos, weather, headlines and application data without opening another app. **Fifteen JavaScript tiles are included**, with layouts for all four tile sizes.
 
 ![Bundled JavaScript live tiles](docs/images/live-tiles.png)
 
-**Orbit clock · Digital clock · Month dots · CPU pulse · Memory flow · Network flow · Battery · Storage · Focus cycle · Year in motion · Countdown · Photo moments**
+**Orbit clock · Digital clock · Month dots · CPU pulse · Memory flow · Network flow · Battery · Storage · Focus cycle · Year in motion · Countdown · Photo moments · Weather · Feed · JSON monitor**
 
 Right-click the background → **Add live tile** to try one. Click a tile to use its local action, such as pausing a focus timer or advancing a photo.
 
+Connected tiles use **Configure data sources…** for the address, selected file and optional credentials. Connections are encrypted locally and excluded from exports; no connection starts just by importing a package. Weather uses Berlin as its example location, which you can change. Follow the [data-source guide](docs/javascript-tiles.md#weather-feeds-web-apis-and-application-data) to connect your own API or application.
+
 ### Write your own
 
-A tile is a `manifest.json` and a `tile.js`. ReStart supplies PC time, the selected language, tile size, click events and retained state. Optional capabilities provide read-only system metrics or photos chosen through the host.
+A tile is a `manifest.json` and a `tile.js`. ReStart supplies PC time, the selected language, tile size, click events and retained state. Optional capabilities provide read-only system metrics, chosen photos or cached Web API/feed/local-file data through the host.
 
 With `system.metrics` enabled in the manifest, this is a complete CPU display:
 
@@ -118,7 +120,7 @@ Settings live in `%LOCALAPPDATA%\ReStart\layout.json`. Saves and upgrades retain
 
 Update checks read public GitHub Releases without an API key. Installation is manual: exit ReStart, then replace the complete extracted installation. If its location changed, save sign-in startup and Explorer integration again. See [updates](docs/updates.md).
 
-No advertising or usage analytics are included. App lists, layouts and photo-folder selections are not uploaded. JavaScript tiles return bounded display data and do not receive general file, network or CLR access; see [security](SECURITY.md).
+No advertising or usage analytics are included. App lists, layouts and photo-folder selections are not uploaded. JavaScript tiles return bounded display data and do not receive general file, network or CLR access. Configured data providers receive their requests and explicitly configured parameters/credentials; see [security](SECURITY.md).
 
 To uninstall, disable sign-in startup and Explorer integration, exit the tray app and delete the extracted installation. Remove the local data folder only if you also want to delete your settings and custom tiles.
 

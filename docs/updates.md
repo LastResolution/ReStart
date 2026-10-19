@@ -10,4 +10,4 @@ Requests use the fixed api.github.com repository endpoint and app version, witho
 
 The checker opens the fixed repository release page. Download, checksum verification and installation are manual: exit the tray app, extract the complete ZIP and restart. No feed-provided executable is launched automatically.
 
-Upgrading from private development builds removes ReStart's obsolete saved credential target without reading its value. The application no longer reads, accepts or stores access tokens.
+Upgrading from private development builds removes ReStart's obsolete saved credential target without reading its value. The update checker no longer reads, accepts or stores access tokens. Optional live-tile data-source credentials are separate, explicitly configured connections; they are never used for update checks.

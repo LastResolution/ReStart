@@ -22,7 +22,7 @@ Portable builds target Windows 10/11 on x64 and ARM64. Development and native au
 | Desktop integration | Reversible Windows-key and Start-button capture, tray, optional sign-in startup and Explorer pin commands; no shell injection |
 | Motion | Separate window fade, bottom-anchored zoom and bottom-to-top tile reveal; animated dismissal, interrupted reopen and reduced-motion support |
 | Appearance | Dark, light, system and high contrast; wallpaper blur/tint approximates the original composition |
-| Live tiles | Local clock/calendar and JavaScript packages; legacy UWP notifications and background delivery are not supported |
+| Live tiles | Local clock/calendar and JavaScript packages, including opt-in cached Web API/feed/file inputs; these are ReStart extensions, without legacy UWP notifications or background delivery |
 | Recommendations | Windows recent/most-used history is not imported |
 | Data | Schema migration with original-file backups and protection against newer producers; no direct Windows layout import |
 | Updates | Public GitHub Releases without an API key; manual installation |
