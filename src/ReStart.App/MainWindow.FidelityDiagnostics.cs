@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Media;
 using ReStart.App.Controls;
 using ReStart.App.Services;
 using ReStart.Core;
@@ -20,10 +21,10 @@ public partial class MainWindow
         { Owner = this, Width = 1280, Height = 800, Topmost = false };
         var language = L.Language; var checks = 0;
         void Check(bool condition, string message) { Require(condition, message); checks++; }
-        async Task Until(Func<bool> condition)
+        async Task Until(Func<bool> condition, [System.Runtime.CompilerServices.CallerArgumentExpression(nameof(condition))] string description = "")
         {
             for (var i = 0; i < 100 && !condition(); i++) await Task.Delay(25);
-            Check(condition(), "An asynchronous fidelity operation failed to reach its expected state.");
+            Check(condition(), "An asynchronous fidelity operation failed: " + description);
         }
         try
         {
@@ -43,6 +44,11 @@ public partial class MainWindow
             }
             L.SetLanguage("en");
             fixture.Document.Preferences.Language = "en";
+            var localizedTerminal = new AppEntry("terminal-package", "\u30bf\u30fc\u30df\u30ca\u30eb", "Microsoft.WindowsTerminal_8wekyb3d8bbwe!App");
+            var localizedPhotos = new AppEntry("photos-package", "\u30d5\u30a9\u30c8", "Microsoft.Windows.Photos_8wekyb3d8bbwe!App");
+            Check(PreviewCatalog.Match(new("terminal", "Windows Terminal", "wt.exe", false), [localizedTerminal]) == localizedTerminal
+                && PreviewCatalog.Match(new("photos", "Photos", "ms-photos:", false), [localizedPhotos]) == localizedPhotos,
+                "English preview labels could not resolve installed icons in a localized catalog.");
             fixture._fileSearchFixture = async (query, _) =>
             {
                 await Task.Delay(query == "obsolete" ? 650 : 30);
@@ -178,6 +184,13 @@ public partial class MainWindow
                         editor.UpdateLayout();
                         foreach (var key in toggles.Keys)
                             VisualChildren<CheckBox>(editor).Single(c => AutomationProperties.GetName(c) == L.T(key)).IsChecked = enabled;
+                        if (enabled)
+                        {
+                            editor.UpdateLayout(); SaveFixtureElement(editor, Path.Combine(directory, "start-behavior.png"));
+                            var scroll = VisualChildren<ScrollViewer>(editor).Single(v => v.Content is StackPanel p && VisualChildren<CheckBox>(p).Count() >= toggles.Count);
+                            scroll.ScrollToVerticalOffset(470); editor.UpdateLayout();
+                            SaveFixtureElement(editor, Path.Combine(directory, "start-behavior-layout.png"));
+                        }
                         VisualChildren<Button>(editor).Single(b => b.IsDefault).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                     }
                     catch (Exception ex) { editorError = ex; editor.Close(); }
@@ -219,6 +232,37 @@ public partial class MainWindow
             Check(savedLaunch.UseLaunchOptions && savedLaunch.LaunchArguments == configuredArguments && savedLaunch.WorkingDirectory == directory && savedLaunch.RunAsAdministrator,
                 "Per-tile launch options did not survive the native editor and layout persistence.");
             launchTile.UseLaunchOptions = false; launchTile.RunAsAdministrator = false;
+            foreach (var tag in L.SupportedLanguages)
+                foreach (var theme in new[] { ReStart.Core.ThemeMode.Dark, ReStart.Core.ThemeMode.Light })
+                {
+                    fixture.Document.Preferences.Language = tag; fixture.Document.Preferences.Theme = theme; fixture.ApplyAppearance();
+                    var demoLaunch = new LaunchOptionsWindow(new Tile
+                    {
+                        Label = "Sample Editor",
+                        UseLaunchOptions = true,
+                        LaunchArguments = "--new-window \"sample project.txt\"",
+                        WorkingDirectory = @"%USERPROFILE%\Documents"
+                    }, true, true)
+                    { Owner = fixture };
+                    Exception? themeError = null;
+                    demoLaunch.Loaded += (_, _) => demoLaunch.Dispatcher.BeginInvoke(() =>
+                    {
+                        try
+                        {
+                            demoLaunch.UpdateLayout();
+                            Check(demoLaunch.Background is SolidColorBrush background && background.Color == ((SolidColorBrush)fixture.FindResource("PanelBrush")).Color
+                                && demoLaunch.Foreground is SolidColorBrush foreground && foreground.Color == ((SolidColorBrush)fixture.FindResource("TextBrush")).Color,
+                                "The launch editor did not inherit the selected window palette.");
+                            Check(VisualChildren<CheckBox>(demoLaunch).All(c => c.Content is string text && text.Length > 0), "A localized launch option has no visible label.");
+                            if (tag == "en") SaveFixtureElement(demoLaunch, Path.Combine(directory, theme == ReStart.Core.ThemeMode.Dark ? "launch-options.png" : "launch-options-light.png"));
+                        }
+                        catch (Exception ex) { themeError = ex; }
+                        finally { demoLaunch.Close(); }
+                    });
+                    demoLaunch.ShowDialog();
+                    if (themeError != null) throw new InvalidOperationException("Launch editor appearance failed.", themeError);
+                }
+            fixture.Document.Preferences.Language = "en";
             foreach (var theme in new[] { ReStart.Core.ThemeMode.Dark, ReStart.Core.ThemeMode.Light })
             {
                 fixture.ResetToPinnedView();
@@ -227,6 +271,12 @@ public partial class MainWindow
                 fixture.SetRailOpen(false); fixture.SetSmokeSearch("Display");
                 fixture.SaveScreenshot(Path.Combine(directory, "settings-search-" + theme + ".png"));
             }
+            fixture.Document.Preferences.Theme = ReStart.Core.ThemeMode.Dark; fixture.RefreshLayout(); fixture.ResetToPinnedView();
+            fixture._apps = [new("display-studio", "Display Studio", "", false)];
+            fixture._fileSearchFixture = (_, _) => Task.FromResult<(IReadOnlyList<AppEntry>, bool)>((new[] { new AppEntry("display-notes", "Display notes.txt", "", false) }, true));
+            fixture.SetSmokeSearch("Display");
+            await Until(() => fixture.SearchResultNames.Contains("Display notes.txt"));
+            fixture.SetStatus(""); fixture.SaveScreenshot(Path.Combine(directory, "unified-search.png"));
             var indexed = await new IndexedFileSearch().FindAsync("ReStart_nonexistent_%_[fidelity]", CancellationToken.None);
             Check(indexed.Files.Count == 0, "The native index query ignored literal wildcard characters.");
             return new(checks, indexed.Available);

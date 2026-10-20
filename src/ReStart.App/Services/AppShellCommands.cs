@@ -120,7 +120,9 @@ internal static class AppShellCommands
         {
             // CMINVOKECOMMANDINFOEX keeps non-ASCII document paths intact and
             // passes arguments to this app's own open verb, not a default handler.
-            var info = new InvokeInfo { Size = (uint)Marshal.SizeOf<InvokeInfo>(), Mask = 0x4000, Owner = owner, Verb = (nint)command, VerbW = (nint)command, ParametersW = arguments, DirectoryW = directory, Show = 1 };
+            // Keep the STA/context alive until the Shell accepts the operation.
+            // Without NOASYNC a handler can schedule work after this short-lived STA exits.
+            var info = new InvokeInfo { Size = (uint)Marshal.SizeOf<InvokeInfo>(), Mask = 0x4100, Owner = owner, Verb = (nint)command, VerbW = (nint)command, ParametersW = arguments, DirectoryW = directory, Show = 1 };
             Marshal.ThrowExceptionForHR(_context!.InvokeCommand(ref info));
         }
         public void Dispose()

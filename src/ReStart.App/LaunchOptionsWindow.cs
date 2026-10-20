@@ -10,6 +10,7 @@ internal sealed class LaunchOptionsWindow : Window
 {
     internal LaunchOptionsWindow(Tile tile, bool canConfigure, bool canElevate)
     {
+        Style = (Style)FindResource(typeof(Window));
         ThemeWindow.Attach(this);
         Title = L.T(K.LaunchOptions); Width = 620; Height = 480; MinWidth = 480; MinHeight = 430;
         WindowStartupLocation = WindowStartupLocation.CenterOwner; ShowInTaskbar = false;

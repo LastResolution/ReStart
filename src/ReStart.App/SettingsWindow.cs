@@ -177,7 +177,12 @@ internal sealed partial class SettingsWindow : Window
         var button = new Button { Content = label, Margin = new(0, 0, 8, 6), Background = Resource("TileBrush") };
         button.Click += (_, _) => action(); panel.Children.Add(button); return button;
     }
-    internal void SelectSection(string name) => _sectionButtons[name].RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    internal void SelectSection(string name)
+    {
+        var button = _sectionButtons[name];
+        button.Focus();
+        button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    }
     private void Save(object sender, RoutedEventArgs e)
     {
         if (!ValidateColors()) return;

@@ -23,7 +23,8 @@ public partial class MainWindow
             var left = new TileGroup { Name = "Left", Column = 0, Row = 0, Tiles = [a, b] };
             var right = new TileGroup { Name = "Right", Column = 1, Row = 8, Tiles = [new() { Label = "Sample C" }] };
             var moving = new TileGroup { Name = "Movable", Column = 2, Row = 0, Tiles = [new() { Label = "Sample D" }] };
-            Document = new() { Preferences = new() { Animate = false, ShowWallpaper = false, Language = original.Preferences.Language }, Groups = [left, right, moving] };
+            Document = new() { Preferences = new() { Animate = false, ShowWallpaper = false, Language = "en" }, Groups = [left, right, moving] };
+            ApplyAppearance();
             Root.Width = 1920;
             Root.Height = 1000;
             ResetToPinnedView();
@@ -240,6 +241,7 @@ public partial class MainWindow
             Document = original;
             Root.Width = originalWidth;
             Root.Height = originalHeight;
+            ApplyAppearance();
             SaveLayout();
             RenderGroups();
         }

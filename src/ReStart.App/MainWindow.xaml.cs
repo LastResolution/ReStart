@@ -181,7 +181,7 @@ public partial class MainWindow : Window
             {
                 foreach (var app in _apps)
                 {
-                    var actual = actualApps.FirstOrDefault(a => a.Name.Contains(app.Name, StringComparison.CurrentCultureIgnoreCase));
+                    var actual = PreviewCatalog.Match(app, actualApps);
                     if (actual != null && _catalog.Icons.TryGetValue(actual.Id, out var icon)) _catalog.Icons[app.Id] = icon;
                 }
             }
