@@ -13,6 +13,7 @@ public sealed class TileDataTransport : IDisposable
     private readonly HttpClient _http;
     private readonly SemaphoreSlim _requests = new(4);
     /// <summary>Creates a shared transport. An injected handler supports deterministic offline verification.</summary>
+    /// <param name="handler">Optional caller-supplied HTTP handler for deterministic reads; null creates the restricted default handler.</param>
     public TileDataTransport(HttpMessageHandler? handler = null)
     {
         _http = new(handler ?? new HttpClientHandler

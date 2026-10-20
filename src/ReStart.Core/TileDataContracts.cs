@@ -17,6 +17,7 @@ public sealed class TileDataDefinition
     /// <summary>Gets or sets the initial connection editor type; this never authorizes access.</summary>
     public string SuggestedAccess { get; set; } = "http";
     /// <summary>Validates the bounded package declaration, which never includes credentials.</summary>
+    /// <returns>Whether the declaration has supported formats, bounded values and a valid optional public example address.</returns>
     public bool IsValid() => Format is "json" or "feed" && RefreshSeconds is >= 1 and <= 86400
         && JsonPointer != null && ValidPointer(JsonPointer)
         && SuggestedAccess is "http" or "file" && SuggestedUrl is { Length: <= 2048 }
@@ -41,17 +42,28 @@ public sealed class TileDataBinding
     /// <summary>Gets or sets the credential header value; it is never part of script context or package exports.</summary>
     public string Secret { get; set; } = "";
     /// <summary>Validates a configured address and prevents malformed or connection-control request headers.</summary>
+    /// <returns>Whether local connection fields and optional credentials satisfy bounds and access restrictions; validation does not grant access.</returns>
     public bool IsValid() => Access is "http" or "file" && Location is { Length: <= 4096 } && !Location.Any(char.IsControl) && TileDataDefinition.ValidPointer(JsonPointer)
         && Secret is { Length: <= 4096 } && !Secret.Any(char.IsControl)
         && HeaderName is { Length: <= 64 } && Regex.IsMatch(HeaderName, "^[A-Za-z][A-Za-z0-9-]*$", RegexOptions.CultureInvariant)
         && !new[] { "Host", "Content-Length", "Connection", "Transfer-Encoding", "Proxy-Authorization", "Accept-Encoding", "Upgrade", "TE", "Cookie" }.Contains(HeaderName, StringComparer.OrdinalIgnoreCase)
         && (!Enabled || (Access == "http" ? ValidHttpAddress(Location) : Path.IsPathFullyQualified(Location) && !Location.StartsWith("\\\\", StringComparison.Ordinal)));
     /// <summary>Accepts HTTPS and explicit loopback HTTP, without embedded user information or URL fragments.</summary>
+    /// <param name="address">Absolute candidate URL; never contacted by this validation method.</param>
+    /// <returns>True for HTTPS or loopback HTTP without embedded user information or fragments.</returns>
     public static bool ValidHttpAddress(string address) => Uri.TryCreate(address, UriKind.Absolute, out var uri)
         && uri.UserInfo.Length == 0 && uri.Fragment.Length == 0 && (uri.Scheme == "https" || uri.Scheme == "http" && uri.IsLoopback);
 }
 
 /// <summary>Provides machine-readable failure information without exposing URLs, file paths, credentials or exception text.</summary>
+/// <param name="Code">Stable machine-readable failure category, without sensitive connection details.</param>
+/// <param name="HttpStatus">Optional HTTP status code; null for non-HTTP failures.</param>
 public sealed record TileDataError(string Code, int? HttpStatus = null);
 /// <summary>Contains only bounded display data and freshness metadata safe to pass to a tile worker.</summary>
+/// <param name="Status">Provider state such as loading, ready, error, disabled or unconfigured.</param>
+/// <param name="Value">Bounded JSON display value; never includes connection credentials.</param>
+/// <param name="UpdatedAt">Time of the last successful value update, or null before success.</param>
+/// <param name="CheckedAt">Time of the latest completed read attempt, or null before a read.</param>
+/// <param name="Stale">Whether the retained successful value predates a failed refresh.</param>
+/// <param name="Error">Display-safe failure category for a failed attempt, or null.</param>
 public sealed record TileDataSnapshot(string Status, JsonElement Value, DateTimeOffset? UpdatedAt, DateTimeOffset? CheckedAt, bool Stale, TileDataError? Error);

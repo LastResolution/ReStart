@@ -25,6 +25,11 @@ public sealed class TileDataSource : IDisposable
     /// <summary>Gets the latest immutable data-only view without blocking rendering.</summary>
     public TileDataSnapshot Snapshot => Volatile.Read(ref _snapshot);
     /// <summary>Creates a provider for one explicit connection and a share of the tile's 8 KiB data budget.</summary>
+    /// <param name="transport">Shared transport used for authorized reads; the source does not own its lifetime.</param>
+    /// <param name="definition">Validated package data-source declaration with format, selector and refresh interval.</param>
+    /// <param name="binding">Explicit user-selected local connection, including enabled state and any protected credential.</param>
+    /// <param name="budget">Maximum data budget in bytes, from 512 through 8192 for this source.</param>
+    /// <exception cref="ArgumentException">The source definition, local binding, or byte budget is invalid.</exception>
     public TileDataSource(TileDataTransport transport, TileDataDefinition definition, TileDataBinding binding, int budget = 8192)
     {
         if (!definition.IsValid() || !binding.IsValid() || budget is < 512 or > 8192) throw new ArgumentException("Invalid data source configuration.");
@@ -32,6 +37,9 @@ public sealed class TileDataSource : IDisposable
         _snapshot = new(binding.Enabled ? "loading" : binding.Location.Length == 0 ? "unconfigured" : "disabled", JsonSerializer.SerializeToElement<object?>(null), null, null, false, null);
     }
     /// <summary>Starts a due update, or shares an existing request. Rendering can read Snapshot immediately without awaiting it.</summary>
+    /// <param name="now">Current host time used for due checks, freshness metadata and retry scheduling.</param>
+    /// <param name="force">Whether to bypass the normal interval; forced reads still have a five-second minimum spacing.</param>
+    /// <returns>A shared pending refresh task, or a completed task when disabled, disposed, throttled, or not yet due.</returns>
     public Task RefreshAsync(DateTimeOffset now, bool force = false)
     {
         lock (_gate)

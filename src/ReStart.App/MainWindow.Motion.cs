@@ -27,6 +27,7 @@ public partial class MainWindow
         (_preview && _verifyMotion || SystemParameters.ClientAreaAnimation && !SystemParameters.HighContrast);
 
     /// <summary>Dismisses Start with its exit transition, or immediately when motion is disabled or an OS session action requires it.</summary>
+    /// <param name="immediately">Whether to bypass animation, for example before a session or power action.</param>
     public void Dismiss(bool immediately = false)
     {
         if (_startupWindow != null) { CancelStartupPresentation(); return; }

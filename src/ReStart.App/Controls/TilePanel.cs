@@ -21,6 +21,8 @@ public sealed class TilePanel : Panel
     public Tile? FolderOwner { get; set; }
 
     /// <summary>Removes transient folder-expansion height from a pointer Y coordinate below the expanded area.</summary>
+    /// <param name="point">Pointer point in this panel's rendered DIP coordinates.</param>
+    /// <returns>Panel-local DIP coordinates with transient inline-folder height removed when applicable.</returns>
     public Point ToModelPoint(Point point)
     {
         if (Expansion != null && point.Y >= Expansion.Row * Cell + Expansion.ExtraHeight(Cell)) point.Y -= Expansion.ExtraHeight(Cell);

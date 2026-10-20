@@ -81,8 +81,12 @@ public sealed class ScriptTileFrame
 }
 
 /// <summary>Contains script source and JSON-only context sent to an isolated worker.</summary>
+/// <param name="Source">Bounded JavaScript source defining render(ctx).</param>
+/// <param name="Context">JSON-only host snapshot; contains no CLR objects or connection credentials.</param>
 public sealed record ScriptTileRequest(string Source, JsonElement Context);
 /// <summary>Contains either a validated frame or an error message returned by the worker.</summary>
+/// <param name="Frame">Validated display frame on success, otherwise null.</param>
+/// <param name="Error">Display-safe failure text on failure, otherwise null.</param>
 public sealed record ScriptTileResponse(ScriptTileFrame? Frame, string? Error);
 /// <summary>Defines the bounded JSON-lines protocol shared by the UI and tile worker.</summary>
 public static class ScriptTileProtocol
@@ -92,6 +96,12 @@ public static class ScriptTileProtocol
     /// <summary>Gets the camel-case, depth-bounded serializer settings used only by the tile protocol.</summary>
     public static readonly JsonSerializerOptions Json = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, PropertyNameCaseInsensitive = true, MaxDepth = 16 };
     /// <summary>Reads one line with a strict character limit; returns null at clean EOF. The caller must enforce an outer deadline for blocking pipes.</summary>
+    /// <param name="reader">Caller-owned text reader, typically an isolated worker pipe.</param>
+    /// <param name="limit">Maximum non-CR characters accepted before throwing InvalidDataException.</param>
+    /// <param name="cancellation">Token cancelling the underlying reads; the caller also owns the overall worker deadline.</param>
+    /// <returns>One line without its terminator, or null at clean EOF before any characters; a final unterminated line is returned.</returns>
+    /// <exception cref="InvalidDataException">The line exceeds the character limit.</exception>
+    /// <exception cref="OperationCanceledException">The caller cancels the underlying read.</exception>
     public static async Task<string?> ReadLineAsync(TextReader reader, int limit, CancellationToken cancellation = default)
     {
         var line = new StringBuilder(); var buffer = new char[1];

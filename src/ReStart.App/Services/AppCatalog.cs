@@ -13,6 +13,7 @@ public sealed class AppCatalog
 {
     private readonly IconCache? _cache;
     /// <summary>Creates a catalog with an optional disposable pixel cache outside the portable application directory.</summary>
+    /// <param name="cacheDirectory">Optional per-user icon-cache directory; null uses the default local ReStart cache.</param>
     public AppCatalog(string? cacheDirectory = null) { if (cacheDirectory != null) _cache = new(cacheDirectory); }
     internal int IconCacheHits => _cache?.Hits ?? 0;
     internal int IconCacheMisses => _cache?.Misses ?? 0;
@@ -36,6 +37,7 @@ public sealed class AppCatalog
     }
 
     /// <summary>Enumerates real app names and launch identities on a background STA thread.</summary>
+    /// <returns>A culture-sorted app catalog; the returned task propagates enumeration failures to its caller.</returns>
     public Task<List<AppEntry>> LoadAsync()
     {
         var completion = new TaskCompletionSource<List<AppEntry>>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -51,6 +53,9 @@ public sealed class AppCatalog
     }
 
     /// <summary>Loads frozen icons with up to four independent STA workers. Progress callbacks must dispatch UI work.</summary>
+    /// <param name="apps">Catalog entries whose missing icons should be loaded into the frozen-image cache.</param>
+    /// <param name="batchReady">Optional background progress callback; subscribers must marshal UI work to the dispatcher.</param>
+    /// <returns>A task completing after all pending app and directory icon attempts finish.</returns>
     public async Task LoadIconsAsync(IEnumerable<AppEntry> apps, Action? batchReady = null)
     {
         var pending = new ConcurrentQueue<(string Key, string Target, bool Folder)>(apps.Where(a => !Icons.ContainsKey(a.Id))

@@ -7,6 +7,10 @@ namespace ReStart.Core;
 public static class AppSearch
 {
     /// <summary>Returns up to limit matches, prioritizing exact names, name prefixes, word prefixes, then substrings.</summary>
+    /// <param name="apps">Flat catalog of installed app identities and display names.</param>
+    /// <param name="query">Search text; matching normalizes case, Unicode width, and hiragana/katakana forms.</param>
+    /// <param name="limit">Maximum number of ranked apps to return.</param>
+    /// <returns>Ranked matching apps, limited to the requested count; a blank query returns the first culture-sorted catalog entries.</returns>
     public static IReadOnlyList<AppEntry> Find(IEnumerable<AppEntry> apps, string query, int limit = 80)
     {
         var words = Fold(query).Split(' ', StringSplitOptions.RemoveEmptyEntries);

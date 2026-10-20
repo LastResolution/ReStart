@@ -34,6 +34,8 @@ gh pr create --base main --fill
 ```powershell
 dotnet restore ReStart.slnx --locked-mode
 dotnet format whitespace ReStart.slnx --verify-no-changes --no-restore
+./scripts/check-api-docs.ps1 -SelfTest
+./scripts/check-api-docs.ps1
 dotnet build ReStart.slnx -c Release --no-restore
 dotnet test ReStart.slnx -c Release --no-build
 ```
@@ -65,3 +67,5 @@ dotnet test ReStart.slnx -c Release --no-build
 - [多言語実装](docs/ja/localization.md) と [API設計](docs/ja/api-contracts.md) も参照してください。
 
 コミットは英語で記述し、全8言語のカタログを同じキーで更新します。今後のリリースノートは英語のみ、一般資料は日本語を併記します。
+
+公開APIには `<param>`・`<typeparam>`・`<returns>` を記載し、単位、nullや省略時の意味、所有権と変更対象、重要な例外を説明します。CIは選択されたSDKのC#パーサーでタグの不足・空欄を検出し、説明内容の正確さはレビューで確認します。

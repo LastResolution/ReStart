@@ -4,6 +4,10 @@ namespace ReStart.Core;
 public static class FilePinning
 {
     /// <summary>Normalizes an absolute file, directory, or shortcut path and preserves shortcut arguments by pinning the shortcut itself.</summary>
+    /// <param name="path">Fully qualified existing filesystem path, without quotes or control characters.</param>
+    /// <returns>A launch entry retaining the file, directory, or shortcut itself as its target.</returns>
+    /// <exception cref="ArgumentException">The path is not fully qualified or contains unsupported quoting, control characters, or excessive length.</exception>
+    /// <exception cref="FileNotFoundException">The target file or directory does not exist.</exception>
     public static AppEntry FromPath(string path)
     {
         if (string.IsNullOrWhiteSpace(path) || path.Length > 32767 || path.Any(c => char.IsControl(c) || c == '"') || !Path.IsPathFullyQualified(path))
