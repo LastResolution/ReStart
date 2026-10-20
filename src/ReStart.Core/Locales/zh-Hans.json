@@ -308,5 +308,15 @@
   "StartupApps": "正在查找应用…",
   "StartupIcons": "正在准备图标…",
   "StartupTiles": "正在准备动态磁贴…",
-  "StartupReady": "准备就绪"
+  "StartupReady": "准备就绪",
+  "SettingsColorThemes": "配色主题",
+  "SettingsBaseTheme": "基础主题",
+  "SettingsBackgroundColor": "背景颜色",
+  "SettingsCustomColorsHelp": "使用 #RRGGBB。背景留空时使用基础主题。文字和控件会自动调整为清晰的对比度。",
+  "SettingsResetColors": "重置颜色",
+  "ThemeMidnight": "午夜",
+  "ThemeOcean": "海洋",
+  "ThemeForest": "森林",
+  "ThemeRose": "玫瑰",
+  "ThemeSand": "沙色"
 }

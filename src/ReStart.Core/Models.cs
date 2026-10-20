@@ -135,6 +135,8 @@ public sealed class Preferences
     public ThemeMode Theme { get; set; } = ThemeMode.Dark;
     /// <summary>Gets or sets the requested accent color.</summary>
     public string Accent { get; set; } = "#0078D7";
+    /// <summary>Gets or sets an optional opaque RGB surface color; empty uses the selected base theme.</summary>
+    public string BackgroundColor { get; set; } = "";
     /// <summary>Gets or sets background tint opacity, normalized to 0.3 through 1.</summary>
     public double BackgroundOpacity { get; set; } = 0.86;
     /// <summary>Gets or sets the cell scale, normalized to 0.7 through 1.5.</summary>
@@ -180,6 +182,8 @@ public sealed class LayoutDocument
         Preferences.TileScale = double.IsFinite(Preferences.TileScale) ? Math.Clamp(Preferences.TileScale, 0.7, 1.5) : 1;
         Preferences.BackgroundOpacity = double.IsFinite(Preferences.BackgroundOpacity) ? Math.Clamp(Preferences.BackgroundOpacity, 0.3, 1) : 0.86;
         if (!Enum.IsDefined(Preferences.Theme)) Preferences.Theme = ThemeMode.Dark;
+        Preferences.Accent = ThemePresets.IsColor(Preferences.Accent) ? Preferences.Accent.ToUpperInvariant() : "#0078D7";
+        Preferences.BackgroundColor = ThemePresets.IsColor(Preferences.BackgroundColor) ? Preferences.BackgroundColor.ToUpperInvariant() : "";
         var ids = new HashSet<string>();
         foreach (var group in Groups)
         {

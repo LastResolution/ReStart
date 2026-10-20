@@ -624,4 +624,24 @@ public enum TextKey
     StartupTiles,
     /// <summary>Ready</summary>
     StartupReady,
+    /// <summary>Color themes</summary>
+    SettingsColorThemes,
+    /// <summary>Base theme</summary>
+    SettingsBaseTheme,
+    /// <summary>Background color</summary>
+    SettingsBackgroundColor,
+    /// <summary>Use #RRGGBB. An empty background uses the base theme. Text and controls adjust for readable contrast.</summary>
+    SettingsCustomColorsHelp,
+    /// <summary>Reset colors</summary>
+    SettingsResetColors,
+    /// <summary>Midnight</summary>
+    ThemeMidnight,
+    /// <summary>Ocean</summary>
+    ThemeOcean,
+    /// <summary>Forest</summary>
+    ThemeForest,
+    /// <summary>Rose</summary>
+    ThemeRose,
+    /// <summary>Sand</summary>
+    ThemeSand,
 }

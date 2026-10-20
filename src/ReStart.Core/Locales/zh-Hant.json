@@ -308,5 +308,15 @@
   "StartupApps": "正在尋找應用程式…",
   "StartupIcons": "正在準備圖示…",
   "StartupTiles": "正在準備動態磚…",
-  "StartupReady": "準備就緒"
+  "StartupReady": "準備就緒",
+  "SettingsColorThemes": "配色主題",
+  "SettingsBaseTheme": "基本主題",
+  "SettingsBackgroundColor": "背景顏色",
+  "SettingsCustomColorsHelp": "使用 #RRGGBB。背景留空時使用基本主題。文字與控制項會自動調整為清晰的對比度。",
+  "SettingsResetColors": "重設顏色",
+  "ThemeMidnight": "午夜",
+  "ThemeOcean": "海洋",
+  "ThemeForest": "森林",
+  "ThemeRose": "玫瑰",
+  "ThemeSand": "沙色"
 }

@@ -308,5 +308,15 @@
   "StartupApps": "앱을 찾는 중…",
   "StartupIcons": "아이콘을 준비하는 중…",
   "StartupTiles": "라이브 타일을 준비하는 중…",
-  "StartupReady": "준비 완료"
+  "StartupReady": "준비 완료",
+  "SettingsColorThemes": "색상 테마",
+  "SettingsBaseTheme": "기본 테마",
+  "SettingsBackgroundColor": "배경색",
+  "SettingsCustomColorsHelp": "#RRGGBB를 사용하세요. 배경색이 비어 있으면 기본 테마를 사용합니다. 텍스트와 컨트롤의 대비를 읽기 쉽게 조정합니다.",
+  "SettingsResetColors": "색상 초기화",
+  "ThemeMidnight": "미드나이트",
+  "ThemeOcean": "오션",
+  "ThemeForest": "포레스트",
+  "ThemeRose": "로즈",
+  "ThemeSand": "샌드"
 }

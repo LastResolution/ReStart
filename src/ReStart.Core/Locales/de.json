@@ -308,5 +308,15 @@
   "StartupApps": "Apps werden gesucht…",
   "StartupIcons": "Symbole werden vorbereitet…",
   "StartupTiles": "Live-Kacheln werden vorbereitet…",
-  "StartupReady": "Bereit"
+  "StartupReady": "Bereit",
+  "SettingsColorThemes": "Farbthemen",
+  "SettingsBaseTheme": "Basisthema",
+  "SettingsBackgroundColor": "Hintergrundfarbe",
+  "SettingsCustomColorsHelp": "#RRGGBB verwenden. Ein leeres Hintergrundfeld nutzt das Basisthema. Text und Bedienelemente passen sich für lesbaren Kontrast an.",
+  "SettingsResetColors": "Farben zurücksetzen",
+  "ThemeMidnight": "Mitternacht",
+  "ThemeOcean": "Ozean",
+  "ThemeForest": "Wald",
+  "ThemeRose": "Rose",
+  "ThemeSand": "Sand"
 }
