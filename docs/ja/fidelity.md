@@ -10,7 +10,9 @@ Windows 10 / 11、x64 / ARM64 向けのビルドを提供します。開発・�
 
 単独の通常タイルへの重なりでグループを作る動作も ReStart の拡張です。グループ内の重なりはフォルダー作成、既存フォルダーは中への追加になります。[Microsoft の Windows 10 向け案内](https://support.microsoft.com/en-au/windows/experience/personalization/customize-the-windows-start-menu)に合わせ、1つ残ったフォルダーは維持し、すべて取り出したときに削除します。
 
-Windows Search 全体、Web / Cortana、旧 UWP タイル通知、Jump Lists、Windows の最近使用 / 使用頻度履歴、Windows の配置の直接取り込みは含みません。更新確認は認証なしで公開 GitHub Releases を参照し、インストールは手動です。
+翻訳したWindows設定15項目とローカルインデックスのファイル名検索、公開APIによる最近・よく使う文書の表示に対応します。独自・ピン留めカテゴリと独自タスクリスト、Windows Search全体、Web / Cortana、旧UWPタイル通知、Windowsの使用頻度履歴の取り込み、Windows配置の直接取り込みは含みません。更新確認は認証なしで公開GitHub Releasesを参照し、インストールは手動です。
+
+サイドバーのホバー展開とフォルダー選択、設定・ファイル検索、ジャンプリスト、アプリ履歴、ホバー表示、重ねて作るグループ・フォルダー、端スクロール、ドロップのヒントを個別に切り替えられます。[スタートの動作設定](start-behavior.md)に既定値と保存先をまとめています。対応するデスクトップアプリとショートカットでは、タイルごとの追加引数・作業フォルダー・管理者実行も指定できます。
 
 明示的な編集モード、複数選択の一括移動、起動中の配置 Undo / Redo は ReStart の拡張です。
 
