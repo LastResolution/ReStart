@@ -303,5 +303,11 @@
   "OpenTileLibrary": "打开磁贴库文件夹",
   "RefreshTiles": "刷新磁贴",
   "TileLibraryEmpty": "暂无包。请将磁贴包文件夹复制到磁贴库中。",
-  "AddLiveTile": "添加动态磁贴"
+  "AddLiveTile": "添加动态磁贴",
+  "StartupTitle": "正在准备启动",
+  "StartupApps": "正在查找应用…",
+  "StartupIcons": "正在准备图标…",
+  "StartupTiles": "正在准备动态磁贴…",
+  "StartupReady": "准备就绪",
+  "StartupSearch": "输入以搜索。开始屏幕打开后会显示搜索结果。"
 }

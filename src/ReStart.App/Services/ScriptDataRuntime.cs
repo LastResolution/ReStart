@@ -9,6 +9,7 @@ internal sealed class ScriptDataRuntime : IDisposable
     private readonly Dictionary<string, TileDataSource> _sources = [];
     internal string Signature { get; }
     internal event Action? Updated;
+    internal bool IsLoading => _sources.Values.Any(s => s.Snapshot.Status == "loading");
     internal ScriptDataRuntime(string path, ScriptTileManifest manifest, TileDataTransport transport)
     {
         Signature = JsonSerializer.Serialize(manifest.DataSources, ScriptTileProtocol.Json);

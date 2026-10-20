@@ -303,5 +303,11 @@
   "OpenTileLibrary": "Abrir biblioteca",
   "RefreshTiles": "Actualizar mosaicos",
   "TileLibraryEmpty": "No hay paquetes. Copia una carpeta de mosaico en la biblioteca.",
-  "AddLiveTile": "Añadir mosaico dinámico"
+  "AddLiveTile": "Añadir mosaico dinámico",
+  "StartupTitle": "Preparando el inicio",
+  "StartupApps": "Buscando tus aplicaciones…",
+  "StartupIcons": "Preparando iconos…",
+  "StartupTiles": "Preparando los mosaicos dinámicos…",
+  "StartupReady": "Listo",
+  "StartupSearch": "Escribe para buscar. Tu búsqueda estará lista cuando se abra Inicio."
 }

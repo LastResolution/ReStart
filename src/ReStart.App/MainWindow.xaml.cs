@@ -22,9 +22,10 @@ public partial class MainWindow : Window
 {
     private readonly LayoutStore _store;
     private readonly bool _preview;
-    private readonly AppCatalog _catalog = new();
+    private readonly AppCatalog _catalog;
     private readonly Func<Task<List<AppEntry>>> _loadCatalog;
     private readonly bool _catalogFixture;
+    private readonly Action<AppEntry>? _activationFixture;
     private readonly DispatcherTimer _clock;
     private readonly List<(TextBlock Text, Tile Tile)> _liveLabels = [];
     private readonly Dictionary<string, FrameworkElement> _sections = [];
@@ -66,12 +67,15 @@ public partial class MainWindow : Window
     /// <summary>Hosts the full-screen launcher and coordinates local models, native input, and tile rendering.</summary>
     public MainWindow(LayoutStore store, bool preview) : this(store, preview, null) { }
 
-    internal MainWindow(LayoutStore store, bool preview, Func<Task<List<AppEntry>>>? catalogLoader)
+    internal MainWindow(LayoutStore store, bool preview, Func<Task<List<AppEntry>>>? catalogLoader, Action<AppEntry>? activation = null)
     {
-        if (!preview && catalogLoader != null) throw new ArgumentException("Catalog fixtures require preview mode.", nameof(catalogLoader));
+        if (!preview && (catalogLoader != null || activation != null)) throw new ArgumentException("Application fixtures require preview mode.", nameof(catalogLoader));
         _store = store;
         _preview = preview;
+        _startupComplete = preview;
+        _catalog = new(Path.Combine(Path.GetDirectoryName(store.FilePath)!, "icon-cache"));
         _catalogFixture = catalogLoader != null;
+        _activationFixture = activation;
         _loadCatalog = catalogLoader ?? _catalog.LoadAsync;
         _scriptPackages = new(Path.GetDirectoryName(store.FilePath)!);
         IsVisibleChanged += (_, _) => { if (!IsVisible) PauseScripts(); };
@@ -153,10 +157,13 @@ public partial class MainWindow : Window
         {
             Document = _store.Load() ?? new();
             ApplyAppearance();
+            MarkStartup("preferences");
             // Preferences and the bare-Windows-key hook must not wait for shell
             // enumeration. Input is accepted while the catalog is still loading.
             PreferencesChanged?.Invoke();
             _apps = await _loadCatalog();
+            MarkStartup("catalog");
+            ReportStartup(K.StartupIcons, .4);
             var actualApps = _apps;
             if (_preview && !_catalogFixture)
             {
@@ -173,6 +180,9 @@ public partial class MainWindow : Window
             _historyReady = true;
             SetStatus(_store.RecoveryMessage ?? L.F(K.StatusCatalogReady, _apps.Count));
             _ready = true;
+            MarkStartup("views");
+            if (ScriptTileCount == 0) MarkStartup("tiles");
+            StartStartupTileWarmup();
             UpdateEditingChrome();
             RefreshSearchResults();
             PreferencesChanged?.Invoke();
@@ -181,10 +191,7 @@ public partial class MainWindow : Window
             var pinnedFiles = Document.Groups.SelectMany(g => g.Tiles).SelectMany(t => new[] { t }.Concat(t.Children))
                 .Where(t => !t.IsFolder && t.Widget.Length == 0 && !t.IsShellApp)
                 .Select(t => new AppEntry(t.AppId, t.Label, t.Target, false));
-            await _catalog.LoadIconsAsync(actualApps.Concat(pinnedFiles).DistinctBy(a => a.Id, StringComparer.OrdinalIgnoreCase).OrderByDescending(a => pinnedIds.Contains(a.Id)), () => Dispatcher.BeginInvoke(() =>
-            {
-                if (!_dragging) RenderGroups();
-            }, DispatcherPriority.Background));
+            await _catalog.LoadIconsAsync(actualApps.Concat(pinnedFiles).DistinctBy(a => a.Id, StringComparer.OrdinalIgnoreCase).OrderByDescending(a => pinnedIds.Contains(a.Id)));
             if (_preview)
             {
                 foreach (var app in _apps)
@@ -194,17 +201,20 @@ public partial class MainWindow : Window
                 }
             }
             IconsReady = true;
+            MarkStartup("icons");
             RenderGroups();
             RenderApps();
             RefreshSearchResults();
             if (_store.RecoveryMessage == null) SetStatus("");
             if (!_preview && !_store.IsReadOnly) SaveLayout();
             if (!_preview && Document.Preferences.CheckUpdatesOnStartup) _ = CheckForUpdatesAsync();
+            MarkStartup("complete");
         }
         catch (Exception ex)
         {
             SetStatus(L.T(K.ErrorCatalogLoad) + ex.Message);
             _ready = true;
+            IconsReady = true;
             RefreshSearchResults();
         }
     }
@@ -228,6 +238,7 @@ public partial class MainWindow : Window
     /// <summary>Hides the active launcher or presents the existing window.</summary>
     public void Toggle()
     {
+        if (_startupWindow != null) { CancelStartupPresentation(); return; }
         if (IsVisible && IsActive && _dialogDepth == 0 && !_dismissing) Dismiss();
         else Present();
     }
@@ -235,6 +246,8 @@ public partial class MainWindow : Window
     /// <summary>Returns to the pinned home view and presents the launcher; existing owned dialogs retain focus and preview windows retain their size.</summary>
     public void Present()
     {
+        if (!_startupComplete && _startupWindow == null && IsReady && IconsReady && ScriptTileCount == 0) _startupComplete = true;
+        if (!_startupComplete) { RequestStartupPresentation(); return; }
         var dialog = OwnedWindows.Cast<Window>().LastOrDefault(w => w.IsVisible);
         if (dialog != null) { dialog.Activate(); return; }
         var wasHidden = !IsVisible;
@@ -312,6 +325,10 @@ public partial class MainWindow : Window
         Application.Current.Resources["PanelBrush"] = new SolidColorBrush(background);
         Application.Current.Resources["TileBrush"] = new SolidColorBrush(highContrast ? background : light ? Color.FromRgb(218, 218, 218) : Color.FromRgb(58, 58, 58));
         Application.Current.Resources["AccentBrush"] = Brush(p.Accent, "#0078D7");
+        var accentColor = Brush(p.Accent, "#0078D7").Color;
+        Application.Current.Resources["SearchSelectionBrush"] = new SolidColorBrush(highContrast ? SystemColors.HighlightColor
+            : Color.FromRgb((byte)(background.R * .75 + accentColor.R * .25), (byte)(background.G * .75 + accentColor.G * .25), (byte)(background.B * .75 + accentColor.B * .25)));
+        Application.Current.Resources["SearchSelectionTextBrush"] = new SolidColorBrush(highContrast ? SystemColors.HighlightTextColor : foreground);
         Application.Current.Resources["ControlBrush"] = new SolidColorBrush(highContrast ? background : light ? Colors.White : Color.FromRgb(43, 43, 43));
         Application.Current.Resources["BorderBrush"] = new SolidColorBrush(highContrast ? foreground : light ? Color.FromRgb(135, 135, 135) : Color.FromRgb(112, 112, 112));
         Application.Current.Resources["HoverBrush"] = new SolidColorBrush(highContrast ? background : light ? Color.FromRgb(225, 225, 225) : Color.FromRgb(70, 70, 70));
@@ -376,6 +393,7 @@ public partial class MainWindow : Window
 
     private void RenderGroups()
     {
+        _boardRenderCount++;
         if (_editingGroupHeader?.IsEditing == true) { _groupsRenderPending = true; return; }
         _groupsRenderPending = false;
         if (_openFolder != null && (!_openFolder.IsFolder || !Document.Groups.Any(g => g.Tiles.Contains(_openFolder)))) _openFolder = null;
@@ -747,22 +765,6 @@ public partial class MainWindow : Window
         ContentScroll.ScrollToLeftEnd();
     }
 
-    private void RefreshSearchResults()
-    {
-        var focusedId = ((Keyboard.FocusedElement as Button)?.Tag as AppEntry)?.Id;
-        ResultsPanel.Children.Clear();
-        var query = SearchBox.Text.Trim();
-        if (query.Length == 0) return;
-        var results = AppSearch.Find(_apps, query);
-        var loading = !_ready && _apps.Count == 0;
-        ResultsPanel.Children.Add(new TextBlock { Text = loading ? L.T(K.StatusLoading) : results.Count == 0 ? L.T(K.SearchNoMatches) : L.T(K.SearchBestMatch), Margin = new(6, 10, 0, 14), Foreground = (System.Windows.Media.Brush)FindResource("MutedBrush") });
-        foreach (var result in results) ResultsPanel.Children.Add(AppButton(result));
-        if (results.Count == 0 && !loading)
-            ResultsPanel.Children.Add(new TextBlock { Text = L.T(K.SearchHint), Margin = new(6), FontSize = 13 });
-        if (focusedId != null && ResultsPanel.IsVisible)
-            ResultsPanel.Children.OfType<Button>().FirstOrDefault(b => b.Tag is AppEntry app && app.Id == focusedId)?.Focus();
-    }
-
     private void ResetToPinnedView()
     {
         _editingGroupHeader?.EndEdit(true);
@@ -858,6 +860,7 @@ public partial class MainWindow : Window
     private void Launch(AppEntry app)
     {
         if (_dismissing || _layoutEditing) return;
+        if (_preview && _activationFixture != null) { _activationFixture(app); return; }
         if (app.Id == "restart:calendar")
         {
             WithDialog(() =>
@@ -930,7 +933,7 @@ public partial class MainWindow : Window
     /// <summary>Prepares a query for rendering verification only; this does not simulate physical keyboard input.</summary>
     public void SetSmokeSearch(string query) { SearchBox.Text = query; FocusSearchInput(); }
     /// <summary>Gets rendered app-result names for smoke diagnostics.</summary>
-    public string[] SearchResultNames => ResultsPanel.Children.OfType<Button>().Select(AutomationProperties.GetName).ToArray();
+    public string[] SearchResultNames => SearchResults.Items.OfType<Button>().Select(AutomationProperties.GetName).ToArray();
     /// <summary>Gets whether the native text input remains in the visible WPF tree.</summary>
     public bool SearchInputInVisibleTree => SearchBox.IsVisible;
     private void WithDialog(Action action) { _dialogDepth++; try { action(); } finally { _dialogDepth--; } }
@@ -970,6 +973,7 @@ public partial class MainWindow : Window
     /// <summary>Closes the menu after a taskbar click unless a dialog or drag currently owns the interaction.</summary>
     public void DismissFromTaskbar()
     {
+        if (_startupWindow != null && Document.Preferences.CloseOnDeactivate) { CancelStartupPresentation(); return; }
         if (IsVisible && _dialogDepth == 0 && !_dragging && Document.Preferences.CloseOnDeactivate) Dismiss();
     }
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
@@ -979,6 +983,7 @@ public partial class MainWindow : Window
         CompleteEntrance();
         if (_editingGroupHeader?.IsEditing == true && e.OriginalSource is TextBox) return;
         if (HandleLayoutEditingKey(e)) return;
+        if (HandleSearchSelectionKey(e)) return;
         if (e.Key == Key.Tab && SearchBox.IsKeyboardFocused && SearchBox.Text.Length == 0 && !_searchRequested)
         { PinnedNav.Focus(); e.Handled = true; return; }
 
@@ -992,16 +997,9 @@ public partial class MainWindow : Window
             e.Handled = true;
         }
         else if (e.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control) { _searchRequested = true; UpdateSearchChrome(true); SearchBox.Focus(); SearchBox.SelectAll(); e.Handled = true; }
-        else if (e.Key == Key.Enter && SearchBox.IsKeyboardFocused && SearchBox.Text.Trim().Length > 0)
-        {
-            var app = AppSearch.Find(_apps, SearchBox.Text, 1).FirstOrDefault();
-            if (app != null) Launch(app);
-            e.Handled = true;
-        }
         else if (e.Key == Key.Down && SearchBox.IsKeyboardFocused)
         {
-            var first = SearchBox.Text.Length > 0 ? ResultsPanel.Children.OfType<Button>().FirstOrDefault()
-                : _allApps ? AppsPanel.Children.OfType<Button>().FirstOrDefault(b => b.Tag is AppEntry || b is AppFolderButton)
+            var first = _allApps ? AppsPanel.Children.OfType<Button>().FirstOrDefault(b => b.Tag is AppEntry || b is AppFolderButton)
                 : GroupsPanel.Children.OfType<StackPanel>().SelectMany(p => p.Children.OfType<TilePanel>())
                     .SelectMany(p => p.Children.OfType<Button>()).FirstOrDefault();
             if (first != null) { first.Focus(); first.BringIntoView(); e.Handled = true; }
@@ -1028,7 +1026,7 @@ public partial class MainWindow : Window
     private static bool IsAnyMenuOpen() => Mouse.Captured is ContextMenu || Mouse.Captured is System.Windows.Controls.Primitives.MenuBase;
     private void OnClosing(object? sender, CancelEventArgs e) { if (!_exit) { e.Cancel = true; Dismiss(); } }
     /// <summary>Stops timers and isolated script workers before permanently closing the launcher.</summary>
-    public void Exit() { _exit = true; StopMotion(); StopFolderDwell(); StopWatchingDesktopAppearance(); _clock.Stop(); _nameRefreshTimer?.Stop(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); foreach (var data in _tileData.Values) data.Runtime.Dispose(); _tileData.Clear(); _tileDataTransport?.Dispose(); _systemMetrics?.Dispose(); Close(); }
+    public void Exit() { _exit = true; CancelStartupPresentation(); StopMotion(); StopFolderDwell(); StopWatchingDesktopAppearance(); _clock.Stop(); _nameRefreshTimer?.Stop(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); foreach (var data in _tileData.Values) data.Runtime.Dispose(); _tileData.Clear(); _tileDataTransport?.Dispose(); _systemMetrics?.Dispose(); Close(); }
 
     /// <summary>Renders only the launcher root to a PNG for reproducible UI verification.</summary>
     public void SaveScreenshot(string path)

@@ -303,5 +303,11 @@
   "OpenTileLibrary": "ライブラリフォルダを開く",
   "RefreshTiles": "タイルを再読み込み",
   "TileLibraryEmpty": "パッケージがありません。ライブラリにタイルのフォルダをコピーしてください。",
-  "AddLiveTile": "ライブタイルを追加"
+  "AddLiveTile": "ライブタイルを追加",
+  "StartupTitle": "起動準備中",
+  "StartupApps": "アプリを取得しています…",
+  "StartupIcons": "アイコンを準備しています…",
+  "StartupTiles": "ライブタイルを準備しています…",
+  "StartupReady": "準備完了",
+  "StartupSearch": "入力すると検索できます。スタートを開いたら検索結果を表示します。"
 }

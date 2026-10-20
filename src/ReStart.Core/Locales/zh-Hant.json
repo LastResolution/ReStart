@@ -303,5 +303,11 @@
   "OpenTileLibrary": "開啟動態磚庫資料夾",
   "RefreshTiles": "重新整理動態磚",
   "TileLibraryEmpty": "尚無套件。請將動態磚套件資料夾複製到庫中。",
-  "AddLiveTile": "新增動態磚"
+  "AddLiveTile": "新增動態磚",
+  "StartupTitle": "正在準備啟動",
+  "StartupApps": "正在尋找應用程式…",
+  "StartupIcons": "正在準備圖示…",
+  "StartupTiles": "正在準備動態磚…",
+  "StartupReady": "準備就緒",
+  "StartupSearch": "輸入以搜尋。開始畫面開啟後會顯示搜尋結果。"
 }

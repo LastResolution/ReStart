@@ -140,11 +140,11 @@ public partial class MainWindow
 
     private async Task UpdateScriptTilesAsync()
     {
-        if (_scriptRendering || !IsVisible) return;
+        if (_scriptRendering || !IsVisible && !_startupPreparing) return;
         _scriptRendering = true;
         try
         {
-            var current = _scriptViews.Where(v => v.Body.IsVisible).ToArray();
+            var current = _scriptViews.Where(v => v.Body.IsVisible || _startupPreparing).ToArray();
             var pinnedIds = Document.Groups.SelectMany(g => g.Tiles).SelectMany(t => new[] { t }.Concat(t.Children)).Select(t => t.Id).ToHashSet();
             foreach (var id in _tileData.Keys.Where(id => !pinnedIds.Contains(id)).ToArray()) RetireTileData(id);
             foreach (var data in _tileData)
@@ -212,10 +212,11 @@ public partial class MainWindow
                         settings = manifest.Settings,
                         state = session.State
                     });
-                    if (!_scriptSessions.TryGetValue(view.Tile.Id, out var latest) || latest != session || !IsVisible || _scriptWorkerPool != pool) return;
+                    if (!_scriptSessions.TryGetValue(view.Tile.Id, out var latest) || latest != session || !IsVisible && !_startupPreparing || _scriptWorkerPool != pool) return;
+                    _scriptAttempts.Add(view.Tile.Id);
                     if (input != null && session.Inputs.TryPeek(out var queued) && queued == input) session.Inputs.Dequeue();
                     if (session.Inputs.Count > 0) session.NextUpdate = DateTimeOffset.MinValue;
-                    if (frame != null) { _scriptFrames[view.Tile.Id] = frame; session.State = frame.State; }
+                    if (frame != null) { _scriptFrames[view.Tile.Id] = frame; session.State = frame.State; if (ScriptsReady) MarkStartup("tiles"); }
                     foreach (var target in _scriptViews.Where(target => target.Tile.Id == view.Tile.Id))
                     {
                         if (frame != null) ApplyScriptFrame(target.Body, target.Button, target.Tile, frame);
@@ -224,7 +225,7 @@ public partial class MainWindow
                     }
                 }
                 catch (Exception ex) when (ex is IOException or InvalidDataException or InvalidOperationException or System.Text.Json.JsonException)
-                { view.Button.ToolTip = L.T(K.ErrorScriptPrefix) + ex.Message; if (view.Body.Children.Count == 0) view.Body.Children.Add(new TextBlock { Text = L.T(K.ErrorScript) }); }
+                { _scriptAttempts.Add(view.Tile.Id); view.Button.ToolTip = L.T(K.ErrorScriptPrefix) + ex.Message; if (view.Body.Children.Count == 0) view.Body.Children.Add(new TextBlock { Text = L.T(K.ErrorScript) }); }
             }));
         }
         finally { _scriptRendering = false; }

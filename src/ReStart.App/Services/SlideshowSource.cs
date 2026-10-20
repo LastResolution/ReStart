@@ -10,6 +10,8 @@ internal sealed class SlideshowSource(string bindingPath)
     internal event Action? Updated;
     private Snapshot _latest = new(null, 0, 0);
     private Task? _pending;
+    private int _initialized;
+    internal bool Initialized => Volatile.Read(ref _initialized) != 0;
     private string? _loadedPath;
     private DateTime _loadedAt;
     private long _loadedLength;
@@ -28,7 +30,7 @@ internal sealed class SlideshowSource(string bindingPath)
     internal Snapshot Refresh(DateTimeOffset now, int intervalSeconds)
     {
         if (_pending == null || _pending.IsCompleted)
-            _pending = Task.Run(() => Load(now, Math.Clamp(intervalSeconds, 5, 3600)));
+            _pending = Task.Run(() => { try { Load(now, Math.Clamp(intervalSeconds, 5, 3600)); } finally { Volatile.Write(ref _initialized, 1); } });
         return Volatile.Read(ref _latest);
     }
 

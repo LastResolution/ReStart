@@ -22,7 +22,7 @@ render(ctx) は同期関数で表示用 JSON を返します。HTML / XAML を�
 
 ctx.now は PC の UTC オフセット付き時刻。ctx.time は unixMs・monotonicMs（稼働時間）・utc・local・offsetMinutes・Windows timeZoneId、ctx.calendar は翻訳済み shortDate・weekday・month と数値の day です。経過時間には monotonicMs を使用します。外部時刻サービスは使わず、OS の時刻・タイムゾーン変更で再描画します。
 
-capabilities に system.metrics を指定すると ctx.system に CPU 使用率、論理 CPU 数、物理メモリ、稼働時間、固定ドライブ容量、送受信速度、バッテリー状態を渡します。全フィールドと単位は[英語 API 表](../javascript-tiles.md)を参照してください。CPU・通信速度は2回のサンプルが必要で、準備中・取得不能は null。通信速度は有効な非ループバック・非トンネルインターフェースの合計で、仮想アダプターでは重複計上する場合があります。ドライブ容量は約30秒キャッシュし、非表示中はサンプリングを停止します。ファイル内容・プロセス名を渡さず、スクリプト自身の通信 API はありません。
+capabilities に system.metrics を指定すると ctx.system に CPU 使用率、論理 CPU 数、物理メモリ、稼働時間、固定ドライブ容量、送受信速度、バッテリー状態を渡します。全フィールドと単位は[英語 API 表](../javascript-tiles.md)を参照してください。CPU・通信速度は2回のサンプルが必要で、準備中・取得不能は null。通信速度は有効な非ループバック・非トンネルインターフェースの合計で、仮想アダプターでは重複計上する場合があります。ドライブ容量は約30秒キャッシュし、スタートを開く準備中と表示中に計測し、閉じるとサンプリングを停止します。ファイル内容・プロセス名を渡さず、スクリプト自身の通信 API はありません。
 
 ## 写真とスタイル
 

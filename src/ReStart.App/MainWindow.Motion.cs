@@ -29,6 +29,7 @@ public partial class MainWindow
     /// <summary>Dismisses Start with its exit transition, or immediately when motion is disabled or an OS session action requires it.</summary>
     public void Dismiss(bool immediately = false)
     {
+        if (_startupWindow != null) { CancelStartupPresentation(); return; }
         if (!IsVisible || _dismissing && !immediately) return;
         if (immediately || !MotionEnabled)
         {

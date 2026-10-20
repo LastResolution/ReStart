@@ -303,5 +303,11 @@
   "OpenTileLibrary": "Bibliotheksordner öffnen",
   "RefreshTiles": "Kacheln aktualisieren",
   "TileLibraryEmpty": "Noch keine Pakete. Kopieren Sie einen Kachelordner in die Bibliothek.",
-  "AddLiveTile": "Live-Kachel hinzufügen"
+  "AddLiveTile": "Live-Kachel hinzufügen",
+  "StartupTitle": "Start wird vorbereitet",
+  "StartupApps": "Apps werden gesucht…",
+  "StartupIcons": "Symbole werden vorbereitet…",
+  "StartupTiles": "Live-Kacheln werden vorbereitet…",
+  "StartupReady": "Bereit",
+  "StartupSearch": "Zum Suchen tippen. Die Suchanfrage wird beim Öffnen von Start übernommen."
 }
