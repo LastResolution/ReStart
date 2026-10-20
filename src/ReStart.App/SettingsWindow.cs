@@ -35,7 +35,7 @@ internal sealed partial class SettingsWindow : Window
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
         var close = new Button { Content = L.T(K.CommonClose), MinWidth = 90, IsCancel = true };
         var save = new Button { Content = L.T(K.CommonSave), MinWidth = 100, Margin = new(12, 0, 0, 0), IsDefault = true };
-        save.SetResourceReference(BackgroundProperty, "AccentBrush"); save.Foreground = Brushes.White;
+        save.SetResourceReference(BackgroundProperty, "AccentBrush"); save.SetResourceReference(ForegroundProperty, "AccentTextBrush");
         save.Click += Save;
         buttons.Children.Add(close); buttons.Children.Add(save); footer.Children.Add(buttons);
         DockPanel.SetDock(footer, Dock.Bottom); root.Children.Add(footer);
@@ -69,24 +69,7 @@ internal sealed partial class SettingsWindow : Window
         explorer.IsEnabled = !main.IsPreview;
         Note(content, L.T(K.ExplorerPinHelp));
         content = Section(L.T(K.SettingsAppearance));
-        Select(content, L.T(K.SettingsTheme), new[] { L.T(K.ThemeSystem), L.T(K.ThemeDark), L.T(K.ThemeLight) }, (int)_draft.Theme, i => _draft.Theme = (ReStart.Core.ThemeMode)i);
-        Check(content, L.T(K.SettingsStartAccent), _draft.ShowAccentOnStart, v => _draft.ShowAccentOnStart = v);
-        Note(content, L.T(K.SettingsStartAccentHelp));
-        Check(content, L.T(K.SettingsWallpaper), _draft.ShowWallpaper, v => _draft.ShowWallpaper = v);
-        Check(content, L.T(K.SettingsColoredTiles), _draft.ColoredTiles, v => _draft.ColoredTiles = v);
-        Check(content, L.T(K.SettingsAnimation), _draft.Animate, v => _draft.Animate = v);
-        Select(content, L.T(K.SettingsGroupWidth), new[] { L.T(K.ColumnsThree), L.T(K.ColumnsFour) }, _draft.Columns == 8 ? 1 : 0, i => _draft.Columns = i == 1 ? 8 : 6);
-        Slide(content, L.T(K.SettingsTileSize), 0.7, 1.5, _draft.TileScale, v => _draft.TileScale = v, true);
-        Slide(content, L.T(K.SettingsOpacity), 0.3, 1, _draft.BackgroundOpacity, v => _draft.BackgroundOpacity = v, false);
-        var colors = new StackPanel { Orientation = Orientation.Horizontal, Margin = new(0, 8, 0, 12) };
-        foreach (var color in new[] { "#0078D7", "#0063B1", "#008272", "#107C10", "#744DA9", "#C239B3", "#D83B01", "#E81123" })
-        {
-            var button = new Button { Width = 42, Height = 34, Background = (SolidColorBrush)new BrushConverter().ConvertFromString(color)!, Margin = new(0, 0, 8, 0), ToolTip = color, Padding = new(0), HorizontalContentAlignment = HorizontalAlignment.Center, Content = _draft.Accent == color ? "✓" : "", Foreground = Brushes.White };
-            System.Windows.Automation.AutomationProperties.SetName(button, L.T(K.AccentPrefix) + color);
-            button.Click += (_, _) => { _draft.Accent = color; foreach (Button b in colors.Children) b.Content = ""; button.Content = "✓"; };
-            colors.Children.Add(button);
-        }
-        content.Children.Add(new TextBlock { Text = L.T(K.SettingsAccent), Margin = new(0, 8, 0, 0) }); content.Children.Add(colors);
+        BuildAppearance(content);
         content = Section(L.T(K.SettingsLanguage));
         var languages = new[] { "system" }.Concat(TextCatalog.SupportedLanguages).ToArray();
         Select(content, L.T(K.SettingsDisplayLanguage), new[] { L.T(K.ThemeSystem) }.Concat(TextCatalog.SupportedLanguages.Select(tag => CultureInfo.GetCultureInfo(tag).NativeName)).ToArray(),
@@ -168,12 +151,13 @@ internal sealed partial class SettingsWindow : Window
         System.Windows.Automation.AutomationProperties.SetName(checkbox, label);
         checkbox.Checked += (_, _) => changed(true); checkbox.Unchecked += (_, _) => changed(false); panel.Children.Add(checkbox); return checkbox;
     }
-    private static void Select(Panel panel, string label, string[] options, int index, Action<int> changed)
+    private static ComboBox Select(Panel panel, string label, string[] options, int index, Action<int> changed)
     {
         var row = new DockPanel { Margin = new(0, 10, 0, 7) };
         row.Children.Add(new TextBlock { Text = label, Width = 170, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center });
         var select = new ComboBox { ItemsSource = options, SelectedIndex = index, MinWidth = 180, HorizontalAlignment = HorizontalAlignment.Left, Padding = new(6) };
-        select.SelectionChanged += (_, _) => changed(select.SelectedIndex); row.Children.Add(select); panel.Children.Add(row);
+        System.Windows.Automation.AutomationProperties.SetName(select, label);
+        select.SelectionChanged += (_, _) => changed(select.SelectedIndex); row.Children.Add(select); panel.Children.Add(row); return select;
     }
     private static void Slide(Panel panel, string label, double min, double max, double value, Action<double> changed, bool snap)
     {
@@ -193,6 +177,7 @@ internal sealed partial class SettingsWindow : Window
     internal void SelectSection(string name) => _sectionButtons[name].RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
     private void Save(object sender, RoutedEventArgs e)
     {
+        if (!ValidateColors()) return;
         var previous = _main.Document.Preferences;
         StartupRegistration.Entry? registration = null;
         try

@@ -50,6 +50,8 @@ Each icon worker explicitly initializes COM. If the 64-pixel image factory canno
 
 Search results use native ListBox selection. The first result is highlighted while the native TextBox retains its caret; arrows move row focus and selection, and Enter invokes the selected rendered action. A same-query refresh retains the selected app identity even if ranking changes.
 
+The catalog is refreshed asynchronously on reopening with a five-second coalescing interval, and after thirty seconds while visible. Concurrent refresh requests share a task. A failed enumeration retains the last successful snapshot. Refresh waits for drags, inline edits and dialogs before replacing rows, preserves the selected installed app and never deletes user pins. Start-menu folder paths are published as one completed dictionary rather than cleared during enumeration. Only icon pixels are cached on disk; the application list is an in-memory snapshot.
+
 `AppShellCommands` reads IContextMenu canonical verbs on an STA and displays supported enabled commands. Invocation re-queries the command ID. Preview never invokes them. App launch targets are passed as shell identities or individual arguments, not evaluated as shell command text.
 
 ## Lifetime and input
@@ -75,6 +77,10 @@ Schema 4 stores tiles, preferences, independent entries, producer version and th
 The native window uses the pointer monitor's working area and PerMonitorV2. WPF content uses DIPs and logical cells. The wallpaper blur is an approximation of the original composition.
 
 Theme resources cover controls, scrollbars, dialogs and calendar. High contrast overrides effects. Modern app tiles use uniform translucent plates; Classic tiles share a global accent. Explicit per-tile color overrides are a ReStart extension and can be reset; high contrast still wins. Optional Start-surface accent applies to dark mode.
+
+Five color presets set only the base mode, RGB background/accent and classic Start-accent flag. An empty background retains the previous base-theme behavior; a custom background derives light/dark text, control surfaces and title-bar treatment from its luminance. Muted text, focus indicators and scrollbars retain readable contrast, and filled accent actions choose black or white ink. The same dynamic resources cover the splash, expanded navigation and settings. Color drafts are validated before saving; preset selection and arbitrary RGB fields remain local preferences, outside layout undo/redo. These color themes are ReStart extensions.
+
+Expanded navigation uses `RailLabel`: a fixed-width Segoe MDL2 Assets icon column and a separate localized caption. Accessibility names belong to each action and do not depend on decorative Unicode symbols in translated text.
 
 Typed `TextKey` references resolve eight embedded JSON catalogs. Custom labels and OS app names are preserved; default live-tile titles resolve in the selected language. Public/protected APIs require XML documentation; CS1591 is a build error.
 

@@ -15,6 +15,7 @@ dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory 
 ./scripts/test-first-input.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-search-selection.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-startup.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+./scripts/test-appearance.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-motion.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-app-menus.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-release-info.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
@@ -40,6 +41,7 @@ dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory 
 | motion | Real WPF entrance/exit clocks, staged rows, catalog refresh, input during entrance, rapid reopen, taskbar dismissal, disabled animation and shutdown cleanup |
 | search-selection | Native selection/automation, selected Enter target, arrows, typing continuation, same-query refresh and eight languages in both themes |
 | startup | Delayed catalog, hidden prepared content, splash typeahead/cancellation/coalesced activation, initial photo/script/error frames, warm reopening, eight languages in both themes and pixel-cache corruption/expiry/invalidation |
+| appearance | Eight languages across five presets, actual expanded-rail glyphs and alignment, splash theme resources, extreme RGB text/control/scrollbar contrast, invalid color rejection and five native settings save/persistence paths |
 | app-menus | Pin/unpin/menu refresh, default/explicit directory destinations with immediate Shell icons, preview command availability, canonical verbs read for real/missing files; no shell verb invocation |
 | release-info | Version, licenses, original migration backup, upgrade record, Eight languages × light/dark settings, global tile and Start accent |
 | placement | Independent group anchors, collision preview/cancel, unchanged child cells, standalone footprint/no header, persistence, inline name events and normal/independent folder expansion |

@@ -20,7 +20,7 @@ public sealed class AppCatalog
     public ConcurrentDictionary<string, ImageSource> Icons { get; } = new(StringComparer.OrdinalIgnoreCase);
     /// <summary>Gets frozen icons for logical Start-menu folder paths.</summary>
     public ConcurrentDictionary<string, ImageSource> FolderIcons { get; } = new(StringComparer.OrdinalIgnoreCase);
-    private readonly ConcurrentDictionary<string, string> _folderIconPaths = new(StringComparer.OrdinalIgnoreCase);
+    private volatile ConcurrentDictionary<string, string> _folderIconPaths = new(StringComparer.OrdinalIgnoreCase);
     /// <summary>Gets the number of Start-menu folder paths found during the last enumeration.</summary>
     public int FolderCount => _folderIconPaths.Count;
     /// <summary>Gets the number of applications returned by the last completed enumeration.</summary>
@@ -86,7 +86,7 @@ public sealed class AppCatalog
 
     private List<AppEntry> Enumerate()
     {
-        _folderIconPaths.Clear();
+        var folderIconPaths = new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var entries = new Dictionary<string, AppEntry>(StringComparer.OrdinalIgnoreCase);
         var shellLinks = new List<ShellAppLink>();
         object? shellObject = null, folderObject = null, itemsObject = null;
@@ -140,7 +140,7 @@ public sealed class AppCatalog
                     physical = Path.Combine(physical, segment);
                     if (!displayNames.TryGetValue(physical, out var display)) displayNames[physical] = display = ShellDisplayName(physical, segment);
                     folders.Add(display);
-                    _folderIconPaths.TryAdd(string.Join('\\', folders), physical);
+                    folderIconPaths.TryAdd(string.Join('\\', folders), physical);
                 }
                 var name = ShellDisplayName(file, Path.GetFileNameWithoutExtension(file));
                 if (name == Path.GetFileName(file)) name = Path.GetFileNameWithoutExtension(name);
@@ -150,6 +150,7 @@ public sealed class AppCatalog
         }
         var merged = AppCatalogLayout.Merge(entries.Values, shortcuts, shellLinks).ToList();
         Count = merged.Count;
+        _folderIconPaths = folderIconPaths;
         return merged;
     }
 

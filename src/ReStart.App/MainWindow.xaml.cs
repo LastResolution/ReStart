@@ -132,7 +132,7 @@ public partial class MainWindow : Window
                 ContentScroll.ScrollToHorizontalOffset(ContentScroll.HorizontalOffset + 26);
             }
         };
-        UserButton.Content = "◉     " + (_preview ? "ReStart" : Environment.UserName);
+        UserRailLabel.Label = _preview ? "ReStart" : Environment.UserName;
         PreviewMouseDown += (_, _) => CompleteEntrance();
         IsVisibleChanged += (_, _) => { if (!IsVisible) { StopMotion(); SetLayoutEditing(false); } };
         Loaded += async (_, _) => await InitializeAsync();
@@ -144,7 +144,7 @@ public partial class MainWindow : Window
         SizeChanged += (_, _) => FitPanels();
         ContentScroll.SizeChanged += (_, _) => FitPanels();
         _clock = new(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(1) };
-        _clock.Tick += async (_, _) => { UpdateLiveTiles(); await UpdateScriptTilesAsync(); };
+        _clock.Tick += async (_, _) => { UpdateLiveTiles(); if (IsVisible) RequestCatalogRefresh(); await UpdateScriptTilesAsync(); };
         _clock.Start();
     }
 
@@ -163,6 +163,7 @@ public partial class MainWindow : Window
             PreferencesChanged?.Invoke();
             _apps = await _loadCatalog();
             MarkStartup("catalog");
+            _catalogRefreshedAt = Environment.TickCount64;
             ReportStartup(K.StartupIcons, .4);
             var actualApps = _apps;
             if (_preview && !_catalogFixture)
@@ -275,6 +276,7 @@ public partial class MainWindow : Window
         if (wasHidden || wasDismissing)
             BeginMotion(false, wasHidden ? EntranceOpacity : previousOpacity, wasHidden ? 0.9 : previousScale);
         FocusSearchInput();
+        RequestCatalogRefresh(opening: true);
         Dispatcher.BeginInvoke(() =>
         {
             if (IsActive && _dialogDepth == 0 && SearchBox.Text.Length == 0)
@@ -318,23 +320,29 @@ public partial class MainWindow : Window
             light = key?.GetValue("SystemUsesLightTheme") is int value && value != 0;
         }
         var highContrast = SystemParameters.HighContrast;
-        var foreground = highContrast ? SystemColors.WindowTextColor : light ? Colors.Black : Colors.White;
         var background = highContrast ? SystemColors.WindowColor : light ? Color.FromRgb(238, 238, 238) : Color.FromRgb(31, 31, 31);
+        var customBackground = !highContrast && ThemePresets.IsColor(p.BackgroundColor);
+        if (customBackground) { background = Brush(p.BackgroundColor, "#1F1F1F").Color; light = ReadableInk(background) == Brushes.Black; }
+        var foreground = highContrast ? SystemColors.WindowTextColor : light ? Colors.Black : Colors.White;
+        var opposite = light ? Colors.White : Colors.Black;
         Application.Current.Resources["TextBrush"] = new SolidColorBrush(foreground);
-        Application.Current.Resources["MutedBrush"] = new SolidColorBrush(highContrast ? foreground : light ? Color.FromRgb(70, 70, 70) : Color.FromRgb(195, 195, 195));
+        Application.Current.Resources["MutedBrush"] = new SolidColorBrush(highContrast ? foreground : customBackground ? EnsureContrast(Mix(background, foreground, .72), background, foreground, 4.5) : light ? Color.FromRgb(70, 70, 70) : Color.FromRgb(195, 195, 195));
         Application.Current.Resources["PanelBrush"] = new SolidColorBrush(background);
-        Application.Current.Resources["TileBrush"] = new SolidColorBrush(highContrast ? background : light ? Color.FromRgb(218, 218, 218) : Color.FromRgb(58, 58, 58));
-        Application.Current.Resources["AccentBrush"] = Brush(p.Accent, "#0078D7");
-        var accentColor = Brush(p.Accent, "#0078D7").Color;
+        Application.Current.Resources["TileBrush"] = new SolidColorBrush(highContrast ? background : customBackground ? Mix(background, opposite, .12) : light ? Color.FromRgb(218, 218, 218) : Color.FromRgb(58, 58, 58));
+        var accentColor = highContrast ? SystemColors.HighlightColor : Brush(p.Accent, "#0078D7").Color;
+        Application.Current.Resources["AccentBrush"] = new SolidColorBrush(accentColor);
+        Application.Current.Resources["AccentTextBrush"] = highContrast ? SystemColors.HighlightTextBrush : ReadableInk(accentColor);
+        var focusAccent = highContrast ? SystemColors.HighlightColor : VisibleAccent(accentColor, background, foreground);
+        Application.Current.Resources["FocusAccentBrush"] = new SolidColorBrush(focusAccent);
         Application.Current.Resources["SearchSelectionBrush"] = new SolidColorBrush(highContrast ? SystemColors.HighlightColor
-            : Color.FromRgb((byte)(background.R * .75 + accentColor.R * .25), (byte)(background.G * .75 + accentColor.G * .25), (byte)(background.B * .75 + accentColor.B * .25)));
+            : Mix(background, focusAccent, .25));
         Application.Current.Resources["SearchSelectionTextBrush"] = new SolidColorBrush(highContrast ? SystemColors.HighlightTextColor : foreground);
-        Application.Current.Resources["ControlBrush"] = new SolidColorBrush(highContrast ? background : light ? Colors.White : Color.FromRgb(43, 43, 43));
-        Application.Current.Resources["BorderBrush"] = new SolidColorBrush(highContrast ? foreground : light ? Color.FromRgb(135, 135, 135) : Color.FromRgb(112, 112, 112));
-        Application.Current.Resources["HoverBrush"] = new SolidColorBrush(highContrast ? background : light ? Color.FromRgb(225, 225, 225) : Color.FromRgb(70, 70, 70));
-        Application.Current.Resources["ScrollThumbBrush"] = new SolidColorBrush(highContrast ? foreground : light ? Color.FromRgb(135, 135, 135) : Color.FromRgb(115, 115, 115));
+        Application.Current.Resources["ControlBrush"] = new SolidColorBrush(highContrast ? background : customBackground ? Mix(background, opposite, .06) : light ? Colors.White : Color.FromRgb(43, 43, 43));
+        Application.Current.Resources["BorderBrush"] = new SolidColorBrush(highContrast ? foreground : customBackground ? VisibleAccent(Mix(background, foreground, .42), background, foreground) : light ? Color.FromRgb(135, 135, 135) : Color.FromRgb(112, 112, 112));
+        Application.Current.Resources["HoverBrush"] = new SolidColorBrush(highContrast ? background : customBackground ? Mix(background, opposite, .18) : light ? Color.FromRgb(225, 225, 225) : Color.FromRgb(70, 70, 70));
+        Application.Current.Resources["ScrollThumbBrush"] = new SolidColorBrush(highContrast ? foreground : customBackground ? VisibleAccent(Mix(background, foreground, .45), background, foreground) : light ? Color.FromRgb(135, 135, 135) : Color.FromRgb(115, 115, 115));
         var startBackground = background;
-        if (p.ShowAccentOnStart && !light && !highContrast)
+        if (p.ShowAccentOnStart && !light && !highContrast && !customBackground)
         {
             var accent = Brush(p.Accent, "#0078D7").Color;
             // Use a darkened accent surface with uniform translucent tile plates.
@@ -342,7 +350,7 @@ public partial class MainWindow : Window
             startBackground = Color.FromRgb((byte)(accent.R * 0.65), (byte)(accent.G * 0.65), (byte)(accent.B * 0.65));
         }
         Application.Current.Resources["StartTileBrush"] = new SolidColorBrush(highContrast ? background
-            : light ? Color.FromArgb(20, 0, 0, 0) : Color.FromArgb(32, 255, 255, 255));
+            : customBackground ? Mix(background, opposite, .12) : light ? Color.FromArgb(20, 0, 0, 0) : Color.FromArgb(32, 255, 255, 255));
         ThemeWindow.IsLight = light;
         foreach (Window window in Application.Current.Windows) ThemeWindow.Apply(window);
         Tint.Background = new SolidColorBrush(Color.FromArgb((byte)(highContrast ? 255 : 255 * p.BackgroundOpacity), startBackground.R, startBackground.G, startBackground.B));

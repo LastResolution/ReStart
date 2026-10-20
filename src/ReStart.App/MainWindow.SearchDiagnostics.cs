@@ -16,8 +16,9 @@ public partial class MainWindow
         if (!_preview) throw new InvalidOperationException("Search selection verification requires preview mode.");
         var directory = Path.Combine(Path.GetDirectoryName(snapshotPath)!, "search-" + Guid.NewGuid().ToString("N"));
         var apps = new List<AppEntry> { new("alpha", "Alpha Editor", ""), new("beta", "Beta Editor", ""), new("gamma", "Gamma Editor", "") };
+        var failCatalog = false;
         var launched = new List<string>();
-        var fixture = new MainWindow(new LayoutStore(Path.Combine(directory, "layout.json")), true, () => Task.FromResult(apps), app => launched.Add(app.Id))
+        var fixture = new MainWindow(new LayoutStore(Path.Combine(directory, "layout.json")), true, () => failCatalog ? Task.FromException<List<AppEntry>>(new IOException("Sample failure")) : Task.FromResult(apps), app => launched.Add(app.Id))
         { Owner = this, Width = 1280, Height = 800, Topmost = false, ShowInTaskbar = false };
         var language = L.Language; var checks = 0; var themes = 0;
         void Check(bool condition, string message) { Require(condition, message); checks++; }
@@ -90,6 +91,22 @@ public partial class MainWindow
                 }
             fixture.Hide(); fixture.Present();
             Check(fixture.SearchResults.SelectedItem == null && fixture.SearchBox.Text.Length == 0, "Reopening retained search selection.");
+            fixture.Document.Groups = [new() { Name = "User pins", Tiles = [Tile.FromApp(apps[0])] }];
+            var pins = System.Text.Json.JsonSerializer.Serialize(fixture.Document.Groups);
+            fixture.SetSmokeSearch("Editor");
+            fixture.SearchResults.SelectedItem = fixture.SearchResults.Items.OfType<Button>().Single(b => b.Tag is AppEntry a && a.Id == "gamma");
+            apps = [apps[2], new("delta", "Delta Editor", "")];
+            var refreshing = fixture.RefreshCatalogAsync();
+            Check(ReferenceEquals(refreshing, fixture.RefreshCatalogAsync()), "Repeated catalog requests started concurrent enumerations.");
+            await refreshing; fixture.UpdateLayout();
+            Check(!fixture.SearchResultNames.Contains("Alpha Editor") && !fixture.SearchResultNames.Contains("Zulu Editor") && fixture.SearchResultNames.Contains("Delta Editor"),
+                "A catalog refresh retained uninstalled apps or omitted a newly installed app from search.");
+            Check(fixture.AppsPanel.Children.OfType<Button>().Where(b => b.Tag is AppEntry).Select(b => ((AppEntry)b.Tag).Id).ToHashSet().SetEquals(new[] { "gamma", "delta" }),
+                "All-apps rows did not use the refreshed catalog.");
+            Check(Selected() == "gamma" && fixture.SearchBox.IsKeyboardFocused && pins == System.Text.Json.JsonSerializer.Serialize(fixture.Document.Groups),
+                "A catalog refresh changed user pins or lost the selected installed app/input focus.");
+            failCatalog = true; await fixture.RefreshCatalogAsync();
+            Check(fixture._catalogRefresh == null && fixture.SearchResultNames.Contains("Delta Editor"), "A failed enumeration discarded the last successful catalog or blocked future refreshes.");
             return new(checks, themes);
         }
         finally { fixture.Exit(); L.SetLanguage(language); ApplyAppearance(); Activate(); }

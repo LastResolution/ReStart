@@ -9,7 +9,7 @@
       </DockPanel>
       <TextBlock x:Name="Stage" Text="{local:Loc Key=StartupApps}" Margin="0,0,0,10" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
       <Grid Height="3" Background="{DynamicResource TileBrush}" Margin="0,0,0,22">
-        <Border x:Name="Progress" Background="{DynamicResource AccentBrush}" RenderTransformOrigin="0,0.5"><Border.RenderTransform><ScaleTransform ScaleX="0.08" /></Border.RenderTransform></Border>
+        <Border x:Name="Progress" Background="{DynamicResource FocusAccentBrush}" RenderTransformOrigin="0,0.5"><Border.RenderTransform><ScaleTransform ScaleX="0.08" /></Border.RenderTransform></Border>
       </Grid>
       <Grid Height="0" ClipToBounds="True" Opacity="0" IsHitTestVisible="False">
         <TextBox x:Name="Query" AutomationProperties.Name="{local:Loc Key=SearchTitle}" MaxLength="512" IsTabStop="False" />

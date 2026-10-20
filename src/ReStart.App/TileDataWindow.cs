@@ -30,6 +30,7 @@ internal sealed class TileDataWindow : Window
         buttons.Children.Add(new Button { Content = L.T(K.CommonCancel), MinWidth = 96, IsCancel = true });
         SaveButton = new Button { Content = L.T(K.CommonSave), MinWidth = 96, IsDefault = true, Margin = new(8, 0, 0, 0) };
         SaveButton.SetResourceReference(BackgroundProperty, "AccentBrush"); SaveButton.Click += (_, _) => Save();
+        SaveButton.SetResourceReference(ForegroundProperty, "AccentTextBrush");
         buttons.Children.Add(SaveButton); footer.Children.Add(buttons); root.Children.Add(footer);
         var body = new StackPanel();
         body.Children.Add(new TextBlock { Text = L.T(K.TileDataHelp), TextWrapping = TextWrapping.Wrap, Margin = new(0, 0, 0, 18) });
