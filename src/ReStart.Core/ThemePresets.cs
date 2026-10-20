@@ -44,9 +44,14 @@ public static class ThemePresets
 
     /// <summary>Recognizes exact palettes only in unlabelled legacy preferences; explicitly saved custom colors remain custom.</summary>
     /// <param name="preferences">Local preferences; a null family ID marks the legacy format, while an empty ID marks intentional custom RGB.</param>
-    /// <returns>The matching legacy family, or null for explicit custom/default colors or an already labelled family.</returns>
-    public static ThemePreset? Match(Preferences preferences) => preferences.ColorThemeId == null ? All.FirstOrDefault(p => new[] { p.Dark, p.Light }.Any(c =>
-        string.Equals(c.Background, preferences.BackgroundColor, StringComparison.OrdinalIgnoreCase) && string.Equals(c.Accent, preferences.Accent, StringComparison.OrdinalIgnoreCase))) : null;
+    /// <returns>The legacy family matching the saved explicit base mode, or null for custom/default colors, System mode, or an already labelled family.</returns>
+    public static ThemePreset? Match(Preferences preferences) => preferences.ColorThemeId == null && preferences.Theme is ThemeMode.Dark or ThemeMode.Light
+        ? All.FirstOrDefault(p =>
+        {
+            var palette = p.Palette(preferences.Theme, false);
+            return string.Equals(palette.Background, preferences.BackgroundColor, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(palette.Accent, preferences.Accent, StringComparison.OrdinalIgnoreCase);
+        }) : null;
 
     /// <summary>Resolves an active family for the current base mode, retaining exact RGB choices for custom colors.</summary>
     /// <param name="preferences">Normalized local preferences. An empty family ID selects the saved RGB colors.</param>

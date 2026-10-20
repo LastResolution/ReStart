@@ -85,6 +85,11 @@ public sealed class ThemePresetsTests
         var legacy = JsonSerializer.Deserialize<LayoutDocument>("{\"Preferences\":{\"BackgroundColor\":\"#102D3D\",\"Accent\":\"#35BDE0\"}}")!; legacy.Normalize();
         Assert.Null(legacy.Preferences.ColorThemeId);
         Assert.Equal("ocean", ThemePresets.Match(legacy.Preferences)!.Id);
+        legacy.Preferences.Theme = ThemeMode.Light;
+        Assert.Null(ThemePresets.Match(legacy.Preferences));
+        Assert.Equal(palette, ThemePresets.Resolve(legacy.Preferences, true));
+        legacy.Preferences.Theme = ThemeMode.System;
+        Assert.Null(ThemePresets.Match(legacy.Preferences));
     }
 
     [Fact]
