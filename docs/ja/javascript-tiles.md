@@ -38,13 +38,13 @@ text/detail/badge/kicker は最大256/512/16/48文字。background・foreground�
 
 `capabilities: ["data.sources"]` と `dataSources` を宣言すると、ホストが明示的に設定された接続先を非同期で読み、`ctx.data.<id>` に最新のスナップショットを渡します。JS 自体に通信・ファイル API は追加しません。[宣言・コード例と全フィールド](../javascript-tiles.md#weather-feeds-web-apis-and-application-data)を参照してください。
 
-右クリック →「データ接続を設定」から Web API / フィードまたはローカルデータファイルを指定します。HTTPS とループバック HTTP を GET で読み取れます。別アプリは既存の localhost エンドポイント、または原子的に置換する JSON ファイルで連携できます。[ファイル生成例](../../examples/integrations/write-tile-data.ps1)を自分で実行し、生成されたファイルを JSON モニターで選択してください。スクリプトの自動起動、書き込み、任意コマンド実行は行いません。
+右クリック →「データソースを設定…」から Web API / フィードまたはローカルデータファイルを指定します。HTTPS とループバック HTTP を GET で読み取れます。別アプリは既存の localhost エンドポイント、または原子的に置換する JSON ファイルで連携できます。[ファイル生成例](../../examples/integrations/write-tile-data.ps1)を自分で実行し、生成されたファイルを JSON モニターで選択してください。スクリプトの自動起動、書き込み、任意コマンド実行は行いません。
 
 宣言は最大4入力。`format` は json / feed、`refreshSeconds` は1～86,400秒（HTTP は最低30秒、ファイルは最低1秒）。`jsonPointer` は最大256文字で、空はルート、`~1` は `/`、`~0` は `~`。設定画面の指定を優先します。`suggestedUrl` は公開の例示 URL に限り、自動接続しません。`suggestedAccess` は http / file で、パッケージからローカルファイルを指定できません。
 
 各スナップショットの `status` は unconfigured / disabled / loading / ready / error、`value` は選択した JSON または初期値 null。`updatedAt` は最終成功・再検証時刻、`checkedAt` は失敗も含む確認時刻、`stale` は以前の正常値を表示しているか、`error` は接続先を含まない code と httpStatus です。RSS 2.0 / Atom は `{title, items:[{title,summary,url,published}]}` に正規化し最大20件、HTML は取り除き、DTD・実体参照を拒否します。リンクは表示データで、自動起動しません。
 
-入力は256 KiB、JSON 深さ12、選択値はタイル全体でシリアライズ後8,192文字以内。共有の同時取得は4件、開始後8秒で打ち切ります。ETag / Last-Modified とキャッシュを使い、失敗時は前回値を保持して再試行間隔を最大1時間まで延ばします。「今すぐデータを更新」は5秒の抑制付きです。非表示で取得を中止し、再表示ではメモリ内のキャッシュを使い、再読み込み・終了で消去します。ファイルは明示した絶対ローカルパスのみで、UNC と直接の再解析ポイントを拒否します。
+入力は256 KiB、JSON 深さ12、選択値はタイル全体でシリアライズ後8,192文字以内。共有の同時取得は4件、開始後8秒で打ち切ります。ETag / Last-Modified とキャッシュを使い、失敗時は前回値を保持して再試行間隔を最大1時間まで延ばします。「データを今すぐ更新」は5秒の抑制付きです。非表示で取得を中止し、再表示ではメモリ内のキャッシュを使い、再読み込み・終了で消去します。ファイルは明示した絶対ローカルパスのみで、UNC と直接の再解析ポイントを拒否します。
 
 認証はネイティブ画面のパスワード欄に `Bearer …` などを入力します。空欄は同じサーバーの保存値を維持し、接続先サーバー変更・ファイル選択で消去します。Cookie や接続制御ヘッダーは指定できず、OS の資格情報を自動送信しません。リダイレクトは同一オリジン内3回までなので、別サーバーへ転送するフィードは最終 URL を指定します。プロバイダーの規約・取得頻度に従ってください。
 
@@ -52,7 +52,7 @@ URL・パス・セレクター・資格情報はインストール済み `data-b
 
 ### 天気の地域
 
-既定の天気は **ベルリン（52.52, 13.41）** の例です。PC の地域ではなく、IP 推定やデバイス位置情報は取得しません。接続設定の URL の latitude / longitude を変更し、current=temperature_2m,weather_code,wind_speed_10m とセレクター `/current` を維持してください。「タイル設定を編集」で settings.location を地名へ変え、保存後に再読み込みします。表示単位は摂氏・km/h。座標は [Open-Meteo の API ビルダー](https://open-meteo.com/en/docs)で作成でき、公開無料エンドポイントの非商用条件を含む[利用規約](https://open-meteo.com/en/terms)が適用されます。
+既定の天気は **ベルリン（52.52, 13.41）** の例です。PC の地域ではなく、IP 推定やデバイス位置情報は取得しません。接続設定の URL の latitude / longitude を変更し、current=temperature_2m,weather_code,wind_speed_10m とセレクター `/current` を維持してください。「タイルの設定を編集」で settings.location を地名へ変え、保存後に再読み込みします。表示単位は摂氏・km/h。座標は [Open-Meteo の API ビルダー](https://open-meteo.com/en/docs)で作成でき、公開無料エンドポイントの非商用条件を含む[利用規約](https://open-meteo.com/en/terms)が適用されます。
 
 ## 実行と保存
 
