@@ -35,7 +35,7 @@ public partial class MainWindow
             Require(integrationUpdates > 0, "Input integration preferences still wait for catalog completion.");
             fixture.ComposeFixtureText("E");
             Require(fixture.SearchBox.Text == "E", "The first routed character was lost or duplicated at cold startup.");
-            Require(fixture.ResultsPanel.Children.OfType<TextBlock>().Any(t => t.Text == L.T(K.StatusLoading)),
+            Require(fixture.SearchResultHeading.Text == L.T(K.StatusLoading),
                 "Pending search reports no matches before the catalog has loaded.");
             fixture.SaveScreenshot(Path.Combine(Path.GetDirectoryName(snapshotPath)!, "first-input-loading.png"));
             fixture.PinnedNav.Focus();

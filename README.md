@@ -132,7 +132,7 @@ Have a layout to show, an idea for a tile, or a bug to report? [Open an issue](h
 | --- | --- |
 | Bare Windows key / `Ctrl+Alt+Space` | Open or close |
 | Type / `Ctrl+F` | Search apps |
-| `Enter` in search | Launch the first result |
+| `Enter` in search | Launch the highlighted result; use `↓` / `↑` to change it |
 | `Esc` | Close the current search, folder or overlay, then Start |
 | `Tab` / arrows / `Enter` | Navigate and activate |
 | Drag a tile / group header | Move it |

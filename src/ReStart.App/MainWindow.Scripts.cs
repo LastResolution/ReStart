@@ -215,7 +215,7 @@ public partial class MainWindow
                     if (!_scriptSessions.TryGetValue(view.Tile.Id, out var latest) || latest != session || !IsVisible || _scriptWorkerPool != pool) return;
                     if (input != null && session.Inputs.TryPeek(out var queued) && queued == input) session.Inputs.Dequeue();
                     if (session.Inputs.Count > 0) session.NextUpdate = DateTimeOffset.MinValue;
-                    if (frame != null) { _scriptFrames[view.Tile.Id] = frame; session.State = frame.State; }
+                    if (frame != null) { _scriptFrames[view.Tile.Id] = frame; session.State = frame.State; if (ScriptsReady) MarkStartup("tiles"); }
                     foreach (var target in _scriptViews.Where(target => target.Tile.Id == view.Tile.Id))
                     {
                         if (frame != null) ApplyScriptFrame(target.Body, target.Button, target.Tile, frame);

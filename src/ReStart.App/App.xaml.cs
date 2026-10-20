@@ -150,6 +150,7 @@ public partial class App : Application
             EditingSmokeResult? editing = null;
             FolderDropSmokeResult? folderDrops = null;
             TileDataSmokeResult? tileData = null;
+            SearchSelectionSmokeResult? searchSelection = null;
             string? error = null;
             try
             {
@@ -166,12 +167,13 @@ public partial class App : Application
                 if (args.Contains("--editing-test")) editing = await _window.VerifyEditingAsync(path);
                 if (args.Contains("--folder-drop-test")) folderDrops = await _window.VerifyFolderDropsAsync(path);
                 if (args.Contains("--tile-data-test")) tileData = await _window.VerifyTileDataAsync(path);
+                if (args.Contains("--search-selection-test")) searchSelection = await _window.VerifySearchSelectionAsync(path);
                 _window.SaveScreenshot(path);
             }
             catch (Exception ex) when (ex is IOException or InvalidOperationException) { success = false; error = ex.Message; }
             try
             {
-                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, catalogFolders = _window.CatalogFolderCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, navigation, placement, appFolders, firstInput, appMenus, releaseInfo, scrolling, bundledTiles, pinIcons, motion, editing, folderDrops, tileData, error, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
+                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, catalogFolders = _window.CatalogFolderCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, navigation, placement, appFolders, firstInput, appMenus, releaseInfo, scrolling, bundledTiles, pinIcons, motion, editing, folderDrops, tileData, searchSelection, startup = _window.StartupMetrics, error, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
             }
             catch (IOException) { success = false; }
             _window.Exit(); Shutdown(success ? 0 : 1);
