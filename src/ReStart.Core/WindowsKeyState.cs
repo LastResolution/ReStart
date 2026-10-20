@@ -21,6 +21,10 @@ public sealed class WindowsKeyState
     private bool _replayed;
 
     /// <summary>Consumes a physical key transition and returns the hook action; a bare Windows key toggles only on release.</summary>
+    /// <param name="virtualKey">Physical Windows virtual-key code, including left/right Windows keys.</param>
+    /// <param name="down">True for a physical key-down transition; false for key-up.</param>
+    /// <param name="modifierAlreadyHeld">Whether a shortcut modifier was already held when this Windows-key press began.</param>
+    /// <returns>Native hook action to forward, suppress, toggle, or replay the Windows-key press.</returns>
     public WindowsKeyAction Process(int virtualKey, bool down, bool modifierAlreadyHeld = false)
     {
         if (virtualKey is 0x5B or 0x5C)

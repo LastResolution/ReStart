@@ -8,6 +8,8 @@ namespace ReStart.TileHost;
 public static class JsTileRunner
 {
     /// <summary>Executes source and render(ctx), validates the returned frame, and propagates script or limit errors. Process isolation and the outer deadline remain the parent host responsibility.</summary>
+    /// <param name="request">Bounded JavaScript source and JSON-only context for this isolated render.</param>
+    /// <returns>A validated native display frame; script, validation and execution-limit failures propagate to the host.</returns>
     public static ScriptTileFrame Render(ScriptTileRequest request)
     {
         if (request.Source.Length > ScriptTileProtocol.MaxSource || request.Context.GetRawText().Length > 32768) throw new InvalidDataException(TextCatalog.T(K.ErrorScriptInputSize));

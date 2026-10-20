@@ -24,6 +24,9 @@ public enum UpdateCheckStatus
 }
 
 /// <summary>Describes a published release; its page URL is constructed only within the fixed repository.</summary>
+/// <param name="Tag">Published release tag from the fixed ReStart repository.</param>
+/// <param name="Version">Parsed semantic version used for comparison.</param>
+/// <param name="Notes">Release body as supplied by GitHub; displayed as text, never executed.</param>
 public sealed record UpdateRelease(string Tag, ReleaseVersion Version, string Notes)
 {
     /// <summary>Gets the browser release page; the app never executes a feed-supplied URL.</summary>
@@ -31,15 +34,25 @@ public sealed record UpdateRelease(string Tag, ReleaseVersion Version, string No
 }
 
 /// <summary>Contains a release check result without raw server errors.</summary>
+/// <param name="Status">Available/current/offline/rate-limit outcome of the check.</param>
+/// <param name="Release">Latest eligible release when found, including an up-to-date release; null when no release is available.</param>
 public sealed record UpdateCheckResult(UpdateCheckStatus Status, UpdateRelease? Release = null);
 
 /// <summary>Checks GitHub releases without downloading or installing executables. The caller owns the HTTP client.</summary>
+/// <param name="client">Caller-owned HTTP client; checking releases neither disposes it nor requires an API key.</param>
 public sealed class ReleaseClient(HttpClient client)
 {
     /// <summary>Gets the repository's browser release listing.</summary>
     public static Uri ReleasesPage { get; } = new("https://github.com/LastResolution/ReStart/releases");
 
     /// <summary>Checks up to 500 releases, respecting prerelease preference, semantic versions and complete architecture assets.</summary>
+    /// <param name="currentVersion">Installed semantic version or informational version, optionally with a v prefix and build metadata.</param>
+    /// <param name="runtime">Package architecture: win-x64 or win-arm64.</param>
+    /// <param name="includePrereleases">Whether published prereleases may be offered alongside stable releases.</param>
+    /// <param name="cancellationToken">Token cancelling pending HTTP requests and response reads.</param>
+    /// <returns>A display-safe result; network/server failures are mapped to status values rather than exposing raw server errors.</returns>
+    /// <exception cref="ArgumentException">The current version cannot be parsed or the runtime is unsupported.</exception>
+    /// <exception cref="OperationCanceledException">The caller cancels the check through its cancellation token.</exception>
     public async Task<UpdateCheckResult> CheckAsync(string currentVersion, string runtime, bool includePrereleases, CancellationToken cancellationToken = default)
     {
         var current = ReleaseVersion.Parse(currentVersion) ?? throw new ArgumentException("Invalid current version.", nameof(currentVersion));

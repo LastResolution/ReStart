@@ -312,7 +312,7 @@
   "SettingsColorThemes": "Farbthemen",
   "SettingsBaseTheme": "Basisthema",
   "SettingsBackgroundColor": "Hintergrundfarbe",
-  "SettingsCustomColorsHelp": "#RRGGBB verwenden. Ein leeres Hintergrundfeld nutzt das Basisthema. Text und Bedienelemente passen sich für lesbaren Kontrast an.",
+  "SettingsCustomColorsHelp": "Farbthemen folgen dem Basismodus, auch dem System. Das Bearbeiten eines RGB-Feldes aktiviert eigene Farben und behält deren genaue Werte bei. Verwenden Sie #RRGGBB; ein leerer Hintergrund nutzt die Basisfarbe.",
   "SettingsResetColors": "Farben zurücksetzen",
   "ThemeMidnight": "Mitternacht",
   "ThemeOcean": "Ozean",

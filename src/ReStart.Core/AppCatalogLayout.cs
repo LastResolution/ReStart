@@ -1,15 +1,27 @@
 namespace ReStart.Core;
 
 /// <summary>Describes a physical Start-menu shortcut, its precedence key and optional shell identity metadata.</summary>
+/// <param name="RelativeKey">Path relative to a user or common Start-menu root; user-first duplicates share this key.</param>
+/// <param name="App">Shortcut launch entry and its physical folder path.</param>
+/// <param name="AppId">Optional Shell app identity used for exact matching.</param>
+/// <param name="TargetPath">Optional resolved shortcut target used for unambiguous matching.</param>
+/// <param name="Arguments">Shortcut arguments; distinct argument strings remain distinct launch identities.</param>
 public sealed record StartMenuShortcut(string RelativeKey, AppEntry App, string AppId = "", string TargetPath = "", string Arguments = "");
 
 /// <summary>Describes the target and arguments exposed by an AppsFolder item.</summary>
+/// <param name="AppId">AppsFolder identity owning this metadata.</param>
+/// <param name="TargetPath">Resolved filesystem launch target, or empty when unavailable.</param>
+/// <param name="Arguments">Launch arguments used to distinguish links with a shared target.</param>
 public sealed record ShellAppLink(string AppId, string TargetPath, string Arguments = "");
 
 /// <summary>Attaches Start-menu folders while retaining existing AppsFolder identities and launch targets.</summary>
 public static class AppCatalogLayout
 {
     /// <summary>Merges user-first shortcuts by app ID, unambiguous link identity, then unambiguous display name.</summary>
+    /// <param name="shellApps">AppsFolder entries with unique app IDs.</param>
+    /// <param name="shortcuts">Physical shortcuts ordered with per-user entries before common entries.</param>
+    /// <param name="shellLinks">Optional target/argument metadata for Shell entries; null supplies no link matching.</param>
+    /// <returns>A culture-sorted merged catalog, retaining Shell launch identities when a unique match is found.</returns>
     public static IReadOnlyList<AppEntry> Merge(IEnumerable<AppEntry> shellApps, IEnumerable<StartMenuShortcut> shortcuts,
         IEnumerable<ShellAppLink>? shellLinks = null)
     {

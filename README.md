@@ -37,7 +37,7 @@ Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button
 - **Arrange without accidental launches.** Edit mode selects tiles instead of opening apps. Move a selection together, then undo or redo the whole operation.
 - **Keep your files close.** Pin a document, directory or shortcut from Explorer's **Pin to ReStart** command.
 - **Open and type.** The first launch prepares icons and live tiles behind a localized progress screen with the app logo. Keystrokes typed while loading carry into Start automatically. Enter launches the highlighted search result; reopening returns to your pinned home. Installed and removed apps refresh in the background while ReStart keeps running.
-- **Set the mood.** Choose Midnight, Ocean, Forest, Rose or Sand, or enter your own background and accent colors. Text, controls, both scrollbars and the splash adapt together. Light, dark, system and high contrast remain available; wallpaper, individual tile colors and animation are optional.
+- **Set the mood.** Choose Midnight, Ocean, Forest, Rose or Sand independently of light, dark or system mode: every family has both variants. Entering your own background or accent switches to exact custom RGB colors. Text, controls, both scrollbars and the splash adapt together. Light, dark, system and high contrast remain available; wallpaper, individual tile colors and animation are optional.
 
 <details>
 <summary><strong>See the light theme</strong></summary>

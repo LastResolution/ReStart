@@ -11,6 +11,8 @@ public static class LayoutEditor
     /// <param name="viewportWidth">Available board width in DIPs.</param>
     /// <param name="preferredTop">Current vertical scroll offset in DIPs.</param>
     /// <returns>The newly created independent entry.</returns>
+    /// <exception cref="ArgumentException">The tile ID is already pinned in the document.</exception>
+    /// <exception cref="InvalidOperationException">No free board position can be found within the supported bounds.</exception>
     public static TileGroup PinIndependent(LayoutDocument document, Tile tile, int availableColumns, double cell, double viewportWidth, double preferredTop = 0)
     {
         if (Find(document, tile.Id) != null) throw new ArgumentException("The tile is already pinned.", nameof(tile));
@@ -36,6 +38,15 @@ public static class LayoutEditor
     }
 
     /// <summary>Detaches a root or folder child as one independent board tile, preserving its identity and freezing existing visible anchors.</summary>
+    /// <param name="document">Layout to mutate in memory; the caller is responsible for saving it.</param>
+    /// <param name="tile">Existing root tile or one-level folder child, identified by its stable ID.</param>
+    /// <param name="column">Requested zero-based board lane.</param>
+    /// <param name="row">Requested board row in half-small-cell units.</param>
+    /// <param name="tileColumn">Horizontal tile offset within the independent entry, in small cells.</param>
+    /// <param name="availableColumns">Number of available board lanes, from 1 through 64.</param>
+    /// <param name="cell">Size of one small tile cell in device-independent pixels (DIPs).</param>
+    /// <param name="x">Optional precise group origin in small-cell units; null uses the lane.</param>
+    /// <returns>The new independent board entry containing the original tile identity.</returns>
     public static TileGroup Detach(LayoutDocument document, Tile tile, int column, int row, int tileColumn, int availableColumns, double cell, double? x = null)
     {
         var source = document.Groups.FirstOrDefault(g => g.Tiles.Any(t => t == tile || t.Children.Contains(tile)));
@@ -52,6 +63,8 @@ public static class LayoutEditor
     }
 
     /// <summary>Unpacks a root folder; independent children keep independent board entries rather than acquiring a group header.</summary>
+    /// <param name="document">Layout to mutate in memory; the caller is responsible for saving it.</param>
+    /// <param name="folder">Existing root folder to replace with its original child tiles; the folder container is removed.</param>
     public static void UnpackFolder(LayoutDocument document, Tile folder)
     {
         var owner = document.Groups.First(g => g.Tiles.Contains(folder));
@@ -72,10 +85,15 @@ public static class LayoutEditor
     }
 
     /// <summary>Finds a root tile or one-level folder child by its stable layout identifier.</summary>
+    /// <param name="document">Original layout to inspect without modifying its groups or preferences.</param>
+    /// <param name="id">Stable layout tile ID, not an application ID.</param>
+    /// <returns>The root or folder-child tile with that ID, or null when absent.</returns>
     public static Tile? Find(LayoutDocument document, string id) => document.Groups.SelectMany(g => g.Tiles)
         .SelectMany(t => new[] { t }.Concat(t.Children)).FirstOrDefault(t => t.Id == id);
 
     /// <summary>Removes a tile and removes its parent folder if that folder becomes empty.</summary>
+    /// <param name="document">Layout to mutate in memory; the caller is responsible for saving it.</param>
+    /// <param name="id">Stable root or folder-child tile ID; an absent ID has no effect.</param>
     public static void Remove(LayoutDocument document, string id)
     {
         foreach (var group in document.Groups.ToArray())
@@ -96,6 +114,11 @@ public static class LayoutEditor
     }
 
     /// <summary>Moves a tile into a group in list order and clears its previous explicit coordinates.</summary>
+    /// <param name="document">Layout to mutate in memory; the caller is responsible for saving it.</param>
+    /// <param name="tile">Existing root tile or one-level folder child, identified by its stable ID.</param>
+    /// <param name="group">Existing non-independent destination group.</param>
+    /// <param name="before">Existing destination root to insert before; null or an absent root appends the tile.</param>
+    /// <exception cref="ArgumentException">The destination is absent from the document or is an independent entry.</exception>
     public static void Move(LayoutDocument document, Tile tile, TileGroup group, Tile? before = null)
     {
         if (!document.Groups.Contains(group)) throw new ArgumentException("Group does not belong to the document.", nameof(group));
@@ -110,6 +133,9 @@ public static class LayoutEditor
     }
 
     /// <summary>Moves a non-folder source into a root target, creating a one-level folder when necessary.</summary>
+    /// <param name="document">Layout to mutate in memory; the caller is responsible for saving it.</param>
+    /// <param name="source">Non-folder tile to move into the target.</param>
+    /// <param name="target">Root tile to turn into a folder, or an existing root folder to receive the source.</param>
     public static void MergeFolder(LayoutDocument document, Tile source, Tile target)
     {
         if (source == target || source.IsFolder || target.Children.Contains(source)) return;
@@ -131,6 +157,12 @@ public static class LayoutEditor
     }
 
     /// <summary>Moves a non-folder tile into an open root folder, preserving identity and resolving child-cell collisions.</summary>
+    /// <param name="document">Layout to mutate in memory; the caller is responsible for saving it.</param>
+    /// <param name="tile">Existing non-folder tile to move, including a child already in this folder.</param>
+    /// <param name="folder">Existing root folder receiving the child.</param>
+    /// <param name="column">Requested folder-local small-cell column, clamped to fit the tile width.</param>
+    /// <param name="row">Requested folder-local small-cell row, clamped to 0 through 200.</param>
+    /// <exception cref="ArgumentException">The source is a folder or the destination is not an existing root folder.</exception>
     public static void MoveIntoFolder(LayoutDocument document, Tile tile, Tile folder, int column, int row)
     {
         if (tile.IsFolder || tile == folder || !document.Groups.Any(g => g.Tiles.Contains(folder)) || !folder.IsFolder)
@@ -153,6 +185,12 @@ public static class LayoutEditor
     }
 
     /// <summary>Moves a tile to an explicit cell, preserving unaffected positions and repacking only conflicting tiles.</summary>
+    /// <param name="document">Layout to mutate in memory; the caller is responsible for saving it.</param>
+    /// <param name="tile">Existing root tile or one-level folder child, identified by its stable ID.</param>
+    /// <param name="destination">Existing non-independent group receiving the root tile.</param>
+    /// <param name="column">Requested group-local small-cell column, clamped to fit the tile width.</param>
+    /// <param name="row">Requested group-local small-cell row, clamped to 0 through 200.</param>
+    /// <exception cref="ArgumentException">The destination is absent from the document or is an independent entry.</exception>
     public static void MoveToCell(LayoutDocument document, Tile tile, TileGroup destination, int column, int row)
     {
         if (!document.Groups.Contains(destination)) throw new ArgumentException("Unknown group.", nameof(destination));

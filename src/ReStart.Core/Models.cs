@@ -34,6 +34,8 @@ public sealed record AppEntry(string Id, string Name, string LaunchTarget, bool 
     /// <summary>Gets the display bucket used for alphabet navigation.</summary>
     public string Section => SectionFor(Name);
     /// <summary>Returns the shared alphabet bucket for an app or folder display name.</summary>
+    /// <param name="name">OS-provided app or directory display name used for grouping.</param>
+    /// <returns>Uppercase ASCII letter, # for blank/digit names, or the localized other section.</returns>
     public static string SectionFor(string name) => string.IsNullOrWhiteSpace(name) ? "#" :
         char.IsAsciiLetter(name[0]) ? char.ToUpperInvariant(name[0]).ToString() :
         char.IsDigit(name[0]) ? "#" : L.T(K.AppListOther);
@@ -76,6 +78,8 @@ public sealed class Tile
     public bool IsFolder => Children.Count > 0;
 
     /// <summary>Creates a new tile preserving the source application name and launch identity.</summary>
+    /// <param name="app">App entry to copy; the app entry itself is not changed.</param>
+    /// <returns>A fresh tile carrying the app identity, launch target and display label.</returns>
     public static Tile FromApp(AppEntry app) => new()
     {
         AppId = app.Id,
@@ -137,6 +141,8 @@ public sealed class Preferences
     public string Accent { get; set; } = "#0078D7";
     /// <summary>Gets or sets an optional opaque RGB surface color; empty uses the selected base theme.</summary>
     public string BackgroundColor { get; set; } = "";
+    /// <summary>Gets or sets the adaptive color family; empty means explicit custom RGB, while null identifies unlabelled legacy preferences.</summary>
+    public string? ColorThemeId { get; set; }
     /// <summary>Gets or sets background tint opacity, normalized to 0.3 through 1.</summary>
     public double BackgroundOpacity { get; set; } = 0.86;
     /// <summary>Gets or sets the cell scale, normalized to 0.7 through 1.5.</summary>
@@ -165,6 +171,8 @@ public sealed class LayoutDocument
     public List<TileGroup> Groups { get; set; } = [];
 
     /// <summary>Repairs bounded presentation values and duplicate identities; rejects unsupported schemas and nested folders.</summary>
+    /// <exception cref="UnsupportedLayoutVersionException">The document schema is newer than supported or is invalid.</exception>
+    /// <exception cref="InvalidDataException">The layout exceeds tile limits or contains nested folders.</exception>
     public void Normalize()
     {
         var migrateStandalone = Version is >= 1 and < 3;
@@ -184,6 +192,7 @@ public sealed class LayoutDocument
         if (!Enum.IsDefined(Preferences.Theme)) Preferences.Theme = ThemeMode.Dark;
         Preferences.Accent = ThemePresets.IsColor(Preferences.Accent) ? Preferences.Accent.ToUpperInvariant() : "#0078D7";
         Preferences.BackgroundColor = ThemePresets.IsColor(Preferences.BackgroundColor) ? Preferences.BackgroundColor.ToUpperInvariant() : "";
+        if (Preferences.ColorThemeId != null && !ThemePresets.All.Any(p => p.Id == Preferences.ColorThemeId)) Preferences.ColorThemeId = "";
         var ids = new HashSet<string>();
         foreach (var group in Groups)
         {
@@ -240,4 +249,10 @@ public sealed class LayoutDocument
 }
 
 /// <summary>Records a completed local upgrade and the backup needed to restore the prior application or schema.</summary>
+/// <param name="FromAppVersion">Application version that last saved the input layout, or empty when unknown.</param>
+/// <param name="ToAppVersion">Application version performing the upgrade.</param>
+/// <param name="FromSchema">Input layout schema version.</param>
+/// <param name="ToSchema">Schema version written by the upgrade.</param>
+/// <param name="AtUtc">UTC time when the upgrade was recorded.</param>
+/// <param name="BackupFile">Local backup filename, without its containing directory.</param>
 public sealed record LayoutUpgradeInfo(string FromAppVersion, string ToAppVersion, int FromSchema, int ToSchema, DateTimeOffset AtUtc, string BackupFile);

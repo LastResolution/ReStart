@@ -4,9 +4,15 @@ using System.Text.RegularExpressions;
 namespace ReStart.Core;
 
 /// <summary>Compares release versions using numeric components and SemVer prerelease precedence, ignoring build metadata.</summary>
+/// <param name="Major">Nonnegative major version component.</param>
+/// <param name="Minor">Nonnegative minor version component.</param>
+/// <param name="Patch">Nonnegative patch version component.</param>
+/// <param name="Prerelease">SemVer prerelease identifiers without a leading hyphen; empty means a stable release.</param>
 public sealed record ReleaseVersion(int Major, int Minor, int Patch, string Prerelease = "") : IComparable<ReleaseVersion>
 {
     /// <summary>Parses bounded v-prefixed release tags or assembly informational versions.</summary>
+    /// <param name="text">Release tag or informational version, at most 128 characters; null is invalid.</param>
+    /// <returns>Parsed semantic version with build metadata discarded, or null for invalid, oversized, or unsupported input.</returns>
     public static ReleaseVersion? Parse(string? text)
     {
         if (text == null || text.Length > 128) return null;
@@ -18,6 +24,8 @@ public sealed record ReleaseVersion(int Major, int Minor, int Patch, string Prer
         return new(major, minor, patch, pre);
     }
     /// <summary>Compares numeric release components, then prerelease identifiers; stable releases sort last.</summary>
+    /// <param name="other">Version to compare, or null.</param>
+    /// <returns>Negative, zero, or positive according to semantic version precedence; null sorts before this version.</returns>
     public int CompareTo(ReleaseVersion? other)
     {
         if (other == null) return 1;
@@ -37,5 +45,6 @@ public sealed record ReleaseVersion(int Major, int Minor, int Patch, string Prer
         return left.Length.CompareTo(right.Length);
     }
     /// <summary>Formats a version without a v prefix or build metadata.</summary>
+    /// <returns>Major.minor.patch with any prerelease suffix; excludes a v prefix and build metadata.</returns>
     public override string ToString() => string.Create(CultureInfo.InvariantCulture, $"{Major}.{Minor}.{Patch}") + (Prerelease.Length == 0 ? "" : "-" + Prerelease);
 }

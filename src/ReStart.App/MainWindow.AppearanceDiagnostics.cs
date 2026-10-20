@@ -25,31 +25,32 @@ public partial class MainWindow
             fixture.Present(); await fixture.InitializeAsync(); fixture._clock.Stop(); fixture.Document.Preferences.Animate = false;
             foreach (var tag in L.SupportedLanguages)
                 foreach (var preset in ThemePresets.All)
-                {
-                    fixture.Document.Preferences.Language = tag; ThemePresets.Apply(fixture.Document.Preferences, preset.Id);
-                    fixture.ApplyAppearance(); fixture.RenderGroups(); fixture.ExpandedRail.Visibility = Visibility.Visible; fixture.UpdateLayout();
-                    var background = (Color)ColorConverter.ConvertFromString(preset.Background);
-                    Check(SystemParameters.HighContrast || ColorOf("PanelBrush") == background && Contrast(ColorOf("TextBrush"), background) >= 4.5
-                        && Contrast(ColorOf("TextBrush"), ColorOf("ControlBrush")) >= 4.5, "A preset surface or control lost its readable text palette.");
-                    var labels = VisualChildren<RailLabel>(fixture.ExpandedRail).ToArray();
-                    Check(labels.Length == 8 && labels.All(label => label.Glyph.Length == 1 && label.Icon.FontFamily.Source == "Segoe MDL2 Assets"
-                        && new Typeface(label.Icon.FontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal).TryGetGlyphTypeface(out var font) && font.CharacterToGlyphMap.ContainsKey(label.Glyph[0])
-                        && label.Caption.Text.Length > 0 && Math.Abs(label.Icon.TransformToAncestor(fixture.ExpandedRail).Transform(new Point(label.Icon.ActualWidth / 2, 0)).X - 24) < 1),
-                        "Expanded navigation lost its symbol font, labels or aligned icon column.");
-                    Check(VisualChildren<Button>(fixture.ExpandedRail).All(b => AutomationProperties.GetName(b).Length > 0), "An expanded navigation action has no accessible name.");
-                    var splash = new StartupWindow(() => false) { Owner = fixture, Topmost = false };
-                    try
+                    foreach (var mode in new[] { ReStart.Core.ThemeMode.Dark, ReStart.Core.ThemeMode.Light, ReStart.Core.ThemeMode.System })
                     {
-                        splash.Show(); splash.UpdateProgress(K.StartupTiles, .65); splash.UpdateLayout();
-                        Check(((SolidColorBrush)((Border)splash.Content).Background).Color == ColorOf("PanelBrush") && ((SolidColorBrush)splash.Stage.Foreground).Color == ColorOf("TextBrush"),
-                            "The splash did not use the selected color theme.");
-                        if (tag is "en" or "ja") SaveStartupScreenshot(splash, Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"splash-{tag}-{preset.Id}.png"));
+                        fixture.Document.Preferences.Language = tag; fixture.Document.Preferences.Theme = mode; ThemePresets.Apply(fixture.Document.Preferences, preset.Id);
+                        fixture.ApplyAppearance(); fixture.RenderGroups(); fixture.ExpandedRail.Visibility = Visibility.Visible; fixture.UpdateLayout();
+                        var background = (Color)ColorConverter.ConvertFromString(preset.Palette(mode, ThemeWindow.SystemIsLight).Background);
+                        Check(SystemParameters.HighContrast || ColorOf("PanelBrush") == background && Contrast(ColorOf("TextBrush"), background) >= 4.5
+                            && Contrast(ColorOf("TextBrush"), ColorOf("ControlBrush")) >= 4.5, "A preset surface or control lost its readable text palette.");
+                        var labels = VisualChildren<RailLabel>(fixture.ExpandedRail).ToArray();
+                        Check(labels.Length == 8 && labels.All(label => label.Glyph.Length == 1 && label.Icon.FontFamily.Source == "Segoe MDL2 Assets"
+                            && new Typeface(label.Icon.FontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal).TryGetGlyphTypeface(out var font) && font.CharacterToGlyphMap.ContainsKey(label.Glyph[0])
+                            && label.Caption.Text.Length > 0 && Math.Abs(label.Icon.TransformToAncestor(fixture.ExpandedRail).Transform(new Point(label.Icon.ActualWidth / 2, 0)).X - 24) < 1),
+                            "Expanded navigation lost its symbol font, labels or aligned icon column.");
+                        Check(VisualChildren<Button>(fixture.ExpandedRail).All(b => AutomationProperties.GetName(b).Length > 0), "An expanded navigation action has no accessible name.");
+                        var splash = new StartupWindow(() => false) { Owner = fixture, Topmost = false };
+                        try
+                        {
+                            splash.Show(); splash.UpdateProgress(K.StartupTiles, .65); splash.UpdateLayout();
+                            Check(((SolidColorBrush)((Border)splash.Content).Background).Color == ColorOf("PanelBrush") && ((SolidColorBrush)splash.Stage.Foreground).Color == ColorOf("TextBrush"),
+                                "The splash did not use the selected color theme.");
+                            if (tag is "en" or "ja") SaveStartupScreenshot(splash, Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"splash-{tag}-{preset.Id}-{mode}.png"));
+                        }
+                        finally { splash.Close(); fixture.Activate(); }
+                        if (tag is "en" or "ja") fixture.SaveScreenshot(Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"rail-{tag}-{preset.Id}-{mode}.png"));
+                        paletteCases++;
                     }
-                    finally { splash.Close(); fixture.Activate(); }
-                    if (tag is "en" or "ja") fixture.SaveScreenshot(Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"rail-{tag}-{preset.Id}.png"));
-                    paletteCases++;
-                }
-            fixture.Document.Preferences.Language = "en";
+            fixture.Document.Preferences.Language = "en"; fixture.Document.Preferences.ColorThemeId = "";
             foreach (var background in new[] { "#000000", "#FFFFFF", "#777777", "#0078D7" })
                 foreach (var accent in new[] { "#000000", "#FFFFFF", "#777777" })
                 {
@@ -60,39 +61,77 @@ public partial class MainWindow
                         "An extreme custom color made text, selected actions or scrollbars unreadable.");
                 }
             foreach (var preset in ThemePresets.All)
-            {
-                Exception? error = null;
-                var settings = new SettingsWindow(fixture, store) { Owner = fixture };
-                settings.Loaded += (_, _) => settings.Dispatcher.BeginInvoke(() =>
+                foreach (var mode in new[] { ReStart.Core.ThemeMode.Dark, ReStart.Core.ThemeMode.Light })
                 {
-                    try
+                    fixture.Document.Preferences.Theme = mode; fixture.Document.Preferences.ColorThemeId = "";
+                    var palette = preset.Palette(mode, false);
+                    Edit(settings =>
                     {
-                        settings.SelectSection(L.T(K.SettingsAppearance)); settings.UpdateLayout();
                         VisualChildren<Button>(settings).Single(b => AutomationProperties.GetName(b) == L.T(preset.Name)).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-                        var background = VisualChildren<TextBox>(settings).Single(t => AutomationProperties.GetName(t) == L.T(K.SettingsBackgroundColor));
-                        var accent = VisualChildren<TextBox>(settings).Single(t => AutomationProperties.GetName(t) == L.T(K.SettingsAccent));
-                        Check(background.Text == preset.Background && accent.Text == preset.Accent, "Choosing a color theme did not update the editable colors.");
+                        Check(Field(settings, K.SettingsBackgroundColor).Text == palette.Background && Field(settings, K.SettingsAccent).Text == palette.Accent
+                            && Mode(settings).SelectedIndex == (int)mode, "Choosing a family changed the base mode or chose the wrong variant.");
+                        Save(settings);
+                    });
+                    fixture.RefreshLayout();
+                    Check(store.Load()!.Preferences.ColorThemeId == preset.Id && fixture.Document.Preferences.Theme == mode,
+                        "Saving a color family lost its identity or changed the base mode.");
+                    Edit(settings =>
+                    {
+                        var background = Field(settings, K.SettingsBackgroundColor); var accent = Field(settings, K.SettingsAccent);
+                        var flipped = mode == ReStart.Core.ThemeMode.Dark ? ReStart.Core.ThemeMode.Light : ReStart.Core.ThemeMode.Dark;
+                        Mode(settings).SelectedIndex = (int)flipped;
+                        Check(background.Text == preset.Palette(flipped, false).Background && accent.Text == preset.Palette(flipped, false).Accent,
+                            "Reopening and switching base mode lost the selected family.");
+                        Mode(settings).SelectedIndex = (int)mode;
                         var before = System.Text.Json.JsonSerializer.Serialize(fixture.Document.Preferences);
-                        var save = VisualChildren<Button>(settings).Single(b => b.IsDefault);
-                        background.Text = "invalid"; save.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                        background.Text = "invalid"; Save(settings);
                         Check(settings.IsVisible && before == System.Text.Json.JsonSerializer.Serialize(fixture.Document.Preferences)
                             && VisualChildren<TextBlock>(settings).Any(t => t.Text == L.T(K.ErrorInvalidColor)), "Invalid color input was saved or silently ignored.");
-                        background.Text = preset.Background; accent.Text = "#FFFFFF";
+                        background.Text = palette.Background; accent.Text = "#FFFFFF";
                         Check(!VisualChildren<TextBlock>(settings).Any(t => t.Text == L.T(K.ErrorInvalidColor)), "Corrected color input retained an obsolete validation error.");
-                        SaveStartupScreenshot(settings, Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"settings-{preset.Id}.png"));
-                        save.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                        Mode(settings).SelectedIndex = (int)flipped;
+                        Check(background.Text == palette.Background && accent.Text == "#FFFFFF", "Changing the base mode overwrote custom RGB choices.");
+                        SaveStartupScreenshot(settings, Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"settings-{preset.Id}-{mode}.png"));
+                        Save(settings);
+                    });
+                    fixture.RefreshLayout();
+                    Check(fixture.Document.Preferences.ColorThemeId == "" && fixture.Document.Preferences.BackgroundColor == palette.Background
+                        && fixture.Document.Preferences.Accent == "#FFFFFF" && store.Load()!.Preferences.BackgroundColor == palette.Background,
+                        "Custom colors did not leave the family or survive the native persistence round trip.");
+                    if (preset.Id == "ocean" && mode == ReStart.Core.ThemeMode.Dark)
+                    {
+                        Edit(settings => { Field(settings, K.SettingsBackgroundColor).Text = palette.Background; Field(settings, K.SettingsAccent).Text = palette.Accent; Save(settings); });
+                        fixture.RefreshLayout();
+                        Check(store.Load()!.Preferences.ColorThemeId == "", "Exact custom RGB values matching a preset were relabelled while saving.");
+                        Edit(settings =>
+                        {
+                            Check(Field(settings, K.SettingsBackgroundColor).Text == palette.Background && Field(settings, K.SettingsAccent).Text == palette.Accent
+                                && Mode(settings).SelectedIndex == (int)ReStart.Core.ThemeMode.Light, "Reopening custom RGB matching a dark preset silently selected its light variant.");
+                            settings.Close();
+                        });
                     }
-                    catch (Exception ex) { error = ex; settings.Close(); }
-                });
-                settings.ShowDialog(); if (error != null) throw new InvalidOperationException("Appearance editor fixture failed: " + error.Message, error);
-                fixture.RefreshLayout();
-                Check(fixture.Document.Preferences.BackgroundColor == preset.Background && fixture.Document.Preferences.Accent == "#FFFFFF"
-                    && store.Load()!.Preferences.BackgroundColor == preset.Background, "Custom colors did not survive the native save and persistence round trip.");
-                editorCases++;
-            }
+                    editorCases++;
+                }
             return new(checks, paletteCases, editorCases);
         }
         finally { fixture.Exit(); L.SetLanguage(language); ApplyAppearance(); Activate(); }
+
+        TextBox Field(SettingsWindow settings, ReStart.Core.TextKey key) => VisualChildren<TextBox>(settings).Single(t => AutomationProperties.GetName(t) == L.T(key));
+        ComboBox Mode(SettingsWindow settings) => VisualChildren<ComboBox>(settings).Single(c => AutomationProperties.GetName(c) == L.T(K.SettingsBaseTheme));
+        void Save(SettingsWindow settings) => VisualChildren<Button>(settings).Single(b => b.IsDefault).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        void Edit(Action<SettingsWindow> edit)
+        {
+            Exception? error = null;
+            var settings = new SettingsWindow(fixture, store) { Owner = fixture };
+            settings.Loaded += (_, _) => settings.Dispatcher.BeginInvoke(() =>
+            {
+                try { settings.SelectSection(L.T(K.SettingsAppearance)); settings.UpdateLayout(); edit(settings); }
+                catch (Exception ex) { error = ex; settings.Close(); }
+            });
+            settings.ShowDialog();
+            if (error != null) throw new InvalidOperationException("Appearance editor fixture failed: " + error.Message, error);
+        }
+
     }
 }
 

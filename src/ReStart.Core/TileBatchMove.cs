@@ -1,6 +1,9 @@
 namespace ReStart.Core;
 
 /// <summary>One selected tile's visible origin, expressed in logical cells on the board.</summary>
+/// <param name="Id">Stable layout tile ID.</param>
+/// <param name="X">Visible board X origin in small-cell units.</param>
+/// <param name="Y">Visible board Y origin in small-cell units, relative to the tile-board origin.</param>
 public readonly record struct SelectedTilePosition(string Id, double X, double Y);
 
 /// <summary>Plans an atomic multi-tile move on copies; a rejected or cancelled plan never changes the source document.</summary>
@@ -8,6 +11,16 @@ public static class TileBatchMove
 {
     /// <summary>Plans a rigid selection move into a group/folder or onto open board space. Returns null when the selection cannot fit.</summary>
     /// <remarks>Group/folder destinations snap to whole cells. Open-space destinations use half cells and create independent tiles.</remarks>
+    /// <param name="document">Original layout to inspect without modifying its groups or preferences.</param>
+    /// <param name="selection">Selected tile IDs and their visible origins in board small-cell units.</param>
+    /// <param name="anchorId">Selected tile whose origin follows the destination anchor.</param>
+    /// <param name="groupId">Destination named-group ID, or null for a folder/board destination.</param>
+    /// <param name="folderId">Destination root-folder ID, or null for a group/board destination.</param>
+    /// <param name="x">Destination anchor X in small-cell units, local to a group/folder or absolute on the board.</param>
+    /// <param name="y">Destination anchor Y in small-cell units, local to a group/folder or absolute on the board.</param>
+    /// <param name="availableColumns">Number of available board lanes, from 1 through 64.</param>
+    /// <param name="cell">Size of one small tile cell in device-independent pixels (DIPs).</param>
+    /// <returns>A deep-copied group tree for an atomic commit, or null for an invalid, colliding, or unfit selection.</returns>
     public static List<TileGroup>? Plan(LayoutDocument document, IReadOnlyList<SelectedTilePosition> selection,
         string anchorId, string? groupId, string? folderId, double x, double y, int availableColumns, double cell)
     {

@@ -312,7 +312,7 @@
   "SettingsColorThemes": "Thèmes de couleurs",
   "SettingsBaseTheme": "Thème de base",
   "SettingsBackgroundColor": "Couleur du fond",
-  "SettingsCustomColorsHelp": "Utilisez #RRGGBB. Un fond vide utilise le thème de base. Le texte et les commandes s’adaptent pour rester lisibles.",
+  "SettingsCustomColorsHelp": "Les palettes suivent le thème de base, y compris le système. Modifier un champ RVB active des couleurs personnalisées qui conservent leurs valeurs exactes. Utilisez #RRGGBB ; un fond vide utilise celui du thème de base.",
   "SettingsResetColors": "Réinitialiser les couleurs",
   "ThemeMidnight": "Minuit",
   "ThemeOcean": "Océan",

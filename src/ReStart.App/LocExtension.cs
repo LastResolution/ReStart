@@ -9,6 +9,8 @@ public sealed class LocExtension : MarkupExtension
     /// <summary>Gets or sets the compile-time text identifier to bind as a dynamic resource.</summary>
     public ReStart.Core.TextKey Key { get; set; }
     /// <summary>Registers the key for language refresh and returns a dynamic-resource expression.</summary>
+    /// <param name="serviceProvider">XAML service provider for the target dependency property.</param>
+    /// <returns>A dynamic resource expression that updates with the selected language.</returns>
     public override object ProvideValue(IServiceProvider serviceProvider)
     {
         LocalizationResources.Keys.Add(Key);

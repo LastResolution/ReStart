@@ -14,6 +14,8 @@ public sealed class SingleInstanceGate : IDisposable
     public WaitHandle Activation => _activation;
 
     /// <summary>Opens a user/session identity lease and its activation event; preview uses an independent namespace.</summary>
+    /// <param name="identity">User/session-specific identity shared by ordinary instances.</param>
+    /// <param name="preview">Whether to use the separate preview namespace, isolating tests from the real launcher.</param>
     public SingleInstanceGate(string identity, bool preview = false)
     {
         var suffix = identity + (preview ? ".Preview" : "");

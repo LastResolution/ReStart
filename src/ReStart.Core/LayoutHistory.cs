@@ -3,6 +3,8 @@ using System.Text.Json;
 namespace ReStart.Core;
 
 /// <summary>Keeps bounded, in-memory layout undo/redo snapshots without retaining preferences or writing history to disk.</summary>
+/// <param name="maximumEdits">Maximum retained edits in addition to the current baseline; values below one are treated as one.</param>
+/// <param name="maximumBytes">Approximate managed-memory budget for UTF-16 JSON snapshots, in bytes; at least the current state is retained.</param>
 public sealed class LayoutHistory(int maximumEdits = 100, long maximumBytes = 32 * 1024 * 1024)
 {
     private readonly List<string> _states = [];
@@ -15,6 +17,7 @@ public sealed class LayoutHistory(int maximumEdits = 100, long maximumBytes = 32
     public bool CanRedo => _position + 1 < _states.Count;
 
     /// <summary>Starts a fresh editing history, for example after loading the local document.</summary>
+    /// <param name="document">Document whose groups establish the fresh history baseline.</param>
     public void Reset(LayoutDocument document)
     {
         _states.Clear(); _bytes = 0; _position = 0;
@@ -22,6 +25,7 @@ public sealed class LayoutHistory(int maximumEdits = 100, long maximumBytes = 32
     }
 
     /// <summary>Records one successfully saved operation; identical saves do not consume history or discard redo.</summary>
+    /// <param name="document">Document whose successfully saved groups are recorded; preferences are excluded.</param>
     public void Record(LayoutDocument document)
     {
         var state = Serialize(document.Groups);
@@ -34,6 +38,8 @@ public sealed class LayoutHistory(int maximumEdits = 100, long maximumBytes = 32
     }
 
     /// <summary>Restores the previous tile/group snapshot, preserving current preferences and upgrade metadata.</summary>
+    /// <param name="document">Document receiving restored group copies; preferences and upgrade metadata remain intact.</param>
+    /// <returns>True when a previous snapshot replaced the groups; false when already at the oldest state.</returns>
     public bool Undo(LayoutDocument document)
     {
         if (!CanUndo) return false;
@@ -42,6 +48,8 @@ public sealed class LayoutHistory(int maximumEdits = 100, long maximumBytes = 32
     }
 
     /// <summary>Restores the next tile/group snapshot, preserving current preferences and upgrade metadata.</summary>
+    /// <param name="document">Document receiving restored group copies; preferences and upgrade metadata remain intact.</param>
+    /// <returns>True when the next snapshot replaced the groups; false when already at the newest state.</returns>
     public bool Redo(LayoutDocument document)
     {
         if (!CanRedo) return false;
@@ -50,12 +58,15 @@ public sealed class LayoutHistory(int maximumEdits = 100, long maximumBytes = 32
     }
 
     /// <summary>Restores the latest successful snapshot without changing the history cursor, for a failed write.</summary>
+    /// <param name="document">Document receiving restored group copies; preferences and upgrade metadata remain intact.</param>
     public void RestoreCurrent(LayoutDocument document)
     {
         if (_states.Count > 0) document.Groups = Deserialize(_states[_position]);
     }
 
     /// <summary>Copies groups, tiles and folder children without sharing mutable objects with the source.</summary>
+    /// <param name="groups">Group tree to clone through the bounded layout JSON representation.</param>
+    /// <returns>A detached deep copy of groups, tiles and folder children with the same stable IDs.</returns>
     public static List<TileGroup> CopyGroups(IEnumerable<TileGroup> groups) => Deserialize(Serialize(groups));
 
     private static string Serialize(IEnumerable<TileGroup> groups) => JsonSerializer.Serialize(groups, LayoutStore.JsonOptions);

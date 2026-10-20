@@ -18,6 +18,10 @@ public sealed class StartButtonPress
     /// <summary>Gets whether a captured mouse-down still needs its matching mouse-up.</summary>
     public bool IsPressed => Volatile.Read(ref _pressed) != 0;
     /// <summary>Resolves one left-button event; changing preferences during a press never forwards an unmatched release.</summary>
+    /// <param name="down">True for a physical left-button press; false for its release.</param>
+    /// <param name="inside">Whether the pointer is currently within the supported native Start button.</param>
+    /// <param name="enabled">Whether Start-button integration is enabled for this transition.</param>
+    /// <returns>Hook action to forward the transition, suppress it, or toggle the launcher.</returns>
     public StartButtonAction Process(bool down, bool inside, bool enabled)
     {
         if (down)

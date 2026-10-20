@@ -1,6 +1,14 @@
 namespace ReStart.Core;
 
 /// <summary>Describes a group anchor, logical height and exact visible height, excluding trailing spacing.</summary>
+/// <param name="Group">Original group referenced by this placement.</param>
+/// <param name="Column">Zero-based board lane used as the legacy horizontal anchor.</param>
+/// <param name="Row">Board anchor row in half-small-cell units.</param>
+/// <param name="Rows">Occupied height rounded to half-small-cell rows.</param>
+/// <param name="Height">Exact visible group height in DIPs, excluding trailing spacing.</param>
+/// <param name="Left">Absolute visible left edge in DIPs.</param>
+/// <param name="Width">Content-sized rectangular width in DIPs.</param>
+/// <param name="Top">Absolute visible top edge in DIPs.</param>
 public readonly record struct GroupPlacement(TileGroup Group, int Column, int Row, int Rows, double Height, double Left, double Width, double Top);
 
 /// <summary>Places groups independently in columns, preserving explicit gaps and displacing only overlapping groups.</summary>
@@ -12,15 +20,33 @@ public static class GroupLayout
     public const double Gap = 24;
 
     /// <summary>Returns the number of complete group columns available in a viewport, with at least one column.</summary>
+    /// <param name="width">Available viewport width in DIPs.</param>
+    /// <param name="tileColumns">Width of a group in small tile cells, normally 6 or 8.</param>
+    /// <param name="cell">Size of one small tile cell in device-independent pixels (DIPs).</param>
+    /// <returns>A lane count clamped to 1 through 64.</returns>
     public static int ColumnCount(double width, int tileColumns, double cell) =>
         Math.Clamp((int)((Math.Max(0, width) + Gap) / (tileColumns * cell + Gap)), 1, 64);
 
     /// <summary>Rounds a canvas point to a group anchor, accounting for the original pointer grab offset.</summary>
+    /// <param name="x">Pointer-adjusted horizontal board offset in DIPs.</param>
+    /// <param name="y">Pointer-adjusted vertical anchor offset in DIPs.</param>
+    /// <param name="columns">Number of available board lanes, from 1 through 64.</param>
+    /// <param name="tileColumns">Width of a group in small tile cells, normally 6 or 8.</param>
+    /// <param name="cell">Size of one small tile cell in device-independent pixels (DIPs).</param>
+    /// <returns>Clamped board lane and half-cell row anchors.</returns>
     public static (int Column, int Row) Snap(double x, double y, int columns, int tileColumns, double cell) =>
         (Math.Clamp((int)Math.Round(x / (tileColumns * cell + Gap), MidpointRounding.AwayFromZero), 0, columns - 1),
          Math.Clamp((int)Math.Round(y / (cell / 2), MidpointRounding.AwayFromZero), 0, 20000));
 
     /// <summary>Snaps beside a nearby visible edge, retaining group spacing and the ordinary cell gap between independent tiles.</summary>
+    /// <param name="placements">Visible placements used as stationary alignment candidates.</param>
+    /// <param name="moving">Group being moved; its own placement is excluded.</param>
+    /// <param name="left">Proposed visible left edge in DIPs.</param>
+    /// <param name="top">Proposed visible top edge in DIPs.</param>
+    /// <param name="width">Moving group visible width in DIPs.</param>
+    /// <param name="height">Moving group visible height in DIPs.</param>
+    /// <param name="cell">Size of one small tile cell in device-independent pixels (DIPs).</param>
+    /// <returns>The nearest adjacent X position in DIPs, or the original left value if no edge is close.</returns>
     public static double SnapBeside(IEnumerable<GroupPlacement> placements, TileGroup moving, double left, double top, double width, double height, double cell)
     {
         var candidates = placements.Where(p => p.Group != moving && top < p.Top + p.Height && top + height > p.Top)
@@ -35,6 +61,14 @@ public static class GroupLayout
     }
 
     /// <summary>Aligns nearby left/right edges without rounding away a lane's non-grid origin; preserves vertical drag alignment when isolated.</summary>
+    /// <param name="placements">Visible placements used as stationary alignment candidates.</param>
+    /// <param name="moving">Group being moved; its own placement is excluded.</param>
+    /// <param name="left">Proposed visible left edge in DIPs.</param>
+    /// <param name="top">Proposed visible top edge in DIPs.</param>
+    /// <param name="width">Moving group visible width in DIPs.</param>
+    /// <param name="height">Moving group visible height in DIPs.</param>
+    /// <param name="cell">Size of one small tile cell in device-independent pixels (DIPs).</param>
+    /// <returns>The nearest aligned X position in DIPs, or the original left value if no alignment is close.</returns>
     public static double SnapAlignedX(IEnumerable<GroupPlacement> placements, TileGroup moving, double left, double top, double width, double height, double cell)
     {
         var items = placements.ToArray();
@@ -47,6 +81,14 @@ public static class GroupLayout
     }
 
     /// <summary>Snaps above or below a nearby group boundary, rounding outward to retain at least the group gap.</summary>
+    /// <param name="placements">Visible placements used as stationary vertical snap candidates.</param>
+    /// <param name="moving">Moving group, excluded from the candidate set.</param>
+    /// <param name="left">Proposed visible left edge in DIPs.</param>
+    /// <param name="row">Proposed board row in half-small-cell units.</param>
+    /// <param name="width">Moving group visible width in DIPs.</param>
+    /// <param name="height">Moving group visible height in DIPs.</param>
+    /// <param name="cell">Size of one small tile cell in device-independent pixels (DIPs).</param>
+    /// <returns>Nearest valid half-cell anchor row, or the proposed row if no edge is close.</returns>
     public static int SnapRow(IEnumerable<GroupPlacement> placements, TileGroup moving, double left, int row, double width, double height, double cell)
     {
         var offset = moving.IsStandalone ? HeaderHeight : 0; var half = cell / 2;
@@ -61,6 +103,11 @@ public static class GroupLayout
     }
 
     /// <summary>Finds a named group within one small cell of its visible edges for a transient adjacent-cell insertion target.</summary>
+    /// <param name="placements">Visible group rectangles; independent entries are not recipients.</param>
+    /// <param name="x">Drop point X in board-local DIPs.</param>
+    /// <param name="y">Drop point Y in board-local DIPs.</param>
+    /// <param name="cell">Size of one small tile cell in device-independent pixels (DIPs).</param>
+    /// <returns>Nearest named group within the adjacent-cell tolerance, or null when no group qualifies.</returns>
     public static TileGroup? DropRecipient(IEnumerable<GroupPlacement> placements, double x, double y, double cell)
     {
         return placements.Where(p => !p.Group.IsStandalone)
@@ -72,6 +119,11 @@ public static class GroupLayout
     }
 
     /// <summary>Returns the content-sized rectangular group footprint, including its header and any expanded folder.</summary>
+    /// <param name="group">Group whose visible footprint is measured.</param>
+    /// <param name="tileColumns">Width of a group in small tile cells, normally 6 or 8.</param>
+    /// <param name="cell">Size of one small tile cell in device-independent pixels (DIPs).</param>
+    /// <param name="expandedFolderId">Open root-folder ID, or null to measure the closed group.</param>
+    /// <returns>Content-sized rectangular bounds relative to the group origin, in DIPs.</returns>
     public static IReadOnlyList<GroupArea> OccupiedAreas(TileGroup group, int tileColumns, double cell, string? expandedFolderId = null)
     {
         var tiles = TileLayout.Pack(group.Tiles, tileColumns);
@@ -85,6 +137,16 @@ public static class GroupLayout
     }
 
     /// <summary>Returns group bounds without mutating anchors; folder expansion temporarily pushes neighbors around its fixed opening anchor.</summary>
+    /// <param name="groups">Groups to place in their existing priority/order.</param>
+    /// <param name="columns">Number of available board lanes, from 1 through 64.</param>
+    /// <param name="tileColumns">Width of a group in small tile cells, normally 6 or 8.</param>
+    /// <param name="cell">Size of one small tile cell in device-independent pixels (DIPs).</param>
+    /// <param name="priority">Optional moving group reserved before ordinary collision resolution.</param>
+    /// <param name="expandedFolderId">Open root-folder ID, or null for the closed-layout baseline.</param>
+    /// <param name="preserveColumns">Whether explicit horizontal lanes must remain fixed when resolving overlaps.</param>
+    /// <param name="priorityIds">Optional stable group IDs reserved ahead of ordinary groups, for example a rigid selection.</param>
+    /// <returns>Visible placements referencing the input groups; stored anchors are not modified.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">The board lane count is outside 1 through 64, or the cell size is nonpositive or nonfinite.</exception>
     public static IReadOnlyList<GroupPlacement> Pack(IEnumerable<TileGroup> groups, int columns, int tileColumns, double cell, TileGroup? priority = null, string? expandedFolderId = null, bool preserveColumns = false, IReadOnlySet<string>? priorityIds = null)
     {
         if (columns is < 1 or > 64 || !double.IsFinite(cell) || cell <= 0) throw new ArgumentOutOfRangeException(nameof(columns));
@@ -158,6 +220,16 @@ public static class GroupLayout
     }
 
     /// <summary>Calculates the exact proposed drop layout without modifying group anchors or any tile contents.</summary>
+    /// <param name="document">Original layout to inspect without modifying its groups or preferences.</param>
+    /// <param name="group">Group whose board anchor is being moved.</param>
+    /// <param name="column">Requested zero-based board lane.</param>
+    /// <param name="row">Requested board row in half-small-cell units.</param>
+    /// <param name="availableColumns">Number of available board lanes, from 1 through 64.</param>
+    /// <param name="cell">Size of one small tile cell in device-independent pixels (DIPs).</param>
+    /// <param name="x">Optional precise horizontal group origin in small-cell units; null uses the lane anchor.</param>
+    /// <returns>Proposed placements without changing the source document.</returns>
+    /// <exception cref="ArgumentException">The moving group is not in the source document.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">An explicit X origin is nonfinite or outside 0 through 10000 cells, or packing dimensions are invalid.</exception>
     public static IReadOnlyList<GroupPlacement> PreviewMove(LayoutDocument document, TileGroup group, int column, int row, int availableColumns, double cell, double? x = null)
     {
         if (!document.Groups.Contains(group)) throw new ArgumentException("Unknown group.", nameof(group));
@@ -178,6 +250,15 @@ public static class GroupLayout
     }
 
     /// <summary>Commits the proposed group layout while preserving every tile's identity, size and local cell coordinates.</summary>
+    /// <param name="document">Layout to mutate in memory; the caller is responsible for saving it.</param>
+    /// <param name="group">Group whose board anchor is being moved.</param>
+    /// <param name="column">Requested zero-based board lane.</param>
+    /// <param name="row">Requested board row in half-small-cell units.</param>
+    /// <param name="availableColumns">Number of available board lanes, from 1 through 64.</param>
+    /// <param name="cell">Size of one small tile cell in device-independent pixels (DIPs).</param>
+    /// <param name="x">Optional precise horizontal group origin in small-cell units; null uses the lane anchor.</param>
+    /// <exception cref="ArgumentException">The moving group is not in the source document.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">The requested X origin or packing dimensions are invalid.</exception>
     public static void Move(LayoutDocument document, TileGroup group, int column, int row, int availableColumns, double cell, double? x = null)
     {
         foreach (var p in PreviewMove(document, group, column, row, availableColumns, cell, x))
@@ -187,6 +268,10 @@ public static class GroupLayout
 }
 
 /// <summary>One occupied local rectangle used consistently for group collision and native hit testing.</summary>
+/// <param name="Left">Left offset relative to the group origin, in DIPs.</param>
+/// <param name="Top">Top offset relative to the group origin, in DIPs.</param>
+/// <param name="Width">Visible rectangular width in DIPs.</param>
+/// <param name="Height">Visible rectangular height in DIPs.</param>
 public readonly record struct GroupArea(double Left, double Top, double Width, double Height)
 {
     /// <summary>Gets the exclusive right edge.</summary>

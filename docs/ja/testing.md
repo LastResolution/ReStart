@@ -9,6 +9,8 @@ Windows と global.json の安定 SDK を使います。使用中の実行ファ
 ~~~powershell
 dotnet restore ReStart.slnx --locked-mode
 dotnet format whitespace ReStart.slnx --verify-no-changes --no-restore
+./scripts/check-api-docs.ps1 -SelfTest
+./scripts/check-api-docs.ps1
 dotnet build ReStart.slnx -c Release --no-restore
 dotnet test ReStart.slnx -c Release --no-build
 ./scripts/smoke.ps1
@@ -36,9 +38,9 @@ dotnet test ReStart.slnx -c Release --no-build
 | navigation | 架空288アプリ、4幅、見出しの連続、8回の再表示リセット |
 | AppFolders | 階層開閉、キー / Automation、隠れた子の検索、幅・テーマ・文字ジャンプ |
 | first-input | 列挙を待機した新規画面へ文字合成で E、完了後 Edge、継続 d、再表示・フォーカス |
-| search-selection | 検索のネイティブ選択・Automation・Enterの起動先・矢印・入力継続・同一検索の更新、8言語×明暗テーマ |
+| search-selection | 検索のネイティブ選択・Automation・Enterの起動先、下1回で2番目へ進む動作、1件・0件・最下段、矢印・入力継続・同一検索の更新、8言語×明暗テーマ |
 | startup | 遅延カタログ・待機中の入力・取消・重複表示の抑制・写真とタイルの初期表示・壊れたタイル・再表示・8言語×明暗・システム、アイコンキャッシュの破損・期限・元ファイル変更 |
-| appearance | 8言語×5配色、展開サイドバーの実フォントと位置、スプラッシュの配色、極端なRGB色での文字・操作部品・スクロールバーの対比、不正色の拒否、5種類の設定保存と再読み込み |
+| appearance | 8言語×5配色×明暗・システム、展開サイドバーの実フォントと位置、スプラッシュの配色、極端なRGB色の対比、不正色の拒否、10通りの配色保存・再表示・モード切替・カスタムRGB保持 |
 | app-menus | ピン / 解除、メニュー更新、有効 verb の読み取り。実行しない |
 | release-info | 版・ライセンス・移行原本・記録、日英×テーマ、アクセント |
 | placement | 独立アンカー、押し出しプレビュー / 取消、内部座標、単独タイルの実寸、保存、直接命名、フォルダー |

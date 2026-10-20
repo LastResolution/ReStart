@@ -8,6 +8,8 @@ using System.Text.Json;
 namespace ReStart.Core;
 
 /// <summary>Returns an acknowledged pin result from the existing launcher process.</summary>
+/// <param name="Success">Whether the primary process completed and saved the pin request.</param>
+/// <param name="Message">Optional display-safe explanation of the outcome.</param>
 public sealed record PinReply(bool Success, string Message = "");
 
 /// <summary>Transfers one bounded path to the existing user/session process without launching the target or writing shared request files.</summary>
@@ -19,11 +21,20 @@ public sealed class PinRequestChannel : IDisposable
     private readonly Task _listener;
 
     /// <summary>Starts a serialized current-user-only listener. The callback acknowledges only after persistence succeeds.</summary>
+    /// <param name="identity">User/session instance identity shared with the primary launcher.</param>
+    /// <param name="receive">Asynchronous pin handler; returns success only after persistence and marshals any UI work itself.</param>
     public PinRequestChannel(string identity, Func<string, Task<PinReply>> receive) => _listener = ListenAsync(Name(identity), receive);
 
     private static string Name(string identity) => "ReStart.Pin." + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(identity)));
 
     /// <summary>Sends a path and waits for the primary process to acknowledge it; cancellation bounds cold-start and shutdown races.</summary>
+    /// <param name="identity">Primary process user/session identity used to derive the pipe name.</param>
+    /// <param name="path">Filesystem path to pin; the receiver performs path validation.</param>
+    /// <param name="cancellationToken">Token bounding pipe connection, transfer and acknowledgement waits.</param>
+    /// <returns>Acknowledgement from the primary process after handling the request.</returns>
+    /// <exception cref="InvalidDataException">The payload or acknowledgement exceeds protocol bounds or contains no reply.</exception>
+    /// <exception cref="OperationCanceledException">The caller cancels connection, transfer, or acknowledgement.</exception>
+    /// <exception cref="IOException">The primary process pipe cannot be opened or disconnects during the request.</exception>
     public static async Task<PinReply> SendAsync(string identity, string path, CancellationToken cancellationToken)
     {
         await using var pipe = new NamedPipeClientStream(".", Name(identity), PipeDirection.InOut, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);

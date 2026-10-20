@@ -4,6 +4,12 @@ namespace ReStart.Core;
 public static class TileGrouping
 {
     /// <summary>Collects sources beside an independent non-folder target, preserving tile identity and earlier neighbors.</summary>
+    /// <param name="document">Original layout to inspect without modifying its groups or preferences.</param>
+    /// <param name="sources">Distinct dragged tiles, excluding the target and any selected parent/child pair.</param>
+    /// <param name="targetId">Stable ID of an independent, non-folder target tile.</param>
+    /// <param name="availableColumns">Number of available board lanes, from 1 through 64.</param>
+    /// <param name="cell">Size of one small tile cell in device-independent pixels (DIPs).</param>
+    /// <returns>A detached group tree containing an ordinary group around the target, or null when grouping is invalid.</returns>
     public static List<TileGroup>? Plan(LayoutDocument document, IReadOnlyList<Tile> sources, string targetId, int availableColumns, double cell)
     {
         if (sources.Count == 0 || sources.Any(t => t.Id == targetId) || sources.Select(t => t.Id).Distinct().Count() != sources.Count

@@ -15,6 +15,12 @@ public sealed class TileFolderHover
     public string? TargetId => _target;
 
     /// <summary>Returns true after a stable eligible source/target pair has remained hovered for the required monotonic duration.</summary>
+    /// <param name="source">Stable dragged tile ID.</param>
+    /// <param name="target">Stable eligible target ID, or null to clear the hover.</param>
+    /// <param name="timestamp">Monotonic elapsed time in milliseconds, from the same clock for successive calls.</param>
+    /// <param name="delayMilliseconds">Positive required dwell duration in milliseconds; defaults to the folder delay.</param>
+    /// <returns>Whether the unchanged source/target pair has reached its dwell deadline.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">The dwell duration is zero or negative.</exception>
     public bool Update(string source, string? target, long timestamp, int delayMilliseconds = DelayMilliseconds)
     {
         if (delayMilliseconds <= 0) throw new ArgumentOutOfRangeException(nameof(delayMilliseconds));

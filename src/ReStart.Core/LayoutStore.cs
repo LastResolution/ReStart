@@ -4,6 +4,8 @@ using System.Text.Json.Serialization;
 namespace ReStart.Core;
 
 /// <summary>Loads and atomically replaces a local layout while retaining a backup and protecting unsupported schemas.</summary>
+/// <param name="filePath">Local layout JSON path; its directory also contains backups and upgrade state.</param>
+/// <param name="applicationVersion">Optional application version for migration metadata; null disables application-version tracking while retaining schema migration.</param>
 public sealed class LayoutStore(string filePath, string? applicationVersion = null)
 {
     private string? _migrationSource;
@@ -32,6 +34,7 @@ public sealed class LayoutStore(string filePath, string? applicationVersion = nu
     public string? UpgradeBackupPath { get; private set; }
 
     /// <summary>Loads the layout or a valid backup; preserves corrupt input and marks unsupported versions read-only.</summary>
+    /// <returns>The loaded or recovered normalized layout; null when no usable document exists. Recovery details are exposed by the store.</returns>
     public LayoutDocument? Load()
     {
         RecoveryMessage = null;
@@ -81,6 +84,11 @@ public sealed class LayoutStore(string filePath, string? applicationVersion = nu
     }
 
     /// <summary>Reads a size-bounded layout file and validates its schema and model invariants.</summary>
+    /// <param name="path">Existing JSON layout file to import or inspect.</param>
+    /// <returns>A validated, normalized layout read without changing the destination store.</returns>
+    /// <exception cref="InvalidDataException">The file exceeds 5 MiB, contains no layout, or violates model/schema limits.</exception>
+    /// <exception cref="JsonException">The file is not valid layout JSON.</exception>
+    /// <exception cref="IOException">The file cannot be read.</exception>
     public static LayoutDocument Read(string path)
     {
         if (new FileInfo(path).Length > 5 * 1024 * 1024) throw new InvalidDataException(L.T(K.ErrorLayoutTooLarge));
@@ -91,6 +99,10 @@ public sealed class LayoutStore(string filePath, string? applicationVersion = nu
     }
 
     /// <summary>Normalizes and writes a temporary file, then replaces the destination while retaining its previous version as a backup.</summary>
+    /// <param name="document">Document to normalize and persist atomically, retaining a last-good backup; read-only newer schemas are rejected.</param>
+    /// <exception cref="InvalidOperationException">A newer layout/application version made this store read-only.</exception>
+    /// <exception cref="ArgumentException">The explicitly supplied producer application version is invalid.</exception>
+    /// <exception cref="IOException">The temporary file, backup, or atomic replacement cannot be written.</exception>
     public void Save(LayoutDocument document)
     {
         if (IsReadOnly) throw new InvalidOperationException(L.T(K.ErrorFutureLayout));

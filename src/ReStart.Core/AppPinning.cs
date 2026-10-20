@@ -4,9 +4,21 @@ namespace ReStart.Core;
 public static class AppPinning
 {
     /// <summary>Gets whether an app is already pinned, including inside a tile folder.</summary>
+    /// <param name="document">Original layout to inspect without modifying its groups or preferences.</param>
+    /// <param name="app">App identity to match by app ID, or filesystem target for a non-Shell app.</param>
+    /// <returns>Whether a matching root or folder-child pin exists.</returns>
     public static bool IsPinned(LayoutDocument document, AppEntry app) => Find(document, app) != null;
 
     /// <summary>Pins an app once in free board space or an explicitly requested group, preserving existing pins and layout.</summary>
+    /// <param name="document">Layout to mutate in memory; the caller is responsible for saving it.</param>
+    /// <param name="app">Launch identity and display name to pin.</param>
+    /// <param name="destination">Explicit named destination group, or null to find free independent board space.</param>
+    /// <param name="availableColumns">Number of available board lanes, from 1 through 64.</param>
+    /// <param name="cell">Size of one small tile cell in device-independent pixels (DIPs).</param>
+    /// <param name="viewportWidth">Usable board width in DIPs; zero uses the configured group width.</param>
+    /// <param name="preferredTop">Preferred vertical board offset in DIPs, usually the current scroll offset.</param>
+    /// <returns>The existing matching tile, or the newly added pin.</returns>
+    /// <exception cref="ArgumentException">The requested destination is absent from the document or is an independent entry.</exception>
     public static Tile Pin(LayoutDocument document, AppEntry app, TileGroup? destination = null, int availableColumns = 1, double cell = 52, double viewportWidth = 0, double preferredTop = 0)
     {
         if (destination != null && !document.Groups.Contains(destination)) throw new ArgumentException("Unknown destination group.", nameof(destination));
@@ -20,6 +32,9 @@ public static class AppPinning
     }
 
     /// <summary>Removes all pins for an app and prunes only groups or folders emptied by that removal.</summary>
+    /// <param name="document">Layout to mutate in memory; the caller is responsible for saving it.</param>
+    /// <param name="app">App identity whose matching pins should be removed.</param>
+    /// <returns>Number of matching app pins removed, including folder children.</returns>
     public static int Unpin(LayoutDocument document, AppEntry app)
     {
         var removed = 0;
@@ -42,6 +57,9 @@ public static class AppPinning
     }
 
     /// <summary>Finds an existing root or folder-child pin without moving it or changing the document.</summary>
+    /// <param name="document">Original layout to inspect without modifying its groups or preferences.</param>
+    /// <param name="app">App identity to match by app ID, or filesystem target for a non-Shell app.</param>
+    /// <returns>The first matching root or folder-child tile, or null when absent.</returns>
     public static Tile? Find(LayoutDocument document, AppEntry app) => document.Groups.SelectMany(g => g.Tiles)
         .SelectMany(t => new[] { t }.Concat(t.Children)).FirstOrDefault(t => Matches(t, app));
     private static bool Matches(Tile tile, AppEntry app) => !tile.IsFolder && tile.Widget.Length == 0

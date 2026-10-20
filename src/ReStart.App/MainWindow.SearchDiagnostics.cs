@@ -45,9 +45,13 @@ public partial class MainWindow
             Key(System.Windows.Input.Key.Enter);
             Check(launched.SequenceEqual(new[] { "alpha" }), "Enter did not invoke exactly the visible default result.");
             Key(System.Windows.Input.Key.Down);
-            Check(Row().IsKeyboardFocused && Selected() == "alpha", "Down did not transfer focus to the selected result.");
+            Check(Row().IsKeyboardFocused && Selected() == "beta", "One Down press did not advance from the default result to the second result.");
             Key(System.Windows.Input.Key.Down);
-            Check(Selected() == "beta" && Row().IsKeyboardFocused, "Arrow navigation did not update selection and focus together.");
+            Check(Selected() == "gamma" && Row().IsKeyboardFocused, "The second Down press did not advance to the third result.");
+            Key(System.Windows.Input.Key.Down);
+            Check(Selected() == "gamma", "Down beyond the last result wrapped or cleared selection.");
+            Key(System.Windows.Input.Key.Up);
+            Check(Selected() == "beta" && Row().IsKeyboardFocused, "Up did not move selection and focus back together.");
             Key(System.Windows.Input.Key.Enter);
             Check(launched.SequenceEqual(new[] { "alpha", "beta" }), "Enter ignored the keyboard-selected result.");
             fixture._apps = apps.Select(a => a.Id == "beta" ? a with { Name = "Zulu Editor" } : a).ToList();
@@ -56,17 +60,22 @@ public partial class MainWindow
                 "Refreshing results lost the selected app identity or stole row focus.");
             fixture.FocusSearchInput(); Key(System.Windows.Input.Key.Enter);
             Check(launched.Last() == "beta" && launched.Count == 3, "Returning to the search field silently changed the Enter target.");
+            Key(System.Windows.Input.Key.Down);
+            Check(Selected() == "beta" && Row().IsKeyboardFocused, "Down from the input did not clamp a preserved last selection.");
+            fixture.FocusSearchInput();
             fixture.SearchBox.CaretIndex = fixture.SearchBox.Text.Length;
             fixture.ComposeFixtureText("x");
             Check(fixture.SearchBox.Text == "Editorx" && fixture.SearchResults.SelectedItem == null, "Continued typing retained an obsolete selection.");
             Key(System.Windows.Input.Key.Enter);
             Check(launched.Count == 3, "An empty result list launched a stale result.");
+            Key(System.Windows.Input.Key.Down);
+            Check(fixture.SearchBox.IsKeyboardFocused && fixture.SearchResults.SelectedItem == null, "Down into an empty result list stole focus or selected a stale app.");
             fixture.SetSmokeSearch("Beta"); fixture.UpdateLayout();
             Check(fixture.SearchResults.SelectedItem == null, "A changed catalog matched an obsolete display name.");
             fixture.SetSmokeSearch("Editor"); Key(System.Windows.Input.Key.Down); Key(System.Windows.Input.Key.Back);
             Check(fixture.SearchBox.Text == "Edito" && fixture.SearchBox.IsKeyboardFocused && Selected() == "alpha",
                 "Backspace from a result did not resume query editing and select the new best result.");
-            fixture.SetSmokeSearch("Editor"); Key(System.Windows.Input.Key.Down); Key(System.Windows.Input.Key.Up);
+            fixture.SetSmokeSearch("Editor"); Key(System.Windows.Input.Key.Down); Key(System.Windows.Input.Key.Up); Key(System.Windows.Input.Key.Up);
             Check(fixture.SearchBox.IsKeyboardFocused && Selected() == "alpha", "Up from the first result did not return to the input.");
             Key(System.Windows.Input.Key.Down); fixture.ComposeFixtureText("x");
             Check(fixture.SearchBox.Text == "Editorx" && fixture.SearchBox.IsKeyboardFocused && fixture.SearchResults.SelectedItem == null,
@@ -79,6 +88,10 @@ public partial class MainWindow
             Check(Selected() == "beta", "A same-query icon refresh reset the selected result.");
             fixture.SearchBox.Clear();
             Check(fixture.SearchResults.SelectedItem == null && !fixture.ResultsPanel.IsVisible, "Clearing search retained a hidden launch target.");
+            fixture.SetSmokeSearch("Gamma"); Key(System.Windows.Input.Key.Down);
+            Check(Selected() == "gamma" && Row().IsKeyboardFocused, "Down with one result lost the only selection.");
+            Key(System.Windows.Input.Key.Up);
+            Check(fixture.SearchBox.IsKeyboardFocused && Selected() == "gamma", "Up from the only result did not return to query editing.");
             foreach (var tag in L.SupportedLanguages)
                 foreach (var theme in new[] { ReStart.Core.ThemeMode.Dark, ReStart.Core.ThemeMode.Light })
                 {

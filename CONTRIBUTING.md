@@ -28,6 +28,8 @@ The pre-commit hook checks the author address and staged files for credential pa
 ~~~powershell
 dotnet restore ReStart.slnx --locked-mode
 dotnet format whitespace ReStart.slnx --verify-no-changes --no-restore
+./scripts/check-api-docs.ps1 -SelfTest
+./scripts/check-api-docs.ps1
 dotnet build ReStart.slnx -c Release --no-restore
 dotnet test ReStart.slnx -c Release --no-build
 ~~~
@@ -54,3 +56,5 @@ Write English XML comments for public/protected APIs. CS1591 is treated as an er
 English documentation is primary. Maintain linked Japanese counterparts for behavior/procedures; future release notes are English only. See [localization](docs/localization.md) and [API contracts](docs/api-contracts.md).
 
 Report ordinary defects through Issues, removing personal information from attachments. Use the [security policy](SECURITY.md) for vulnerabilities.
+
+Public callable APIs need meaningful `<param>`, `<typeparam>` and `<returns>` documentation, including units, null/default behavior and ownership or mutation. Describe important exceptions. CI checks missing/empty tags using the selected SDK’s C# parser; review is still responsible for the accuracy of those descriptions.

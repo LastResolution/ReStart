@@ -312,7 +312,7 @@
   "SettingsColorThemes": "Color themes",
   "SettingsBaseTheme": "Base theme",
   "SettingsBackgroundColor": "Background color",
-  "SettingsCustomColorsHelp": "Use #RRGGBB. An empty background uses the base theme. Text and controls adjust for readable contrast.",
+  "SettingsCustomColorsHelp": "Color themes follow the base mode, including System. Editing either RGB field switches to custom colors, which keep their exact values. Use #RRGGBB; an empty background uses the base surface.",
   "SettingsResetColors": "Reset colors",
   "ThemeMidnight": "Midnight",
   "ThemeOcean": "Ocean",
