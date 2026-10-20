@@ -20,8 +20,14 @@ public partial class MainWindow
         var originalWidth = Root.Width;
         var originalHeight = Root.Height;
         var originalTheme = Document.Preferences.Theme;
+        var originalRecent = Document.Preferences.ShowRecentlyAdded;
+        var originalMostUsed = Document.Preferences.ShowMostUsed;
         try
         {
+            // This fixture checks the alphabetical directory tree. Optional
+            // history rows have their own fidelity fixture and can repeat leaves.
+            Document.Preferences.ShowRecentlyAdded = false;
+            Document.Preferences.ShowMostUsed = false;
             _apps = [new("root", "Root sample", ""), new("alpha", "Alpha sample", "", FolderPath: "Sample tools"),
                 new("beta", "Beta sample", "", FolderPath: "Sample tools"), new("gamma", "Gamma sample", "", FolderPath: "Sample tools/Nested samples"),
                 new("delta", "Delta sample", "", FolderPath: "Other tools"), new("zulu", "Zulu sample", "")];
@@ -103,6 +109,8 @@ public partial class MainWindow
             Root.Width = originalWidth;
             Root.Height = originalHeight;
             Document.Preferences.Theme = originalTheme;
+            Document.Preferences.ShowRecentlyAdded = originalRecent;
+            Document.Preferences.ShowMostUsed = originalMostUsed;
             ApplyAppearance();
             RenderApps();
             ResetToPinnedView();

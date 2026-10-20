@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -26,7 +27,12 @@ public partial class MainWindow
             var text = new TextBlock { Text = L.T(heading), FontSize = 14 };
             text.SetResourceReference(TextBlock.ForegroundProperty, "MutedBrush");
             AppsPanel.Children.Add(new Border { Tag = "section", Padding = new(8, 12, 0, 8), Child = text });
-            foreach (var app in apps) AppsPanel.Children.Add(AppButton(app));
+            foreach (var app in apps)
+            {
+                var row = AppButton(app); row.Uid = "history";
+                AutomationProperties.SetItemStatus(row, L.T(heading));
+                AppsPanel.Children.Add(row);
+            }
         }
         if (Document.Preferences.ShowRecentlyAdded) HistorySection(K.RecentlyAdded, Activity.Recent(_apps, DateTimeOffset.Now));
         if (Document.Preferences.ShowMostUsed) HistorySection(K.MostUsed, Activity.Frequent(_apps));
