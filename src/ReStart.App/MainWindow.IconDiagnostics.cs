@@ -28,7 +28,7 @@ public partial class MainWindow
         var executable = Environment.ProcessPath!;
         var entries = new List<AppEntry> { FilePinning.FromPath(folder), FilePinning.FromPath(text), FilePinning.FromPath(unknown),
             FilePinning.FromPath(url), FilePinning.FromPath(image), FilePinning.FromPath(executable) };
-        var links = await CreateIconFixtureLinksAsync(directory, folder, text, executable);
+        var links = await CreateIconFixtureLinksAsync(directory, entries.Select(a => a.LaunchTarget).ToArray(), folder, text, executable);
         entries.AddRange(links.Select(FilePinning.FromPath));
         if (_apps.FirstOrDefault(a => a.IsShellApp) is { } shellApp) entries.Add(shellApp);
         await _catalog.LoadIconsAsync(entries);
@@ -37,7 +37,7 @@ public partial class MainWindow
         {
             foreach (var entry in entries)
             {
-                Require(_catalog.Icons.TryGetValue(entry.Id, out var source) && source is BitmapSource, "A filesystem or Shell app icon is missing.");
+                Require(_catalog.Icons.TryGetValue(entry.Id, out var source) && source is BitmapSource, $"A filesystem or Shell app icon is missing at fixture index {entries.IndexOf(entry)}.");
                 var bitmap = new FormatConvertedBitmap((BitmapSource)source!, PixelFormats.Bgra32, null, 0);
                 var pixels = new byte[bitmap.PixelWidth * bitmap.PixelHeight * 4]; bitmap.CopyPixels(pixels, bitmap.PixelWidth * 4, 0);
                 var xs = new List<int>(); var ys = new List<int>();
@@ -90,12 +90,12 @@ public partial class MainWindow
             await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
             Require(StatusText.Text.Length == 0 && !timer.IsEnabled, "The operation message did not expire.");
             timer.Interval = TimeSpan.FromSeconds(5);
-            return new(entries.Count, rendered, folderPixels, 4, 2);
+            return new(entries.Count, rendered, folderPixels, 4, 2, links.Length + 6);
         }
         finally { SetStatus(""); Document = original; ApplyAppearance(); RenderGroups(); }
     }
 
-    private static Task<string[]> CreateIconFixtureLinksAsync(string directory, params string[] targets)
+    private static Task<string[]> CreateIconFixtureLinksAsync(string directory, string[] files, params string[] targets)
     {
         var completion = new TaskCompletionSource<string[]>(TaskCreationOptions.RunContinuationsAsynchronously);
         var thread = new Thread(() =>
@@ -114,6 +114,8 @@ public partial class MainWindow
                     finally { System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shortcut); }
                     paths.Add(path);
                 }
+                foreach (var path in files.Concat(paths))
+                    Require(AppCatalog.GetFileIcon(path) is BitmapSource { IsFrozen: true }, "The legacy icon fallback failed for a filesystem fixture.");
                 completion.SetResult(paths.ToArray());
             }
             catch (Exception ex) { completion.SetException(ex); }
@@ -125,4 +127,4 @@ public partial class MainWindow
     }
 }
 
-internal sealed record IconSmokeResult(int Types, int RenderedSizesAndScales, int FolderVisiblePixels, int FolderPreviewIcons, int StatusChecks);
+internal sealed record IconSmokeResult(int Types, int RenderedSizesAndScales, int FolderVisiblePixels, int FolderPreviewIcons, int StatusChecks, int FallbackTypes);

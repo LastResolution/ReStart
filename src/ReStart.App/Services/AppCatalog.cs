@@ -62,6 +62,7 @@ public sealed class AppCatalog
             var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             var thread = new Thread(() =>
             {
+                var apartment = CoInitializeEx(0, 2);
                 try
                 {
                     while (pending.TryDequeue(out var item))
@@ -73,6 +74,7 @@ public sealed class AppCatalog
                     completion.SetResult();
                 }
                 catch (Exception ex) { completion.SetException(ex); }
+                finally { if (apartment >= 0) CoUninitialize(); }
             })
             { IsBackground = true, Name = "ReStart Shell icons" };
             thread.SetApartmentState(ApartmentState.STA); thread.Start();
@@ -222,8 +224,28 @@ public sealed class AppCatalog
     }
     [DllImport("shell32.dll", CharSet = CharSet.Unicode, PreserveSig = true)]
     private static extern int SHCreateItemFromParsingName(string path, nint binding, ref Guid iid, [MarshalAs(UnmanagedType.Interface)] out IShellItemImageFactory factory);
+    [DllImport("ole32.dll")] private static extern int CoInitializeEx(nint reserved, uint mode);
+    [DllImport("ole32.dll")] private static extern void CoUninitialize();
+    [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] private static extern bool DestroyIcon(nint icon);
 
     internal static ImageSource? GetIcon(string path)
+        => GetFactoryIcon(path) ?? GetFileIcon(path);
+
+    /// <summary>Uses the legacy full-icon path when an image factory cannot supply a filesystem icon.</summary>
+    internal static ImageSource? GetFileIcon(string path)
+    {
+        if (path.Length >= 260 || !File.Exists(path) && !Directory.Exists(path)) return null;
+        SHGetFileInfo(path, 0, out var info, (uint)Marshal.SizeOf<ShellFileInfo>(), 0x100);
+        if (info.Icon == 0) return null;
+        try
+        {
+            var image = Imaging.CreateBitmapSourceFromHIcon(info.Icon, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+            image.Freeze(); return image;
+        }
+        finally { DestroyIcon(info.Icon); }
+    }
+
+    private static ImageSource? GetFactoryIcon(string path)
     {
         IShellItemImageFactory? factory = null;
         nint bitmap = 0;
