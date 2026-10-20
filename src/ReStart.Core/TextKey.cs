@@ -644,4 +644,74 @@ public enum TextKey
     ThemeRose,
     /// <summary>Sand</summary>
     ThemeSand,
+    /// <summary>Apps</summary>
+    SearchApps,
+    /// <summary>Settings</summary>
+    SearchSettings,
+    /// <summary>Files</summary>
+    SearchFiles,
+    /// <summary>Search indexed files</summary>
+    SearchFilesSetting,
+    /// <summary>File search is unavailable. Check Windows indexing settings.</summary>
+    SearchIndexUnavailable,
+    /// <summary>Recent</summary>
+    JumpRecent,
+    /// <summary>Frequent</summary>
+    JumpFrequent,
+    /// <summary>Recently added</summary>
+    RecentlyAdded,
+    /// <summary>Most used</summary>
+    MostUsed,
+    /// <summary>Show recently added apps</summary>
+    SettingsShowRecentApps,
+    /// <summary>Show most used apps (record launches in ReStart)</summary>
+    SettingsShowMostUsed,
+    /// <summary>Clear app history</summary>
+    ClearAppHistory,
+    /// <summary>History stays on this PC. Usage counts are recorded only when enabled. Existing apps are not marked as newly added on the first run.</summary>
+    AppHistoryHelp,
+    /// <summary>App history cleared</summary>
+    HistoryCleared,
+    /// <summary>Navigation shortcuts</summary>
+    SettingsSidebar,
+    /// <summary>Downloads</summary>
+    NavDownloads,
+    /// <summary>Music</summary>
+    NavMusic,
+    /// <summary>Videos</summary>
+    NavVideos,
+    /// <summary>Network</summary>
+    NavNetwork,
+    /// <summary>Personal folder</summary>
+    NavPersonalFolder,
+    /// <summary>Display</summary>
+    WindowsDisplay,
+    /// <summary>Sound</summary>
+    WindowsSound,
+    /// <summary>Network &amp; Internet</summary>
+    WindowsNetwork,
+    /// <summary>Bluetooth &amp; devices</summary>
+    WindowsBluetooth,
+    /// <summary>Installed apps</summary>
+    WindowsApps,
+    /// <summary>Storage</summary>
+    WindowsStorage,
+    /// <summary>Windows Update</summary>
+    WindowsUpdates,
+    /// <summary>Privacy</summary>
+    WindowsPrivacy,
+    /// <summary>Personalization</summary>
+    WindowsPersonalization,
+    /// <summary>Background wallpaper</summary>
+    WindowsBackground,
+    /// <summary>Colors</summary>
+    WindowsColors,
+    /// <summary>Date &amp; time</summary>
+    WindowsDateTime,
+    /// <summary>Language &amp; region</summary>
+    WindowsLanguage,
+    /// <summary>Accessibility</summary>
+    WindowsAccessibility,
+    /// <summary>Power &amp; battery</summary>
+    WindowsPower,
 }

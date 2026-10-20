@@ -111,6 +111,14 @@ public sealed class TileGroup
 /// <summary>Stores local UI and integration choices; imported layouts do not replace these settings.</summary>
 public sealed class Preferences
 {
+    /// <summary>Gets or sets whether search includes up to twenty local Windows-indexed filesystem results.</summary>
+    public bool SearchFiles { get; set; } = true;
+    /// <summary>Gets or sets whether apps first observed after the initial catalog appear in Recently added for seven days.</summary>
+    public bool ShowRecentlyAdded { get; set; } = true;
+    /// <summary>Gets or sets whether successful ReStart app launches are counted locally and shown in Most used.</summary>
+    public bool ShowMostUsed { get; set; }
+    /// <summary>Gets or sets the optional navigation folders; unknown identifiers are ignored and null restores the default pair.</summary>
+    public List<string>? NavigationFolders { get; set; }
     /// <summary>Gets or sets whether a per-user Explorer command pins files, directories and shortcuts to ReStart.</summary>
     public bool ExplorerContextMenu { get; set; } = true;
     /// <summary>Gets or sets whether one read-only update check runs at normal startup.</summary>
