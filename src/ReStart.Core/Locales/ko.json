@@ -303,5 +303,11 @@
   "OpenTileLibrary": "라이브러리 폴더 열기",
   "RefreshTiles": "타일 새로 고침",
   "TileLibraryEmpty": "패키지가 없습니다. 타일 폴더를 라이브러리에 복사하세요.",
-  "AddLiveTile": "라이브 타일 추가"
+  "AddLiveTile": "라이브 타일 추가",
+  "StartupTitle": "시작 준비 중",
+  "StartupApps": "앱을 찾는 중…",
+  "StartupIcons": "아이콘을 준비하는 중…",
+  "StartupTiles": "라이브 타일을 준비하는 중…",
+  "StartupReady": "준비 완료",
+  "StartupSearch": "검색어를 입력하세요. 시작 화면이 열리면 검색 결과가 표시됩니다."
 }

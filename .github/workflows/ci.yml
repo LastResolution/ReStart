@@ -39,6 +39,8 @@ jobs:
         run: ./scripts/test-first-input.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
       - name: Verify selected search results and focused Enter actions
         run: ./scripts/test-search-selection.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+      - name: Verify prepared startup, typeahead, cancellation and icon caching
+        run: ./scripts/test-startup.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
       - name: Verify launcher motion and interrupted open/close
         run: ./scripts/test-motion.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
       - name: Verify app menus and read canonical shell commands
@@ -74,6 +76,8 @@ jobs:
             artifacts/first-input/start.json
             artifacts/search-selection/*/*.png
             artifacts/search-selection/*/start.json
+            artifacts/startup/*/*.png
+            artifacts/startup/*/start.json
             artifacts/app-menus/start.json
             artifacts/release-info/*.png
             artifacts/release-info/start.json

@@ -303,5 +303,11 @@
   "OpenTileLibrary": "Ouvrir la bibliothèque",
   "RefreshTiles": "Actualiser les vignettes",
   "TileLibraryEmpty": "Aucun paquet. Copiez un dossier de vignette dans la bibliothèque.",
-  "AddLiveTile": "Ajouter une vignette dynamique"
+  "AddLiveTile": "Ajouter une vignette dynamique",
+  "StartupTitle": "Préparation en cours",
+  "StartupApps": "Recherche de vos applications…",
+  "StartupIcons": "Préparation des icônes…",
+  "StartupTiles": "Préparation des vignettes dynamiques…",
+  "StartupReady": "Prêt",
+  "StartupSearch": "Saisissez votre recherche. Elle sera disponible à l’ouverture de Démarrer."
 }

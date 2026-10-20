@@ -36,7 +36,7 @@ Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button
 - **Make room for your apps.** Four tile sizes, movable groups, independent tiles and folders that expand in place. Drag, resize and rename without leaving Start.
 - **Arrange without accidental launches.** Edit mode selects tiles instead of opening apps. Move a selection together, then undo or redo the whole operation.
 - **Keep your files close.** Pin a document, directory or shortcut from Explorer's **Pin to ReStart** command.
-- **Open and type.** Search your apps immediately, including while the catalog is loading. Reopening returns to your pinned home.
+- **Open and type.** The first launch prepares icons and live tiles behind a localized progress screen. Type there to carry your search into Start; Enter launches the highlighted result. Reopening returns to your pinned home.
 - **Set the mood.** Light, dark, system and high-contrast themes; desktop wallpaper, accent colors and individual tile colors. Opening and closing respect your animation settings.
 
 <details>
@@ -72,7 +72,7 @@ Right-click the background → **Add live tile** to try one. Click a tile to use
 2. In **Configure data sources…**, enter the address or choose a local file, then **Save**. Optional credentials belong in this dialog.
 3. To change an installed tile's connection, right-click it → **Configure data sources…**. **Refresh data now** requests a fresh value.
 
-Updates run asynchronously while Start is visible. Cached values stay useful during connection failures, and hiding Start stops reads. Connections and credentials are encrypted for your Windows user and excluded from shared layouts; importing a package alone does not connect it.
+Updates run asynchronously while Start is opening or visible. Cached values stay useful during connection failures, and hiding Start stops reads. Connections and credentials are encrypted for your Windows user and excluded from shared layouts; importing a package alone does not connect it.
 
 **Weather starts with Berlin example coordinates, not your PC's location.** ReStart does not infer your region. The [location guide](docs/javascript-tiles.md#weather-location) explains how to change the coordinates and displayed place name. The image above uses fictional local data.
 

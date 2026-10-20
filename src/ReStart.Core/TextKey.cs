@@ -614,4 +614,16 @@ public enum TextKey
     PromptTileColor,
     /// <summary>Enter a color as #RRGGBB, for example #0078D7.</summary>
     ErrorInvalidColor,
+    /// <summary>Getting ready</summary>
+    StartupTitle,
+    /// <summary>Finding your apps…</summary>
+    StartupApps,
+    /// <summary>Preparing icons…</summary>
+    StartupIcons,
+    /// <summary>Preparing live tiles…</summary>
+    StartupTiles,
+    /// <summary>Ready</summary>
+    StartupReady,
+    /// <summary>Type to search. Your query will be ready when Start opens.</summary>
+    StartupSearch,
 }

@@ -22,7 +22,7 @@ public partial class MainWindow : Window
 {
     private readonly LayoutStore _store;
     private readonly bool _preview;
-    private readonly AppCatalog _catalog = new();
+    private readonly AppCatalog _catalog;
     private readonly Func<Task<List<AppEntry>>> _loadCatalog;
     private readonly bool _catalogFixture;
     private readonly Action<AppEntry>? _activationFixture;
@@ -72,6 +72,8 @@ public partial class MainWindow : Window
         if (!preview && (catalogLoader != null || activation != null)) throw new ArgumentException("Application fixtures require preview mode.", nameof(catalogLoader));
         _store = store;
         _preview = preview;
+        _startupComplete = preview;
+        _catalog = new(Path.Combine(Path.GetDirectoryName(store.FilePath)!, "icon-cache"));
         _catalogFixture = catalogLoader != null;
         _activationFixture = activation;
         _loadCatalog = catalogLoader ?? _catalog.LoadAsync;
@@ -161,6 +163,7 @@ public partial class MainWindow : Window
             PreferencesChanged?.Invoke();
             _apps = await _loadCatalog();
             MarkStartup("catalog");
+            ReportStartup(K.StartupIcons, .4);
             var actualApps = _apps;
             if (_preview && !_catalogFixture)
             {
@@ -179,6 +182,7 @@ public partial class MainWindow : Window
             _ready = true;
             MarkStartup("views");
             if (ScriptTileCount == 0) MarkStartup("tiles");
+            StartStartupTileWarmup();
             UpdateEditingChrome();
             RefreshSearchResults();
             PreferencesChanged?.Invoke();
@@ -187,10 +191,7 @@ public partial class MainWindow : Window
             var pinnedFiles = Document.Groups.SelectMany(g => g.Tiles).SelectMany(t => new[] { t }.Concat(t.Children))
                 .Where(t => !t.IsFolder && t.Widget.Length == 0 && !t.IsShellApp)
                 .Select(t => new AppEntry(t.AppId, t.Label, t.Target, false));
-            await _catalog.LoadIconsAsync(actualApps.Concat(pinnedFiles).DistinctBy(a => a.Id, StringComparer.OrdinalIgnoreCase).OrderByDescending(a => pinnedIds.Contains(a.Id)), () => Dispatcher.BeginInvoke(() =>
-            {
-                if (!_dragging) RenderGroups();
-            }, DispatcherPriority.Background));
+            await _catalog.LoadIconsAsync(actualApps.Concat(pinnedFiles).DistinctBy(a => a.Id, StringComparer.OrdinalIgnoreCase).OrderByDescending(a => pinnedIds.Contains(a.Id)));
             if (_preview)
             {
                 foreach (var app in _apps)
@@ -213,6 +214,7 @@ public partial class MainWindow : Window
         {
             SetStatus(L.T(K.ErrorCatalogLoad) + ex.Message);
             _ready = true;
+            IconsReady = true;
             RefreshSearchResults();
         }
     }
@@ -236,6 +238,7 @@ public partial class MainWindow : Window
     /// <summary>Hides the active launcher or presents the existing window.</summary>
     public void Toggle()
     {
+        if (_startupWindow != null) { CancelStartupPresentation(); return; }
         if (IsVisible && IsActive && _dialogDepth == 0 && !_dismissing) Dismiss();
         else Present();
     }
@@ -243,6 +246,8 @@ public partial class MainWindow : Window
     /// <summary>Returns to the pinned home view and presents the launcher; existing owned dialogs retain focus and preview windows retain their size.</summary>
     public void Present()
     {
+        if (!_startupComplete && _startupWindow == null && IsReady && IconsReady && ScriptTileCount == 0) _startupComplete = true;
+        if (!_startupComplete) { RequestStartupPresentation(); return; }
         var dialog = OwnedWindows.Cast<Window>().LastOrDefault(w => w.IsVisible);
         if (dialog != null) { dialog.Activate(); return; }
         var wasHidden = !IsVisible;
@@ -968,6 +973,7 @@ public partial class MainWindow : Window
     /// <summary>Closes the menu after a taskbar click unless a dialog or drag currently owns the interaction.</summary>
     public void DismissFromTaskbar()
     {
+        if (_startupWindow != null && Document.Preferences.CloseOnDeactivate) { CancelStartupPresentation(); return; }
         if (IsVisible && _dialogDepth == 0 && !_dragging && Document.Preferences.CloseOnDeactivate) Dismiss();
     }
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
@@ -1020,7 +1026,7 @@ public partial class MainWindow : Window
     private static bool IsAnyMenuOpen() => Mouse.Captured is ContextMenu || Mouse.Captured is System.Windows.Controls.Primitives.MenuBase;
     private void OnClosing(object? sender, CancelEventArgs e) { if (!_exit) { e.Cancel = true; Dismiss(); } }
     /// <summary>Stops timers and isolated script workers before permanently closing the launcher.</summary>
-    public void Exit() { _exit = true; StopMotion(); StopFolderDwell(); StopWatchingDesktopAppearance(); _clock.Stop(); _nameRefreshTimer?.Stop(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); foreach (var data in _tileData.Values) data.Runtime.Dispose(); _tileData.Clear(); _tileDataTransport?.Dispose(); _systemMetrics?.Dispose(); Close(); }
+    public void Exit() { _exit = true; CancelStartupPresentation(); StopMotion(); StopFolderDwell(); StopWatchingDesktopAppearance(); _clock.Stop(); _nameRefreshTimer?.Stop(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); foreach (var data in _tileData.Values) data.Runtime.Dispose(); _tileData.Clear(); _tileDataTransport?.Dispose(); _systemMetrics?.Dispose(); Close(); }
 
     /// <summary>Renders only the launcher root to a PNG for reproducible UI verification.</summary>
     public void SaveScreenshot(string path)

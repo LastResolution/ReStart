@@ -71,7 +71,8 @@ public partial class App : Application
         var handle = new WindowInteropHelper(_window).EnsureHandle();
         LegacySettingsCleanup.Run();
         _integration = new StartIntegration(handle, Dispatcher, _window.Toggle, _window.DismissFromTaskbar, _window.ToggleFromStartButton);
-        _window.IsVisibleChanged += (_, _) => _integration.SetMenuOpen(_window.IsVisible);
+        _window.IsVisibleChanged += (_, _) => _integration.SetMenuOpen(_window.IsPresenting);
+        _window.PresentationVisibilityChanged = () => _integration.SetMenuOpen(_window.IsPresenting);
         _window.PreferencesChanged = () =>
         {
             _integration.Apply(_window.Document.Preferences);
@@ -99,7 +100,7 @@ public partial class App : Application
     {
         var menu = new System.Windows.Forms.ContextMenuStrip();
         menu.Items.Add(L.T(K.AppOpen), null, (_, _) => Dispatcher.Invoke(() => _window!.Present()));
-        menu.Items.Add(L.T(K.NavSettings), null, (_, _) => Dispatcher.Invoke(() => { _window!.Present(); _window.ShowSettings(); }));
+        menu.Items.Add(L.T(K.NavSettings), null, (_, _) => Dispatcher.Invoke(() => _window!.PresentSettings()));
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
         menu.Items.Add(L.T(K.CommonExit), null, (_, _) => Dispatcher.Invoke(ExitApplication));
         _tray = new System.Windows.Forms.NotifyIcon
@@ -151,6 +152,7 @@ public partial class App : Application
             FolderDropSmokeResult? folderDrops = null;
             TileDataSmokeResult? tileData = null;
             SearchSelectionSmokeResult? searchSelection = null;
+            StartupSmokeResult? startupPreparation = null;
             string? error = null;
             try
             {
@@ -168,12 +170,13 @@ public partial class App : Application
                 if (args.Contains("--folder-drop-test")) folderDrops = await _window.VerifyFolderDropsAsync(path);
                 if (args.Contains("--tile-data-test")) tileData = await _window.VerifyTileDataAsync(path);
                 if (args.Contains("--search-selection-test")) searchSelection = await _window.VerifySearchSelectionAsync(path);
+                if (args.Contains("--startup-test")) startupPreparation = await _window.VerifyStartupAsync(path);
                 _window.SaveScreenshot(path);
             }
             catch (Exception ex) when (ex is IOException or InvalidOperationException) { success = false; error = ex.Message; }
             try
             {
-                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, catalogFolders = _window.CatalogFolderCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, navigation, placement, appFolders, firstInput, appMenus, releaseInfo, scrolling, bundledTiles, pinIcons, motion, editing, folderDrops, tileData, searchSelection, startup = _window.StartupMetrics, error, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
+                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, catalogFolders = _window.CatalogFolderCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, navigation, placement, appFolders, firstInput, appMenus, releaseInfo, scrolling, bundledTiles, pinIcons, motion, editing, folderDrops, tileData, searchSelection, startupPreparation, startup = _window.StartupMetrics, error, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
             }
             catch (IOException) { success = false; }
             _window.Exit(); Shutdown(success ? 0 : 1);

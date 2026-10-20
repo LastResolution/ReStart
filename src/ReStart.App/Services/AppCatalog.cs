@@ -11,6 +11,11 @@ namespace ReStart.App.Services;
 /// <summary>Enumerates AppsFolder and local shortcuts on dedicated STA threads without altering the shell.</summary>
 public sealed class AppCatalog
 {
+    private readonly IconCache? _cache;
+    /// <summary>Creates a catalog with an optional disposable pixel cache outside the portable application directory.</summary>
+    public AppCatalog(string? cacheDirectory = null) { if (cacheDirectory != null) _cache = new(cacheDirectory); }
+    internal int IconCacheHits => _cache?.Hits ?? 0;
+    internal int IconCacheMisses => _cache?.Misses ?? 0;
     /// <summary>Gets frozen icon images safe to consume from the UI thread.</summary>
     public ConcurrentDictionary<string, ImageSource> Icons { get; } = new(StringComparer.OrdinalIgnoreCase);
     /// <summary>Gets frozen icons for logical Start-menu folder paths.</summary>
@@ -45,38 +50,36 @@ public sealed class AppCatalog
         return completion.Task;
     }
 
-    /// <summary>Loads icons on a background STA thread. The optional batch callback runs there and must dispatch any UI work.</summary>
-    public Task LoadIconsAsync(IEnumerable<AppEntry> apps, Action? batchReady = null)
+    /// <summary>Loads frozen icons with up to four independent STA workers. Progress callbacks must dispatch UI work.</summary>
+    public async Task LoadIconsAsync(IEnumerable<AppEntry> apps, Action? batchReady = null)
     {
-        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var entries = apps.ToArray();
-        var thread = new Thread(() =>
+        var pending = new ConcurrentQueue<(string Key, string Target, bool Folder)>(apps.Where(a => !Icons.ContainsKey(a.Id))
+            .Select(a => (a.Id, a.IsShellApp ? "shell:AppsFolder\\" + a.LaunchTarget : a.LaunchTarget, false))
+            .Concat(_folderIconPaths.Where(f => !FolderIcons.ContainsKey(f.Key)).Select(f => (f.Key, f.Value, true))));
+        var count = 0;
+        var workers = Enumerable.Range(0, Math.Min(4, pending.Count)).Select(_ =>
         {
-            try
+            var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var thread = new Thread(() =>
             {
-                var count = 0;
-                foreach (var app in entries)
+                try
                 {
-                    if (!Icons.ContainsKey(app.Id))
+                    while (pending.TryDequeue(out var item))
                     {
-                        var icon = GetIcon(app.IsShellApp ? "shell:AppsFolder\\" + app.LaunchTarget : app.LaunchTarget);
-                        if (icon != null) Icons[app.Id] = icon;
+                        var icon = _cache == null ? GetIcon(item.Target) : _cache.Load(item.Target, GetIcon);
+                        if (icon != null) (item.Folder ? FolderIcons : Icons)[item.Key] = icon;
+                        if (Interlocked.Increment(ref count) % 20 == 0) batchReady?.Invoke();
                     }
-                    if (++count % 20 == 0) batchReady?.Invoke();
+                    completion.SetResult();
                 }
-                foreach (var folder in _folderIconPaths.ToArray())
-                {
-                    if (FolderIcons.ContainsKey(folder.Key)) continue;
-                    var icon = GetIcon(folder.Value);
-                    if (icon != null) FolderIcons[folder.Key] = icon;
-                }
-                completion.SetResult();
-            }
-            catch (Exception ex) { completion.SetException(ex); }
-        })
-        { IsBackground = true, Name = "ReStart Shell icons" };
-        thread.SetApartmentState(ApartmentState.STA); thread.Start();
-        return completion.Task;
+                catch (Exception ex) { completion.SetException(ex); }
+            })
+            { IsBackground = true, Name = "ReStart Shell icons" };
+            thread.SetApartmentState(ApartmentState.STA); thread.Start();
+            return completion.Task;
+        }).ToArray();
+        await Task.WhenAll(workers);
+        _cache?.Trim();
     }
 
     private List<AppEntry> Enumerate()

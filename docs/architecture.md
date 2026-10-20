@@ -44,11 +44,17 @@ Single-tile preview and commit share one resolver. Root overlap also resolves co
 
 App directories expand inline. Column balancing keeps headings and initial children together. Search uses the flat catalog, including closed directories. Input preferences are applied before catalog loading; completing the catalog reruns any pending query without taking navigation focus.
 
+Four independent STA workers load icons into frozen images. `IconCache` stores PNG pixels under SHA-256 identities in the user's local data folder, with a one-day refresh, file length/write-time invalidation and a 1,024-entry bound. Damaged or inaccessible cache entries fall back to the Shell. No source paths or app-name index are stored in the cache; deleting it is safe. Catalog/icon refreshes rebuild the board twice during initialization rather than once per icon batch.
+
+Search results use native ListBox selection. The first result is highlighted while the native TextBox retains its caret; arrows move row focus and selection, and Enter invokes the selected rendered action. A same-query refresh retains the selected app identity even if ranking changes.
+
 `AppShellCommands` reads IContextMenu canonical verbs on an STA and displays supported enabled commands. Invocation re-queries the command ID. Preview never invokes them. App launch targets are passed as shell identities or individual arguments, not evaluated as shell command text.
 
 ## Lifetime and input
 
 A per-user/session mutex prevents duplicate normal instances across versions and paths. A named event activates the existing instance. Preview has a separate scope. Background duplicate launches do not open the menu.
+
+The initial foreground presentation uses `StartupWindow` while catalog, icons and initial tile frames are prepared. Its native TextBox accepts typeahead and IME composition; the query and an optional Enter intent transfer to the prepared launcher. Worker startup overlaps icon loading. Hidden content is measured before script bounds are sent, and chosen photos/system-rate samples are allowed to settle. External data and failed scripts produce bounded loading/error states rather than blocking Start indefinitely. Esc, a second toggle, taskbar dismissal or deactivation cancels presentation without a later unsolicited popup. Sign-in background initialization shows no splash and executes no tile scripts or data reads until Start is requested. Subsequent presentations reuse loaded icons and cached frames.
 
 Low-level hooks run a short Win32 message loop on a dedicated thread. A bare Windows key toggles ReStart; combinations replay the pending Windows-key down. UI work is dispatched. Hooks, hotkeys and workers are released on exit. Native Start-button capture uses recent UI Automation bounds scoped to Explorer's primary/secondary taskbars; no DLL injection or guessed hit regions are used.
 
