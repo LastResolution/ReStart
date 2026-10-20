@@ -16,7 +16,7 @@ public partial class MainWindow
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException) { }
             _activity ??= new();
             _activity.Entries = (_activity.Entries ?? []).Where(e => !string.IsNullOrWhiteSpace(e.Key) && e.Key.Length <= 4096 && e.Value != null)
-                .Take(4096).ToDictionary(e => e.Key, e => e.Value, StringComparer.OrdinalIgnoreCase);
+                .DistinctBy(e => e.Key, StringComparer.OrdinalIgnoreCase).Take(4096).ToDictionary(e => e.Key, e => e.Value, StringComparer.OrdinalIgnoreCase);
             return _activity;
         }
     }

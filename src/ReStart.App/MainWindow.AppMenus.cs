@@ -140,6 +140,8 @@ public partial class MainWindow
         var owner = new WindowInteropHelper(this).Handle;
         Dismiss();
         try { await AppShellCommands.InvokeAsync(app, verb, owner); }
+        catch (COMException ex) when (ex.HResult == unchecked((int)0x800704c7)) { }
+        catch (Win32Exception ex) when (ex.NativeErrorCode == 1223) { }
         catch (Exception ex) when (ex is COMException or Win32Exception or InvalidOperationException or IOException or UnauthorizedAccessException)
         { Present(); SetStatus(L.T(K.ErrorAppCommand) + ex.Message); }
     }

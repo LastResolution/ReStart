@@ -39,6 +39,7 @@ public partial class MainWindow
             if (Document.Preferences.ShowMostUsed) SaveActivity();
         }
         catch (Win32Exception ex) when (ex.NativeErrorCode == 1223) { } // Normal UAC cancellation.
+        catch (COMException ex) when (ex.HResult == unchecked((int)0x800704c7)) { }
         catch (Exception ex) when (ex is Win32Exception or COMException or InvalidOperationException or IOException or UnauthorizedAccessException or ArgumentException)
         { Present(); SetStatus(L.T(K.ErrorLaunch) + ex.Message); }
     }
