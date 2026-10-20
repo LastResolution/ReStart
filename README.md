@@ -17,7 +17,9 @@
 
 **Miss the Windows 10 full-screen Start menu?** ReStart gives your apps a familiar home on Windows 11 and Windows 10. Pin what you use, arrange the screen your way, and add live tiles that you can write in JavaScript.
 
-**Portable · x64 & ARM64 · Eight languages · No separate .NET installation**
+**Portable · JavaScript live tiles · x64 & ARM64 · Eight languages · No separate .NET installation**
+
+[Explore the tiles](#give-your-tiles-something-to-say) · [Connect your data](#connect-weather-headlines-and-app-data) · [Write a tile](#write-your-own) · [Build from source](#build-it-yourself)
 
 ## Start in a minute
 
@@ -46,37 +48,74 @@ Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button
 
 ## Give your tiles something to say
 
-See PC metrics, your chosen photos, weather, headlines and application data without opening another app. **Fifteen JavaScript tiles are included**, with layouts for all four tile sizes.
+See the time, PC activity, your chosen photos, weather and headlines alongside your apps. **Fifteen JavaScript tiles are included**, with layouts for all four tile sizes.
 
-![Bundled JavaScript live tiles](docs/images/live-tiles.png)
+![Bundled clock, system metrics, focus and photo tiles](docs/images/live-tiles.png)
 
-**Orbit clock · Digital clock · Month dots · CPU pulse · Memory flow · Network flow · Battery · Storage · Focus cycle · Year in motion · Countdown · Photo moments · Weather · Feed · JSON monitor**
+- **Time and focus:** Orbit clock, Digital clock, Month dots, Focus cycle, Year in motion and Countdown.
+- **Your PC:** CPU pulse, Memory flow, Network flow, Battery and Storage.
+- **Your photos:** Photo moments, with a folder you choose and click-to-advance slides.
 
 Right-click the background → **Add live tile** to try one. Click a tile to use its local action, such as pausing a focus timer or advancing a photo.
 
-Connected tiles use **Configure data sources…** for the address, selected file and optional credentials. Connections are encrypted locally and excluded from exports; no connection starts just by importing a package. Weather uses Berlin as its example location, which you can change. Follow the [data-source guide](docs/javascript-tiles.md#weather-feeds-web-apis-and-application-data) to connect your own API or application.
+### Connect weather, headlines and app data
+
+<p align="center"><img src="docs/images/connected-data.png" width="464" alt="Weather, Feed headlines and JSON monitor rendered in ReStart" /></p>
+
+| Tile | What it shows | Choose your source |
+| --- | --- | --- |
+| **Weather** | Temperature, conditions and wind from Open-Meteo | Set the coordinates for a place you want to follow |
+| **Feed headlines** | RSS/Atom headlines; click to see the next item | Paste a feed URL |
+| **JSON monitor** | Service status, a value or progress from your own app | Use a Web API, localhost endpoint or selected JSON file |
+
+1. Right-click the background → **Add live tile** → choose one of these three tiles.
+2. In **Configure data sources…**, enter the address or choose a local file, then **Save**. Optional credentials belong in this dialog.
+3. To change an installed tile's connection, right-click it → **Configure data sources…**. **Refresh data now** requests a fresh value.
+
+Updates run asynchronously while Start is visible. Cached values stay useful during connection failures, and hiding Start stops reads. Connections and credentials are encrypted for your Windows user and excluded from shared layouts; importing a package alone does not connect it.
+
+**Weather starts with Berlin example coordinates, not your PC's location.** ReStart does not infer your region. The [location guide](docs/javascript-tiles.md#weather-location) explains how to change the coordinates and displayed place name. The image above uses fictional local data.
+
+For your own application, publish JSON through an existing local endpoint or a file. The [file-producer example](examples/integrations/write-tile-data.ps1) and [data-source guide](docs/javascript-tiles.md#weather-feeds-web-apis-and-application-data) show both routes, selectors and credential settings.
 
 ### Write your own
 
 A tile is a `manifest.json` and a `tile.js`. ReStart supplies PC time, the selected language, tile size, click events and retained state. Optional capabilities provide read-only system metrics, chosen photos or cached Web API/feed/local-file data through the host.
 
-With `system.metrics` enabled in the manifest, this is a complete CPU display:
+Start with a named data source in `manifest.json`:
+
+```json
+{
+  "version": 1,
+  "title": "My service",
+  "refreshSeconds": 1,
+  "capabilities": ["data.sources"],
+  "dataSources": {
+    "service": { "format": "json", "refreshSeconds": 60, "jsonPointer": "/status" }
+  },
+  "settings": {}
+}
+```
+
+Then display its cached value in `tile.js`:
 
 ```js
 function render(ctx) {
-  const cpu = ctx.system?.cpuPercent;
+  const source = ctx.data?.service;
   return {
-    text: cpu == null ? "—" : Math.round(cpu) + "%",
-    kicker: "CPU",
+    text: source?.value?.text ?? "Waiting for data",
+    detail: source?.stale ? "Showing cached data" : "",
+    kicker: "My service",
     background: "#12344B", backgroundEnd: "#10202F",
-    foreground: "#FFFFFF", accent: "#70E0CB",
-    layout: ctx.size === "large" ? "stacked" : "split",
-    visual: "ring", progress: (cpu ?? 0) / 100
+    foreground: "#FFFFFF",
+    layout: "centered"
   };
 }
 ```
 
-ReStart draws the tile natively. Put a package in its own subfolder under `%LOCALAPPDATA%\ReStart\TileLibrary` to discover it automatically, or add it from the right-click menu. Start from the [bundled examples](examples/tiles), follow the [tile guide](docs/javascript-tiles.md), or explore the [API contracts](docs/api-contracts.md).
+Put both files in a subfolder under `%LOCALAPPDATA%\ReStart\TileLibrary`, then add the tile from the gallery or right-click menu. In its connection dialog, choose a source returning `{"status":{"text":"Build passed"}}`. The selector `/status` supplies that object to `ctx.data.service.value`. Keep personal URLs and keys in the connection dialog, outside the package.
+
+ReStart draws the tile natively; `render(ctx)` reads a snapshot and returns display data. Start from the [bundled examples](examples/tiles) for system metrics, photos, responsive layouts and local click actions, or follow the [tile guide](docs/javascript-tiles.md) and [API contracts](docs/api-contracts.md).
 
 ## Make it yours—and share it
 
