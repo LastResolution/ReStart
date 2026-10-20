@@ -98,6 +98,18 @@ public partial class MainWindow
                     Check(fixture.Document.Preferences.ColorThemeId == "" && fixture.Document.Preferences.BackgroundColor == palette.Background
                         && fixture.Document.Preferences.Accent == "#FFFFFF" && store.Load()!.Preferences.BackgroundColor == palette.Background,
                         "Custom colors did not leave the family or survive the native persistence round trip.");
+                    if (preset.Id == "ocean" && mode == ReStart.Core.ThemeMode.Dark)
+                    {
+                        Edit(settings => { Field(settings, K.SettingsBackgroundColor).Text = palette.Background; Field(settings, K.SettingsAccent).Text = palette.Accent; Save(settings); });
+                        fixture.RefreshLayout();
+                        Check(store.Load()!.Preferences.ColorThemeId == "", "Exact custom RGB values matching a preset were relabelled while saving.");
+                        Edit(settings =>
+                        {
+                            Check(Field(settings, K.SettingsBackgroundColor).Text == palette.Background && Field(settings, K.SettingsAccent).Text == palette.Accent
+                                && Mode(settings).SelectedIndex == (int)ReStart.Core.ThemeMode.Light, "Reopening custom RGB matching a dark preset silently selected its light variant.");
+                            settings.Close();
+                        });
+                    }
                     editorCases++;
                 }
             return new(checks, paletteCases, editorCases);

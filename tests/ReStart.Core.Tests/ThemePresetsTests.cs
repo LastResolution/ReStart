@@ -75,6 +75,19 @@ public sealed class ThemePresetsTests
     }
 
     [Fact]
+    public void Explicit_custom_colors_matching_a_palette_stay_custom_after_reopening_in_the_opposite_mode()
+    {
+        var palette = ThemePresets.All.Single(p => p.Id == "ocean").Dark;
+        var document = new LayoutDocument { Preferences = new() { ColorThemeId = "", Theme = ThemeMode.Light, BackgroundColor = palette.Background, Accent = palette.Accent } };
+        var copy = JsonSerializer.Deserialize<LayoutDocument>(JsonSerializer.Serialize(document))!; copy.Normalize();
+        Assert.Null(ThemePresets.Match(copy.Preferences));
+        Assert.Equal(palette, ThemePresets.Resolve(copy.Preferences, true));
+        var legacy = JsonSerializer.Deserialize<LayoutDocument>("{\"Preferences\":{\"BackgroundColor\":\"#102D3D\",\"Accent\":\"#35BDE0\"}}")!; legacy.Normalize();
+        Assert.Null(legacy.Preferences.ColorThemeId);
+        Assert.Equal("ocean", ThemePresets.Match(legacy.Preferences)!.Id);
+    }
+
+    [Fact]
     public void Custom_colors_round_trip_and_older_preferences_keep_defaults()
     {
         var document = new LayoutDocument { Preferences = new() { Accent = "#aa33ff", BackgroundColor = "#ddeeff" } };

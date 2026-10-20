@@ -42,11 +42,11 @@ public static class ThemePresets
     /// <returns>True only for # followed by six hexadecimal digits.</returns>
     public static bool IsColor(string? value) => value is { Length: 7 } && value[0] == '#' && value.AsSpan(1).IndexOfAnyExcept("0123456789abcdefABCDEF") < 0;
 
-    /// <summary>Recognizes a saved exact palette, including the unlabelled RGB choices written by version 1.3.0.</summary>
-    /// <param name="preferences">Local appearance preferences; custom colors are never changed.</param>
-    /// <returns>The matching color family, or null for custom/default colors.</returns>
-    public static ThemePreset? Match(Preferences preferences) => All.FirstOrDefault(p => new[] { p.Dark, p.Light }.Any(c =>
-        string.Equals(c.Background, preferences.BackgroundColor, StringComparison.OrdinalIgnoreCase) && string.Equals(c.Accent, preferences.Accent, StringComparison.OrdinalIgnoreCase)));
+    /// <summary>Recognizes exact palettes only in unlabelled legacy preferences; explicitly saved custom colors remain custom.</summary>
+    /// <param name="preferences">Local preferences; a null family ID marks the legacy format, while an empty ID marks intentional custom RGB.</param>
+    /// <returns>The matching legacy family, or null for explicit custom/default colors or an already labelled family.</returns>
+    public static ThemePreset? Match(Preferences preferences) => preferences.ColorThemeId == null ? All.FirstOrDefault(p => new[] { p.Dark, p.Light }.Any(c =>
+        string.Equals(c.Background, preferences.BackgroundColor, StringComparison.OrdinalIgnoreCase) && string.Equals(c.Accent, preferences.Accent, StringComparison.OrdinalIgnoreCase))) : null;
 
     /// <summary>Resolves an active family for the current base mode, retaining exact RGB choices for custom colors.</summary>
     /// <param name="preferences">Normalized local preferences. An empty family ID selects the saved RGB colors.</param>

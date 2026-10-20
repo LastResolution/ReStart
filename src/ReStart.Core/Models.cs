@@ -141,8 +141,8 @@ public sealed class Preferences
     public string Accent { get; set; } = "#0078D7";
     /// <summary>Gets or sets an optional opaque RGB surface color; empty uses the selected base theme.</summary>
     public string BackgroundColor { get; set; } = "";
-    /// <summary>Gets or sets an optional color-family identity that follows the selected base mode; empty retains exact RGB choices.</summary>
-    public string ColorThemeId { get; set; } = "";
+    /// <summary>Gets or sets the adaptive color family; empty means explicit custom RGB, while null identifies unlabelled legacy preferences.</summary>
+    public string? ColorThemeId { get; set; }
     /// <summary>Gets or sets background tint opacity, normalized to 0.3 through 1.</summary>
     public double BackgroundOpacity { get; set; } = 0.86;
     /// <summary>Gets or sets the cell scale, normalized to 0.7 through 1.5.</summary>
@@ -192,7 +192,7 @@ public sealed class LayoutDocument
         if (!Enum.IsDefined(Preferences.Theme)) Preferences.Theme = ThemeMode.Dark;
         Preferences.Accent = ThemePresets.IsColor(Preferences.Accent) ? Preferences.Accent.ToUpperInvariant() : "#0078D7";
         Preferences.BackgroundColor = ThemePresets.IsColor(Preferences.BackgroundColor) ? Preferences.BackgroundColor.ToUpperInvariant() : "";
-        if (!ThemePresets.All.Any(p => p.Id == Preferences.ColorThemeId)) Preferences.ColorThemeId = "";
+        if (Preferences.ColorThemeId != null && !ThemePresets.All.Any(p => p.Id == Preferences.ColorThemeId)) Preferences.ColorThemeId = "";
         var ids = new HashSet<string>();
         foreach (var group in Groups)
         {

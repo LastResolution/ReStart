@@ -21,7 +21,7 @@ internal sealed partial class SettingsWindow
             _draft.Theme = (ReStart.Core.ThemeMode)i;
             if (_backgroundColor != null)
             {
-                if (_draft.ColorThemeId.Length > 0) ApplyColorPreset(_draft.ColorThemeId);
+                if (!string.IsNullOrEmpty(_draft.ColorThemeId)) ApplyColorPreset(_draft.ColorThemeId);
                 RefreshPresetPreviews();
             }
         });
