@@ -45,6 +45,9 @@ $patterns = [ordered]@{
 }
 $findings = [Collections.Generic.List[string]]::new()
 function Test-PrivateBytes([byte[]]$Bytes, [string]$DisplayPath) {
+    if ($DisplayPath -match '(?i)\.(?:pfx|p12|snk|key|jks|keystore)$') {
+        $findings.Add("$DisplayPath — private signing container")
+    }
     $raw = [Text.Encoding]::UTF8.GetString($Bytes)
     # Normalize complete UTF-16 ASCII runs, retaining string terminators. Removing
     # every NUL would join unrelated binary string-table entries into false keys.
