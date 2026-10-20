@@ -85,6 +85,14 @@ public partial class MainWindow
             var other = new MainWindow(new LayoutStore(Path.Combine(directory, "deactivation", "layout.json")), true, () => deferred.Task)
             { Owner = this, Width = 1280, Height = 800, _startupComplete = false, Topmost = false };
             var foreign = new Window { Title = "Sample application", Width = 220, Height = 120, ShowInTaskbar = false };
+            var settingsClosed = 0;
+            var closeSettings = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(10) };
+            closeSettings.Tick += (_, _) =>
+            {
+                foreach (var settings in Application.Current.Windows.OfType<SettingsWindow>().Where(w => w.IsVisible).ToArray())
+                { settings.Close(); settingsClosed++; }
+            };
+            closeSettings.Start();
             try
             {
                 _ = other.InitializeAsync();
@@ -93,22 +101,23 @@ public partial class MainWindow
                 await Until(() => other._startupWindow == null);
                 deferred.SetResult([]); await other.InitializeAsync(); await Until(() => other._startupPresentation == null);
                 Check(!other.IsPresenting && !other.IsVisible, "A foreign activation during startup caused a late popup.");
-                other.Present();
-                Check(other.IsVisible && other._startupWindow == null, "A background-ready launcher without scripts repeated its splash.");
+                other.PresentSettings();
+                Check(other.IsVisible && other._startupWindow == null && settingsClosed == 1 && !other._startupSettings,
+                    "Settings on a background-ready launcher were dropped or repeated its splash.");
             }
             finally { deferred.TrySetResult([]); other.Exit(); foreign.Close(); fixture.Activate(); }
             var cold = new MainWindow(store, true, () => Task.FromResult(new List<AppEntry>()))
             { Owner = this, Width = 1280, Height = 800, _startupComplete = false, Topmost = false };
             try
             {
-                cold.Present();
+                cold.PresentSettings();
                 Check(cold._scriptWorkerPool != null && cold._startupWorkerWarmup != Task.CompletedTask && !cold.IsVisible,
                     "Foreground initialization did not warm isolated workers before revealing the main window.");
                 await cold._startupPresentation!;
-                Check(cold.IsVisible && cold.ScriptFrameCount == ScriptTilePackages.BundledIds.Count && cold._startupWindow == null,
-                    "Parallel worker warmup did not produce all initial bundled frames.");
+                Check(cold.IsVisible && cold.ScriptFrameCount == ScriptTilePackages.BundledIds.Count && cold._startupWindow == null && settingsClosed == 2 && !cold._startupSettings,
+                    "Parallel worker warmup did not produce all frames or open pending settings.");
             }
-            finally { cold.Exit(); fixture.Activate(); }
+            finally { closeSettings.Stop(); cold.Exit(); fixture.Activate(); }
             var cacheChecks = VerifyIconCache(directory);
             return new(checks, languageCases, cacheChecks, fixture.StartupMetrics);
         }

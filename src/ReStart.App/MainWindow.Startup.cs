@@ -121,7 +121,7 @@ public partial class MainWindow
             FocusSearchInput();
             PresentationVisibilityChanged?.Invoke();
             if (_startupSettings) { _startupSettings = false; ShowSettings(); }
-            if (launch && SearchResults.SelectedItem is System.Windows.Controls.Button selected) selected.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
+            else if (launch && SearchResults.SelectedItem is System.Windows.Controls.Button selected) selected.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
         }
         finally { _startButtonPoint = null; }
     }
@@ -129,8 +129,9 @@ public partial class MainWindow
     /// <summary>Opens settings after startup preparation, including when requested from the tray during loading.</summary>
     public void PresentSettings()
     {
-        if (_startupComplete) { Present(); ShowSettings(); }
-        else { _startupSettings = true; Present(); }
+        _startupSettings = true;
+        Present();
+        if (_startupComplete && _startupWindow == null) { _startupSettings = false; ShowSettings(); }
     }
 
     private void SizeStartupContent()
