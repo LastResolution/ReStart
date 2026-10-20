@@ -714,4 +714,40 @@ public enum TextKey
     WindowsAccessibility,
     /// <summary>Power &amp; battery</summary>
     WindowsPower,
+    /// <summary>Start behavior</summary>
+    SettingsStartExperience,
+    /// <summary>Search Windows settings</summary>
+    SettingsSearchSettings,
+    /// <summary>Show recent and frequent documents in app menus</summary>
+    SettingsJumpLists,
+    /// <summary>Expand navigation on hover</summary>
+    SettingsRailHover,
+    /// <summary>Highlight tiles on hover</summary>
+    SettingsTileHover,
+    /// <summary>Scroll automatically near board edges</summary>
+    SettingsDragScroll,
+    /// <summary>Show drop hints and hover progress</summary>
+    SettingsDropHints,
+    /// <summary>Create groups by overlapping independent tiles</summary>
+    SettingsDropGroups,
+    /// <summary>Create folders by overlapping grouped tiles</summary>
+    SettingsDropFolders,
+    /// <summary>Show group boundaries on hover</summary>
+    SettingsGroupHover,
+    /// <summary>Searching indexed files…</summary>
+    SearchIndexSearching,
+    /// <summary>Launch options…</summary>
+    LaunchOptions,
+    /// <summary>Use custom launch options</summary>
+    UseLaunchOptions,
+    /// <summary>Arguments</summary>
+    LaunchArguments,
+    /// <summary>Start in</summary>
+    WorkingDirectory,
+    /// <summary>Arguments are passed to the app or shortcut. Quote paths containing spaces. Empty fields keep the Shell defaults. Windows handles administrator consent.</summary>
+    LaunchOptionsHelp,
+    /// <summary>Custom launch options are available for desktop applications and application shortcuts supported by Windows.</summary>
+    LaunchOptionsUnavailable,
+    /// <summary>Choose an existing working directory.</summary>
+    ErrorWorkingDirectory,
 }

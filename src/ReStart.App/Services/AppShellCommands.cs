@@ -33,7 +33,34 @@ internal static class AppShellCommands
         });
     }
 
-    private static Task<T> OnSta<T>(Func<T> work)
+    internal static Task OpenDocumentAsync(AppEntry app, string document, nint owner) => OnSta(() =>
+    {
+        if (!File.Exists(document) && !Directory.Exists(document)) throw new FileNotFoundException("The destination is no longer available.", document);
+        using var context = new ShellContext(app);
+        if (!context.Commands.TryGetValue("open", out var command)) throw new InvalidOperationException(L.T(K.ErrorAppCommandUnavailable));
+        context.Invoke(command, owner, "\"" + document + "\"");
+        return true;
+    });
+
+    /// <summary>Invokes this app's canonical open/runas verb with explicit Unicode arguments and working directory.</summary>
+    /// <param name="app">The installed application or local shortcut whose Shell verb is invoked.</param>
+    /// <param name="arguments">Windows argument string passed verbatim to the application, without a command interpreter.</param>
+    /// <param name="workingDirectory">Optional existing directory; environment variables are expanded, and empty uses Shell defaults.</param>
+    /// <param name="elevated">Whether to request runas. Windows owns consent; an unsupported verb fails without a fallback launch.</param>
+    /// <param name="owner">Native owner HWND for Shell consent and error UI.</param>
+    /// <returns>A task completing after the Shell accepts or rejects the launch; failures propagate to the UI.</returns>
+    internal static Task LaunchConfiguredAsync(AppEntry app, string arguments, string workingDirectory, bool elevated, nint owner) => OnSta(() =>
+    {
+        var directory = Environment.ExpandEnvironmentVariables(workingDirectory.Trim());
+        if (directory.Length > 0 && !Directory.Exists(directory)) throw new DirectoryNotFoundException(L.T(K.ErrorWorkingDirectory));
+        if (arguments.Length > 32760 || directory.Length > 32760 || arguments.Contains('\0')) throw new ArgumentException("Invalid launch options.");
+        using var context = new ShellContext(app);
+        if (!context.Commands.TryGetValue(elevated ? "runas" : "open", out var command)) throw new InvalidOperationException(L.T(K.ErrorAppCommandUnavailable));
+        context.Invoke(command, owner, arguments, directory);
+        return true;
+    });
+
+    internal static Task<T> OnSta<T>(Func<T> work)
     {
         var result = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
         var thread = new Thread(() =>
@@ -89,9 +116,11 @@ internal static class AppShellCommands
             }
         }
 
-        internal void Invoke(uint command, nint owner)
+        internal void Invoke(uint command, nint owner, string? arguments = null, string? directory = null)
         {
-            var info = new InvokeInfo { Size = (uint)Marshal.SizeOf<InvokeInfo>(), Owner = owner, Verb = (nint)command, Show = 1 };
+            // CMINVOKECOMMANDINFOEX keeps non-ASCII document paths intact and
+            // passes arguments to this app's own open verb, not a default handler.
+            var info = new InvokeInfo { Size = (uint)Marshal.SizeOf<InvokeInfo>(), Mask = 0x4000, Owner = owner, Verb = (nint)command, VerbW = (nint)command, ParametersW = arguments, DirectoryW = directory, Show = 1 };
             Marshal.ThrowExceptionForHR(_context!.InvokeCommand(ref info));
         }
         public void Dispose()
@@ -122,6 +151,11 @@ internal static class AppShellCommands
         public int Show;
         public uint HotKey;
         public nint Icon;
+        public nint Title, VerbW;
+        [MarshalAs(UnmanagedType.LPWStr)] public string? ParametersW;
+        [MarshalAs(UnmanagedType.LPWStr)] public string? DirectoryW;
+        public nint TitleW;
+        public int PointX, PointY;
     }
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
     private static extern int SHCreateItemFromParsingName(string path, nint binding, ref Guid iid, out IShellItem item);

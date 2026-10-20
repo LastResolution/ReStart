@@ -8,11 +8,16 @@ public sealed class TileFolderHover
     private long _since;
     private int _delay;
     /// <summary>Duration of an uninterrupted eligible hover in milliseconds.</summary>
-    public const int DelayMilliseconds = 1000;
+    public const int DelayMilliseconds = 600;
     /// <summary>Short dwell for collecting independent tiles into an ordinary group.</summary>
     public const int GroupDelayMilliseconds = 300;
     /// <summary>Gets the currently tracked destination, allowing its hit region to retain a small movement tolerance.</summary>
     public string? TargetId => _target;
+
+    /// <summary>Returns the fraction of the current dwell completed, without changing its source, target or deadline.</summary>
+    /// <param name="timestamp">Monotonic milliseconds from the same clock used by Update; an earlier instant yields zero.</param>
+    /// <returns>A value from zero to one, or zero when no eligible hover is active.</returns>
+    public double Progress(long timestamp) => _target == null || _delay <= 0 ? 0 : Math.Clamp((timestamp - _since) / (double)_delay, 0, 1);
 
     /// <summary>Returns true after a stable eligible source/target pair has remained hovered for the required monotonic duration.</summary>
     /// <param name="source">Stable dragged tile ID.</param>

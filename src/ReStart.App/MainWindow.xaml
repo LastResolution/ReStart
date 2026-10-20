@@ -50,8 +50,7 @@
         </StackPanel>
         <StackPanel VerticalAlignment="Bottom" Margin="0,0,0,12">
           <Button Height="48" ToolTip="{local:Loc Key=NavAccount}" AutomationProperties.Name="{local:Loc Key=NavAccount}" Click="OpenAccount" HorizontalContentAlignment="Center" Padding="0"><TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE77B;" FontSize="18" /></Button>
-          <Button Height="48" ToolTip="{local:Loc Key=NavDocuments}" AutomationProperties.Name="{local:Loc Key=NavDocuments}" Click="OpenDocuments" HorizontalContentAlignment="Center" Padding="0"><TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8A5;" FontSize="18" /></Button>
-          <Button Height="48" ToolTip="{local:Loc Key=NavPictures}" AutomationProperties.Name="{local:Loc Key=NavPictures}" Click="OpenPictures" HorizontalContentAlignment="Center" Padding="0"><TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xEB9F;" FontSize="18" /></Button>
+          <ScrollViewer x:Name="CollapsedFolderScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel x:Name="CollapsedFolderShortcuts" /></ScrollViewer>
           <Button Height="48" ToolTip="{local:Loc Key=SettingsTitle}" AutomationProperties.Name="{local:Loc Key=SettingsTitle}" Click="OpenSettings" HorizontalContentAlignment="Center" Padding="0"><TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE713;" FontSize="18" /></Button>
           <Button Height="48" ToolTip="{local:Loc Key=NavPower}" AutomationProperties.Name="{local:Loc Key=NavPower}" Click="OpenPower" HorizontalContentAlignment="Center" Padding="0"><TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE7E8;" FontSize="18" /></Button>
         </StackPanel>
@@ -116,8 +115,7 @@
         </StackPanel>
         <StackPanel VerticalAlignment="Bottom" Margin="0,0,0,12">
           <Button HorizontalContentAlignment="Stretch" Padding="0" x:Name="UserButton" AutomationProperties.Name="{local:Loc Key=NavAccount}" Height="48" Click="OpenAccount"><controls:RailLabel x:Name="UserRailLabel" Glyph="&#xE77B;" /></Button>
-          <Button HorizontalContentAlignment="Stretch" Padding="0" AutomationProperties.Name="{local:Loc Key=NavDocuments}" Height="48" Click="OpenDocuments"><controls:RailLabel Glyph="&#xE8A5;" Label="{local:Loc Key=NavDocuments}" /></Button>
-          <Button HorizontalContentAlignment="Stretch" Padding="0" AutomationProperties.Name="{local:Loc Key=NavPictures}" Height="48" Click="OpenPictures"><controls:RailLabel Glyph="&#xEB9F;" Label="{local:Loc Key=NavPictures}" /></Button>
+          <ScrollViewer x:Name="ExpandedFolderScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel x:Name="ExpandedFolderShortcuts" /></ScrollViewer>
           <Button HorizontalContentAlignment="Stretch" Padding="0" AutomationProperties.Name="{local:Loc Key=SettingsTitle}" Height="48" Click="OpenSettings"><controls:RailLabel Glyph="&#xE713;" Label="{local:Loc Key=SettingsTitle}" /></Button>
           <Button HorizontalContentAlignment="Stretch" Padding="0" AutomationProperties.Name="{local:Loc Key=NavPower}" Height="48" Click="OpenPower"><controls:RailLabel Glyph="&#xE7E8;" Label="{local:Loc Key=NavPower}" /></Button>
         </StackPanel>

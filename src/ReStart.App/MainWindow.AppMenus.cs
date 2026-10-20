@@ -12,7 +12,7 @@ public partial class MainWindow
 {
     private ContextMenu CreateAppMenu(AppEntry app)
     {
-        var menu = new ContextMenu();
+        var menu = CreateContextMenu();
         var pin = new MenuItem();
         var extras = new MenuItem { Header = "ReStart" };
         pin.Click += (_, _) =>
@@ -79,14 +79,44 @@ public partial class MainWindow
         uninstall.Click += async (_, _) => await ExecuteAppCommandAsync(app, "uninstall");
         var position = index ?? menu.Items.Count;
         menu.Items.Insert(position, more); menu.Items.Insert(position + 1, uninstall);
+        var recent = new MenuItem { Header = L.T(K.JumpRecent), Visibility = Visibility.Collapsed };
+        var frequent = new MenuItem { Header = L.T(K.JumpFrequent), Visibility = Visibility.Collapsed };
+        menu.Items.Insert(position + 2, recent); menu.Items.Insert(position + 3, frequent);
         var generation = 0;
         menu.Closed += (_, _) => generation++;
         menu.Opened += async (_, _) =>
         {
             var current = ++generation;
-            var verbs = await AppShellCommands.ReadAsync(app);
-            if (current == generation && menu.IsOpen) PopulateAppShellItems(more, uninstall, app, verbs);
+            var verbsTask = AppShellCommands.ReadAsync(app);
+            var jumpTask = Document.Preferences.ShowJumpLists ? AppJumpLists.ReadAsync(app) : Task.FromResult<IReadOnlyList<JumpDestination>>([]);
+            await Task.WhenAll(verbsTask, jumpTask);
+            if (current != generation || !menu.IsOpen) return;
+            PopulateAppShellItems(more, uninstall, app, await verbsTask);
+            PopulateJumpItems(recent, frequent, app, await jumpTask);
         };
+    }
+
+    private void PopulateJumpItems(MenuItem recent, MenuItem frequent, AppEntry app, IReadOnlyList<JumpDestination> destinations)
+    {
+        foreach (var menu in new[] { recent, frequent })
+        {
+            menu.Items.Clear();
+            foreach (var destination in destinations.Where(d => d.Frequent == (menu == frequent)))
+            {
+                var item = new MenuItem { Header = new TextBlock { Text = destination.Name, MaxWidth = 340, TextTrimming = TextTrimming.CharacterEllipsis }, ToolTip = destination.Target, IsEnabled = !_preview || _activationFixture != null };
+                item.Click += async (_, _) =>
+                {
+                    if (_preview) { _activationFixture?.Invoke(new(app.Id, destination.Name, destination.Target, false)); return; }
+                    var owner = new WindowInteropHelper(this).Handle;
+                    Dismiss();
+                    try { await AppShellCommands.OpenDocumentAsync(app, destination.Target, owner); }
+                    catch (Exception ex) when (ex is COMException or Win32Exception or InvalidOperationException or IOException or UnauthorizedAccessException)
+                    { Present(); SetStatus(L.T(K.ErrorAppCommand) + ex.Message); }
+                };
+                menu.Items.Add(item);
+            }
+            menu.Visibility = menu.Items.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+        }
     }
 
     private void PopulateAppShellItems(MenuItem more, MenuItem uninstall, AppEntry app, IReadOnlySet<string> verbs)

@@ -56,6 +56,14 @@ public sealed class Tile
     public string Target { get; set; } = "";
     /// <summary>Gets or sets whether the launch target is an AppsFolder shell identity.</summary>
     public bool IsShellApp { get; set; } = true;
+    /// <summary>Gets or sets whether this tile applies its custom arguments, working directory and elevation preference when launched.</summary>
+    public bool UseLaunchOptions { get; set; }
+    /// <summary>Gets or sets the additional Windows command-line argument string; empty preserves the app or shortcut default.</summary>
+    public string LaunchArguments { get; set; } = "";
+    /// <summary>Gets or sets an optional working directory, with environment variables expanded at launch; empty uses the Shell default.</summary>
+    public string WorkingDirectory { get; set; } = "";
+    /// <summary>Gets or sets whether configured launches request the app's canonical runas verb and normal Windows consent.</summary>
+    public bool RunAsAdministrator { get; set; }
     /// <summary>Gets or sets the logical tile footprint.</summary>
     public TileSize Size { get; set; } = TileSize.Medium;
     /// <summary>Gets or sets an explicit logical column, or null for automatic placement.</summary>
@@ -111,6 +119,24 @@ public sealed class TileGroup
 /// <summary>Stores local UI and integration choices; imported layouts do not replace these settings.</summary>
 public sealed class Preferences
 {
+    /// <summary>Gets or sets whether search includes localized Windows settings entry points.</summary>
+    public bool SearchSettings { get; set; } = true;
+    /// <summary>Gets or sets whether app menus query Windows Recent/Frequent destinations; Windows history privacy settings also apply.</summary>
+    public bool ShowJumpLists { get; set; } = true;
+    /// <summary>Gets or sets whether dwelling over the collapsed navigation rail expands it automatically.</summary>
+    public bool ExpandNavigationOnHover { get; set; } = true;
+    /// <summary>Gets or sets whether tile surfaces brighten on pointer hover; keyboard focus remains visible.</summary>
+    public bool TileHoverHighlight { get; set; } = true;
+    /// <summary>Gets or sets whether dragging near a board edge scrolls and extends available board space.</summary>
+    public bool DragEdgeScrolling { get; set; } = true;
+    /// <summary>Gets or sets whether drop previews display explanatory captions and dwell progress; destination geometry remains visible.</summary>
+    public bool ShowDropHints { get; set; } = true;
+    /// <summary>Gets or sets whether overlapping independent tiles can create an ordinary group.</summary>
+    public bool GroupTilesOnDrop { get; set; } = true;
+    /// <summary>Gets or sets whether overlapping grouped tiles can create a tile folder; existing folders remain usable.</summary>
+    public bool CreateFoldersOnDrop { get; set; } = true;
+    /// <summary>Gets or sets whether hovering a normal group reveals its boundary. Edit and drag boundaries remain visible.</summary>
+    public bool ShowGroupBoundariesOnHover { get; set; } = true;
     /// <summary>Gets or sets whether search includes up to twenty local Windows-indexed filesystem results.</summary>
     public bool SearchFiles { get; set; } = true;
     /// <summary>Gets or sets whether apps first observed after the initial catalog appear in Recently added for seven days.</summary>
@@ -241,6 +267,11 @@ public sealed class LayoutDocument
             tile.Label ??= L.T(K.AppFallback);
             tile.AppId ??= "";
             tile.Target ??= "";
+            tile.LaunchArguments ??= "";
+            tile.WorkingDirectory ??= "";
+            if (tile.LaunchArguments.Length > 32760 || tile.WorkingDirectory.Length > 32760
+                || tile.LaunchArguments.Contains('\0') || tile.WorkingDirectory.Contains('\0'))
+                throw new InvalidDataException("Invalid tile launch options.");
             tile.Widget ??= "";
             tile.ScriptId ??= "";
             tile.Color ??= "";

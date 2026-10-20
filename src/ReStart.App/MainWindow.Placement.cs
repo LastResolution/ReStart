@@ -56,6 +56,7 @@ public partial class MainWindow
         var dragged = new Rect(point.X - _dragOffset.X, point.Y - _dragOffset.Y, width * Cell - 4, height * Cell - 4);
         return panel.Placements
             .Where(p => p.Tile.Id != source.Id
+                && (p.Tile.IsFolder || (CreatesGroup(panel, p.Tile) ? Document.Preferences.GroupTilesOnDrop : Document.Preferences.CreateFoldersOnDrop))
                 && (!source.IsFolder || panel.Tag is TileGroup { IsStandalone: true } && !p.Tile.IsFolder)
                 && (_selectionDragPositions == null || !_selectedTileIds.Contains(p.Tile.Id))
                 && (!existingFoldersOnly || p.Tile.IsFolder && !_selectedTileIds.Contains(p.Tile.Id)))
@@ -66,7 +67,7 @@ public partial class MainWindow
                 var delta = new Point(dragged.X + dragged.Width / 2, dragged.Y + dragged.Height / 2) - new Point(p.Bounds.X + p.Bounds.Width / 2, p.Bounds.Y + p.Bounds.Height / 2);
                 return new FolderOverlap(p.Tile, overlap.IsEmpty ? 0 : overlap.Width * overlap.Height / Math.Min(dragged.Width * dragged.Height, p.Bounds.Width * p.Bounds.Height), delta.LengthSquared);
             })
-            .Where(p => p.Ratio >= (CreatesGroup(panel, p.Tile) ? _folderHover.TargetId == p.Tile.Id ? .30 : .40 : .65))
+            .Where(p => p.Ratio >= (CreatesGroup(panel, p.Tile) ? _folderHover.TargetId == p.Tile.Id ? .30 : .40 : _folderHover.TargetId == p.Tile.Id ? .55 : .65))
             .OrderByDescending(p => p.Ratio).ThenBy(p => p.Distance).FirstOrDefault();
     }
 
@@ -202,12 +203,13 @@ public partial class MainWindow
         if (_dropAdorner?.AdornedElement != GroupsPanel)
         {
             ClearDropPreview();
-            _dropAdorner = new(GroupsPanel) { IsHitTestVisible = false };
+            _dropAdorner = new(GroupsPanel) { IsHitTestVisible = false, ShowHints = Document.Preferences.ShowDropHints };
             System.Windows.Documents.AdornerLayer.GetAdornerLayer(GroupsPanel)?.Add(_dropAdorner);
         }
         _dropAdorner.CellBounds = bounds;
         _dropAdorner.SelectionBounds = null;
         _dropAdorner.FolderTarget = false;
+        _dropAdorner.HoverProgress = 0;
         _dropAdorner.GroupTarget = false;
         _dropAdorner.GroupBounds = null;
         _dropAdorner.Caption = L.T(K.DropIndependent);

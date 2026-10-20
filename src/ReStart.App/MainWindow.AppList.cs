@@ -19,6 +19,17 @@ public partial class MainWindow
         AppsPanel.Children.Clear();
         _sections.Clear();
         _appFolderRows.Clear();
+        if (Activity.Observe(_apps, DateTimeOffset.Now)) SaveActivity();
+        void HistorySection(K heading, IReadOnlyList<AppEntry> apps)
+        {
+            if (apps.Count == 0) return;
+            var text = new TextBlock { Text = L.T(heading), FontSize = 14 };
+            text.SetResourceReference(TextBlock.ForegroundProperty, "MutedBrush");
+            AppsPanel.Children.Add(new Border { Tag = "section", Padding = new(8, 12, 0, 8), Child = text });
+            foreach (var app in apps) AppsPanel.Children.Add(AppButton(app));
+        }
+        if (Document.Preferences.ShowRecentlyAdded) HistorySection(K.RecentlyAdded, Activity.Recent(_apps, DateTimeOffset.Now));
+        if (Document.Preferences.ShowMostUsed) HistorySection(K.MostUsed, Activity.Frequent(_apps));
         var tree = AppListTree.Build(_apps);
         foreach (var section in tree.GroupBy(n => n.Section).OrderBy(g => g.Key, StringComparer.CurrentCulture))
         {

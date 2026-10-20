@@ -53,6 +53,7 @@ public partial class MainWindow
                 pending.Target.Id, 0, 0) != null;
         ShowDropPreview(pending.Panel, pending.Target, placement.Column, placement.Row);
         _dropAdorner!.FolderTarget = armed && fits;
+        _dropAdorner.HoverProgress = _folderHover.Progress(Environment.TickCount64);
         _dropAdorner.Caption = L.T(!fits ? K.SelectionDoesNotFit : createsGroup ? K.HoldToCreateGroup : armed ? K.DropIntoFolder : K.HoldToCreateFolder);
         if (pending.Target.IsFolder) _dropAdorner.Caption += " · " + TileDisplayName(pending.Target);
         _dropAdorner.InvalidateVisual();

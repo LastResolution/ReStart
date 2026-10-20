@@ -20,6 +20,7 @@ public partial class MainWindow
         GroupsPanel.MouseMove += (_, e) =>
         {
             if (_groupBoundaries == null) return;
+            if (!Document.Preferences.ShowGroupBoundariesOnHover) { _groupBoundaries.HoveredGroup = null; _groupBoundaries.InvalidateVisual(); return; }
             var point = e.GetPosition(GroupsPanel);
             var group = GroupsPanel.Placements.FirstOrDefault(p => !p.Group.IsStandalone && GroupLayout.OccupiedAreas(p.Group, GroupsPanel.TileColumns, Cell, _openFolder?.Id)
                 .Any(a => new Rect(p.Left + a.Left, p.Top + a.Top, a.Width, a.Height).Contains(point))).Group;
@@ -37,6 +38,7 @@ public partial class MainWindow
     private void ShowGroupBoundaries(bool show)
     {
         if (_groupBoundaries == null) return;
+        if (!Document.Preferences.ShowGroupBoundariesOnHover) _groupBoundaries.HoveredGroup = null;
         _groupBoundaries.ShowAll = show; _groupBoundaries.InvalidateVisual();
     }
 }

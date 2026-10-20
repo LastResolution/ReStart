@@ -9,6 +9,7 @@ namespace ReStart.App;
 public partial class MainWindow
 {
     private DispatcherTimer? _nameRefreshTimer;
+    private bool _animateFolderOnRender;
     private string TileDisplayName(Tile tile)
     {
         if (tile.IsFolder && string.IsNullOrEmpty(tile.Label)) return L.T(K.TileFolder);
@@ -36,7 +37,20 @@ public partial class MainWindow
         }, () => InlineFolderHeader(folder));
         var children = new TilePanel { Columns = parent.Columns, Cell = Cell, Placements = expansion.Children, FolderOwner = folder };
         foreach (var child in expansion.Children) children.Children.Add(CreateTileButton(child.Tile));
-        return new(name, children);
+        var view = new InlineFolderView(name, children);
+        var animate = _animateFolderOnRender && MotionEnabled;
+        _animateFolderOnRender = false;
+        if (animate)
+        {
+            _animateFolderOnRender = false;
+            view.BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(140)));
+            var translation = new System.Windows.Media.TranslateTransform(0, -8);
+            view.RenderTransform = translation;
+            translation.BeginAnimation(System.Windows.Media.TranslateTransform.YProperty,
+                new System.Windows.Media.Animation.DoubleAnimation(-8, 0, TimeSpan.FromMilliseconds(140))
+                { EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut } });
+        }
+        return view;
     }
 
     private GroupHeader? InlineFolderHeader(Tile folder) => GroupsPanel.Children.OfType<StackPanel>().SelectMany(s => s.Children.OfType<TilePanel>())
@@ -84,6 +98,7 @@ public partial class MainWindow
         if (_openFolder == tile) { CloseFolder(this, new()); return; }
         _editingGroupHeader?.EndEdit(true);
         _openFolder = tile;
+        _animateFolderOnRender = true;
         RenderGroups();
         Dispatcher.BeginInvoke(() =>
         {
@@ -100,6 +115,7 @@ public partial class MainWindow
         foreach (var child in _openFolder.Children)
             if (_scriptSessions.TryGetValue(child.Id, out var session)) session.NextUpdate = DateTimeOffset.MinValue;
         _openFolder = null;
+        _animateFolderOnRender = false;
         RenderGroups();
     }
 

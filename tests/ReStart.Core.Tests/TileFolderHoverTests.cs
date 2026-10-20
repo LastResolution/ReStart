@@ -5,6 +5,18 @@ namespace ReStart.Core.Tests;
 public sealed class TileFolderHoverTests
 {
     [Fact]
+    public void ProgressIsBoundedAndDoesNotArmOrResetTheHover()
+    {
+        var hover = new TileFolderHover();
+        Assert.Equal(0, hover.Progress(100));
+        hover.Update("a", "b", 100);
+        Assert.Equal(.5, hover.Progress(100 + TileFolderHover.DelayMilliseconds / 2));
+        Assert.Equal(0, hover.Progress(0));
+        Assert.Equal(1, hover.Progress(10000));
+        Assert.False(hover.Update("a", "b", 101));
+        hover.Reset(); Assert.Equal(0, hover.Progress(10000));
+    }
+    [Fact]
     public void GroupDwellArmsQuicklyAndChangingIntentCannotReuseItsElapsedTime()
     {
         var hover = new TileFolderHover();
@@ -13,17 +25,17 @@ public sealed class TileFolderHoverTests
         Assert.True(hover.Update("a", "b", 310, TileFolderHover.GroupDelayMilliseconds));
         Assert.Equal("b", hover.TargetId);
         Assert.False(hover.Update("a", "b", 311));
-        Assert.False(hover.Update("a", "b", 1310));
-        Assert.True(hover.Update("a", "b", 1311));
+        Assert.False(hover.Update("a", "b", 310 + TileFolderHover.DelayMilliseconds - 1));
+        Assert.True(hover.Update("a", "b", 311 + TileFolderHover.DelayMilliseconds));
         hover.Reset(); Assert.Null(hover.TargetId);
     }
     [Fact]
-    public void RequiresAContinuousSecondWithoutModifiers()
+    public void RequiresAContinuousDwellWithoutModifiers()
     {
         var hover = new TileFolderHover();
         Assert.False(hover.Update("a", "b", 10));
-        Assert.False(hover.Update("a", "b", 1009));
-        Assert.True(hover.Update("a", "b", 1010));
+        Assert.False(hover.Update("a", "b", 10 + TileFolderHover.DelayMilliseconds - 1));
+        Assert.True(hover.Update("a", "b", 10 + TileFolderHover.DelayMilliseconds));
     }
     [Fact]
     public void LeavingChangingTargetsOrCancellingRestartsTheDwell()

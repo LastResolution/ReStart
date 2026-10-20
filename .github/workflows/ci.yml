@@ -43,6 +43,8 @@ jobs:
         run: ./scripts/test-first-input.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
       - name: Verify selected search results and focused Enter actions
         run: ./scripts/test-search-selection.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+      - name: Verify local search, jump destinations, navigation and feature switches
+        run: ./scripts/test-fidelity.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
       - name: Verify prepared startup, typeahead, cancellation and icon caching
         run: ./scripts/test-startup.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
       - name: Verify custom themes, settings colors and expanded navigation glyphs
@@ -82,6 +84,8 @@ jobs:
             artifacts/first-input/start.json
             artifacts/search-selection/*/*.png
             artifacts/search-selection/*/start.json
+            artifacts/fidelity/*/start.json
+            artifacts/fidelity/*/fixture-*/*.png
             artifacts/startup/*/*.png
             artifacts/startup/*/start.json
             artifacts/appearance/*/*.png

@@ -1,0 +1,238 @@
+using System.Text.Json;
+using System.Windows;
+using System.Windows.Automation;
+using System.Windows.Controls;
+using ReStart.App.Controls;
+using ReStart.App.Services;
+using ReStart.Core;
+
+namespace ReStart.App;
+
+public partial class MainWindow
+{
+    internal async Task<FidelitySmokeResult> VerifyFidelityAsync(string snapshotPath)
+    {
+        if (!_preview) throw new InvalidOperationException("Fidelity verification requires preview mode.");
+        var directory = Path.Combine(Path.GetDirectoryName(snapshotPath)!, "fixture-" + Guid.NewGuid().ToString("N"));
+        var apps = new List<AppEntry> { new("alpha", "Alpha Editor", ""), new("beta", "Beta Editor", "") };
+        var launched = new List<AppEntry>();
+        var fixture = new MainWindow(new LayoutStore(Path.Combine(directory, "layout.json")), true, () => Task.FromResult(apps), launched.Add)
+        { Owner = this, Width = 1280, Height = 800, Topmost = false };
+        var language = L.Language; var checks = 0;
+        void Check(bool condition, string message) { Require(condition, message); checks++; }
+        async Task Until(Func<bool> condition)
+        {
+            for (var i = 0; i < 100 && !condition(); i++) await Task.Delay(25);
+            Check(condition(), "An asynchronous fidelity operation failed to reach its expected state.");
+        }
+        try
+        {
+            fixture.Present(); await fixture.InitializeAsync(); fixture._clock.Stop();
+            fixture.Document.Preferences.Animate = false;
+            foreach (var lang in TextCatalog.SupportedLanguages)
+            {
+                L.SetLanguage(lang);
+                var settings = SettingsSearch.Find(L.T(K.WindowsDisplay));
+                Check(settings.Any(a => a.LaunchTarget == "ms-settings:display"), "Localized settings search did not resolve Display.");
+                fixture.Document.Preferences.NavigationFolders = FolderShortcuts.Select(s => s.Id).ToList();
+                fixture.RefreshNavigationShortcuts(); fixture.UpdateLayout();
+                Check(fixture.CollapsedFolderShortcuts.Children.Count == 7 && fixture.ExpandedFolderShortcuts.Children.Count == 7,
+                    "Navigation shortcut preferences do not match both sidebar variants.");
+                Check(fixture.ExpandedFolderShortcuts.Children.OfType<Button>().All(b => AutomationProperties.GetName(b).Length > 0
+                    && b.Content is RailLabel), "A navigation shortcut lost its accessible label or fixed icon column.");
+            }
+            L.SetLanguage("en");
+            fixture.Document.Preferences.Language = "en";
+            fixture._fileSearchFixture = async (query, _) =>
+            {
+                await Task.Delay(query == "obsolete" ? 650 : 30);
+                return (new AppEntry[] { new("restart:file:" + query, query + " document", "", false) }, true);
+            };
+            fixture.SetSmokeSearch("Editor");
+            Check(fixture.SearchResultNames.SequenceEqual(new[] { "Alpha Editor", "Beta Editor" }), "File search delayed immediate app results.");
+            await Until(() => fixture.SearchResultNames.Contains("Editor document"));
+            Check(((Button)fixture.SearchResults.SelectedItem).Tag is AppEntry { Id: "alpha" }, "Async file results displaced the selected app.");
+            fixture.SetSmokeSearch("obsolete"); await Task.Delay(230); fixture.SetSmokeSearch("current");
+            await Until(() => fixture.SearchResultNames.Contains("current document")); await Task.Delay(700);
+            Check(!fixture.SearchResultNames.Contains("obsolete document"), "A stale file query overwrote the current search.");
+            fixture._fileSearchFixture = (_, _) => Task.FromResult<(IReadOnlyList<AppEntry>, bool)>(([], false));
+            fixture.SetSmokeSearch("unavailable");
+            await Until(() => fixture.SearchResultHint.Text == L.T(K.SearchIndexUnavailable));
+            fixture.SetSmokeSearch("Display");
+            Check(fixture.SearchResultNames.Contains(L.T(K.WindowsDisplay)), "Settings did not appear in search.");
+            ((Button)fixture.SearchResults.SelectedItem).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Check(launched.Last().LaunchTarget == "ms-settings:display", "Search invoked a different settings target.");
+            fixture.Document.Preferences.SearchSettings = false; fixture.RefreshSearchResults();
+            Check(fixture.SearchResults.Items.OfType<Button>().All(b => b.Tag is not AppEntry a || !a.Id.StartsWith("restart:setting:", StringComparison.Ordinal)),
+                "Disabling settings search left settings results visible.");
+            fixture.Document.Preferences.SearchSettings = true;
+            fixture.ResetToPinnedView();
+            await Task.Delay(250);
+            Check(fixture._fileSearchResults.Count == 0 && fixture._fileSearchQuery.Length == 0, "Returning home retained file search results.");
+
+            fixture.Document.Preferences.ShowMostUsed = true;
+            fixture.Activity.RecordLaunch("beta", true, DateTimeOffset.Now); fixture.RenderApps();
+            Check(VisualChildren<TextBlock>(fixture.AppsPanel).Any(t => t.Text == L.T(K.MostUsed)), "Most used was not rendered from local launch counts.");
+            fixture.ClearAppHistory();
+            Check(!VisualChildren<TextBlock>(fixture.AppsPanel).Any(t => t.Text == L.T(K.MostUsed)), "Cleared app history still appears.");
+            fixture.SetRailOpen(true); Check(fixture.ExpandedRail.Visibility == Visibility.Visible && !fixture._railPinnedOpen, "Hover expansion was treated as a pinned-open sidebar.");
+            fixture.SetRailOpen(true, true); Check(fixture._railPinnedOpen, "Explicit sidebar expansion did not stay open.");
+            fixture.SetRailOpen(false);
+
+            var recent = new MenuItem(); var frequent = new MenuItem();
+            fixture.PopulateJumpItems(recent, frequent, apps[0], [new("Recent sample", "sample.txt", false), new("Frequent sample", "other.txt", true)]);
+            Check(recent.Items.Count == 1 && frequent.Items.Count == 1, "Jump list categories were mixed.");
+            ((MenuItem)recent.Items[0]).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            Check(launched.Last().Id == "alpha" && launched.Last().LaunchTarget == "sample.txt", "A jump destination lost its owning app identity.");
+            fixture.PopulateJumpItems(recent, frequent, apps[0], []);
+            Check(recent.Visibility == Visibility.Collapsed && frequent.Visibility == Visibility.Collapsed, "An empty jump list left empty menu categories.");
+            Check((await AppJumpLists.ReadAsync(new("nonexistent", "Fixture", "ReStart.Nonexistent.Fidelity"))).Count == 0,
+                "An unknown app inherited another app's recent documents.");
+            var probe = Environment.GetEnvironmentVariable("RESTART_TEST_SHELL_PROBE");
+            Check(!string.IsNullOrEmpty(probe) && File.Exists(probe), "The native document argument probe was not supplied.");
+            var document = Path.Combine(directory, "Document \u4f8b_%[1].txt"); File.WriteAllText(document, "Fictional document argument fixture.");
+            await AppShellCommands.OpenDocumentAsync(new("probe", "Shell probe", probe!, false), document, new System.Windows.Interop.WindowInteropHelper(fixture).Handle);
+            await Until(() => File.Exists(document + ".opened"));
+            Check(JsonSerializer.Deserialize<string[]>(File.ReadAllText(document + ".opened"))?.SequenceEqual(new[] { document }) == true,
+                "The app's native open verb corrupted or split the Unicode document path.");
+            var configuredDocument = Path.Combine(directory, "Configured \u4f8b document.txt"); File.WriteAllText(configuredDocument, "Fictional configured launch.");
+            var configuredArguments = "--sample \"argument one\" \"" + configuredDocument + "\"";
+            await AppShellCommands.LaunchConfiguredAsync(new("probe", "Shell probe", probe!, false), configuredArguments, directory, false,
+                new System.Windows.Interop.WindowInteropHelper(fixture).Handle);
+            await Until(() => File.Exists(configuredDocument + ".cwd"));
+            Check(JsonSerializer.Deserialize<string[]>(File.ReadAllText(configuredDocument + ".opened"))?.SequenceEqual(new[] { "--sample", "argument one", configuredDocument }) == true,
+                "Configured launch arguments were split or quoted incorrectly.");
+            Check(Path.GetFullPath(File.ReadAllText(configuredDocument + ".cwd")).Equals(Path.GetFullPath(directory), StringComparison.OrdinalIgnoreCase),
+                "The configured working directory was not passed to the application.");
+            var shortcut = Path.Combine(directory, "Probe shortcut.lnk");
+            await AppShellCommands.OnSta(() =>
+            {
+                object? shell = null, link = null;
+                try
+                {
+                    shell = Activator.CreateInstance(Type.GetTypeFromProgID("WScript.Shell")!);
+                    link = ((dynamic)shell!).CreateShortcut(shortcut);
+                    ((dynamic)link).TargetPath = probe!;
+                    ((dynamic)link).Arguments = "--shortcut \"" + document + "\"";
+                    ((dynamic)link).WorkingDirectory = directory;
+                    ((dynamic)link).Save();
+                    return true;
+                }
+                finally
+                {
+                    if (link != null) System.Runtime.InteropServices.Marshal.FinalReleaseComObject(link);
+                    if (shell != null) System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shell);
+                }
+            });
+            // Launch only our own no-window probe; real apps and UAC are never invoked by this fixture.
+            File.WriteAllText(document + ".opened", "[]");
+            ShellLauncher.Launch(shortcut);
+            await Until(() => JsonSerializer.Deserialize<string[]>(File.ReadAllText(document + ".opened"))?.Length == 2);
+            Check(JsonSerializer.Deserialize<string[]>(File.ReadAllText(document + ".opened"))?.SequenceEqual(new[] { "--shortcut", document }) == true,
+                "A shortcut's existing arguments were lost.");
+            Check((await AppShellCommands.ReadAsync(new("probe", "Shell probe", probe!, false))).Contains("runas"),
+                "The desktop app did not expose administrator execution through its canonical verb.");
+
+            var group = new TileGroup { Name = "Sample group", Tiles = [new() { Label = "Sample tile" }] };
+            fixture.Document.Groups = [group]; fixture.RenderGroups(); fixture.UpdateLayout();
+            Check(VisualChildren<TileSurfaceButton>(fixture.GroupsPanel).Single().Style == fixture.FindResource("TileSurfaceAction"), "Tile hover uses ordinary button borders.");
+            var before = JsonSerializer.Serialize(fixture.Document.Groups);
+            fixture._dragging = true; fixture._activeDragFormat = "ReStart.Group"; fixture._activeDragId = group.Id;
+            fixture.PreserveDragExtent();
+            var point = new Point(fixture.ContentScroll.ViewportWidth / 2, fixture.ContentScroll.ViewportHeight - 2);
+            for (var i = 0; i < 10; i++) fixture.ScrollDragAt(point, .032);
+            Check(fixture.ContentScroll.VerticalOffset > 0, "Stationary edge scrolling did not advance.");
+            Check(JsonSerializer.Serialize(fixture.Document.Groups) == before, "Scroll previews mutated persisted layout coordinates.");
+            fixture._dragging = false; fixture._activeDragId = null; fixture.ClearDropPreview();
+            fixture.Document.Preferences.DragEdgeScrolling = false;
+            var stoppedOffset = fixture.ContentScroll.VerticalOffset;
+            Check(!fixture.ScrollDragAt(point, .1) && fixture.ContentScroll.VerticalOffset == stoppedOffset, "Disabled edge scrolling still moved the viewport.");
+            fixture.Document.Preferences.DragEdgeScrolling = true;
+            fixture.GroupsPanel.DragMinimumHeight = 0; fixture.GroupsPanel.DragMinimumWidth = 0;
+            fixture.ContentScroll.ScrollToTop(); fixture.ContentScroll.ScrollToLeftEnd();
+            fixture.Document.Preferences.Language = "en";
+            var toggles = new Dictionary<K, Func<Preferences, bool>>
+            {
+                [K.SettingsRailHover] = p => p.ExpandNavigationOnHover,
+                [K.SettingsSearchSettings] = p => p.SearchSettings,
+                [K.SearchFilesSetting] = p => p.SearchFiles,
+                [K.SettingsJumpLists] = p => p.ShowJumpLists,
+                [K.SettingsTileHover] = p => p.TileHoverHighlight,
+                [K.SettingsGroupHover] = p => p.ShowGroupBoundariesOnHover,
+                [K.SettingsDropGroups] = p => p.GroupTilesOnDrop,
+                [K.SettingsDropFolders] = p => p.CreateFoldersOnDrop,
+                [K.SettingsDragScroll] = p => p.DragEdgeScrolling,
+                [K.SettingsDropHints] = p => p.ShowDropHints,
+                [K.SettingsShowRecentApps] = p => p.ShowRecentlyAdded,
+                [K.SettingsShowMostUsed] = p => p.ShowMostUsed
+            };
+            foreach (var enabled in new[] { false, true })
+            {
+                Exception? editorError = null;
+                var editor = new SettingsWindow(fixture, fixture._store) { Owner = fixture };
+                editor.Loaded += (_, _) => editor.Dispatcher.BeginInvoke(() =>
+                {
+                    try
+                    {
+                        editor.SelectSection(L.T(K.SettingsStartExperience));
+                        editor.UpdateLayout();
+                        foreach (var key in toggles.Keys)
+                            VisualChildren<CheckBox>(editor).Single(c => AutomationProperties.GetName(c) == L.T(key)).IsChecked = enabled;
+                        VisualChildren<Button>(editor).Single(b => b.IsDefault).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    }
+                    catch (Exception ex) { editorError = ex; editor.Close(); }
+                });
+                editor.ShowDialog();
+                if (editorError != null) throw new InvalidOperationException("Start preference editor failed: " + editorError.Message, editorError);
+                var saved = fixture._store.Load()!.Preferences;
+                Check(toggles.Values.All(read => read(saved) == enabled), "A Start feature toggle did not survive save and reload.");
+                fixture.RefreshLayout();
+                Check(VisualChildren<TileSurfaceButton>(fixture.GroupsPanel).All(b => b.HoverHighlightEnabled == enabled), "Saved hover preference was not applied to tiles.");
+                Check(!enabled || fixture.Document.Preferences.NavigationFolders?.Count == 7, "Navigation shortcuts were lost while saving feature switches.");
+            }
+            fixture.Document.Preferences.ShowMostUsed = false;
+            var launchTile = group.Tiles[0]; launchTile.Target = probe!; launchTile.IsShellApp = false;
+            Exception? launchEditorError = null;
+            var launchEditor = new LaunchOptionsWindow(launchTile, true, true) { Owner = fixture };
+            launchEditor.Loaded += (_, _) => launchEditor.Dispatcher.BeginInvoke(() =>
+            {
+                try
+                {
+                    var enabled = VisualChildren<CheckBox>(launchEditor).Single(c => AutomationProperties.GetName(c) == L.T(K.UseLaunchOptions));
+                    enabled.IsChecked = true;
+                    var args = VisualChildren<TextBox>(launchEditor).Single(c => AutomationProperties.GetName(c) == L.T(K.LaunchArguments));
+                    var cwd = VisualChildren<TextBox>(launchEditor).Single(c => AutomationProperties.GetName(c) == L.T(K.WorkingDirectory));
+                    args.Text = configuredArguments; cwd.Text = Path.Combine(directory, "Missing directory");
+                    var save = VisualChildren<Button>(launchEditor).Single(b => b.IsDefault);
+                    save.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    Check(launchEditor.IsVisible && !launchTile.UseLaunchOptions, "Invalid launch options were committed before validation.");
+                    cwd.Text = directory;
+                    VisualChildren<CheckBox>(launchEditor).Single(c => AutomationProperties.GetName(c) == L.T(K.RunAsAdministrator)).IsChecked = true;
+                    save.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                }
+                catch (Exception ex) { launchEditorError = ex; launchEditor.Close(); }
+            });
+            launchEditor.ShowDialog();
+            if (launchEditorError != null) throw new InvalidOperationException("Launch options editor failed: " + launchEditorError.Message, launchEditorError);
+            fixture.CommitLayout();
+            var savedLaunch = fixture._store.Load()!.Groups.SelectMany(g => g.Tiles).Single(t => t.Id == launchTile.Id);
+            Check(savedLaunch.UseLaunchOptions && savedLaunch.LaunchArguments == configuredArguments && savedLaunch.WorkingDirectory == directory && savedLaunch.RunAsAdministrator,
+                "Per-tile launch options did not survive the native editor and layout persistence.");
+            launchTile.UseLaunchOptions = false; launchTile.RunAsAdministrator = false;
+            foreach (var theme in new[] { ReStart.Core.ThemeMode.Dark, ReStart.Core.ThemeMode.Light })
+            {
+                fixture.ResetToPinnedView();
+                fixture.Document.Preferences.Theme = theme; fixture.RefreshLayout(); fixture.SetRailOpen(true, true);
+                fixture.SaveScreenshot(Path.Combine(directory, "navigation-" + theme + ".png"));
+                fixture.SetRailOpen(false); fixture.SetSmokeSearch("Display");
+                fixture.SaveScreenshot(Path.Combine(directory, "settings-search-" + theme + ".png"));
+            }
+            var indexed = await new IndexedFileSearch().FindAsync("ReStart_nonexistent_%_[fidelity]", CancellationToken.None);
+            Check(indexed.Files.Count == 0, "The native index query ignored literal wildcard characters.");
+            return new(checks, indexed.Available);
+        }
+        finally { fixture.Exit(); L.SetLanguage(language); ApplyAppearance(); Activate(); }
+    }
+}
+
+internal sealed record FidelitySmokeResult(int Checks, bool NativeIndexAvailable);

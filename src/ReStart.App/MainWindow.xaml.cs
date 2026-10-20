@@ -36,7 +36,6 @@ public partial class MainWindow : Window
     private GroupHeader? _editingGroupHeader;
     private bool _groupsRenderPending;
     private DropAdorner? _dropAdorner;
-    private long _lastDragScroll;
     private int _dialogDepth;
     private Tile? _openFolder;
     private bool _exit;
@@ -84,6 +83,7 @@ public partial class MainWindow : Window
         IsVisibleChanged += (_, _) => { if (!IsVisible) PauseScripts(); };
         InitializeComponent();
         InstallGroupBoundaries();
+        InstallNavigationBehavior();
         ThemeWindow.Attach(this);
         WatchDesktopAppearance();
         Activated += (_, _) =>
@@ -104,7 +104,7 @@ public partial class MainWindow : Window
         ContentScroll.DragLeave += (_, e) =>
         {
             if (new Rect(new Point(), ContentScroll.RenderSize).Contains(e.GetPosition(ContentScroll))) return;
-            _folderHover.Reset(); StopFolderDwell(); ClearDropPreview();
+            _folderHover.Reset(); StopFolderDwell(); _dragScrollTimer?.Stop(); ClearDropPreview();
         };
         ContentScroll.PreviewMouseWheel += (_, e) =>
         {
@@ -114,27 +114,7 @@ public partial class MainWindow : Window
         GroupsPanel.PreviewDragOver += OnBoardDragOver;
         GroupsPanel.PreviewDrop += OnBoardDrop;
         GroupsPanel.RequestBringIntoView += (_, e) => { if (_dragging) e.Handled = true; };
-        ContentScroll.PreviewDragOver += (_, e) =>
-        {
-            if (!HasDrag(e)) return;
-            var now = Environment.TickCount64;
-            if (now - _lastDragScroll < 80) return;
-            _lastDragScroll = now;
-            var point = e.GetPosition(ContentScroll);
-            if (point.Y < 42) ContentScroll.ScrollToVerticalOffset(ContentScroll.VerticalOffset - 26);
-            else if (point.Y > ContentScroll.ActualHeight - 42)
-            {
-                ExtendDragSpace();
-                ContentScroll.ScrollToVerticalOffset(ContentScroll.VerticalOffset + 26);
-            }
-            if (point.X < 42) ContentScroll.ScrollToHorizontalOffset(ContentScroll.HorizontalOffset - 26);
-            else if (point.X > ContentScroll.ActualWidth - 42)
-            {
-                GroupsPanel.DragMinimumWidth = Math.Min(10000 * Cell, ContentScroll.HorizontalOffset + ContentScroll.ViewportWidth + Cell * 4);
-                GroupsPanel.InvalidateMeasure();
-                ContentScroll.ScrollToHorizontalOffset(ContentScroll.HorizontalOffset + 26);
-            }
-        };
+        ContentScroll.PreviewDragOver += (_, e) => TrackDragScrolling(e);
         UserRailLabel.Label = _preview ? "ReStart" : Environment.UserName;
         PreviewMouseDown += (_, _) => CompleteEntrance();
         IsVisibleChanged += (_, _) => { if (!IsVisible) { StopMotion(); SetLayoutEditing(false); } };
@@ -272,6 +252,7 @@ public partial class MainWindow : Window
             var area = screen.WorkingArea;
             _wallpaperMonitor = screen.Bounds;
             RefreshWallpaper();
+            RefreshNavigationShortcuts();
             Native.SetWindowPos(handle, new nint(-1), area.X, area.Y, area.Width, area.Height, 0x0040);
         }
         if (!_preview || _verifyNativeActivation) ForegroundActivation.Request(handle);
@@ -293,7 +274,7 @@ public partial class MainWindow : Window
 
     private void RefreshBackgroundMenu()
     {
-        var backgroundMenu = new ContextMenu();
+        var backgroundMenu = CreateContextMenu();
         Add(backgroundMenu, L.T(K.NewGroup), AddGroup);
         Add(backgroundMenu, L.T(K.PinApp), () => ShowAllApps(this, new()));
         Add(backgroundMenu, L.T(K.AddTile), () => OpenAddMenu(AddButton, new()));
@@ -358,6 +339,7 @@ public partial class MainWindow : Window
         Root.Background = new SolidColorBrush(startBackground);
         UpdateSearchChrome(SearchBox.Text.Trim().Length > 0 || _searchRequested);
         RefreshWallpaper();
+        RefreshNavigationShortcuts();
     }
 
     /// <summary>Reapplies preferences and rebuilds visible groups and app views without changing saved labels.</summary>
@@ -460,6 +442,11 @@ public partial class MainWindow : Window
 
     private void FitPanels()
     {
+        if (CollapsedFolderScroll != null)
+        {
+            var available = Math.Max(48, Root.ActualHeight - 312);
+            CollapsedFolderScroll.MaxHeight = available; ExpandedFolderScroll.MaxHeight = available;
+        }
         if (ContentScroll.ActualWidth < 1) return;
         GroupsPanel.TileColumns = Document.Preferences.Columns;
         GroupsPanel.Cell = Cell;
@@ -469,7 +456,7 @@ public partial class MainWindow : Window
     private Button CreateTileButton(Tile tile)
     {
         var displayName = TileDisplayName(tile);
-        var button = new Button { Tag = tile, Padding = new(0), HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch, ToolTip = displayName };
+        var button = new TileSurfaceButton { MotionAllowed = MotionEnabled, HoverHighlightEnabled = Document.Preferences.TileHoverHighlight, Tag = tile, Padding = new(0), HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch, ToolTip = displayName };
         AutomationProperties.SetName(button, displayName + (tile.IsFolder && tile.Label.Length > 0 ? L.T(K.TileFolderSuffix) : ""));
         var colorful = tile.UseCustomColor || Document.Preferences.ColoredTiles || tile.Widget.Length > 0;
         button.Background = colorful && !SystemParameters.HighContrast
@@ -518,13 +505,13 @@ public partial class MainWindow : Window
         button.Content = grid;
         InstallTileSelection(button, grid, tile);
         button.ContextMenu = TileMenu(tile);
-        button.Click += (_, _) =>
+        button.Click += async (_, _) =>
         {
             if (_dragging || _dismissing) return;
             if (_layoutEditing) { ToggleTileSelection(tile.Id); return; }
             if (tile.Widget == "script") InteractWithScriptTile(tile);
             else if (tile.IsFolder) OpenFolder(tile);
-            else Launch(new(tile.AppId, tile.Label, tile.Target, tile.IsShellApp));
+            else await LaunchTileAsync(tile);
         };
         WireDrag(button, "ReStart.Tile", tile.Id);
         return button;
@@ -547,7 +534,7 @@ public partial class MainWindow : Window
 
     private ContextMenu TileMenu(Tile tile)
     {
-        var menu = new ContextMenu();
+        var menu = CreateContextMenu();
         if (tile.IsFolder) Add(menu, L.T(K.OpenTileFolder), () => OpenFolder(tile));
         Add(menu, L.T(K.SelectTileForEditing), () => SelectTileForEditing(tile.Id));
         Add(menu, L.T(K.UnpinTile), () => { RemoveTile(tile.Id); CommitLayout(); });
@@ -562,6 +549,12 @@ public partial class MainWindow : Window
         if (!tile.IsFolder && tile.Widget.Length == 0 && tile.Target.Length > 0)
             AddAppShellItems(menu, _apps.FirstOrDefault(a => a.Id == tile.AppId) ?? new(tile.AppId, tile.Label, tile.Target, tile.IsShellApp));
         var extras = new MenuItem { Header = "ReStart" };
+        if (!tile.IsFolder && tile.Widget.Length == 0 && tile.Target.Length > 0)
+        {
+            var launchOptions = new MenuItem { Header = L.T(K.LaunchOptions) };
+            launchOptions.Click += async (_, _) => await EditLaunchOptionsAsync(tile);
+            extras.Items.Add(launchOptions);
+        }
         extras.Items.Add(TileColorMenu(tile));
         Add(extras, L.T(K.RenameTile), () =>
         {
@@ -603,7 +596,7 @@ public partial class MainWindow : Window
 
     private ContextMenu GroupMenu(TileGroup group)
     {
-        var menu = new ContextMenu();
+        var menu = CreateContextMenu();
         AddLiveTileMenu(menu);
         Add(menu, L.T(K.RenameGroup), () => RenameGroup(group));
         Add(menu, L.T(K.DeleteGroup), () =>
@@ -643,6 +636,7 @@ public partial class MainWindow : Window
             }
         }
         PreserveDragExtent();
+        _activeDragFormat = format; _activeDragId = id;
         button.ReleaseMouseCapture();
         e.Handled = true;
         try
@@ -654,6 +648,7 @@ public partial class MainWindow : Window
         }
         finally
         {
+            _dragScrollTimer?.Stop(); _activeDragFormat = null; _activeDragId = null;
             ShowGroupBoundaries(_layoutEditing);
             ClearDropPreview();
             _folderHover.Reset();
@@ -681,14 +676,14 @@ public partial class MainWindow : Window
     private static bool HasDrag(DragEventArgs e) => e.Data.GetDataPresent("ReStart.Tile") || e.Data.GetDataPresent("ReStart.App") || e.Data.GetDataPresent("ReStart.Group") || e.Data.GetDataPresent("ReStart.Selection");
     private Tile? DragTile(DragEventArgs e) => e.Data.GetData("ReStart.Tile") is string id ? FindTile(id) :
         e.Data.GetData("ReStart.App") is string appId ? TileForAppDrag(appId) : null;
-    private Tile? TileForAppDrag(string appId) => _apps.FirstOrDefault(a => a.Id == appId) is AppEntry app
+    private Tile? TileForAppDrag(string appId) => _apps.Concat(_fileSearchResults).Concat(SettingsSearch.Find(SearchBox.Text)).FirstOrDefault(a => a.Id == appId) is AppEntry app
         ? AppPinning.Find(Document, app) ?? Tile.FromApp(app) : null;
     private void ShowDropPreview(TilePanel panel, Tile tile, int col, int row)
     {
         if (_dropAdorner?.AdornedElement != panel)
         {
             ClearDropPreview();
-            _dropAdorner = new(panel) { IsHitTestVisible = false };
+            _dropAdorner = new(panel) { IsHitTestVisible = false, ShowHints = Document.Preferences.ShowDropHints };
             AdornerLayer.GetAdornerLayer(panel)?.Add(_dropAdorner);
         }
         var (width, height) = TileLayout.Dimensions(tile.Size);
@@ -696,6 +691,7 @@ public partial class MainWindow : Window
         _dropAdorner.CellBounds = new(col * Cell, y, width * Cell - 4, height * Cell - 4);
         _dropAdorner.SelectionBounds = null;
         _dropAdorner.FolderTarget = false;
+        _dropAdorner.HoverProgress = 0;
         _dropAdorner.GroupTarget = false;
         _dropAdorner.GroupBounds = panel.FolderOwner == null && panel.Tag is TileGroup { IsStandalone: false }
             ? new Rect(0, -GroupLayout.HeaderHeight, Math.Max(panel.ActualWidth, (col + width) * Cell), Math.Max(panel.ActualHeight, y + height * Cell) + GroupLayout.HeaderHeight) : null;
@@ -793,7 +789,7 @@ public partial class MainWindow : Window
     private void ShowPinned(object sender, RoutedEventArgs e) => ResetToPinnedView();
     private void ShowAllApps(object sender, RoutedEventArgs e) { SetLayoutEditing(false); _searchRequested = false; _allApps = true; SearchBox.Clear(); SearchChanged(SearchBox, new(TextBox.TextChangedEvent, UndoAction.None)); ExpandedRail.Visibility = Visibility.Collapsed; ContentScroll.ScrollToTop(); }
     private void ClearSearch(object sender, RoutedEventArgs e) { SearchBox.Clear(); SearchBox.Focus(); }
-    private void ToggleRail(object sender, RoutedEventArgs e) => ExpandedRail.Visibility = ExpandedRail.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+    private void ToggleRail(object sender, RoutedEventArgs e) => SetRailOpen(ExpandedRail.Visibility != Visibility.Visible, explicitToggle: true);
     private void RenameGroup(TileGroup group) => GroupsPanel.Children.OfType<StackPanel>().Where(s => s.Tag == group).SelectMany(s => s.Children.OfType<GroupHeader>()).FirstOrDefault()?.BeginEdit();
     private void AddGroup()
     {
@@ -806,7 +802,7 @@ public partial class MainWindow : Window
 
     private void OpenAddMenu(object sender, RoutedEventArgs e)
     {
-        var menu = new ContextMenu();
+        var menu = CreateContextMenu();
         Add(menu, L.T(K.NewGroup), AddGroup);
         Add(menu, L.T(K.PinApp), () => ShowAllApps(this, new()));
         Add(menu, L.T(K.PinFile), () => ChoosePinPath(false));
@@ -829,7 +825,7 @@ public partial class MainWindow : Window
 
     private void AddCustomTile()
     {
-        var menu = new ContextMenu();
+        var menu = CreateContextMenu();
         Add(menu, L.T(K.ChooseFile), () =>
         {
             WithDialog(() => { var dialog = new OpenFileDialog { Title = L.T(K.PromptPinFile) }; if (dialog.ShowDialog(this) == true) PinCustom(new() { AppId = dialog.FileName, Target = dialog.FileName, Label = Path.GetFileNameWithoutExtension(dialog.FileName), IsShellApp = false }); });
@@ -880,7 +876,7 @@ public partial class MainWindow : Window
             });
             return;
         }
-        try { ShellLauncher.Launch(app); Dismiss(); }
+        try { ShellLauncher.Launch(app); Activity.RecordLaunch(app.Id, Document.Preferences.ShowMostUsed, DateTimeOffset.Now); if (Document.Preferences.ShowMostUsed) SaveActivity(); Dismiss(); }
         catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or System.IO.FileNotFoundException) { SetStatus(L.T(K.ErrorLaunch) + ex.Message); }
     }
     private void OpenDocuments(object sender, RoutedEventArgs e) => LaunchPath(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
@@ -888,7 +884,7 @@ public partial class MainWindow : Window
     private void LaunchPath(string path) => Launch(new(path, path, path, false));
     private void OpenAccount(object sender, RoutedEventArgs e)
     {
-        var menu = new ContextMenu();
+        var menu = CreateContextMenu();
         Add(menu, L.T(K.AccountSettings), () => LaunchPath("ms-settings:yourinfo"));
         Add(menu, L.T(K.AccountLock), () => { Dismiss(immediately: true); Native.LockWorkStation(); });
         Add(menu, L.T(K.AccountSignOut), () => RunPower("/l", L.T(K.AccountSignOut)));
@@ -896,7 +892,7 @@ public partial class MainWindow : Window
     }
     private void OpenPower(object sender, RoutedEventArgs e)
     {
-        var menu = new ContextMenu();
+        var menu = CreateContextMenu();
         Add(menu, L.T(K.PowerSleep), () => { if (Confirm(L.T(K.ConfirmSleep))) { Dismiss(immediately: true); System.Windows.Forms.Application.SetSuspendState(System.Windows.Forms.PowerState.Suspend, false, false); } });
         Add(menu, L.T(K.PowerShutdown), () => RunPower("/s", L.T(K.PowerShutdown)));
         Add(menu, L.T(K.PowerRestart), () => RunPower("/r", L.T(K.PowerRestart)));
@@ -1040,7 +1036,7 @@ public partial class MainWindow : Window
     private static bool IsAnyMenuOpen() => Mouse.Captured is ContextMenu || Mouse.Captured is System.Windows.Controls.Primitives.MenuBase;
     private void OnClosing(object? sender, CancelEventArgs e) { if (!_exit) { e.Cancel = true; Dismiss(); } }
     /// <summary>Stops timers and isolated script workers before permanently closing the launcher.</summary>
-    public void Exit() { _exit = true; CancelStartupPresentation(); StopMotion(); StopFolderDwell(); StopWatchingDesktopAppearance(); _clock.Stop(); _nameRefreshTimer?.Stop(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); foreach (var data in _tileData.Values) data.Runtime.Dispose(); _tileData.Clear(); _tileDataTransport?.Dispose(); _systemMetrics?.Dispose(); Close(); }
+    public void Exit() { _exit = true; CancelStartupPresentation(); StopMotion(); StopFolderDwell(); StopWatchingDesktopAppearance(); _clock.Stop(); _nameRefreshTimer?.Stop(); _railHoverTimer?.Stop(); _dragScrollTimer?.Stop(); _fileSearchCancellation?.Cancel(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); foreach (var data in _tileData.Values) data.Runtime.Dispose(); _tileData.Clear(); _tileDataTransport?.Dispose(); _systemMetrics?.Dispose(); Close(); }
 
     /// <summary>Renders only the launcher root to a PNG for reproducible UI verification.</summary>
     /// <param name="path">Destination PNG path for the current preview visual; missing parent directories are created.</param>

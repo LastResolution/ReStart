@@ -31,7 +31,7 @@ public sealed class AppActivity
     public void RecordLaunch(string appId, bool enabled, DateTimeOffset now)
     {
         if (!enabled || !Entries.TryGetValue(appId, out var entry)) return;
-        entry.Launches = Math.Min(1_000_000, entry.Launches + 1); entry.LastLaunched = now;
+        entry.Launches = Math.Clamp(entry.Launches, 0, 999_999) + 1; entry.LastLaunched = now;
     }
 
     /// <summary>Returns up to three still-installed apps first discovered during the last seven days.</summary>

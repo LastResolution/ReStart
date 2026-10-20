@@ -72,6 +72,7 @@ internal sealed partial class SettingsWindow : Window
         Note(content, L.T(K.ExplorerPinHelp));
         content = Section(L.T(K.SettingsAppearance));
         BuildAppearance(content);
+        BuildNavigationSettings(Section(L.T(K.SettingsStartExperience)));
         content = Section(L.T(K.SettingsLanguage));
         var languages = new[] { "system" }.Concat(TextCatalog.SupportedLanguages).ToArray();
         Select(content, L.T(K.SettingsDisplayLanguage), new[] { L.T(K.ThemeSystem) }.Concat(TextCatalog.SupportedLanguages.Select(tag => CultureInfo.GetCultureInfo(tag).NativeName)).ToArray(),

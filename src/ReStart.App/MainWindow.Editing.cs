@@ -264,7 +264,7 @@ public partial class MainWindow
 
     private void MoveSelectedTilesClick(object sender, RoutedEventArgs e)
     {
-        var menu = new ContextMenu();
+        var menu = CreateContextMenu();
         foreach (var group in Document.Groups.Where(g => !g.IsStandalone))
             Add(menu, group.Name.Length == 0 ? L.T(K.UnnamedGroup) : group.Name, () => MoveSelectionToGroup(group));
         Add(menu, L.T(K.NewGroup), () => MoveSelectionToGroup(null));

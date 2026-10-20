@@ -165,8 +165,8 @@ public partial class MainWindow
             var center = targetButton.TranslatePoint(new Point(targetButton.ActualWidth / 2, targetButton.ActualHeight / 2), targetPanel);
             _folderHover.Reset();
             Require(FolderHoverTarget(a, targetPanel, center, a.Id, 0) == null
-                && FolderHoverTarget(a, targetPanel, center, a.Id, 999) == null
-                && FolderHoverTarget(a, targetPanel, center, a.Id, 1000) == b, "Actual tile hit testing does not arm a folder after a continuous one-second center hover.");
+                && FolderHoverTarget(a, targetPanel, center, a.Id, TileFolderHover.DelayMilliseconds - 1) == null
+                && FolderHoverTarget(a, targetPanel, center, a.Id, TileFolderHover.DelayMilliseconds) == b, "Actual tile hit testing does not arm a folder after a continuous folder dwell.");
             var edge = targetButton.TranslatePoint(new Point(1, 1), targetPanel);
             Require(FolderHoverTarget(a, targetPanel, edge, a.Id, 1001) == null, "The tile edge incorrectly creates a folder instead of moving a tile.");
             _folderHover.Reset();

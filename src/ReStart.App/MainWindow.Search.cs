@@ -2,17 +2,26 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using ReStart.Core;
+using ReStart.App.Services;
 
 namespace ReStart.App;
 
 public partial class MainWindow
 {
     private string _renderedSearchQuery = "";
+    private string _fileSearchQuery = "";
+    private CancellationTokenSource? _fileSearchCancellation;
+    private readonly IndexedFileSearch _indexedFiles = new();
+    private IReadOnlyList<AppEntry> _fileSearchResults = [];
+    private bool _fileIndexAvailable = true;
+    private bool _fileSearchPending;
+    private Func<string, CancellationToken, Task<(IReadOnlyList<AppEntry> Files, bool Available)>>? _fileSearchFixture;
 
     /// <summary>Rebuilds the visible results, retaining the selected app only when the query has not changed.</summary>
     private void RefreshSearchResults()
     {
         var query = SearchBox.Text.Trim();
+        ScheduleIndexedSearch(query);
         var selectedId = query == _renderedSearchQuery ? (SearchResults.SelectedItem as Button)?.Tag as AppEntry : null;
         var restoreFocus = SearchResults.IsKeyboardFocusWithin;
         SearchResults.Items.Clear();
@@ -20,20 +29,69 @@ public partial class MainWindow
         SearchResultHint.Visibility = Visibility.Collapsed;
         SearchResultHeading.Text = "";
         if (query.Length == 0) return;
-        var results = AppSearch.Find(_apps, query);
+        var apps = AppSearch.Find(_apps, query);
+        var settings = Document.Preferences.SearchSettings ? SettingsSearch.Find(query) : [];
+        var results = apps.Concat(settings).Concat(_fileSearchResults).DistinctBy(a => a.Id, StringComparer.OrdinalIgnoreCase).ToArray();
         var loading = !_ready && _apps.Count == 0;
-        SearchResultHeading.Text = loading ? L.T(K.StatusLoading) : results.Count == 0 ? L.T(K.SearchNoMatches) : L.T(K.SearchBestMatch);
+        SearchResultHeading.Text = loading ? L.T(K.StatusLoading) : results.Length == 0 ? L.T(_fileSearchPending ? K.SearchIndexSearching : K.SearchNoMatches) : L.T(K.SearchBestMatch);
+        var shownCategories = new HashSet<K>();
         foreach (var app in results)
         {
             var button = AppButton(app);
+            var category = app.Id.StartsWith("restart:setting:", StringComparison.Ordinal) ? K.SearchSettings
+                : _fileSearchResults.Contains(app) ? K.SearchFiles : K.SearchApps;
+            var content = new StackPanel();
+            if (shownCategories.Add(category))
+            {
+                var label = new TextBlock { Text = L.T(category), FontSize = 12, Margin = new(0, 6, 0, 4) };
+                label.SetResourceReference(TextBlock.ForegroundProperty, "MutedBrush"); content.Children.Add(label);
+                button.Height = 68;
+            }
+            var originalContent = (UIElement)button.Content; button.Content = null;
+            content.Children.Add(originalContent); button.Content = content;
+            if (category == K.SearchFiles) button.ToolTip = app.LaunchTarget;
             button.Style = (Style)FindResource("SearchResultAction");
             button.PreviewMouseDown += (_, _) => { SearchResults.SelectedItem = button; FocusSearchResult(); };
             SearchResults.Items.Add(button);
         }
-        SearchResultHint.Visibility = results.Count == 0 && !loading ? Visibility.Visible : Visibility.Collapsed;
+        SearchResultHint.Text = !_fileIndexAvailable ? L.T(K.SearchIndexUnavailable) : L.T(K.SearchHint);
+        SearchResultHint.Visibility = !loading && !_fileSearchPending && (results.Length == 0 || !_fileIndexAvailable) ? Visibility.Visible : Visibility.Collapsed;
         SearchResults.SelectedItem = SearchResults.Items.OfType<Button>().FirstOrDefault(b => b.Tag is AppEntry app && app.Id == selectedId?.Id)
             ?? SearchResults.Items.OfType<Button>().FirstOrDefault();
         if (restoreFocus && ResultsPanel.IsVisible) FocusSearchResult();
+    }
+
+    private void ScheduleIndexedSearch(string query)
+    {
+        var requested = Document.Preferences.SearchFiles && (!_preview || _fileSearchFixture != null) && IndexedFileQuery.Build(query) != null ? query : "";
+        if (requested == _fileSearchQuery) return;
+        _fileSearchQuery = requested;
+        _fileSearchCancellation?.Cancel(); _fileSearchCancellation?.Dispose(); _fileSearchCancellation = null;
+        _fileSearchResults = []; _fileIndexAvailable = true; _fileSearchPending = requested.Length > 0;
+        if (requested.Length == 0) return;
+        var cancellation = new CancellationTokenSource(); _fileSearchCancellation = cancellation;
+        _ = LoadIndexedResultsAsync(requested, cancellation.Token);
+    }
+
+    private async Task LoadIndexedResultsAsync(string query, CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(200, token);
+            var result = await (_fileSearchFixture?.Invoke(query, token) ?? _indexedFiles.FindAsync(query, token));
+            token.ThrowIfCancellationRequested();
+            if (_exit || SearchBox.Text.Trim() != query) return;
+            _fileSearchResults = result.Files; _fileIndexAvailable = result.Available; _fileSearchPending = false;
+            RefreshSearchResults();
+            await _catalog.LoadIconsAsync(result.Files);
+            if (!token.IsCancellationRequested && !_exit && SearchBox.Text.Trim() == query) RefreshSearchResults();
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex) when (ex is IOException or System.Runtime.InteropServices.COMException or InvalidOperationException)
+        {
+            if (!token.IsCancellationRequested && !_exit && SearchBox.Text.Trim() == query)
+            { _fileIndexAvailable = false; _fileSearchPending = false; RefreshSearchResults(); }
+        }
     }
 
     /// <summary>Moves keyboard focus to the selected native result row and scrolls it into view without changing selection.</summary>
