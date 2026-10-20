@@ -21,9 +21,10 @@ public partial class MainWindow
         { Owner = this, Width = 1280, Height = 800, Topmost = false };
         var language = L.Language; var checks = 0;
         void Check(bool condition, string message) { Require(condition, message); checks++; }
-        async Task Until(Func<bool> condition, [System.Runtime.CompilerServices.CallerArgumentExpression(nameof(condition))] string description = "")
+        async Task Until(Func<bool> condition, int timeoutMs = 2500, [System.Runtime.CompilerServices.CallerArgumentExpression(nameof(condition))] string description = "")
         {
-            for (var i = 0; i < 100 && !condition(); i++) await Task.Delay(25);
+            var deadline = Environment.TickCount64 + timeoutMs;
+            while (!condition() && Environment.TickCount64 < deadline) await Task.Delay(25);
             Check(condition(), "An asynchronous fidelity operation failed: " + description);
         }
         try
@@ -111,6 +112,9 @@ public partial class MainWindow
             Check(Path.GetFullPath(File.ReadAllText(configuredDocument + ".cwd")).Equals(Path.GetFullPath(directory), StringComparison.OrdinalIgnoreCase),
                 "The configured working directory was not passed to the application.");
             var shortcut = Path.Combine(directory, "Probe shortcut.lnk");
+            var shortcutDocument = Path.Combine(directory, "Shortcut document.txt");
+            File.WriteAllText(shortcutDocument, "Fictional shortcut launch.");
+            var shortcutArguments = "--shortcut \"" + shortcutDocument + "\"";
             await AppShellCommands.OnSta(() =>
             {
                 object? shell = null, link = null;
@@ -119,9 +123,10 @@ public partial class MainWindow
                     shell = Activator.CreateInstance(Type.GetTypeFromProgID("WScript.Shell")!);
                     link = ((dynamic)shell!).CreateShortcut(shortcut);
                     ((dynamic)link).TargetPath = probe!;
-                    ((dynamic)link).Arguments = "--shortcut \"" + document + "\"";
+                    ((dynamic)link).Arguments = shortcutArguments;
                     ((dynamic)link).WorkingDirectory = directory;
                     ((dynamic)link).Save();
+                    Check(((dynamic)link).Arguments == shortcutArguments, "The shortcut did not retain its stored arguments.");
                     return true;
                 }
                 finally
@@ -131,10 +136,9 @@ public partial class MainWindow
                 }
             });
             // Launch only our own no-window probe; real apps and UAC are never invoked by this fixture.
-            File.WriteAllText(document + ".opened", "[]");
             ShellLauncher.Launch(shortcut);
-            await Until(() => JsonSerializer.Deserialize<string[]>(File.ReadAllText(document + ".opened"))?.Length == 2);
-            Check(JsonSerializer.Deserialize<string[]>(File.ReadAllText(document + ".opened"))?.SequenceEqual(new[] { "--shortcut", document }) == true,
+            await Until(() => File.Exists(shortcutDocument + ".cwd"), timeoutMs: 10000);
+            Check(JsonSerializer.Deserialize<string[]>(File.ReadAllText(shortcutDocument + ".opened"))?.SequenceEqual(new[] { "--shortcut", shortcutDocument }) == true,
                 "A shortcut's existing arguments were lost.");
             Check((await AppShellCommands.ReadAsync(new("probe", "Shell probe", probe!, false))).Contains("runas"),
                 "The desktop app did not expose administrator execution through its canonical verb.");
