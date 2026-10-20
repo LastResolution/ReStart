@@ -71,6 +71,7 @@ public partial class MainWindow
             await _startupWorkerWarmup;
             if (!_startupWanted || _exit) return;
             var watch = Stopwatch.StartNew();
+            var retries = new Dictionary<string, int>();
             // Every tile gets either an initial frame or a visible error. External
             // sources retain their bounded loading/error state instead of holding
             // the entire launcher hostage to an unavailable service.
@@ -78,13 +79,18 @@ public partial class MainWindow
             {
                 await UpdateScriptTilesAsync().WaitAsync(TimeSpan.FromSeconds(12));
                 if (!_startupWanted || _exit) return;
-                var localPending = _scriptViews.Any(v => v.Tile.Live && !_scriptAttempts.Contains(v.Tile.Id));
+                // Cold JIT/worker startup can fail a first frame. Retry missing
+                // frames twice without repeatedly rendering every healthy tile.
+                var missing = _scriptViews.Where(v => !_scriptFrames.ContainsKey(v.Tile.Id) && retries.GetValueOrDefault(v.Tile.Id) < 2).ToArray();
+                foreach (var view in missing)
+                    if (_scriptSessions.TryGetValue(view.Tile.Id, out var session))
+                    { session.NextUpdate = DateTimeOffset.MinValue; retries[view.Tile.Id] = retries.GetValueOrDefault(view.Tile.Id) + 1; }
+                var localPending = missing.Length > 0 || _scriptViews.Any(v => v.Tile.Live && !_scriptAttempts.Contains(v.Tile.Id));
                 var samplePending = _systemMetrics != null && _systemMetrics.Latest?.NetworkReceiveBytesPerSecond == null;
                 var imagesPending = _slideshowSources.Values.Any(v => !v.Source.Initialized);
                 var dataPending = _tileData.Values.Any(v => v.Runtime.IsLoading);
                 if (!localPending && !samplePending && !imagesPending && !dataPending) break;
                 await Task.Delay(100);
-                foreach (var session in _scriptSessions.Values) session.NextUpdate = DateTimeOffset.MinValue;
             } while (watch.Elapsed < TimeSpan.FromSeconds(9));
             // Providers can finish while the first JS batch is in flight. Render
             // their settled snapshot once before exposing the prepared board.

@@ -144,7 +144,7 @@ public partial class MainWindow : Window
         SizeChanged += (_, _) => FitPanels();
         ContentScroll.SizeChanged += (_, _) => FitPanels();
         _clock = new(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(1) };
-        _clock.Tick += async (_, _) => { UpdateLiveTiles(); if (IsVisible) RequestCatalogRefresh(); await UpdateScriptTilesAsync(); };
+        _clock.Tick += async (_, _) => { UpdateLiveTiles(); if (IsVisible) RequestCatalogRefresh(); if (!_startupPreparing) await UpdateScriptTilesAsync(); };
         _clock.Start();
     }
 
