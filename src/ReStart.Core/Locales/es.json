@@ -308,6 +308,5 @@
   "StartupApps": "Buscando tus aplicaciones…",
   "StartupIcons": "Preparando iconos…",
   "StartupTiles": "Preparando los mosaicos dinámicos…",
-  "StartupReady": "Listo",
-  "StartupSearch": "Escribe para buscar. Tu búsqueda estará lista cuando se abra Inicio."
+  "StartupReady": "Listo"
 }

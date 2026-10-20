@@ -16,6 +16,7 @@
     <ProjectReference Include="../ReStart.Core/ReStart.Core.csproj" />
     <ProjectReference Include="../ReStart.TileHost/ReStart.TileHost.csproj" ReferenceOutputAssembly="false" />
     <Content Include="../../examples/tiles/**/*" Link="Examples/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Resource Include="../../assets/ReStart.png" Link="Assets/ReStart.png" />
     <EmbeddedResource Include="../../LICENSE" LogicalName="ReStart.Licenses.ReStart (MIT)" />
     <EmbeddedResource Include="../../third-party/*.txt" LogicalName="ReStart.Licenses.%(Filename)%(Extension)" />
     <Using Remove="System.Windows.Forms" />

@@ -308,6 +308,5 @@
   "StartupApps": "Recherche de vos applications…",
   "StartupIcons": "Préparation des icônes…",
   "StartupTiles": "Préparation des vignettes dynamiques…",
-  "StartupReady": "Prêt",
-  "StartupSearch": "Saisissez votre recherche. Elle sera disponible à l’ouverture de Démarrer."
+  "StartupReady": "Prêt"
 }

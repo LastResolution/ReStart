@@ -36,7 +36,7 @@ Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button
 - **Make room for your apps.** Four tile sizes, movable groups, independent tiles and folders that expand in place. Drag, resize and rename without leaving Start.
 - **Arrange without accidental launches.** Edit mode selects tiles instead of opening apps. Move a selection together, then undo or redo the whole operation.
 - **Keep your files close.** Pin a document, directory or shortcut from Explorer's **Pin to ReStart** command.
-- **Open and type.** The first launch prepares icons and live tiles behind a localized progress screen. Type there to carry your search into Start; Enter launches the highlighted result. Reopening returns to your pinned home.
+- **Open and type.** The first launch prepares icons and live tiles behind a localized progress screen with the app logo. Keystrokes typed while loading carry into Start automatically. Enter launches the highlighted search result; reopening returns to your pinned home.
 - **Set the mood.** Light, dark, system and high-contrast themes; desktop wallpaper, accent colors and individual tile colors. Opening and closing respect your animation settings.
 
 <details>

@@ -308,6 +308,5 @@
   "StartupApps": "正在查找应用…",
   "StartupIcons": "正在准备图标…",
   "StartupTiles": "正在准备动态磁贴…",
-  "StartupReady": "准备就绪",
-  "StartupSearch": "输入以搜索。开始屏幕打开后会显示搜索结果。"
+  "StartupReady": "准备就绪"
 }

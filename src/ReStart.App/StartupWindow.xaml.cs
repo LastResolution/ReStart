@@ -19,7 +19,7 @@ internal partial class StartupWindow : Window
         PreviewKeyDown += (_, e) =>
         {
             if (e.Key == Key.Escape) { CancelRequested?.Invoke(); e.Handled = true; }
-            else if (e.Key == Key.Enter) { LaunchRequested = Query.Text.Trim().Length > 0; e.Handled = true; }
+            else if (e.Key == Key.Enter && Query.IsKeyboardFocused) { LaunchRequested = Query.Text.Trim().Length > 0; e.Handled = true; }
         };
         Query.TextChanged += (_, _) => LaunchRequested = false;
         Deactivated += (_, _) => Dispatcher.BeginInvoke(() => { if (IsVisible && !IsActive && closeOnDeactivate()) CancelRequested?.Invoke(); });

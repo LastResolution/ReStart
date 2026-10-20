@@ -308,6 +308,5 @@
   "StartupApps": "正在尋找應用程式…",
   "StartupIcons": "正在準備圖示…",
   "StartupTiles": "正在準備動態磚…",
-  "StartupReady": "準備就緒",
-  "StartupSearch": "輸入以搜尋。開始畫面開啟後會顯示搜尋結果。"
+  "StartupReady": "準備就緒"
 }

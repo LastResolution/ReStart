@@ -54,12 +54,20 @@ public partial class MainWindow
                     splash.UpdateProgress(K.StartupApps, .25); splash.UpdateLayout();
                     Check(splash.Stage.Text == L.T(K.StartupApps) && splash.Query.Text == "E" && splash.ActualHeight > 200 && splash.ActualHeight < 500,
                         "The localized splash lost its input, progress or bounded layout.");
-                    Check(splash.StartupTitle.Text == L.T(K.StartupTitle) && splash.SearchHelp.Text == L.T(K.StartupSearch) && (string)splash.CancelButton.Content == L.T(K.CommonCancel),
-                        "The splash's title, search help or cancel action was not translated.");
+                    Check(splash.StartupTitle.Text == L.T(K.StartupTitle) && (string)splash.CancelButton.Content == L.T(K.CommonCancel)
+                        && splash.Query.Parent is Grid { ActualHeight: 0 } && splash.AppLogo.Source is BitmapSource { PixelWidth: 256, PixelHeight: 256 },
+                        "The splash did not retain its translations, hidden typeahead or actual application logo.");
                     if (tag is "en" or "ja") SaveStartupScreenshot(splash, Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"startup-{tag}-{theme}.png"));
                     languageCases++;
                 }
             fixture.Toggle(); Check(fixture._startupWindow == null && !fixture.IsVisible, "Toggling during startup did not cancel presentation.");
+            fixture.Present();
+            var cancel = fixture._startupWindow!.CancelButton; cancel.Focus();
+            var cancelKey = new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(cancel)!, Environment.TickCount, Key.Enter)
+            { RoutedEvent = Keyboard.PreviewKeyDownEvent };
+            cancel.RaiseEvent(cancelKey);
+            if (!cancelKey.Handled) { cancelKey.RoutedEvent = Keyboard.KeyDownEvent; cancel.RaiseEvent(cancelKey); }
+            Check(fixture._startupWindow == null, "Enter on the focused Cancel button did not cancel startup.");
             catalog.SetResult([new("sample-edge", "Microsoft Edge", ""), new("sample-editor", "Editor sample", "")]);
             await fixture.InitializeAsync(); await Until(() => fixture._startupPresentation == null);
             Check(!fixture.IsVisible && fixture._scriptWorkerPool == null, "Cancelled startup opened later or retained hidden tile workers.");

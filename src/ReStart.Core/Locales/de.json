@@ -308,6 +308,5 @@
   "StartupApps": "Apps werden gesucht…",
   "StartupIcons": "Symbole werden vorbereitet…",
   "StartupTiles": "Live-Kacheln werden vorbereitet…",
-  "StartupReady": "Bereit",
-  "StartupSearch": "Zum Suchen tippen. Die Suchanfrage wird beim Öffnen von Start übernommen."
+  "StartupReady": "Bereit"
 }

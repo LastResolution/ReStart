@@ -624,6 +624,4 @@ public enum TextKey
     StartupTiles,
     /// <summary>Ready</summary>
     StartupReady,
-    /// <summary>Type to search. Your query will be ready when Start opens.</summary>
-    StartupSearch,
 }

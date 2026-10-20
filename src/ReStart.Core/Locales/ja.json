@@ -308,6 +308,5 @@
   "StartupApps": "アプリを取得しています…",
   "StartupIcons": "アイコンを準備しています…",
   "StartupTiles": "ライブタイルを準備しています…",
-  "StartupReady": "準備完了",
-  "StartupSearch": "入力すると検索できます。スタートを開いたら検索結果を表示します。"
+  "StartupReady": "準備完了"
 }

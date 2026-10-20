@@ -308,6 +308,5 @@
   "StartupApps": "Finding your apps…",
   "StartupIcons": "Preparing icons…",
   "StartupTiles": "Preparing live tiles…",
-  "StartupReady": "Ready",
-  "StartupSearch": "Type to search. Your query will be ready when Start opens."
+  "StartupReady": "Ready"
 }
