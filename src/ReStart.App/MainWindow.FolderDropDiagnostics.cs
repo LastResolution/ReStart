@@ -31,10 +31,14 @@ public partial class MainWindow
                         // Leave the real mouse untouched. An OLE drag event supplies
                         // its own screen position, independently of WPF mouse polling.
                         var stale = Mouse.GetPosition(fixture.GroupsPanel);
-                        if ((point - stale).Length < 150)
+                        if (timers == 0 || (point - stale).Length < 150)
                         {
                             var owner = fixture.Document.Groups.Single(g => g.Tiles.Contains(target)); owner.X = 16;
                             fixture.RenderGroups(); fixture.UpdateLayout(); panel = fixture.RootPanelFor(owner); point = Pointer(panel, target);
+                            // Relocation is fixture setup, not part of the user's drop.
+                            // Establish its saved undo baseline after moving it, and
+                            // exercise this path regardless of the CI mouse position.
+                            fixture.SaveLayout(); fixture._layoutHistory.Reset(fixture.Document);
                         }
                         var before = JsonSerializer.Serialize(fixture.Document.Groups, LayoutStore.JsonOptions);
                         fixture._dragging = true;
@@ -48,7 +52,8 @@ public partial class MainWindow
                         fixture._dragging = false;
                         VerifySavedDrop(source, target, standalone);
                         fixture.RestoreLayoutHistory(false);
-                        Require(before == JsonSerializer.Serialize(fixture.Document.Groups, LayoutStore.JsonOptions), "Folder creation did not undo in one step.");
+                        Require(before == JsonSerializer.Serialize(fixture.Document.Groups, LayoutStore.JsonOptions),
+                            $"Folder creation did not undo in one step: standalone={standalone}, editing={editing}, source={sizes.Source}, target={sizes.Target}.");
                         fixture.RestoreLayoutHistory(true); VerifySavedDrop(source, target, standalone);
                         timers++;
                     }

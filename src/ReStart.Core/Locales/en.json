@@ -309,5 +309,14 @@
   "StartupIcons": "Preparing icons…",
   "StartupTiles": "Preparing live tiles…",
   "StartupReady": "Ready",
-  "StartupSearch": "Type to search. Your query will be ready when Start opens."
+  "SettingsColorThemes": "Color themes",
+  "SettingsBaseTheme": "Base theme",
+  "SettingsBackgroundColor": "Background color",
+  "SettingsCustomColorsHelp": "Use #RRGGBB. An empty background uses the base theme. Text and controls adjust for readable contrast.",
+  "SettingsResetColors": "Reset colors",
+  "ThemeMidnight": "Midnight",
+  "ThemeOcean": "Ocean",
+  "ThemeForest": "Forest",
+  "ThemeRose": "Rose",
+  "ThemeSand": "Sand"
 }

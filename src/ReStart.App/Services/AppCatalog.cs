@@ -20,7 +20,7 @@ public sealed class AppCatalog
     public ConcurrentDictionary<string, ImageSource> Icons { get; } = new(StringComparer.OrdinalIgnoreCase);
     /// <summary>Gets frozen icons for logical Start-menu folder paths.</summary>
     public ConcurrentDictionary<string, ImageSource> FolderIcons { get; } = new(StringComparer.OrdinalIgnoreCase);
-    private readonly ConcurrentDictionary<string, string> _folderIconPaths = new(StringComparer.OrdinalIgnoreCase);
+    private volatile ConcurrentDictionary<string, string> _folderIconPaths = new(StringComparer.OrdinalIgnoreCase);
     /// <summary>Gets the number of Start-menu folder paths found during the last enumeration.</summary>
     public int FolderCount => _folderIconPaths.Count;
     /// <summary>Gets the number of applications returned by the last completed enumeration.</summary>
@@ -62,6 +62,7 @@ public sealed class AppCatalog
             var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             var thread = new Thread(() =>
             {
+                var apartment = CoInitializeEx(0, 2);
                 try
                 {
                     while (pending.TryDequeue(out var item))
@@ -73,6 +74,7 @@ public sealed class AppCatalog
                     completion.SetResult();
                 }
                 catch (Exception ex) { completion.SetException(ex); }
+                finally { if (apartment >= 0) CoUninitialize(); }
             })
             { IsBackground = true, Name = "ReStart Shell icons" };
             thread.SetApartmentState(ApartmentState.STA); thread.Start();
@@ -84,7 +86,7 @@ public sealed class AppCatalog
 
     private List<AppEntry> Enumerate()
     {
-        _folderIconPaths.Clear();
+        var folderIconPaths = new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var entries = new Dictionary<string, AppEntry>(StringComparer.OrdinalIgnoreCase);
         var shellLinks = new List<ShellAppLink>();
         object? shellObject = null, folderObject = null, itemsObject = null;
@@ -138,7 +140,7 @@ public sealed class AppCatalog
                     physical = Path.Combine(physical, segment);
                     if (!displayNames.TryGetValue(physical, out var display)) displayNames[physical] = display = ShellDisplayName(physical, segment);
                     folders.Add(display);
-                    _folderIconPaths.TryAdd(string.Join('\\', folders), physical);
+                    folderIconPaths.TryAdd(string.Join('\\', folders), physical);
                 }
                 var name = ShellDisplayName(file, Path.GetFileNameWithoutExtension(file));
                 if (name == Path.GetFileName(file)) name = Path.GetFileNameWithoutExtension(name);
@@ -148,6 +150,7 @@ public sealed class AppCatalog
         }
         var merged = AppCatalogLayout.Merge(entries.Values, shortcuts, shellLinks).ToList();
         Count = merged.Count;
+        _folderIconPaths = folderIconPaths;
         return merged;
     }
 
@@ -222,8 +225,28 @@ public sealed class AppCatalog
     }
     [DllImport("shell32.dll", CharSet = CharSet.Unicode, PreserveSig = true)]
     private static extern int SHCreateItemFromParsingName(string path, nint binding, ref Guid iid, [MarshalAs(UnmanagedType.Interface)] out IShellItemImageFactory factory);
+    [DllImport("ole32.dll")] private static extern int CoInitializeEx(nint reserved, uint mode);
+    [DllImport("ole32.dll")] private static extern void CoUninitialize();
+    [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] private static extern bool DestroyIcon(nint icon);
 
     internal static ImageSource? GetIcon(string path)
+        => GetFactoryIcon(path) ?? GetFileIcon(path);
+
+    /// <summary>Uses the legacy full-icon path when an image factory cannot supply a filesystem icon.</summary>
+    internal static ImageSource? GetFileIcon(string path)
+    {
+        if (path.Length >= 260 || !File.Exists(path) && !Directory.Exists(path)) return null;
+        SHGetFileInfo(path, 0, out var info, (uint)Marshal.SizeOf<ShellFileInfo>(), 0x100);
+        if (info.Icon == 0) return null;
+        try
+        {
+            var image = Imaging.CreateBitmapSourceFromHIcon(info.Icon, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+            image.Freeze(); return image;
+        }
+        finally { DestroyIcon(info.Icon); }
+    }
+
+    private static ImageSource? GetFactoryIcon(string path)
     {
         IShellItemImageFactory? factory = null;
         nint bitmap = 0;

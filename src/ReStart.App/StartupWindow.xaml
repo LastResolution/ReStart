@@ -4,17 +4,16 @@
   <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="30" Background="{DynamicResource PanelBrush}">
     <StackPanel>
       <DockPanel Margin="0,0,0,22">
-        <Border Width="44" Height="44" Background="{DynamicResource AccentBrush}" CornerRadius="10" DockPanel.Dock="Left" Margin="0,0,14,0">
-          <UniformGrid Columns="2" Margin="12"><Rectangle Fill="White" Margin="1" /><Rectangle Fill="White" Margin="1" /><Rectangle Fill="White" Margin="1" /><Rectangle Fill="White" Margin="1" /></UniformGrid>
-        </Border>
+        <Image x:Name="AppLogo" Source="/Assets/ReStart.png" Width="44" Height="44" DockPanel.Dock="Left" Margin="0,0,14,0" AutomationProperties.Name="ReStart" />
         <StackPanel VerticalAlignment="Center"><TextBlock Text="ReStart" FontSize="25" FontWeight="Light" /><TextBlock x:Name="StartupTitle" Text="{local:Loc Key=StartupTitle}" Foreground="{DynamicResource MutedBrush}" FontSize="12" /></StackPanel>
       </DockPanel>
       <TextBlock x:Name="Stage" Text="{local:Loc Key=StartupApps}" Margin="0,0,0,10" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
       <Grid Height="3" Background="{DynamicResource TileBrush}" Margin="0,0,0,22">
-        <Border x:Name="Progress" Background="{DynamicResource AccentBrush}" RenderTransformOrigin="0,0.5"><Border.RenderTransform><ScaleTransform ScaleX="0.08" /></Border.RenderTransform></Border>
+        <Border x:Name="Progress" Background="{DynamicResource FocusAccentBrush}" RenderTransformOrigin="0,0.5"><Border.RenderTransform><ScaleTransform ScaleX="0.08" /></Border.RenderTransform></Border>
       </Grid>
-      <TextBlock x:Name="SearchHelp" Text="{local:Loc Key=StartupSearch}" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,0,0,8" TextWrapping="Wrap" />
-      <TextBox x:Name="Query" AutomationProperties.Name="{local:Loc Key=SearchTitle}" MaxLength="512" />
+      <Grid Height="0" ClipToBounds="True" Opacity="0" IsHitTestVisible="False">
+        <TextBox x:Name="Query" AutomationProperties.Name="{local:Loc Key=SearchTitle}" MaxLength="512" IsTabStop="False" />
+      </Grid>
       <Button x:Name="CancelButton" Content="{local:Loc Key=CommonCancel}" HorizontalAlignment="Right" Margin="0,14,-10,-8" />
     </StackPanel>
   </Border>

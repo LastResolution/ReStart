@@ -48,18 +48,35 @@ public partial class MainWindow
             fixture.ComposeFixtureText("E"); fixture.Present();
             Check(fixture._startupWindow == splash && splash.Query.Text == "E", "Repeated activation reset the startup query or opened another splash.");
             foreach (var tag in L.SupportedLanguages)
-                foreach (var theme in new[] { ReStart.Core.ThemeMode.Dark, ReStart.Core.ThemeMode.Light })
+                foreach (var theme in new[] { ReStart.Core.ThemeMode.Dark, ReStart.Core.ThemeMode.Light, ReStart.Core.ThemeMode.System })
                 {
-                    fixture.Document.Preferences.Language = tag; fixture.Document.Preferences.Theme = theme; fixture.ApplyAppearance();
+                    fixture.Document.Preferences.Language = tag; fixture.Document.Preferences.Theme = theme;
+                    fixture.Document.Preferences.Accent = theme switch { ReStart.Core.ThemeMode.Light => "#D83B01", ReStart.Core.ThemeMode.System => "#008272", _ => "#0078D7" };
+                    fixture.ApplyAppearance();
                     splash.UpdateProgress(K.StartupApps, .25); splash.UpdateLayout();
                     Check(splash.Stage.Text == L.T(K.StartupApps) && splash.Query.Text == "E" && splash.ActualHeight > 200 && splash.ActualHeight < 500,
                         "The localized splash lost its input, progress or bounded layout.");
-                    Check(splash.StartupTitle.Text == L.T(K.StartupTitle) && splash.SearchHelp.Text == L.T(K.StartupSearch) && (string)splash.CancelButton.Content == L.T(K.CommonCancel),
-                        "The splash's title, search help or cancel action was not translated.");
+                    Check(splash.StartupTitle.Text == L.T(K.StartupTitle) && (string)splash.CancelButton.Content == L.T(K.CommonCancel)
+                        && splash.Query.Parent is Grid { ActualHeight: 0 } && splash.AppLogo.Source is BitmapSource { PixelWidth: 256, PixelHeight: 256 },
+                        "The splash did not retain its translations, hidden typeahead or actual application logo.");
+                    using var systemTheme = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+                    var light = theme == ReStart.Core.ThemeMode.Light || theme == ReStart.Core.ThemeMode.System && systemTheme?.GetValue("SystemUsesLightTheme") is int value && value != 0;
+                    var expectedBackground = SystemParameters.HighContrast ? SystemColors.WindowColor : light ? Color.FromRgb(238, 238, 238) : Color.FromRgb(31, 31, 31);
+                    var expectedText = SystemParameters.HighContrast ? SystemColors.WindowTextColor : light ? Colors.Black : Colors.White;
+                    Check(((SolidColorBrush)((Border)splash.Content).Background).Color == expectedBackground && ((SolidColorBrush)splash.Stage.Foreground).Color == expectedText
+                        && ((SolidColorBrush)splash.CancelButton.Foreground).Color == expectedText && ((SolidColorBrush)splash.Progress.Background).Color == (SystemParameters.HighContrast ? SystemColors.HighlightColor : (Color)ColorConverter.ConvertFromString(fixture.Document.Preferences.Accent)),
+                        "The splash did not follow saved/system theme colors or the selected accent.");
                     if (tag is "en" or "ja") SaveStartupScreenshot(splash, Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"startup-{tag}-{theme}.png"));
                     languageCases++;
                 }
             fixture.Toggle(); Check(fixture._startupWindow == null && !fixture.IsVisible, "Toggling during startup did not cancel presentation.");
+            fixture.Present();
+            var cancel = fixture._startupWindow!.CancelButton; cancel.Focus();
+            var cancelKey = new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(cancel)!, Environment.TickCount, Key.Enter)
+            { RoutedEvent = Keyboard.PreviewKeyDownEvent };
+            cancel.RaiseEvent(cancelKey);
+            if (!cancelKey.Handled) { cancelKey.RoutedEvent = Keyboard.KeyDownEvent; cancel.RaiseEvent(cancelKey); }
+            Check(fixture._startupWindow == null, "Enter on the focused Cancel button did not cancel startup.");
             catalog.SetResult([new("sample-edge", "Microsoft Edge", ""), new("sample-editor", "Editor sample", "")]);
             await fixture.InitializeAsync(); await Until(() => fixture._startupPresentation == null);
             Check(!fixture.IsVisible && fixture._scriptWorkerPool == null, "Cancelled startup opened later or retained hidden tile workers.");
@@ -73,6 +90,8 @@ public partial class MainWindow
                 "Startup did not exchange the splash for a fully prepared main window.");
             Check(fixture.ScriptFrameCount == ScriptTilePackages.BundledIds.Count && fixture._scriptAttempts.Contains(broken.Id) && fixture._scriptViews.Single(v => v.Tile.Id == broken.Id).Body.Children.Count > 0,
                 "Initial live tiles or a broken tile's error were missing at presentation.");
+            Check(fixture._scriptSessions[broken.Id].Attempts is >= 3 and <= 5,
+                "A failed initial frame was not retried within a bounded attempt budget.");
             Check(fixture._slideshowImages.ContainsKey(photo.Id) && fixture._scriptViews.All(v => v.Button.ActualWidth > 0),
                 "Startup frames were rendered before photo decoding or tile layout.");
             Check(fixture.SearchBox.Text == "Edge" && fixture.SearchBox.IsKeyboardFocused && fixture.SearchResults.SelectedItem is Button && launched.SequenceEqual(new[] { "sample-edge" }),
@@ -115,7 +134,7 @@ public partial class MainWindow
                     "Foreground initialization did not warm isolated workers before revealing the main window.");
                 await cold._startupPresentation!;
                 Check(cold.IsVisible && cold.ScriptFrameCount == ScriptTilePackages.BundledIds.Count && cold._startupWindow == null && settingsClosed == 2 && !cold._startupSettings,
-                    "Parallel worker warmup did not produce all frames or open pending settings.");
+                    $"Parallel worker warmup did not produce all frames or open pending settings: visible={cold.IsVisible}, frames={cold.ScriptFrameCount}, settings={settingsClosed}, pending={cold._startupSettings}.");
             }
             finally { closeSettings.Stop(); cold.Exit(); fixture.Activate(); }
             var cacheChecks = VerifyIconCache(directory);
@@ -144,12 +163,7 @@ public partial class MainWindow
     }
 
     private static void SaveStartupScreenshot(Window window, string path)
-    {
-        window.UpdateLayout();
-        var bitmap = new RenderTargetBitmap((int)window.ActualWidth, (int)window.ActualHeight, 96, 96, PixelFormats.Pbgra32); bitmap.Render(window);
-        var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
-        using var stream = File.Create(path); encoder.Save(stream);
-    }
+        => SaveFixtureElement(window, path);
 }
 
 internal sealed record StartupSmokeResult(int Checks, int LanguageThemeCases, int CacheChecks, object Timings);

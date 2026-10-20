@@ -309,5 +309,14 @@
   "StartupIcons": "Preparando iconos…",
   "StartupTiles": "Preparando los mosaicos dinámicos…",
   "StartupReady": "Listo",
-  "StartupSearch": "Escribe para buscar. Tu búsqueda estará lista cuando se abra Inicio."
+  "SettingsColorThemes": "Temas de color",
+  "SettingsBaseTheme": "Tema base",
+  "SettingsBackgroundColor": "Color de fondo",
+  "SettingsCustomColorsHelp": "Usa #RRGGBB. Un fondo vacío usa el tema base. El texto y los controles se ajustan para mantener un contraste legible.",
+  "SettingsResetColors": "Restablecer colores",
+  "ThemeMidnight": "Medianoche",
+  "ThemeOcean": "Océano",
+  "ThemeForest": "Bosque",
+  "ThemeRose": "Rosa",
+  "ThemeSand": "Arena"
 }

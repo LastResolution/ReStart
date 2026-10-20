@@ -19,6 +19,7 @@ internal static class TextPrompt
         var cancel = new Button { Content = L.T(K.CommonCancel), IsCancel = true, MinWidth = 100 };
         var save = new Button { Content = L.T(K.CommonSave), IsDefault = true, MinWidth = 90, Margin = new(8, 0, 0, 0) };
         save.SetResourceReference(Control.BackgroundProperty, "AccentBrush");
+        save.SetResourceReference(Control.ForegroundProperty, "AccentTextBrush");
         save.Click += (_, _) => { if (!string.IsNullOrWhiteSpace(input.Text)) window.DialogResult = true; };
         buttons.Children.Add(cancel); buttons.Children.Add(save);
         panel.Children.Add(buttons); window.Content = panel;

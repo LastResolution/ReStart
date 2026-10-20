@@ -309,5 +309,14 @@
   "StartupIcons": "アイコンを準備しています…",
   "StartupTiles": "ライブタイルを準備しています…",
   "StartupReady": "準備完了",
-  "StartupSearch": "入力すると検索できます。スタートを開いたら検索結果を表示します。"
+  "SettingsColorThemes": "カラーテーマ",
+  "SettingsBaseTheme": "基本テーマ",
+  "SettingsBackgroundColor": "背景色",
+  "SettingsCustomColorsHelp": "#RRGGBBで指定します。背景色を空欄にすると基本テーマを使います。文字や操作部品は読みやすい明暗に調整します。",
+  "SettingsResetColors": "色をリセット",
+  "ThemeMidnight": "ミッドナイト",
+  "ThemeOcean": "オーシャン",
+  "ThemeForest": "フォレスト",
+  "ThemeRose": "ローズ",
+  "ThemeSand": "サンド"
 }

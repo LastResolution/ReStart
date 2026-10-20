@@ -36,7 +36,7 @@ internal sealed class CalendarWindow : Window
         {
             var day = start.AddDays(i);
             var button = new Button { Content = day.Day.ToString(L.Culture), Height = 40, Padding = new(0), HorizontalContentAlignment = HorizontalAlignment.Center, Opacity = day.Month == _month.Month ? 1 : 0.4, ToolTip = day.ToString("D", L.Culture) };
-            if (day == DateTime.Today) { button.SetResourceReference(BackgroundProperty, "AccentBrush"); button.Foreground = Brushes.White; }
+            if (day == DateTime.Today) { button.SetResourceReference(BackgroundProperty, "AccentBrush"); button.SetResourceReference(ForegroundProperty, "AccentTextBrush"); }
             days.Children.Add(button);
         }
         _body.Children.Add(days);

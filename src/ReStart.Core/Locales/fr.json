@@ -309,5 +309,14 @@
   "StartupIcons": "Préparation des icônes…",
   "StartupTiles": "Préparation des vignettes dynamiques…",
   "StartupReady": "Prêt",
-  "StartupSearch": "Saisissez votre recherche. Elle sera disponible à l’ouverture de Démarrer."
+  "SettingsColorThemes": "Thèmes de couleurs",
+  "SettingsBaseTheme": "Thème de base",
+  "SettingsBackgroundColor": "Couleur du fond",
+  "SettingsCustomColorsHelp": "Utilisez #RRGGBB. Un fond vide utilise le thème de base. Le texte et les commandes s’adaptent pour rester lisibles.",
+  "SettingsResetColors": "Réinitialiser les couleurs",
+  "ThemeMidnight": "Minuit",
+  "ThemeOcean": "Océan",
+  "ThemeForest": "Forêt",
+  "ThemeRose": "Rose",
+  "ThemeSand": "Sable"
 }

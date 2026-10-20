@@ -15,6 +15,7 @@ public partial class MainWindow
     private readonly List<(Tile Tile, StackPanel Body, Button Button)> _scriptViews = [];
     private sealed class ScriptRuntime
     {
+        internal int Attempts;
         internal DateTimeOffset NextUpdate;
         internal System.Text.Json.JsonElement State = System.Text.Json.JsonSerializer.SerializeToElement(new { });
         internal Queue<ScriptInput> Inputs = new();
@@ -157,6 +158,7 @@ public partial class MainWindow
                 if (!_scriptSessions.TryGetValue(view.Tile.Id, out var session)) _scriptSessions[view.Tile.Id] = session = new();
                 if (session.NextUpdate > DateTimeOffset.Now) return;
                 session.NextUpdate = DateTimeOffset.Now.AddSeconds(5);
+                session.Attempts++;
                 try
                 {
                     var (manifest, source) = _scriptPackages.Read(view.Tile.ScriptId);

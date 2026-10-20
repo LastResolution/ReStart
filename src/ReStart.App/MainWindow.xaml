@@ -19,7 +19,7 @@
       <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem">
         <Border x:Name="Chrome" Background="{TemplateBinding Background}">
           <Grid>
-            <Border x:Name="Current" Width="3" HorizontalAlignment="Left" Background="{DynamicResource AccentBrush}" Visibility="Collapsed" />
+            <Border x:Name="Current" Width="3" HorizontalAlignment="Left" Background="{DynamicResource FocusAccentBrush}" Visibility="Collapsed" />
             <ContentPresenter Margin="6,0,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
           </Grid>
         </Border>
@@ -46,7 +46,7 @@
         <StackPanel>
           <Button Height="48" ToolTip="{local:Loc Key=ExpandMenu}" AutomationProperties.Name="{local:Loc Key=ExpandMenu}" Click="ToggleRail" HorizontalContentAlignment="Center" Padding="0"><TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE700;" FontSize="16" /></Button>
           <Button x:Name="PinnedNav" Height="48" ToolTip="{local:Loc Key=NavPinned}" AutomationProperties.Name="{local:Loc Key=NavPinned}" Click="ShowPinned" HorizontalContentAlignment="Center" Padding="0"><TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE80A;" FontSize="16" /></Button>
-          <Button x:Name="AppsNav" Height="48" ToolTip="{local:Loc Key=NavAllApps}" AutomationProperties.Name="{local:Loc Key=NavAllApps}" Click="ShowAllApps" HorizontalContentAlignment="Center" Padding="0"><TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8A9;" FontSize="16" /></Button>
+          <Button x:Name="AppsNav" Height="48" ToolTip="{local:Loc Key=NavAllApps}" AutomationProperties.Name="{local:Loc Key=NavAllApps}" Click="ShowAllApps" HorizontalContentAlignment="Center" Padding="0"><TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE71D;" FontSize="16" /></Button>
         </StackPanel>
         <StackPanel VerticalAlignment="Bottom" Margin="0,0,0,12">
           <Button Height="48" ToolTip="{local:Loc Key=NavAccount}" AutomationProperties.Name="{local:Loc Key=NavAccount}" Click="OpenAccount" HorizontalContentAlignment="Center" Padding="0"><TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE77B;" FontSize="18" /></Button>
@@ -110,16 +110,16 @@
     <Border x:Name="ExpandedRail" Width="260" HorizontalAlignment="Left" Background="{DynamicResource PanelBrush}" Visibility="Collapsed">
       <Grid>
         <StackPanel>
-          <Button HorizontalContentAlignment="Left" Content="{local:Loc Key=RailStart}" Height="48" Click="ToggleRail" />
-          <Button HorizontalContentAlignment="Left" Content="{local:Loc Key=RailPinned}" Height="48" Click="ShowPinned" />
-          <Button HorizontalContentAlignment="Left" Content="{local:Loc Key=RailAllApps}" Height="48" Click="ShowAllApps" />
+          <Button HorizontalContentAlignment="Stretch" Padding="0" AutomationProperties.Name="{local:Loc Key=NavStart}" Height="48" Click="ToggleRail"><controls:RailLabel Glyph="&#xE700;" Label="{local:Loc Key=NavStart}" /></Button>
+          <Button HorizontalContentAlignment="Stretch" Padding="0" AutomationProperties.Name="{local:Loc Key=NavPinned}" Height="48" Click="ShowPinned"><controls:RailLabel Glyph="&#xE80A;" Label="{local:Loc Key=NavPinned}" /></Button>
+          <Button HorizontalContentAlignment="Stretch" Padding="0" AutomationProperties.Name="{local:Loc Key=NavAllApps}" Height="48" Click="ShowAllApps"><controls:RailLabel Glyph="&#xE71D;" Label="{local:Loc Key=NavAllApps}" /></Button>
         </StackPanel>
         <StackPanel VerticalAlignment="Bottom" Margin="0,0,0,12">
-          <Button HorizontalContentAlignment="Left" x:Name="UserButton" Content="{local:Loc Key=NavAccount}" Height="48" Click="OpenAccount" />
-          <Button HorizontalContentAlignment="Left" Content="{local:Loc Key=RailDocuments}" Height="48" Click="OpenDocuments" />
-          <Button HorizontalContentAlignment="Left" Content="{local:Loc Key=RailPictures}" Height="48" Click="OpenPictures" />
-          <Button HorizontalContentAlignment="Left" Content="{local:Loc Key=RailSettings}" Height="48" Click="OpenSettings" />
-          <Button HorizontalContentAlignment="Left" Content="{local:Loc Key=RailPower}" Height="48" Click="OpenPower" />
+          <Button HorizontalContentAlignment="Stretch" Padding="0" x:Name="UserButton" AutomationProperties.Name="{local:Loc Key=NavAccount}" Height="48" Click="OpenAccount"><controls:RailLabel x:Name="UserRailLabel" Glyph="&#xE77B;" /></Button>
+          <Button HorizontalContentAlignment="Stretch" Padding="0" AutomationProperties.Name="{local:Loc Key=NavDocuments}" Height="48" Click="OpenDocuments"><controls:RailLabel Glyph="&#xE8A5;" Label="{local:Loc Key=NavDocuments}" /></Button>
+          <Button HorizontalContentAlignment="Stretch" Padding="0" AutomationProperties.Name="{local:Loc Key=NavPictures}" Height="48" Click="OpenPictures"><controls:RailLabel Glyph="&#xEB9F;" Label="{local:Loc Key=NavPictures}" /></Button>
+          <Button HorizontalContentAlignment="Stretch" Padding="0" AutomationProperties.Name="{local:Loc Key=SettingsTitle}" Height="48" Click="OpenSettings"><controls:RailLabel Glyph="&#xE713;" Label="{local:Loc Key=SettingsTitle}" /></Button>
+          <Button HorizontalContentAlignment="Stretch" Padding="0" AutomationProperties.Name="{local:Loc Key=NavPower}" Height="48" Click="OpenPower"><controls:RailLabel Glyph="&#xE7E8;" Label="{local:Loc Key=NavPower}" /></Button>
         </StackPanel>
       </Grid>
     </Border>
