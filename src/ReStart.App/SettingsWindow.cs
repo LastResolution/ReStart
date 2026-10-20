@@ -26,6 +26,8 @@ internal sealed partial class SettingsWindow : Window
         Style = (Style)FindResource(typeof(Window));
         _store = store;
         _draft = JsonSerializer.Deserialize<Preferences>(JsonSerializer.Serialize(main.Document.Preferences))!;
+        if (_draft.ColorThemeId.Length == 0) _draft.ColorThemeId = ThemePresets.Match(_draft)?.Id ?? "";
+        if (_draft.ColorThemeId.Length > 0) ThemePresets.Apply(_draft, _draft.ColorThemeId, ThemeWindow.SystemIsLight);
         if (!main.IsPreview) _draft.StartWithWindows = StartupRegistration.Current.IsEnabled;
         Title = L.T(K.SettingsTitle); Width = 940; Height = 740; MinWidth = 760; MinHeight = 500;
         WindowStartupLocation = main.IsPreview ? WindowStartupLocation.CenterScreen : WindowStartupLocation.CenterOwner; ShowInTaskbar = main.IsPreview;

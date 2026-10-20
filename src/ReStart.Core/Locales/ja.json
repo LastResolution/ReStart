@@ -312,7 +312,7 @@
   "SettingsColorThemes": "カラーテーマ",
   "SettingsBaseTheme": "基本テーマ",
   "SettingsBackgroundColor": "背景色",
-  "SettingsCustomColorsHelp": "#RRGGBBで指定します。背景色を空欄にすると基本テーマを使います。文字や操作部品は読みやすい明暗に調整します。",
+  "SettingsCustomColorsHelp": "配色は基本テーマ（システムを含む）に追従します。RGB欄を編集すると指定値を維持するカスタム配色に切り替わります。#RRGGBB 形式を使い、背景を空欄にすると基本テーマの背景を使います。",
   "SettingsResetColors": "色をリセット",
   "ThemeMidnight": "ミッドナイト",
   "ThemeOcean": "オーシャン",

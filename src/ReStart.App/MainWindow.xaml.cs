@@ -62,9 +62,12 @@ public partial class MainWindow : Window
     /// <summary>Gets the number of icons loaded for diagnostics.</summary>
     public int IconCount => _catalog.Icons.Count;
     /// <summary>Creates a localized default layout from the currently loaded app catalog.</summary>
+    /// <returns>A new seed layout based on the current app catalog; does not replace or save the current document.</returns>
     public LayoutDocument CreateInitialLayout() => SeedLayout.Create(_apps);
 
     /// <summary>Hosts the full-screen launcher and coordinates local models, native input, and tile rendering.</summary>
+    /// <param name="store">Local layout store used for loading, migration and subsequent saves.</param>
+    /// <param name="preview">Whether to isolate preview behavior and avoid real hooks, startup entries and user-layout writes.</param>
     public MainWindow(LayoutStore store, bool preview) : this(store, preview, null) { }
 
     internal MainWindow(LayoutStore store, bool preview, Func<Task<List<AppEntry>>>? catalogLoader, Action<AppEntry>? activation = null)
@@ -149,6 +152,7 @@ public partial class MainWindow : Window
     }
 
     /// <summary>Initializes layout and catalog once; background startup may call this before showing a window.</summary>
+    /// <returns>The shared initialization task, completing after catalog, initial views and icon loading finish; foreground presentation performs additional tile preparation.</returns>
     public Task InitializeAsync() => _initialization ??= InitializeCoreAsync();
 
     private async Task InitializeCoreAsync()
@@ -313,23 +317,20 @@ public partial class MainWindow : Window
         Language = System.Windows.Markup.XmlLanguage.GetLanguage(L.Culture.IetfLanguageTag);
         RefreshBackgroundMenu();
         if (_preview) Title = L.T(K.PreviewTitle);
-        var light = p.Theme == ReStart.Core.ThemeMode.Light;
-        if (p.Theme == ReStart.Core.ThemeMode.System)
-        {
-            using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
-            light = key?.GetValue("SystemUsesLightTheme") is int value && value != 0;
-        }
+        var systemLight = ThemeWindow.SystemIsLight;
+        var light = p.Theme == ReStart.Core.ThemeMode.Light || p.Theme == ReStart.Core.ThemeMode.System && systemLight;
+        var palette = ThemePresets.Resolve(p, systemLight);
         var highContrast = SystemParameters.HighContrast;
         var background = highContrast ? SystemColors.WindowColor : light ? Color.FromRgb(238, 238, 238) : Color.FromRgb(31, 31, 31);
-        var customBackground = !highContrast && ThemePresets.IsColor(p.BackgroundColor);
-        if (customBackground) { background = Brush(p.BackgroundColor, "#1F1F1F").Color; light = ReadableInk(background) == Brushes.Black; }
+        var customBackground = !highContrast && ThemePresets.IsColor(palette.Background);
+        if (customBackground) { background = Brush(palette.Background, "#1F1F1F").Color; light = ReadableInk(background) == Brushes.Black; }
         var foreground = highContrast ? SystemColors.WindowTextColor : light ? Colors.Black : Colors.White;
         var opposite = light ? Colors.White : Colors.Black;
         Application.Current.Resources["TextBrush"] = new SolidColorBrush(foreground);
         Application.Current.Resources["MutedBrush"] = new SolidColorBrush(highContrast ? foreground : customBackground ? EnsureContrast(Mix(background, foreground, .72), background, foreground, 4.5) : light ? Color.FromRgb(70, 70, 70) : Color.FromRgb(195, 195, 195));
         Application.Current.Resources["PanelBrush"] = new SolidColorBrush(background);
         Application.Current.Resources["TileBrush"] = new SolidColorBrush(highContrast ? background : customBackground ? Mix(background, opposite, .12) : light ? Color.FromRgb(218, 218, 218) : Color.FromRgb(58, 58, 58));
-        var accentColor = highContrast ? SystemColors.HighlightColor : Brush(p.Accent, "#0078D7").Color;
+        var accentColor = highContrast ? SystemColors.HighlightColor : Brush(palette.Accent, "#0078D7").Color;
         Application.Current.Resources["AccentBrush"] = new SolidColorBrush(accentColor);
         Application.Current.Resources["AccentTextBrush"] = highContrast ? SystemColors.HighlightTextBrush : ReadableInk(accentColor);
         var focusAccent = highContrast ? SystemColors.HighlightColor : VisibleAccent(accentColor, background, foreground);
@@ -471,7 +472,9 @@ public partial class MainWindow : Window
         var button = new Button { Tag = tile, Padding = new(0), HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch, ToolTip = displayName };
         AutomationProperties.SetName(button, displayName + (tile.IsFolder && tile.Label.Length > 0 ? L.T(K.TileFolderSuffix) : ""));
         var colorful = tile.UseCustomColor || Document.Preferences.ColoredTiles || tile.Widget.Length > 0;
-        button.Background = colorful && !SystemParameters.HighContrast ? Brush((tile.UseCustomColor || tile.Widget.Length > 0) && tile.Color.Length > 0 ? tile.Color : Document.Preferences.Accent, "#0078D7") : (System.Windows.Media.Brush)FindResource("StartTileBrush");
+        button.Background = colorful && !SystemParameters.HighContrast
+            ? (tile.UseCustomColor || tile.Widget.Length > 0) && tile.Color.Length > 0 ? Brush(tile.Color, "#0078D7") : (System.Windows.Media.Brush)FindResource("AccentBrush")
+            : (System.Windows.Media.Brush)FindResource("StartTileBrush");
         if (colorful && !SystemParameters.HighContrast && button.Background is SolidColorBrush plate)
         {
             static double Linear(byte value) => value / 255d <= 0.04045 ? value / 255d / 12.92 : Math.Pow((value / 255d + 0.055) / 1.055, 2.4);
@@ -923,6 +926,7 @@ public partial class MainWindow : Window
     private System.Windows.Threading.DispatcherTimer? _statusTimer;
 
     /// <summary>Displays a transient operation message, restarting its five-second lifetime on replacement.</summary>
+    /// <param name="message">Localized transient status text; empty clears the current message and its expiry timer.</param>
     public void SetStatus(string message)
     {
         _statusTimer ??= CreateStatusTimer();
@@ -939,6 +943,7 @@ public partial class MainWindow : Window
         return timer;
     }
     /// <summary>Prepares a query for rendering verification only; this does not simulate physical keyboard input.</summary>
+    /// <param name="query">Fictional preview search query applied through the normal search UI path.</param>
     public void SetSmokeSearch(string query) { SearchBox.Text = query; FocusSearchInput(); }
     /// <summary>Gets rendered app-result names for smoke diagnostics.</summary>
     public string[] SearchResultNames => SearchResults.Items.OfType<Button>().Select(AutomationProperties.GetName).ToArray();
@@ -958,6 +963,7 @@ public partial class MainWindow : Window
         return answer;
     }
     /// <summary>Atomically saves an imported/reset layout before replacing the visible document and recording one undo step.</summary>
+    /// <param name="document">Replacement layout to normalize and save; failure restores the previous document and history state.</param>
     public void ReplaceDocument(LayoutDocument document)
     {
         _store.Save(document);
@@ -1037,6 +1043,7 @@ public partial class MainWindow : Window
     public void Exit() { _exit = true; CancelStartupPresentation(); StopMotion(); StopFolderDwell(); StopWatchingDesktopAppearance(); _clock.Stop(); _nameRefreshTimer?.Stop(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); foreach (var data in _tileData.Values) data.Runtime.Dispose(); _tileData.Clear(); _tileDataTransport?.Dispose(); _systemMetrics?.Dispose(); Close(); }
 
     /// <summary>Renders only the launcher root to a PNG for reproducible UI verification.</summary>
+    /// <param name="path">Destination PNG path for the current preview visual; missing parent directories are created.</param>
     public void SaveScreenshot(string path)
     {
         SaveBitmap(path, RenderScreenshot());

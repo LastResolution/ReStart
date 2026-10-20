@@ -312,7 +312,7 @@
   "SettingsColorThemes": "Temas de color",
   "SettingsBaseTheme": "Tema base",
   "SettingsBackgroundColor": "Color de fondo",
-  "SettingsCustomColorsHelp": "Usa #RRGGBB. Un fondo vacío usa el tema base. El texto y los controles se ajustan para mantener un contraste legible.",
+  "SettingsCustomColorsHelp": "Las paletas siguen el tema base, incluido el sistema. Editar un campo RGB activa colores personalizados que conservan sus valores exactos. Usa #RRGGBB; un fondo vacío usa el del tema base.",
   "SettingsResetColors": "Restablecer colores",
   "ThemeMidnight": "Medianoche",
   "ThemeOcean": "Océano",
