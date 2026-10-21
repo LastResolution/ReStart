@@ -64,7 +64,6 @@ public partial class MainWindow
             var from = button.TranslatePoint(new(button.ActualWidth / 2, button.ActualHeight / 2), Root);
             var to = new Point(from.X - 2 * Cell, from.Y);
             var initial = CapturePromoSurface(surface);
-            var ghost = new CroppedBitmap(initial, new((int)(from.X - button.ActualWidth / 2), (int)(from.Y - button.ActualHeight / 2), (int)button.ActualWidth, (int)button.ActualHeight));
             var logo = new BitmapImage(new Uri("pack://application:,,,/Assets/ReStart.png"));
             var output = Path.Combine(directory, "ReStart-demo.mp4");
             var start = new ProcessStartInfo(encoderPath) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardError = true };
@@ -87,7 +86,7 @@ public partial class MainWindow
                 var stage = seconds < 3 ? 0 : seconds < 8 ? 1 : seconds < 20 ? 2 : seconds < 25 ? 3 : seconds < 31 ? 4 : seconds < 43 ? 5 : seconds < 55 ? 6 : 7;
                 if (stage != lastStage)
                 {
-                    StopMotion(); ClearDropPreview(); StopFolderDwell(); _dragging = false;
+                    StopMotion(); StopDragGhost(); ClearDropPreview(); StopFolderDwell(); _dragging = false;
                     if (stage == 1)
                     {
                         _verifyMotion = true; Document.Preferences.Animate = true;
@@ -114,7 +113,6 @@ public partial class MainWindow
                     await Task.WhenAll(_htmlTiles.Values.Select(view => view.FreezeForDocumentationAsync()));
                 }
                 Point? cursor = null;
-                var dragging = false;
                 if (stage == 1)
                 {
                     if (seconds < 3.367 && _motion != null) SeekMotion((seconds - 3) * 1000);
@@ -127,13 +125,15 @@ public partial class MainWindow
                     cursor = new(from.X + (to.X - from.X) * eased, from.Y - 24 * Math.Sin(progress * Math.PI));
                     if (seconds >= 9 && seconds < 12)
                     {
-                        dragging = true; _dragging = true; _dragOffset = new(button.ActualWidth / 2, button.ActualHeight / 2);
-                        button.Opacity = 0.3;
+                        _dragging = true; _dragOffset = new(button.ActualWidth / 2, button.ActualHeight / 2);
+                        if (_dragGhost == null) StartDragGhost(button, "ReStart.Tile", movingId, from);
+                        _dragGhostTimer?.Stop();
+                        MoveDragGhost(cursor.Value);
                         PreviewSingleTileDrop(moving, Root.TranslatePoint(cursor.Value, GroupsPanel), movingId);
                     }
                     else if (seconds >= 12 && !dragCommitted)
                     {
-                        _dragging = false; button.Opacity = 1;
+                        _dragging = false; StopDragGhost();
                         Require(CommitSingleTileDrop(moving, Root.TranslatePoint(to, GroupsPanel), movingId), "The demonstration tile drop was rejected.");
                         Require(FindTile(movingId)?.Column == 0 && FindTile(movingId)?.Row == 0, "The demonstrated move did not reach its visible destination.");
                         dragCommitted = true;
@@ -161,7 +161,7 @@ public partial class MainWindow
                 }
                 if (frame % 3 == 0 || stage == 1 && seconds < 3.4) snapshot = CapturePromoSurface(surface);
                 var scene = stage == 6 ? studioScenes[seconds < 47 ? 0 : seconds < 51 ? 1 : 2] : snapshot;
-                var composed = ComposePromoFrame(seconds, stage, scene, logo, cursor, dragging ? ghost : null);
+                var composed = ComposePromoFrame(seconds, stage, scene, logo, cursor);
                 composed.CopyPixels(pixels, 1920 * 4, 0);
                 await encoder.StandardInput.BaseStream.WriteAsync(pixels);
                 if (frame % 90 == 0 || frame is 216 or 252 or 405 or 567 or 738 or 834)
@@ -195,7 +195,7 @@ public partial class MainWindow
         finally
         {
             if (encoder is { HasExited: false }) encoder.Kill(entireProcessTree: true);
-            encoder?.Dispose(); StopMotion(); ClearDropPreview(); StopFolderDwell();
+            encoder?.Dispose(); StopMotion(); StopDragGhost(); ClearDropPreview(); StopFolderDwell();
             _startupPreparing = false; _documentationNow = null; _documentationMetrics = null; _documentationMonotonicMilliseconds = null; _documentationSampleConnections = false; _dragging = false;
         }
     }
@@ -213,7 +213,7 @@ public partial class MainWindow
         bitmap.Render(surface); bitmap.Freeze(); return bitmap;
     }
 
-    private BitmapSource ComposePromoFrame(double seconds, int stage, BitmapSource surface, BitmapSource logo, Point? pointer, BitmapSource? ghost)
+    private BitmapSource ComposePromoFrame(double seconds, int stage, BitmapSource surface, BitmapSource logo, Point? pointer)
     {
         var visual = new DrawingVisual();
         using (var dc = visual.RenderOpen())
@@ -272,13 +272,7 @@ public partial class MainWindow
                 dc.DrawImage(surface, new Rect(0, 0, 1920, 900));
                 if (pointer is Point point)
                 {
-                    if (ghost != null)
-                    {
-                        dc.PushOpacity(0.9);
-                        dc.DrawImage(ghost, new Rect(point.X - ghost.PixelWidth / 2d, point.Y - ghost.PixelHeight / 2d, ghost.PixelWidth, ghost.PixelHeight));
-                        dc.Pop();
-                    }
-                    dc.DrawEllipse(new SolidColorBrush(Color.FromArgb(75, 75, 181, 255)), null, point, ghost == null ? 13 : 19, ghost == null ? 13 : 19);
+                    dc.DrawEllipse(new SolidColorBrush(Color.FromArgb(75, 75, 181, 255)), null, point, _dragGhost == null ? 13 : 19, _dragGhost == null ? 13 : 19);
                     var cursor = Geometry.Parse("M0,0 L0,23 L6,17 L11,28 L16,26 L11,16 L21,16 Z");
                     dc.PushTransform(new TranslateTransform(point.X, point.Y)); dc.DrawGeometry(Brushes.White, new Pen(Brushes.Black, 1), cursor); dc.Pop();
                 }

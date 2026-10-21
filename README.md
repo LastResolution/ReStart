@@ -42,7 +42,7 @@ Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button
 
 ![ReStart opening and closing with apps and live tiles](docs/images/start-motion.gif)
 
-- **Make room for your apps.** Four tile sizes, movable groups, independent tiles and folders that expand in place. Drag, resize and rename without leaving Start. Ordinary moves preview displaced tiles before you drop; cancellation restores the original positions.
+- **Make room for your apps.** Four tile sizes, movable groups, independent tiles and folders that expand in place. Drag, resize and rename without leaving Start. A translucent copy follows the pointer for tiles, groups and selections. Ordinary moves preview displaced tiles before you drop; cancellation restores the original positions.
 - **Choose several tiles without accidental launches.** Use **Select tiles** in the sidebar or background context menu, or press **Ctrl+E**. Move a selection together, then undo or redo the whole operation. Individual tiles and groups can be dragged directly while unlocked. Global and per-group placement locks prevent accidental changes; Ctrl+Arrow moves selected tiles without a mouse.
 - **Keep your files close.** Pin a document, directory or shortcut from Explorer's **Pin to ReStart** command.
 - **Find the next thing.** Search apps, Windows settings and indexed local filenames. App menus can show recent/frequent documents. Choose sidebar folders, optional app history and per-tile launch options. Control each feature in **Settings → Start behavior**. [Explore the switches](docs/start-behavior.md).

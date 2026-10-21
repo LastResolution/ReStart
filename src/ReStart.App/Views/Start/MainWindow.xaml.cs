@@ -666,7 +666,6 @@ public partial class MainWindow : Window
         ShowGroupBoundaries(true);
         _folderHover.Reset();
         if (format == "ReStart.Group" && _openFolder != null) { CloseFolder(this, new()); UpdateLayout(); }
-        var previousView = PrepareDragView(format);
         if (_layoutEditing && format == "ReStart.Tile")
         {
             if (!_selectedTileIds.Contains(id)) { _selectedTileIds.Clear(); _selectedTileIds.Add(id); RefreshTileSelection(); }
@@ -681,8 +680,11 @@ public partial class MainWindow : Window
         _activeDragFormat = format; _activeDragId = id;
         button.ReleaseMouseCapture();
         e.Handled = true;
+        var previousView = new DragViewState(_allApps, _searchRequested, SearchBox.Text, ContentScroll.VerticalOffset, ContentScroll.HorizontalOffset);
         try
         {
+            StartDragGhost(button, format, id, TranslatePoint(_dragOrigin, Root));
+            previousView = PrepareDragView(format);
             // A list/search row can disappear when switching to tiles. Keep the
             // OLE drag source attached to the window for the whole operation.
             var result = DragDrop.DoDragDrop(this, new DataObject(format, id), DragDropEffects.Move);
@@ -690,6 +692,7 @@ public partial class MainWindow : Window
         }
         finally
         {
+            StopDragGhost();
             _dragScrollTimer?.Stop(); _activeDragFormat = null; _activeDragId = null;
             ShowGroupBoundaries(_layoutEditing);
             ClearDropPreview();
@@ -1092,7 +1095,7 @@ public partial class MainWindow : Window
     private static bool IsAnyMenuOpen() => Mouse.Captured is ContextMenu || Mouse.Captured is System.Windows.Controls.Primitives.MenuBase;
     private void OnClosing(object? sender, CancelEventArgs e) { if (!_exit) { e.Cancel = true; Dismiss(); } }
     /// <summary>Stops timers and isolated script workers before permanently closing the launcher.</summary>
-    public void Exit() { _exit = true; CancelStartupPresentation(); StopMotion(); StopFolderDwell(); StopWatchingDesktopAppearance(); _clock.Stop(); _nameRefreshTimer?.Stop(); _railHoverTimer?.Stop(); _dragScrollTimer?.Stop(); _fileSearchCancellation?.Cancel(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); RetireHtmlTiles(all: true); foreach (var data in _tileData.Values) data.Runtime.Dispose(); _tileData.Clear(); _tileDataTransport?.Dispose(); _systemMetrics?.Dispose(); Close(); }
+    public void Exit() { _exit = true; CancelStartupPresentation(); StopMotion(); StopFolderDwell(); StopDragGhost(); StopWatchingDesktopAppearance(); _clock.Stop(); _nameRefreshTimer?.Stop(); _railHoverTimer?.Stop(); _dragScrollTimer?.Stop(); _fileSearchCancellation?.Cancel(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); RetireHtmlTiles(all: true); foreach (var data in _tileData.Values) data.Runtime.Dispose(); _tileData.Clear(); _tileDataTransport?.Dispose(); _systemMetrics?.Dispose(); Close(); }
 
     /// <summary>Renders only the launcher root to a PNG for reproducible UI verification.</summary>
     /// <param name="path">Destination PNG path for the current preview visual; missing parent directories are created.</param>

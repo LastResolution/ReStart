@@ -55,6 +55,7 @@ public partial class MainWindow
         checks += VerifyUpdateNotices(directory);
         checks += VerifyPresentationAssets(directory);
         checks += VerifyDropProjection(directory);
+        checks += VerifyDragGhost(directory);
         checks += await VerifyWebSamplesAsync(directory);
         checks += await VerifyWebScrollingAsync();
         checks += await VerifyFolderPreviewsAsync(directory);
