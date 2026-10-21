@@ -14,7 +14,7 @@
 
 <p align="center"><strong>60초 데모 보기</strong><br><sub>1080p · 영어 · 소리 없음</sub></p>
 
-[![ReStart product demonstration](docs/images/demo-poster.png)](https://github.com/LastResolution/ReStart/releases/download/v1.5.0/ReStart-demo.mp4)
+https://github.com/user-attachments/assets/243a5c5a-46bc-4180-8a0c-cee71ab63f06
 
 Windows 10의 전체 화면 시작 메뉴가 그리우신가요? ReStart는 Windows 11과 Windows 10에서 익숙한 앱 공간을 제공합니다. 자주 쓰는 항목을 고정하고 원하는 대로 배치하며 JavaScript로 작성할 수 있는 라이브 타일을 추가하세요.
 
