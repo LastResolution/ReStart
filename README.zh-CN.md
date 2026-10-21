@@ -3,7 +3,9 @@
 <p align="center"><strong>让全屏开始菜单回归。</strong><br>你的应用、你的布局、你自己的动态磁贴。</p>
 
 <!-- languages:start -->
-[English](README.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md)
+<p align="center">
+  <a href="README.md">English</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.fr.md">Français</a> · <a href="README.ja.md">日本語</a> · <a href="README.ko.md">한국어</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.zh-TW.md">繁體中文</a>
+</p>
 <!-- languages:end -->
 
 > **AI 翻译：** 本指南使用 AI 从英文翻译，可能存在错误。[英文 README](README.md) 为主要参考，包含更多示例。欢迎修正翻译。截图使用英文演示环境和示例数据。
@@ -86,7 +88,7 @@
 | 拖动磁贴 / 分组标题 | 移动；放到空白处创建独立磁贴 |
 | 在独立磁贴上部分重叠约 0.3 秒 | 预览就绪后创建普通分组 |
 | 在分组内磁贴上重叠约 0.6 秒 | 创建文件夹；已有文件夹接收添加项 |
-| **Edit layout** / `Ctrl+E` | 多选而不误启动应用 |
+| 侧栏/背景菜单的 **选择磁贴** / `Ctrl+E` | 多选而不打开应用；平时也可以直接拖动磁贴 |
 | 编辑时 `Ctrl+A` / `Delete` | 选择根磁贴 / 取消固定所选项 |
 | `Ctrl+Z` / `Ctrl+Y` 或 `Ctrl+Shift+Z` | 撤销 / 重做布局 |
 | 铅笔 / 双击名称 | 内联重命名分组或文件夹 |

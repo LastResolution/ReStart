@@ -3,7 +3,9 @@
 <p align="center"><strong>讓全螢幕開始功能表回歸。</strong><br>你的應用程式、你的配置、你自己的動態磚。</p>
 
 <!-- languages:start -->
-[English](README.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md)
+<p align="center">
+  <a href="README.md">English</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.fr.md">Français</a> · <a href="README.ja.md">日本語</a> · <a href="README.ko.md">한국어</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.zh-TW.md">繁體中文</a>
+</p>
 <!-- languages:end -->
 
 > **AI 翻譯：** 本指南使用 AI 從英文翻譯，可能含有錯誤。[英文 README](README.md) 為主要參考，包含更多範例。歡迎協助修正。螢幕擷取畫面使用英文示範環境與範例資料。
@@ -86,7 +88,7 @@
 | 拖曳動態磚 / 群組標題 | 移動；放到空白處建立獨立磚 |
 | 在獨立磚上部分重疊約 0.3 秒 | 預覽就緒後建立一般群組 |
 | 在群組內磚上重疊約 0.6 秒 | 建立資料夾；既有資料夾可接收新增項目 |
-| **Edit layout** / `Ctrl+E` | 多重選取，避免誤啟動程式 |
+| 側邊欄/背景選單的 **選取磚塊** / `Ctrl+E` | 多重選取而不開啟程式；平時也可以直接拖曳磚塊 |
 | 編輯時 `Ctrl+A` / `Delete` | 選取根磚 / 取消釘選所選項目 |
 | `Ctrl+Z` / `Ctrl+Y` 或 `Ctrl+Shift+Z` | 復原 / 重做配置 |
 | 鉛筆 / 按兩下名稱 | 就地重新命名群組或資料夾 |

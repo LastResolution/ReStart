@@ -3,7 +3,9 @@
 <p align="center"><strong>Recupera Inicio a pantalla completa.</strong><br>Tus aplicaciones, tu diseño y tus propios mosaicos dinámicos.</p>
 
 <!-- languages:start -->
-[English](README.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md)
+<p align="center">
+  <a href="README.md">English</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.fr.md">Français</a> · <a href="README.ja.md">日本語</a> · <a href="README.ko.md">한국어</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.zh-TW.md">繁體中文</a>
+</p>
 <!-- languages:end -->
 
 > **Traducción con IA:** esta guía se ha traducido del inglés mediante IA y puede contener errores. El [README en inglés](README.md) es la referencia principal e incluye más ejemplos. Se agradecen las correcciones. Las capturas usan una demostración en inglés con datos de ejemplo.
@@ -86,7 +88,7 @@ Un mosaico consta de `manifest.json` y `tile.js`. `render(ctx)` recibe una insta
 | Arrastrar mosaico / cabecera | Mover; el espacio vacío crea un anclaje independiente |
 | Superponer un mosaico independiente unos 0,3 s | Crear un grupo cuando la vista previa esté preparada |
 | Superponer un mosaico de un grupo unos 0,6 s | Crear una carpeta; las existentes aceptan elementos |
-| **Edit layout** / `Ctrl+E` | Seleccionar varios sin abrir aplicaciones por error |
+| **Seleccionar mosaicos** en la barra lateral/el menú del fondo / `Ctrl+E` | Selección múltiple sin abrir aplicaciones; siempre puedes arrastrar directamente |
 | `Ctrl+A` / `Delete` en edición | Seleccionar mosaicos raíz / desanclar la selección |
 | `Ctrl+Z` / `Ctrl+Y` o `Ctrl+Shift+Z` | Deshacer / rehacer diseño |
 | Lápiz / doble clic en nombre | Renombrar grupo o carpeta en línea |

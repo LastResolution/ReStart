@@ -11,7 +11,7 @@ if (@($catalogs | Where-Object { -not $files.Contains($_) }).Count -gt 0 -or $ca
 foreach ($entry in $files.GetEnumerator()) {
     $text = Get-Content -LiteralPath (Join-Path $repoRoot $entry.Value) -Raw
     foreach ($file in $files.Values) {
-        if (-not $text.Contains("]($file)")) { throw "Missing language link in $($entry.Value): $file" }
+        if (-not $text.Contains("]($file)") -and -not $text.Contains('href="' + $file + '"')) { throw "Missing language link in $($entry.Value): $file" }
     }
     if ($entry.Key -ne 'en' -and ($text -notmatch '(?m)^>.*(?:AI|KI|IA)' -or -not $text.Contains('](README.md)'))) {
         throw "Missing visible AI-translation notice or English source in $($entry.Value)."

@@ -1,5 +1,7 @@
 # Start behavior
 
+Choose **Select tiles** from the sidebar or background context menu, or press **Ctrl+E**, to select several tiles without launching apps. Normal tile/group dragging is always available. **Finish selecting** leaves selection mode. The sidebar keeps the same icon size and position when expanded, and confirmations use the current palette with **No** as the safe default.
+
 [日本語](ja/start-behavior.md)
 
 Open **ReStart settings → Start behavior** to choose how Start responds. Each switch is saved locally and takes effect after Save. Existing settings for Windows-key/Start-button capture, startup, close-on-deactivate, wallpaper, colors and animation remain in their respective sections.

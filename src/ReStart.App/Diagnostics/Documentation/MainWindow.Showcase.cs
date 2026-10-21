@@ -29,7 +29,7 @@ public partial class MainWindow
             var photo = tiles[11];
             SlideshowSource.Bind(_scriptPackages.SlideshowBindingPath(photo.ScriptId), images);
             await SaveLauncherShowcaseAsync(tiles, this, directory);
-            SaveNavigationShowcases(directory);
+            await SaveNavigationShowcasesAsync(directory);
             SetLayoutEditing(true);
             foreach (var tile in Document.Groups[0].Tiles.Take(2)) ToggleTileSelection(tile.Id);
             SaveScreenshot(Path.Combine(directory, "selection-mode.png"));
@@ -60,7 +60,7 @@ public partial class MainWindow
         finally { _startupPreparing = false; _documentationNow = null; }
     }
 
-    private void SaveNavigationShowcases(string directory)
+    private async Task SaveNavigationShowcasesAsync(string directory)
     {
         foreach (var language in L.SupportedLanguages)
             foreach (var theme in new[] { ReStart.Core.ThemeMode.Dark, ReStart.Core.ThemeMode.Light })
@@ -75,6 +75,7 @@ public partial class MainWindow
                     Require(NavigationGlyphsStayAligned(), "Expanded navigation moved/resized an icon in " + language + "/" + theme + "/" + height);
                     if (language == "en" && height == 1080)
                     {
+                        await WaitForDocumentationFramesAsync();
                         SaveScreenshot(Path.Combine(directory, $"sidebar-expanded-{theme}.png"));
                         SetRailOpen(false); SaveScreenshot(Path.Combine(directory, $"sidebar-collapsed-{theme}.png"));
                         var confirmation = new ConfirmationWindow(L.F(K.ConfirmDeleteGroup, "Sample group"));
@@ -89,6 +90,21 @@ public partial class MainWindow
         Root.Height = 1080;
         Document.Preferences.Language = "en"; Document.Preferences.Theme = ReStart.Core.ThemeMode.Dark; Document.Preferences.NavigationFolders = null;
         ApplyAppearance(); SetRailOpen(false); RenderGroups();
+        await WaitForDocumentationFramesAsync();
+    }
+
+    private async Task WaitForDocumentationFramesAsync()
+    {
+        for (var attempt = 0; attempt < 50; attempt++)
+        {
+            UpdateLayout();
+            if (ScriptFrameCount == _scriptViews.Count && _scriptViews.Count > 0 && _scriptViews.All(view =>
+                view.Body.Children.OfType<TextBlock>().Any(text => Equals(text.Tag, "ScriptValue") && text.Text.Length > 0 && text.ActualHeight > 0))) return;
+            foreach (var runtime in _scriptSessions.Values) runtime.NextUpdate = DateTimeOffset.MinValue;
+            await UpdateScriptTilesAsync(); await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
+            await Task.Delay(100);
+        }
+        throw new InvalidOperationException("Documentation contains a live tile without a rendered value.");
     }
 
     private async Task SaveSearchShowcaseAsync(string directory)

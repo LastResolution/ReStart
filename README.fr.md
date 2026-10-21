@@ -3,7 +3,9 @@
 <p align="center"><strong>Retrouvez le menu Démarrer en plein écran.</strong><br>Vos applications, votre disposition, vos propres vignettes dynamiques.</p>
 
 <!-- languages:start -->
-[English](README.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md)
+<p align="center">
+  <a href="README.md">English</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.fr.md">Français</a> · <a href="README.ja.md">日本語</a> · <a href="README.ko.md">한국어</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.zh-TW.md">繁體中文</a>
+</p>
 <!-- languages:end -->
 
 > **Traduction par IA :** ce guide a été traduit de l’anglais à l’aide de l’IA et peut contenir des erreurs. Le [README anglais](README.md) reste la référence principale et contient des exemples supplémentaires. Les corrections sont bienvenues. Les captures utilisent une démonstration en anglais et des données d’exemple.
@@ -86,7 +88,7 @@ Une vignette comprend `manifest.json` et `tile.js`. `render(ctx)` lit un instant
 | Glisser une vignette / un titre de groupe | Déplacer ; un espace vide crée une épingle indépendante |
 | Superposer une vignette indépendante environ 0,3 s | Créer un groupe lorsque l’aperçu est prêt |
 | Superposer une vignette d’un groupe environ 0,6 s | Créer un dossier ; les dossiers existants acceptent des ajouts |
-| **Edit layout** / `Ctrl+E` | Sélectionner plusieurs vignettes sans lancer d’applications |
+| **Sélectionner des vignettes** dans la barre latérale/le menu du fond / `Ctrl+E` | Sélection multiple sans ouvrir d’applications ; le déplacement direct reste disponible |
 | `Ctrl+A` / `Delete` en édition | Sélectionner les vignettes racines / détacher la sélection |
 | `Ctrl+Z` / `Ctrl+Y` ou `Ctrl+Shift+Z` | Annuler / rétablir la disposition |
 | Crayon / double-clic sur un nom | Renommer directement le groupe ou dossier |

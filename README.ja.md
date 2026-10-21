@@ -15,7 +15,9 @@
 </p>
 
 <!-- languages:start -->
-[English](README.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md)
+<p align="center">
+  <a href="README.md">English</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.fr.md">Français</a> · <a href="README.ja.md">日本語</a> · <a href="README.ko.md">한국어</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.zh-TW.md">繁體中文</a>
+</p>
 <!-- languages:end -->
 
 > **AI翻訳:** この案内は英語を基にAIを用いて翻訳・編集しており、誤りが含まれる場合があります。[英語README](README.md)を原本とし、翻訳の修正を歓迎します。スクリーンショットは全言語版で英語のデモ環境を使用しています。
@@ -218,7 +220,7 @@ Windows 11 x64 が実機検証対象です。Windows 10 22H2 と ARM64 は対応
 | アプリ一覧・検索結果からドラッグ | タイル画面へ切り替えて配置。キャンセルで元の表示へ復帰 |
 | 単独タイルに半分ほど重ねて約0.3秒待ち、「グループを作成」でドロップ | 通常のグループにまとめる |
 | グループ内のタイルに重ねて約0.6秒待ち、フォルダーのプレビューでドロップ | フォルダーを作成。既存フォルダーなら中に追加 |
-| 「配置を編集」 / `Ctrl+E` | クリックでタイルを選択。アプリを起動せず、選択したタイルをまとめてドラッグ |
+| サイドバー・背景の右クリックの「タイルを選択」 / `Ctrl+E` | アプリを起動せずに複数選択。通常時もタイルやグループを直接ドラッグできます |
 | 編集中の `Ctrl+A` / `Delete` | ルートタイルをすべて選択 / 選択したタイルをピン留め解除 |
 | `Ctrl+Z` / `Ctrl+Y` または `Ctrl+Shift+Z` | 配置を元に戻す / やり直す。文字入力欄では通常の文字編集の取り消し |
 | グループ名をダブルクリック / `Enter` / `F2` | その場で名前を編集。`Enter`で確定、`Esc`で取消 |

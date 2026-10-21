@@ -13,7 +13,9 @@
 </p>
 
 <!-- languages:start -->
-[English](README.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md)
+<p align="center">
+  <a href="README.md">English</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.fr.md">Français</a> · <a href="README.ja.md">日本語</a> · <a href="README.ko.md">한국어</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.zh-TW.md">繁體中文</a>
+</p>
 <!-- languages:end -->
 
 English is the primary documentation. The translated guides are AI-assisted and may contain errors; corrections are welcome. All screenshots use an English demonstration environment.
@@ -39,7 +41,7 @@ Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button
 ![ReStart opening and closing with apps and live tiles](docs/images/start-motion.gif)
 
 - **Make room for your apps.** Four tile sizes, movable groups, independent tiles and folders that expand in place. Drag, resize and rename without leaving Start.
-- **Arrange without accidental launches.** Edit mode selects tiles instead of opening apps. Move a selection together, then undo or redo the whole operation.
+- **Choose several tiles without accidental launches.** Use **Select tiles** in the sidebar or background context menu, or press **Ctrl+E**. Move a selection together, then undo or redo the whole operation. Individual tiles and groups can always be dragged directly.
 - **Keep your files close.** Pin a document, directory or shortcut from Explorer's **Pin to ReStart** command.
 - **Find the next thing.** Search apps, Windows settings and indexed local filenames. App menus can show recent/frequent documents. Choose sidebar folders, optional app history and per-tile launch options. Control each feature in **Settings → Start behavior**. [Explore the switches](docs/start-behavior.md).
 - **Open and type.** The first launch prepares icons and live tiles behind a localized progress screen with the app logo. Keystrokes typed while loading carry into Start automatically. Enter launches the highlighted search result; reopening returns to your pinned home. Installed and removed apps refresh in the background while ReStart keeps running.
@@ -89,6 +91,10 @@ Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button
 | ![Start behavior switches and navigation folders](docs/images/start-behavior.png) | ![Arguments, working directory and optional administrator execution](docs/images/launch-options.png) |
 
 ![Layout interaction, history and search switches](docs/images/start-behavior-layout.png)
+
+![Multiple tile selection from the sidebar](docs/images/selection-mode.png)
+
+![A confirmation using the current app theme](docs/images/confirmation.png)
 
 Switch off settings/file search, document menus, hover effects, automatic overlap grouping/folders, edge scrolling or drop hints individually. Most used recording starts off. **Use custom launch options** can be disabled while retaining its fields. The screenshots use fictional apps and documents.
 
@@ -187,7 +193,7 @@ Have a layout to show, an idea for a tile, or a bug to report? [Open an issue](h
 | Drop a tile in empty space | Create an independent pin |
 | Partly overlap an independent tile for about 0.3 seconds, then drop when **Create group** appears | Collect the tiles into an ordinary group |
 | Overlap a tile inside a group for about 0.6 seconds, then drop when the folder preview is ready | Create a tile folder; dropping onto an existing folder adds to it |
-| **Edit layout** / `Ctrl+E` | Select tiles without launching apps; drag selected tiles together |
+| **Select tiles** in the sidebar/background menu / `Ctrl+E` | Select several tiles without launching apps; normal dragging remains available outside this mode |
 | `Ctrl+A` / `Delete` in edit mode | Select root tiles / unpin the selection |
 | `Ctrl+Z` / `Ctrl+Y` or `Ctrl+Shift+Z` | Undo / redo a layout edit; text fields keep their own text undo |
 | Pencil button / double-click a group or folder name | Rename inline |
@@ -196,7 +202,7 @@ Have a layout to show, an idea for a tile, or a bug to report? [Open an issue](h
 
 Win+letter shortcuts are forwarded to Windows. Settings can disable Windows-key and taskbar Start-button capture. [Compatibility](docs/fidelity.md) describes the desktop integration and platform coverage.
 
-Edit mode provides **Move to group…**, **Unpin selected** and **Done**. Dragging keeps relative positions; the group menu collects the selection into a compact block. Overlapping an independent non-folder tile collects the selection into a compact ordinary group. A single tile can create a folder inside a group; multiple selected tiles can enter an existing folder but do not create one accidentally. Use a folder's **Open folder** context action to arrange its children. A folder with one remaining child stays a folder; removing its last child removes the folder. `Esc` clears selection, then leaves editing. Reopening Start leaves edit mode. Layout history lasts for the running session (up to 100 edits within a 32 MiB memory budget); it preserves current preferences and is never saved to disk. Each successful pin, move, resize, rename, color change, folder edit, import or reset is undoable as one operation.
+Selection mode provides **Move to group…**, **Unpin selected** and **Finish selecting**. Dragging keeps relative positions; the group menu collects the selection into a compact block. Overlapping an independent non-folder tile collects the selection into a compact ordinary group. A single tile can create a folder inside a group; multiple selected tiles can enter an existing folder but do not create one accidentally. Use a folder's **Open folder** context action to arrange its children. A folder with one remaining child stays a folder; removing its last child removes the folder. `Esc` clears selection, then leaves editing. Reopening Start leaves edit mode. Layout history lasts for the running session (up to 100 edits within a 32 MiB memory budget); it preserves current preferences and is never saved to disk. Each successful pin, move, resize, rename, color change, folder edit, import or reset is undoable as one operation.
 
 </details>
 

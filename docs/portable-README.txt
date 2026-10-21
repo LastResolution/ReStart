@@ -10,8 +10,9 @@ Drag tiles/groups; empty-space drops create independent pins. Double-click
 group names to edit. Partly overlap an independent tile for about 0.3 seconds to collect a group;
 hold about 0.6 seconds over a grouped tile to create a folder. Existing folders
 accept additions; one remaining child stays in its folder until moved out.
-Edit layout / Ctrl+E selects tiles without opening apps. Drag a selection together;
-Move to group collects it into a compact block. Done leaves editing.
+Select tiles in the sidebar/background menu, or Ctrl+E, selects without opening apps.
+Normal tile/group dragging is always available. Drag a selection together;
+Move to group collects it into a compact block. Finish selecting leaves the mode.
 Ctrl+Z undoes layout edits; Ctrl+Y or Ctrl+Shift+Z redoes. History is session-only.
 Type immediately to search. Explorer: Pin to ReStart (Windows 11: Show more options).
 Settings -> JavaScript tiles: fifteen bundled examples. Normal click operates

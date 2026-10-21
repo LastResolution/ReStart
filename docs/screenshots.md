@@ -18,6 +18,8 @@ The renderer obtains actual icons for its fixed app selection from the local She
 
 Output is under `artifacts/readme-render/<run>/`: full dark/light launchers, groups, expanded folders, curated app lists and offline search. The sample date/time is fixed for consistent English clocks. If FFmpeg is available, the script encodes `start-motion.gif` from the native transition frames over a generated background. It never records the real desktop.
 
+The renderer also checks collapsed/expanded glyph geometry across eight languages, two themes and short/tall viewports, and produces the current sidebar, selection-mode and themed-confirmation images. Wait for localized live frames after changing languages; blank loading tiles are not finished documentation. Refresh every full-launcher image and the GIF when navigation or persistent controls move.
+
 ## Settings and launch options
 
 `scripts/test-fidelity.ps1` produces English `start-behavior.png`, `start-behavior-layout.png` and `launch-options.png` in its fixture output. These native dialog tests also verify all eight languages and both base themes. Run native interactive fixtures on a dedicated desktop/CI runner; use their artifact images rather than photographing a working user's screen. The launch example uses `%USERPROFILE%\Documents` literally and a fictional command line, not an expanded user path.

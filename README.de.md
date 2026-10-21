@@ -3,7 +3,9 @@
 <p align="center"><strong>Das Vollbild-Startmenü zurückholen.</strong><br>Deine Apps, dein Layout, deine eigenen Live-Kacheln.</p>
 
 <!-- languages:start -->
-[English](README.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md)
+<p align="center">
+  <a href="README.md">English</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.fr.md">Français</a> · <a href="README.ja.md">日本語</a> · <a href="README.ko.md">한국어</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.zh-TW.md">繁體中文</a>
+</p>
 <!-- languages:end -->
 
 > **KI-Übersetzung:** Dieser Leitfaden wurde mithilfe von KI aus dem Englischen übersetzt und kann Fehler enthalten. Die [englische README](README.md) ist die maßgebliche Referenz mit weiteren Beispielen. Korrekturen sind willkommen. Die Screenshots verwenden eine englische Demo mit Beispieldaten.
@@ -86,7 +88,7 @@ Eine eigene Kachel besteht aus `manifest.json` und `tile.js`. `render(ctx)` beko
 | Kachel / Gruppenüberschrift ziehen | Verschieben; leere Fläche erzeugt eine unabhängige Kachel |
 | Unabhängige Kachel etwa 0,3 s überlagern | Nach der Vorschau eine normale Gruppe erstellen |
 | Kachel in einer Gruppe etwa 0,6 s überlagern | Nach der Vorschau einen Ordner erstellen; bestehende Ordner nehmen Kacheln auf |
-| **Edit layout** / `Ctrl+E` | Mehrfachauswahl ohne versehentliche App-Starts |
+| **Kacheln auswählen** in der Seitenleiste/im Hintergrundmenü / `Strg+E` | Mehrfachauswahl ohne App-Starts; direktes Ziehen ist jederzeit möglich |
 | `Ctrl+A` / `Delete` im Bearbeitungsmodus | Hauptkacheln auswählen / Auswahl lösen |
 | `Ctrl+Z` / `Ctrl+Y` oder `Ctrl+Shift+Z` | Layoutänderung rückgängig / wiederholen |
 | Stift / Doppelklick auf Gruppen-/Ordnernamen | Direkt umbenennen |

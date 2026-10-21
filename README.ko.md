@@ -3,7 +3,9 @@
 <p align="center"><strong>전체 화면 시작 메뉴를 다시 만나세요.</strong><br>내 앱, 내 배치, 직접 만드는 라이브 타일.</p>
 
 <!-- languages:start -->
-[English](README.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md)
+<p align="center">
+  <a href="README.md">English</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.fr.md">Français</a> · <a href="README.ja.md">日本語</a> · <a href="README.ko.md">한국어</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.zh-TW.md">繁體中文</a>
+</p>
 <!-- languages:end -->
 
 > **AI 번역:** 이 안내서는 영어를 바탕으로 AI로 번역했으며 오류가 있을 수 있습니다. [영어 README](README.md)가 기준 문서이며 추가 예제를 제공합니다. 번역 수정 제안을 환영합니다. 스크린샷은 영어 데모와 예시 데이터를 사용합니다.
@@ -86,7 +88,7 @@ Windows 10의 전체 화면 시작 메뉴가 그리우신가요? ReStart는 Wind
 | 타일 / 그룹 제목 드래그 | 이동; 빈 공간에 놓으면 독립 타일 생성 |
 | 독립 타일에 약 0.3초 겹치기 | 미리 보기 준비 후 일반 그룹 생성 |
 | 그룹 내 타일에 약 0.6초 겹치기 | 폴더 생성; 기존 폴더에는 항목 추가 |
-| **Edit layout** / `Ctrl+E` | 앱을 잘못 실행하지 않고 여러 타일 선택 |
+| 사이드바/배경 메뉴의 **타일 선택** / `Ctrl+E` | 앱을 열지 않고 여러 타일 선택. 평소에도 타일을 바로 끌어 이동할 수 있습니다 |
 | 편집 중 `Ctrl+A` / `Delete` | 루트 타일 전체 선택 / 선택 고정 해제 |
 | `Ctrl+Z` / `Ctrl+Y` 또는 `Ctrl+Shift+Z` | 배치 실행 취소 / 다시 실행 |
 | 연필 / 이름 더블클릭 | 그룹 또는 폴더 이름 인라인 변경 |
