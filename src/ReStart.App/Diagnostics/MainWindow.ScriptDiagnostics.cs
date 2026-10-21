@@ -194,6 +194,25 @@ public partial class MainWindow
                     Require(main.ActualHeight >= 29 && main.ActualHeight <= view.Body.ActualHeight + .1,
                         "The small clock clips its second line instead of displaying both time components.");
             }
+            stage = "live folder presentation transitions";
+            var keep = responsive[^1]; var keepView = fixture._htmlTiles[keep.Id];
+            await keepView.InspectAsync("window.reparentMarker='retained'");
+            var liveFolder = new Tile { Label = "Live previews", Children = responsive.Take(2).ToList() };
+            fixture.Document.Groups[0].Tiles = [liveFolder, .. responsive.Skip(2)];
+            fixture.RenderGroups(); fixture.UpdateLayout();
+            Require(fixture._htmlTiles[responsive[0].Id].HasTransitionPreview, "Closing a native live folder exposed an empty surface before its miniature was ready.");
+            await RenderUntil(() => fixture.ScriptsReady);
+            Require(fixture._htmlTiles[responsive[0].Id].OffscreenOnly && !fixture._htmlTiles[responsive[0].Id].HasTransitionPreview,
+                "The closed folder failed to replace its retained frame with a live miniature.");
+            fixture.OpenFolder(liveFolder); fixture.UpdateLayout();
+            Require(fixture._htmlTiles[responsive[0].Id].HasTransitionPreview, "Opening a native live folder discarded its last miniature before painting.");
+            await RenderUntil(() => fixture.ScriptsReady);
+            Require(!fixture._htmlTiles[responsive[0].Id].OffscreenOnly && !fixture._htmlTiles[responsive[0].Id].HasTransitionPreview,
+                "The expanded folder did not reveal its ready interactive surface.");
+            fixture.CloseFolder(fixture, new()); fixture.UpdateLayout(); await RenderUntil(() => fixture.ScriptsReady);
+            keep.Row = 6; fixture.RenderGroups(); fixture.UpdateLayout(); await RenderUntil(() => fixture.ScriptsReady);
+            Require(ReferenceEquals(keepView, fixture._htmlTiles[keep.Id]) && await keepView.InspectAsync("window.reparentMarker") == "\"retained\"",
+                "A folder toggle or tile move reloaded an unrelated browser.");
             await Task.WhenAll(fixture._htmlTiles.Values.Select(view => view.FreezeForDocumentationAsync()));
             fixture.SaveTileShowcase(Path.Combine(Path.GetDirectoryName(snapshotPath)!, "responsive-sizes.png"));
             stage = "position-independent tile geometry";
