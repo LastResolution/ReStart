@@ -44,7 +44,10 @@ public partial class MainWindow
             var sources = _selectionDragPositions is { } selected
                 ? selected.Select(s => FindTile(s.Id)!).ToArray() : new[] { pending.Source };
             if (TileGrouping.Plan(Document, sources, pending.Target.Id, GroupsPanel.Columns, Cell) is { } plan)
+            {
                 ShowGroupCreationPreview(plan, ((TileGroup)pending.Panel.Tag).Id);
+                ProjectDropGroups(plan, pending.Source.Id, ((TileGroup)pending.Panel.Tag).Id);
+            }
             return;
         }
         var fits = true;

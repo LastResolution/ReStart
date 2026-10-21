@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "renderer": "web",
+  "refreshSeconds": 1,
+  "capabilities": [],
+  "settings": {
+    "color": "#18384B",
+    "labels": {
+      "en": {
+        "caption": "Canvas garden"
+      },
+      "ja": {
+        "caption": "Canvas ガーデン"
+      },
+      "de": {
+        "caption": "Canvas-Garten"
+      },
+      "es": {
+        "caption": "Jardín Canvas"
+      },
+      "fr": {
+        "caption": "Jardin Canvas"
+      },
+      "ko": {
+        "caption": "Canvas 정원"
+      },
+      "zh-Hans": {
+        "caption": "Canvas 花园"
+      },
+      "zh-Hant": {
+        "caption": "Canvas 花園"
+      }
+    }
+  },
+  "title": "Canvas garden",
+  "localizedTitles": {
+    "en": "Canvas garden",
+    "ja": "Canvas ガーデン",
+    "de": "Canvas-Garten",
+    "es": "Jardín Canvas",
+    "fr": "Jardin Canvas",
+    "ko": "Canvas 정원",
+    "zh-Hans": "Canvas 花园",
+    "zh-Hant": "Canvas 花園"
+  }
+}

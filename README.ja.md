@@ -22,15 +22,29 @@
 
 > **AI翻訳:** この案内は英語を基にAIを用いて翻訳・編集しており、誤りが含まれる場合があります。[英語README](README.md)を原本とし、翻訳の修正を歓迎します。スクリーンショットは全言語版で英語のデモ環境を使用しています。
 
-<p align="center"><strong>29秒のデモを見る</strong><br><sub>1080p · 英語 · 音声なし</sub></p>
+<p align="center"><strong>60秒のデモを見る</strong><br><sub>1080p · 英語 · 音声なし</sub></p>
 
-https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
+[![ReStart product demonstration](docs/images/demo-poster.png)](https://github.com/LastResolution/ReStart/releases/download/v1.5.0/ReStart-demo.mp4)
 
 **Windows 10 のフルスクリーンスタートが恋しい人へ。** ReStart は Windows 11 と Windows 10 で使えるデスクトップランチャーです。いつものアプリをピン留めし、画面を自由に並べ、JavaScript で自分のライブタイルを作れます。
 
 **Windows 11 / 10 · JavaScript ライブタイル · x64 / ARM64 · ポータブル · 通常利用に管理者権限は不要**
 
 [ライブタイルを見る](#ライブタイルで必要な情報を) · [データをつなぐ](#天気や見出しをアプリと一緒に) · [タイルを作る](#タイルを作る) · [ソースからビルド](#自分でビルドする)
+
+## 配置とライブタイルをもっと自由に
+
+全体またはグループ単位で配置をロックできます。Ctrl+Shift+Lで全体を切り替えます。Ctrl+Eで選択し、Ctrl+矢印でタイル、Ctrl+Shift+矢印でグループを移動、Alt+1〜4でサイズ変更、Ctrl+Gでグループ化。Shift+F10でメニューを開け、Undo/Redoも使えます。デスクトップとは別の背景画像も指定できます。
+
+HTML/CSS/JavaScript製のライブタイルを19種類同梱。Tile Studioでソースとmanifestを編集し、オフラインのサンプル値で4サイズを確認して保存・ピン留めできます。天気のCSSアート、システムダッシュボード、RSSニュース、Canvasガーデンを追加し、オービット時計の秒針はPC時刻で動きます。設定の「ライブタイル名を表示」は初期値ONで、左下の名前を非表示にもできます。
+
+ドラッグ中はタイル・グループ・複数選択の半透明コピーがマウスに追従します。青い目印で移動先を示し、押し出されるタイルもドロップ前に配置をプレビューします。
+
+![Tile Studio: HTML, CSS and JavaScript with four live previews](docs/images/tile-studio.png)
+
+![Weather scene, System dashboard, News board and Canvas garden](docs/images/web-examples.png)
+
+**エディター操作：** JavaScript・HTML・CSS・JSON のシンタックスハイライト、**Tab / Shift+Tab** によるインデント、**ドキュメントを整形 / Ctrl+Shift+F** によるオフライン整形に対応。整形は1回の Undo で戻せます。Feed headlines と News board はタイル内でスクロールし、閉じたフォルダには同じ大きさのライブプレビューを表示します。初期配置とリセットには同梱の Month dots と Orbit clock を使用。任意の起動時更新チェックで新バージョンを閉じられる通知として案内します。
 
 ## 使い始める
 
@@ -42,7 +56,7 @@ https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
 
 | すぐにアプリへ | 配置を自分のものに | 必要な情報をひと目で |
 | --- | --- | --- |
-| Windows キー、タスクバーの Start、`Ctrl+Alt+Space`、トレイから開いてそのまま検索。 | 4サイズのタイル、独立ピン、自由なグループ移動、インラインフォルダ、個別の色。 | 同梱15種類。グラフ、PC時刻、システム情報、写真、天気・RSS/Atom・Web API・ローカルファイル連携。 |
+| Windows キー、タスクバーの Start、`Ctrl+Alt+Space`、トレイから開いてそのまま検索。 | 4サイズのタイル、独立ピン、自由なグループ移動、インラインフォルダ、個別の色。 | 同梱19種類。グラフ、PC時刻、システム情報、写真、天気・RSS/Atom・Web API・ローカルファイル連携。 |
 
 ## 自分のスタートに
 
@@ -91,7 +105,7 @@ Microsoft とは独立したプロジェクトです。Explorer のパッチは�
 | 起動オプション | タイルごとの有効・無効、追加引数、作業フォルダー、対応するデスクトップアプリ・ショートカットの管理者実行。UACの確認はWindowsが担当 |
 | サイドバー | 任意のホバー展開、ドキュメント・ダウンロード・音楽・画像・動画・ネットワーク・個人用フォルダーの個別選択、アカウントと電源操作 |
 | 外観 | 5種類のカラーテーマとライト・ダーク・システム設定、背景・アクセントのRGB指定、壁紙、スタートのアクセント色、旧式・個別タイル色、コントロール・両スクロールバー、ハイコントラスト、任意のアニメーション |
-| ライブタイル | JS製15種類を同梱、4サイズ対応、クリック時のローカル操作、更新の有効・無効、データ接続設定、サンプル作成、パッケージ取込、ローカルライブラリの自動検出 |
+| ライブタイル | JS製19種類を同梱、4サイズ対応、クリック時のローカル操作、更新の有効・無効、データ接続設定、サンプル作成、パッケージ取込、ローカルライブラリの自動検出 |
 | JS API | PC時刻、言語・サイズ・保持状態、CPU・メモリ・通信・バッテリー・ストレージ、選択フォルダーの写真、JSON・Web API・RSS・Atom・ローカルファイルのキャッシュとアプリ連携 |
 | 多言語 | 英語、日本語、ドイツ語、フランス語、スペイン語、韓国語、簡体字・繁体字中国語。UIと同梱タイルに対応 |
 | データと更新 | ローカル設定、配置の取込・書出し・初期化、バックアップとバージョン移行、消去可能なアプリ履歴、バージョン・ビルド・ライセンス、APIキー不要の更新確認と手動更新 |
@@ -118,7 +132,7 @@ Microsoft とは独立したプロジェクトです。Explorer のパッチは�
 
 ## ライブタイルで必要な情報を
 
-時刻、PC の状態、選んだ写真、天気や見出しをアプリと同じ画面に表示できます。**15種類を同梱**し、4サイズに合わせたレイアウトを用意しています。
+時刻、PC の状態、選んだ写真、天気や見出しをアプリと同じ画面に表示できます。**19種類を同梱**し、4サイズに合わせたレイアウトを用意しています。
 
 ![時計・システム情報・集中タイマー・写真の同梱タイル](docs/images/live-tiles.png)
 
@@ -130,7 +144,7 @@ Microsoft とは独立したプロジェクトです。Explorer のパッチは�
 
 ### 天気や見出しをアプリと一緒に
 
-<p align="center"><img src="docs/images/connected-data.png" width="464" alt="ReStart で表示する天気・フィードの見出し・JSON モニター" /></p>
+<p align="center"><img src="docs/images/connected-weather.png" width="204" alt="Weather web tile" /> <img src="docs/images/connected-feed.png" width="204" alt="Feed headlines web tile" /> <img src="docs/images/connected-json-monitor.png" width="204" alt="JSON monitor web tile" /></p>
 
 | タイル | 表示するもの | 接続先の指定 |
 | --- | --- | --- |

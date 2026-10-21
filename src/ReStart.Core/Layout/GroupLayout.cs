@@ -53,10 +53,14 @@ public static class GroupLayout
             .SelectMany(p =>
             {
                 var gap = moving.IsStandalone && p.Group.IsStandalone ? 0 : Gap;
-                return new[] { p.Left + p.Width + gap, p.Left - width - gap };
+                var tolerance = Math.Min(cell / 4, Gap / 2);
+                // Keep the normal group gutter when approaching from touching
+                // edges, but do not absorb a deliberate half/full-cell gap.
+                return new[] { (X: p.Left + p.Width + gap, Before: gap + tolerance, After: tolerance),
+                    (X: p.Left - width - gap, Before: tolerance, After: gap + tolerance) };
             })
-            .Where(x => x >= 0 && Math.Abs(x - left) <= Gap + cell / 4)
-            .OrderBy(x => Math.Abs(x - left)).ThenBy(x => x).ToArray();
+            .Where(p => p.X >= 0 && left >= p.X - p.Before && left <= p.X + p.After)
+            .Select(p => p.X).OrderBy(x => Math.Abs(x - left)).ThenBy(x => x).ToArray();
         return candidates.Length == 0 ? left : candidates[0];
     }
 

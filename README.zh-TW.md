@@ -10,13 +10,27 @@
 
 > **AI 翻譯：** 本指南使用 AI 從英文翻譯，可能含有錯誤。[英文 README](README.md) 為主要參考，包含更多範例。歡迎協助修正。螢幕擷取畫面使用英文示範環境與範例資料。
 
-<p align="center"><strong>觀看 29 秒示範</strong><br><sub>1080p · 英文 · 無音訊</sub></p>
+<p align="center"><strong>觀看 60 秒示範</strong><br><sub>1080p · 英文 · 無音訊</sub></p>
 
-https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
+[![ReStart product demonstration](docs/images/demo-poster.png)](https://github.com/LastResolution/ReStart/releases/download/v1.5.0/ReStart-demo.mp4)
 
 懷念 Windows 10 的全螢幕開始功能表？ReStart 在 Windows 11 和 Windows 10 上提供熟悉的應用程式空間。釘選常用內容，自由安排配置，再加入能以 JavaScript 撰寫的動態磚。
 
 **可攜式 · JavaScript 動態磚 · x64 與 ARM64 · 八種語言 · 不必另外安裝 .NET**
+
+## 更多配置控制與創作空間
+
+可鎖定全部配置或個別群組。Ctrl+Shift+L 切換全域鎖定；Ctrl+E 選取動態磚，Ctrl+方向鍵移動動態磚，Ctrl+Shift+方向鍵移動群組，Alt+1–4 更改大小，Ctrl+G 將所選動態磚分組，Shift+F10 開啟選單。仍支援復原/重做。亦可儲存獨立於桌面的背景圖片。
+
+內建 19 個 HTML/CSS/JavaScript 動態磚。Tile Studio 可編輯原始碼與資訊清單，以離線範例資料預覽四種大小，再儲存草稿或釘選。新增天氣風景、系統儀表板、RSS 新聞看板及 Canvas 花園；SVG 時鐘指針依電腦時間運作。動態磚名稱預設顯示，可在設定中隱藏。
+
+拖曳時，動態磚、群組或多選項目的半透明副本會跟隨指標。藍色標記指示目標位置，被推開的動態磚也會在放下前預覽新位置。
+
+![Tile Studio: HTML, CSS and JavaScript with four live previews](docs/images/tile-studio.png)
+
+![Weather scene, System dashboard, News board and Canvas garden](docs/images/web-examples.png)
+
+**編輯器操作：** 支援 JavaScript、HTML、CSS 和 JSON 語法醒目提示，**Tab / Shift+Tab** 縮排，以及 **Format document / Ctrl+Shift+F** 離線格式化；一次復原即可還原。Feed headlines 和 News board 在動態磚內部捲動。關閉的資料夾顯示大小一致的即時預覽。初始與重設配置使用隨附的 Month dots 和 Orbit clock。選用的啟動更新檢查會透過可關閉的通知提示新版本。
 
 ## 快速開始
 
@@ -45,7 +59,7 @@ https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
 | 啟動選項 | 每個動態磚獨立啟用、引數、工作目錄、支援桌面程式/捷徑的系統管理員執行；UAC 由 Windows 處理 |
 | 導覽 | 選擇性暫留展開、個別選擇文件/下載/音樂/圖片/影片/網路/個人資料夾、帳戶及電源操作 |
 | 外觀 | 五種色系各有明暗變體、系統模式、自訂 RGB 背景/輔色、桌布、開始畫面著色、個別磚色彩、主題控制項/捲軸、高對比、選擇性動畫 |
-| 動態磚 | 15 個 JavaScript 範例、四種回應式大小、本機點擊動作、即時更新開關、資料設定、建立範例、匯入套件、自動監看本機程式庫 |
+| 動態磚 | 19 個 JavaScript 範例、四種回應式大小、本機點擊動作、即時更新開關、資料設定、建立範例、匯入套件、自動監看本機程式庫 |
 | 動態磚 API | 電腦時間、語言/大小、保留狀態、CPU/記憶體/網路/電池/儲存、選定照片、快取 JSON/Web API/RSS/Atom/檔案輸入、本機程式整合 |
 | 語言 | 英文、日文、德文、法文、西班牙文、韓文、簡體中文、繁體中文，包括內建動態磚文字 |
 | 資料與更新 | 本機設定、配置匯入/匯出/重設、備份與移轉、可清除的程式活動、版本/組建/授權、免 API 金鑰更新檢查與手動安裝 |
@@ -78,7 +92,7 @@ https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
 
 **天氣初始採用柏林範例座標，不是電腦位置。** ReStart 不會推測所在地區。依[天氣指南](docs/javascript-tiles.md#weather-location)變更座標與顯示名稱。認證資料依目前 Windows 使用者加密，不包含在配置匯出中。連線失敗時可顯示快取，隱藏開始畫面後停止讀取。
 
-自訂磚由 `manifest.json` 與 `tile.js` 組成。`render(ctx)` 接收有界資料快照，回傳原生顯示資料，可按大小改變配置。JavaScript 不具一般檔案、網路或 CLR 存取權。將套件資料夾放到 `%LOCALAPPDATA%\ReStart\TileLibrary` 即自動探索。[範例](examples/tiles) · [JavaScript API（英文）](docs/javascript-tiles.md) · [本機資料產生範例](examples/integrations/write-tile-data.ps1)
+Web 動態磚包含 manifest.json、index.html、tile.css、tile.js 及選用 assets。在四種固定大小內可自由使用 HTML/CSS、SVG、Canvas 與透明背景，並相容原生 JS 套件。需要 WebView2 Runtime；直接連網須宣告能力並逐磚授權，不提供通用檔案、CLR 或 shell 橋接。 [HTML/CSS/JavaScript API](docs/javascript-tiles.md) · [Examples](examples/tiles)
 
 ## 操作
 

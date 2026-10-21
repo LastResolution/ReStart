@@ -4,17 +4,21 @@ namespace ReStart.App.Services;
 
 internal static class SeedLayout
 {
-    public static LayoutDocument Create(IReadOnlyList<AppEntry> apps)
+    public static LayoutDocument Create(IReadOnlyList<AppEntry> apps, ScriptTilePackages packages)
     {
         var document = new LayoutDocument();
         var everyday = new TileGroup { Name = L.T(K.SeedEveryday) };
         var tools = new TileGroup { Name = L.T(K.SeedTools) };
-        everyday.Tiles.Add(new() { AppId = "restart:calendar", Label = L.T(K.AppCalendar), Target = "", IsShellApp = false, Widget = "calendar", Size = TileSize.Wide, Color = "#0078D7" });
-        everyday.Tiles.Add(new() { AppId = "restart:clock", Label = L.T(K.AppClock), Target = "ms-clock:", IsShellApp = false, Widget = "clock", Color = "#325B8C" });
+        var calendar = packages.Import(ScriptTilePackages.BundledManifestPath("calendar"));
+        calendar.Size = TileSize.Large;
+        var clock = packages.Import(ScriptTilePackages.BundledManifestPath("orbit"));
+        clock.Size = TileSize.Medium;
+        everyday.Tiles.Add(calendar);
+        everyday.Tiles.Add(clock);
         var chosen = new HashSet<string>();
         var terms = new[] { "Edge", "Chrome", "Firefox", "Outlook", "Store", "Spotify", "Terminal", "Visual Studio Code" }
             .Concat(new[] { K.AppMail, K.AppPhotos, K.AppNotepad, K.AppCalculator, K.AppPaint }
-                .SelectMany(key => new[] { L.Translate(key, "ja"), L.Translate(key, "en") }));
+                .SelectMany(key => TextCatalog.SupportedLanguages.Select(language => L.Translate(key, language))));
         foreach (var term in terms)
         {
             var app = apps.FirstOrDefault(a => a.Name.Contains(term, StringComparison.OrdinalIgnoreCase) && !chosen.Contains(a.Id));

@@ -10,13 +10,27 @@
 
 > **Traducción con IA:** esta guía se ha traducido del inglés mediante IA y puede contener errores. El [README en inglés](README.md) es la referencia principal e incluye más ejemplos. Se agradecen las correcciones. Las capturas usan una demostración en inglés con datos de ejemplo.
 
-<p align="center"><strong>Ver la demostración de 29 segundos</strong><br><sub>1080p · Inglés · Sin audio</sub></p>
+<p align="center"><strong>Ver la demostración de 60 segundos</strong><br><sub>1080p · Inglés · Sin audio</sub></p>
 
-https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
+[![ReStart product demonstration](docs/images/demo-poster.png)](https://github.com/LastResolution/ReStart/releases/download/v1.5.0/ReStart-demo.mp4)
 
 ¿Echas de menos Inicio a pantalla completa de Windows 10? ReStart ofrece un espacio familiar para tus aplicaciones en Windows 11 y Windows 10. Ancla lo que utilizas, organiza la pantalla y añade mosaicos que puedes escribir en JavaScript.
 
 **Portátil · Mosaicos JavaScript · x64 y ARM64 · Ocho idiomas · Sin instalar .NET por separado**
+
+## Más control y espacio para crear
+
+Bloquea todo el diseño o grupos individuales. Ctrl+Mayús+L cambia el bloqueo global. Ctrl+E selecciona; Ctrl+flecha mueve mosaicos, Ctrl+Mayús+flecha mueve el grupo y Alt+1–4 cambia el tamaño. Ctrl+G agrupa la selección; Mayús+F10 abre su menú. Se mantiene Deshacer/Rehacer. Puedes guardar un fondo propio, independiente del escritorio.
+
+Incluye 19 mosaicos HTML/CSS/JavaScript. Tile Studio permite editar código y manifiesto, probar cuatro tamaños con datos de ejemplo sin conexión y guardar borradores o anclarlos. Los nuevos ejemplos muestran tiempo atmosférico, panel del sistema, noticias RSS y arte Canvas. Las agujas del reloj SVG siguen la hora del PC. Los nombres se muestran por defecto y pueden ocultarse en los ajustes.
+
+Al arrastrar, una copia semitransparente del mosaico, grupo o selección sigue al puntero. La marca azul indica el destino y los mosaicos desplazados muestran su posición antes de soltar.
+
+![Tile Studio: HTML, CSS and JavaScript with four live previews](docs/images/tile-studio.png)
+
+![Weather scene, System dashboard, News board and Canvas garden](docs/images/web-examples.png)
+
+**Controles del editor:** resaltado de JavaScript, HTML, CSS y JSON; **Tab / Mayús+Tab** para la sangría; **Format document / Ctrl+Mayús+F** para formatear sin conexión y deshacer en un solo paso. Feed headlines y News board se desplazan dentro de su mosaico. Las carpetas cerradas muestran vistas previas dinámicas del mismo tamaño. Los diseños nuevos y restablecidos usan Month dots y Orbit clock. La comprobación opcional al iniciar muestra un aviso descartable cuando hay una versión nueva.
 
 ## Primeros pasos
 
@@ -45,7 +59,7 @@ El engranaje permite elegir temas, inicio con Windows, integración de la tecla 
 | Opciones de ejecución | Activación por mosaico, argumentos, directorio de trabajo y administrador para aplicaciones/accesos directos de escritorio compatibles; Windows controla UAC |
 | Navegación | Expansión opcional al pasar el puntero, Documentos/Descargas/Música/Imágenes/Vídeos/Red/carpeta personal seleccionables, cuenta y energía |
 | Apariencia | Cinco familias con variantes claras/oscuras, modo del sistema, fondo/acento RGB personalizados, papel tapiz, tinte de Inicio, colores por mosaico, controles y barras a juego, alto contraste y animación opcional |
-| Mosaicos dinámicos | 15 ejemplos JavaScript, cuatro tamaños adaptables, acciones locales al pulsar, actualizaciones activables, fuentes de datos configurables, creación de ejemplos, importación y biblioteca observada automáticamente |
+| Mosaicos dinámicos | 19 ejemplos JavaScript, cuatro tamaños adaptables, acciones locales al pulsar, actualizaciones activables, fuentes de datos configurables, creación de ejemplos, importación y biblioteca observada automáticamente |
 | API de mosaicos | Hora del PC, idioma/tamaño, estado conservado, CPU/memoria/red/batería/almacenamiento, fotos elegidas, datos JSON/Web API/RSS/Atom/archivos en caché e integración local |
 | Idiomas | Inglés, japonés, alemán, francés, español, coreano, chino simplificado y tradicional, incluidos los textos de mosaicos suministrados |
 | Datos y actualizaciones | Ajustes locales, importar/exportar/restablecer, copias y migración, actividad de aplicaciones borrable, versión/build/licencias, comprobación sin clave API e instalación manual |
@@ -78,7 +92,7 @@ Clic derecho en el fondo → **Add live tile**. Los clics actúan dentro del mos
 
 **El tiempo usa Berlín como ejemplo inicial, no la ubicación de tu PC.** ReStart no estima tu región. Cambia coordenadas y nombre con la [guía meteorológica](docs/javascript-tiles.md#weather-location). Las credenciales se cifran para tu usuario de Windows y se excluyen de las exportaciones. La caché sigue siendo útil si falla la conexión; ocultar Inicio detiene las lecturas.
 
-Un mosaico consta de `manifest.json` y `tile.js`. `render(ctx)` recibe una instantánea limitada y devuelve datos para dibujarlos de forma nativa, con diseño según tamaño. JavaScript no obtiene acceso general a archivos, red ni CLR. Coloca paquetes en `%LOCALAPPDATA%\ReStart\TileLibrary`; se detectan automáticamente. [Ejemplos](examples/tiles) · [API JavaScript (inglés)](docs/javascript-tiles.md) · [Productor local](examples/integrations/write-tile-data.ps1)
+Un mosaico web contiene manifest.json, index.html, tile.css, tile.js y assets opcionales. Usa HTML/CSS, SVG, Canvas y transparencia dentro de cuatro tamaños fijos. Los paquetes JS nativos siguen funcionando. Requiere WebView2 Runtime. La red directa exige declarar la capacidad y autorizarla por mosaico; no hay acceso general a archivos, CLR ni shell. [HTML/CSS/JavaScript API](docs/javascript-tiles.md) · [Examples](examples/tiles)
 
 ## Controles
 

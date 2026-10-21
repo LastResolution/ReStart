@@ -3,6 +3,12 @@ namespace ReStart.Core;
 /// <summary>Stores local UI and integration choices; imported layouts do not replace these settings.</summary>
 public sealed class Preferences
 {
+    /// <summary>Gets or sets whether tile/group positions, sizes and membership are protected from editing; launch and appearance remain available.</summary>
+    public bool LayoutLocked { get; set; }
+    /// <summary>Gets or sets whether live tiles show their bottom name; defaults to true. Browser packages receive the preference and a title marker contract.</summary>
+    public bool ShowLiveTileNames { get; set; } = true;
+    /// <summary>Gets or sets stable IDs of groups whose geometry and membership are protected independently of the global lock. Locks are outside undo history.</summary>
+    public List<string> LockedGroupIds { get; set; } = [];
     /// <summary>Gets or sets whether search includes localized Windows settings entry points.</summary>
     public bool SearchSettings { get; set; } = true;
     /// <summary>Gets or sets whether app menus query Windows Recent/Frequent destinations; Windows history privacy settings also apply.</summary>
@@ -47,6 +53,10 @@ public sealed class Preferences
     public bool CloseOnDeactivate { get; set; } = true;
     /// <summary>Gets or sets whether the desktop wallpaper is used as the background.</summary>
     public bool ShowWallpaper { get; set; } = true;
+    /// <summary>Gets or sets whether enabled wallpaper uses a locally selected ReStart image instead of the desktop image.</summary>
+    public bool UseCustomBackground { get; set; }
+    /// <summary>Gets or sets the generated N-format GUID of a local background image; empty means no custom image. Source paths are never stored here.</summary>
+    public string CustomBackgroundId { get; set; } = "";
     /// <summary>Gets or sets whether app tiles use classic accent-colored backgrounds.</summary>
     public bool ColoredTiles { get; set; }
     /// <summary>Gets or sets whether the dark Start surface uses the selected accent color, as in late Windows 10.</summary>

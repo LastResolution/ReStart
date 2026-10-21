@@ -18,14 +18,24 @@ public partial class App : Application
     private System.Windows.Forms.NotifyIcon? _tray;
     private MainWindow? _window;
     private PinRequestChannel? _pinRequests;
+    private UpdateRelease? _updateNotificationRelease;
 
     /// <summary>Acquires the instance lease before creating UI or registering shell hooks.</summary>
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        if (e.Args.Contains("--render-docs") || e.Args.Contains("--render-promo")) { await RenderDocumentationAsync(e.Args); return; }
+        if (e.Args.Contains("--render-docs") || e.Args.Contains("--render-promo") || e.Args.Contains("--render-studio")) { await RenderDocumentationAsync(e.Args); return; }
         var preview = e.Args.Contains("--preview") || e.Args.Contains("--smoke-test");
         var smoke = e.Args.Contains("--smoke-test");
+        if (preview) DispatcherUnhandledException += (_, error) =>
+        {
+            Console.Error.WriteLine(error.Exception);
+            var index = Array.IndexOf(e.Args, "--snapshot");
+            if (index >= 0 && index + 1 < e.Args.Length)
+                try { File.WriteAllText(Path.ChangeExtension(e.Args[index + 1], ".json"), JsonSerializer.Serialize(new { success = false, error = error.Exception.ToString() })); }
+                catch (IOException) { }
+            error.Handled = true; Shutdown(1);
+        };
         var sid = WindowsIdentity.GetCurrent().User?.Value ?? Environment.UserName;
         var pinIndex = Array.IndexOf(e.Args, "--pin");
         var pinPath = pinIndex >= 0 && pinIndex + 1 < e.Args.Length ? e.Args[pinIndex + 1] : null;
@@ -84,6 +94,12 @@ public partial class App : Application
             if (_integration.Status is string status) _window.SetStatus(status);
         };
         CreateTray();
+        _window.StartupUpdateAvailable += release =>
+        {
+            if (_tray == null || _window.IsPresenting) return;
+            _updateNotificationRelease = release;
+            _tray.ShowBalloonTip(10000, "ReStart", L.F(K.UpdateAvailable, release.Version), System.Windows.Forms.ToolTipIcon.Info);
+        };
         if (pinPath != null) await _window.PinPathAsync(pinPath);
         else if (e.Args.Contains("--background")) _ = _window.InitializeAsync();
         else _window.Present();
@@ -112,6 +128,7 @@ public partial class App : Application
             Visible = true
         };
         _tray.DoubleClick += (_, _) => Dispatcher.Invoke(() => _window!.Toggle());
+        _tray.BalloonTipClicked += (_, _) => Dispatcher.Invoke(() => { if (_updateNotificationRelease is { } release) _window?.OpenUpdateRelease(release); });
     }
 
     private void RefreshTrayLanguage()
@@ -178,7 +195,7 @@ public partial class App : Application
                 if (args.Contains("--fidelity-test")) fidelity = await _window.VerifyFidelityAsync(path);
                 _window.SaveScreenshot(path);
             }
-            catch (Exception ex) when (ex is IOException or InvalidOperationException) { success = false; error = ex.Message; }
+            catch (Exception ex) { success = false; error = ex.ToString(); Console.Error.WriteLine(ex); }
             try
             {
                 File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, catalogFolders = _window.CatalogFolderCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, navigation, placement, appFolders, firstInput, appMenus, releaseInfo, scrolling, bundledTiles, pinIcons, motion, editing, folderDrops, tileData, searchSelection, startupPreparation, appearance, fidelity, startup = _window.StartupMetrics, error, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));

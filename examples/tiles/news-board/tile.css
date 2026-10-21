@@ -1,0 +1,179 @@
+* {
+    box-sizing: border-box;
+}
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent;
+}
+body {
+    font:
+        calc(12px * var(--tile-scale, 1)) "Segoe UI",
+        sans-serif;
+    color: #f3f8ff;
+}
+.tile {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    padding: calc(11px * var(--tile-scale, 1));
+    display: flex;
+    flex-direction: column;
+    gap: calc(6px * var(--tile-scale, 1));
+}
+.tile-name {
+    font-size: calc(12px * var(--tile-scale, 1));
+    line-height: calc(15px * var(--tile-scale, 1));
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: auto;
+    position: relative;
+    z-index: 2;
+}
+html[data-show-title="false"] .tile-name {
+    display: none;
+}
+.kicker {
+    font-size: calc(10px * var(--tile-scale, 1));
+    opacity: 0.75;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.value {
+    font-size: calc(30px * var(--tile-scale, 1));
+    font-weight: 300;
+    line-height: 1.06;
+}
+html[data-size="small"] .tile {
+    padding: calc(5px * var(--tile-scale, 1));
+}
+html[data-size="small"] .tile-name,
+html[data-size="small"] .kicker {
+    display: none;
+}
+html[data-reduced-motion="true"] *,
+html[data-reduced-motion="true"] *::before,
+html[data-reduced-motion="true"] *::after {
+    animation: none !important;
+    transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* The heading and title stay fixed while the story owns its scroll range. */
+.paper {
+    background: #efe8d9;
+    color: #212b33;
+    border-top: calc(4px * var(--tile-scale, 1)) solid #c3553d;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: calc(4px * var(--tile-scale, 1));
+}
+.masthead {
+    display: flex;
+    justify-content: space-between;
+    gap: calc(8px * var(--tile-scale, 1));
+    border-bottom: calc(1px * var(--tile-scale, 1)) solid currentColor;
+    padding-bottom: calc(3px * var(--tile-scale, 1));
+    font-size: calc(9px * var(--tile-scale, 1));
+    line-height: calc(11px * var(--tile-scale, 1));
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+.masthead > span:first-child {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.masthead > span:last-child {
+    flex: none;
+}
+#story {
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: currentColor transparent;
+    padding-right: calc(3px * var(--tile-scale, 1));
+}
+#headline {
+    font:
+        600 calc(22px * var(--tile-scale, 1)) / 1.16 Georgia,
+        serif;
+    overflow-wrap: anywhere;
+}
+#summary {
+    font-size: calc(11px * var(--tile-scale, 1));
+    line-height: 1.4;
+    opacity: 0.8;
+    margin-top: calc(7px * var(--tile-scale, 1));
+}
+.paper .tile-name {
+    margin: 0;
+    font-size: calc(10px * var(--tile-scale, 1));
+    line-height: calc(13px * var(--tile-scale, 1));
+    opacity: 0.8;
+}
+[data-size="wide"] .paper,
+[data-size="medium"] .paper {
+    padding: calc(9px * var(--tile-scale, 1));
+}
+[data-size="wide"] #headline {
+    font-size: calc(16px * var(--tile-scale, 1));
+}
+[data-size="medium"] #headline {
+    font-size: calc(12px * var(--tile-scale, 1));
+}
+[data-size="medium"] #summary {
+    font-size: calc(10px * var(--tile-scale, 1));
+}
+[data-size="wide"] .masthead {
+    font-size: calc(8px * var(--tile-scale, 1));
+    line-height: calc(10px * var(--tile-scale, 1));
+}
+[data-size="medium"] .masthead {
+    font-size: calc(7px * var(--tile-scale, 1));
+    line-height: calc(9px * var(--tile-scale, 1));
+}
+[data-size="wide"] .paper .tile-name,
+[data-size="medium"] .paper .tile-name {
+    font-size: calc(9px * var(--tile-scale, 1));
+    line-height: calc(11px * var(--tile-scale, 1));
+}
+[data-size="small"] .paper {
+    grid-template-rows: minmax(0, 1fr);
+}
+[data-size="small"] .masthead,
+[data-size="small"] #summary {
+    display: none;
+}
+[data-size="small"] #headline {
+    font-size: calc(10px * var(--tile-scale, 1));
+    line-height: 1.1;
+}
+.paper.changed #headline {
+    animation: headline-in 0.4s ease-out;
+}
+@keyframes headline-in {
+    from {
+        opacity: 0;
+        transform: translateY(calc(6px * var(--tile-scale, 1)));
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}

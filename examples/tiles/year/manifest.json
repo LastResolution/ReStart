@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "title": "Year in motion",
   "localizedTitles": {
     "en": "Year in motion",
@@ -43,5 +43,6 @@
         "caption": "年度進度"
       }
     }
-  }
+  },
+  "renderer": "web"
 }

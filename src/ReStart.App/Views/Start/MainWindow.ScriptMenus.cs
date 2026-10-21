@@ -9,6 +9,8 @@ public partial class MainWindow
     private MenuItem AddLiveTileMenu(ItemsControl menu)
     {
         var add = new MenuItem { Header = L.T(K.AddLiveTile) };
+        Add(add, L.T(K.StudioTitle), CreateScriptTile);
+        add.Items.Add(new Separator());
         foreach (var id in ScriptTilePackages.BundledIds)
             try
             {
@@ -25,7 +27,7 @@ public partial class MainWindow
         add.Items.Add(library);
         Add(add, L.T(K.OpenTileLibrary), () =>
         {
-            try { Directory.CreateDirectory(_scriptPackages.LibraryRoot); ShellLauncher.Launch(_scriptPackages.LibraryRoot); }
+            try { Directory.CreateDirectory(_scriptPackages.LibraryRoot); LaunchPath(_scriptPackages.LibraryRoot); }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception) { SetStatus(ex.Message); }
         });
         menu.Items.Add(add); return add;

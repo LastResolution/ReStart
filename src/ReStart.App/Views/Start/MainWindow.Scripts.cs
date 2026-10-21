@@ -13,50 +13,44 @@ namespace ReStart.App;
 public partial class MainWindow
 {
     private readonly List<(Tile Tile, StackPanel Body, Button Button)> _scriptViews = [];
+    private int _scriptPresentationGeneration;
     private sealed class ScriptRuntime
     {
         internal int Attempts;
+        internal bool Rendering;
         internal DateTimeOffset NextUpdate;
         internal System.Text.Json.JsonElement State = System.Text.Json.JsonSerializer.SerializeToElement(new { });
         internal Queue<ScriptInput> Inputs = new();
     }
-    private sealed record ScriptInput(string Type, long UnixMs);
+    private sealed record ScriptInput(string Type, long UnixMs, double? X = null, double? Y = null);
     private readonly Dictionary<string, ScriptRuntime> _scriptSessions = [];
     private ScriptTileWorkerPool? _scriptWorkerPool;
     private readonly Dictionary<string, ScriptTileFrame> _scriptFrames = [];
     private ScriptTilePackages _scriptPackages = null!;
     internal ScriptTilePackages ScriptPackages => _scriptPackages;
-    private bool _scriptRendering;
     private string? _scriptLanguage;
     private SystemMetricsSampler? _systemMetrics;
     private TileDataTransport? _tileDataTransport;
     private readonly Dictionary<string, (string Package, ScriptDataRuntime Runtime)> _tileData = [];
     private readonly Dictionary<string, (string Package, SlideshowSource Source)> _slideshowSources = [];
     private readonly Dictionary<string, BitmapSource> _slideshowImages = [];
-    /// <summary>Gets the number of live root JavaScript tiles in the current document.</summary>
-    public int ScriptTileCount => Document.Groups.SelectMany(g => g.Tiles).Count(t => t.Widget == "script" && t.Live);
+    /// <summary>Gets the number of currently presented JavaScript tiles, including visible folder miniatures and expanded children.</summary>
+    public int ScriptTileCount => _scriptViews.Count(v => v.Tile.Live);
     /// <summary>Gets the number of cached successful JavaScript frames.</summary>
     public int ScriptFrameCount => _scriptFrames.Count;
-    /// <summary>Gets whether all live root JavaScript tiles have produced a successful frame.</summary>
-    public bool ScriptsReady => Document.Groups.SelectMany(g => g.Tiles).Where(t => t.Widget == "script" && t.Live).All(t => _scriptFrames.ContainsKey(t.Id));
+    /// <summary>Gets whether every currently presented JavaScript tile has produced a successful frame.</summary>
+    public bool ScriptsReady => _scriptViews.All(v => _scriptFrames.ContainsKey(v.Tile.Id));
 
-    /// <summary>Installs the bundled clock sample, pins it, and explicitly opens its source in Notepad.</summary>
-    public void CreateScriptTile()
-    {
-        try
-        {
-            var tile = _scriptPackages.Import(Path.Combine(AppContext.BaseDirectory, "Examples", "clock", "manifest.json"));
-            PinCustom(tile); _scriptPackages.Edit(tile.ScriptId);
-        }
-        catch (Exception ex) when (ex is IOException or InvalidDataException or InvalidOperationException or System.ComponentModel.Win32Exception or System.Text.Json.JsonException) { SetStatus(ex.Message); }
-    }
+    /// <summary>Opens a new local tile draft in Tile Studio; saving and pinning remain explicit actions.</summary>
+    public void CreateScriptTile() => OpenTileStudio();
 
     internal Tile? AddBundledScriptTile(string id)
         => AddScriptPackage(ScriptTilePackages.BundledManifestPath(id));
 
     internal Tile? AddScriptPackage(string manifestPath)
     {
-        try { var tile = _scriptPackages.Import(manifestPath); PinCustom(tile); return tile; }
+        if (!CanEditLayout) { SetStatus(L.T(K.LayoutLockedStatus)); return null; }
+        try { var tile = _scriptPackages.Import(manifestPath); PinCustom(tile); return FindTile(tile.Id) != null ? tile : null; }
         catch (Exception ex) when (ex is IOException or InvalidDataException or InvalidOperationException or System.Text.Json.JsonException)
         { SetStatus(ex.Message); return null; }
     }
@@ -91,15 +85,18 @@ public partial class MainWindow
             }
         }
         catch (Exception ex) when (ex is IOException or InvalidDataException or System.Text.Json.JsonException) { }
+        Add(menu, L.T(K.StudioTitle), () => OpenTileStudio(tile));
+        AddWebTileMenu(menu, tile);
         Add(menu, L.T(K.EditScript), () => EditScript(tile));
         Add(menu, L.T(K.EditScriptSettings), () => EditScript(tile, "manifest.json"));
         Add(menu, L.T(K.OpenScriptFolder), () =>
         {
-            try { ShellLauncher.Launch(_scriptPackages.Folder(tile.ScriptId)); }
+            try { LaunchPath(_scriptPackages.Folder(tile.ScriptId)); }
             catch (Exception ex) when (ex is IOException or InvalidDataException or InvalidOperationException or System.ComponentModel.Win32Exception) { SetStatus(ex.Message); }
         });
         Add(menu, L.T(K.ReloadScript), () =>
         {
+            if (_htmlTiles.Remove(tile.Id, out var htmlView)) htmlView.Dispose();
             RetireTileData(tile.Id);
             _scriptSessions.Remove(tile.Id);
             _scriptFrames.Remove(tile.Id);
@@ -113,11 +110,11 @@ public partial class MainWindow
         catch (Exception ex) when (ex is IOException or InvalidDataException or InvalidOperationException or System.ComponentModel.Win32Exception) { SetStatus(ex.Message); }
     }
 
-    private void InteractWithScriptTile(Tile tile)
+    private void InteractWithScriptTile(Tile tile, Point? position = null)
     {
         if (!tile.Live) return;
         if (!_scriptSessions.TryGetValue(tile.Id, out var runtime)) _scriptSessions[tile.Id] = runtime = new();
-        if (runtime.Inputs.Count < 16) runtime.Inputs.Enqueue(new("click", DateTimeOffset.Now.ToUnixTimeMilliseconds()));
+        if (runtime.Inputs.Count < 16) runtime.Inputs.Enqueue(new("click", DateTimeOffset.Now.ToUnixTimeMilliseconds(), position?.X, position?.Y));
         runtime.NextUpdate = DateTimeOffset.MinValue;
         if (_slideshowSources.TryGetValue(tile.Id, out var photos)) photos.Source.Advance(DateTimeOffset.Now);
         _ = UpdateScriptTilesAsync();
@@ -141,9 +138,7 @@ public partial class MainWindow
 
     private async Task UpdateScriptTilesAsync()
     {
-        if (_scriptRendering || !IsVisible && !_startupPreparing) return;
-        _scriptRendering = true;
-        try
+        if (!IsVisible && !_startupPreparing) return;
         {
             var current = _scriptViews.Where(v => v.Body.IsVisible || _startupPreparing).ToArray();
             var pinnedIds = Document.Groups.SelectMany(g => g.Tiles).SelectMany(t => new[] { t }.Concat(t.Children)).Select(t => t.Id).ToHashSet();
@@ -153,10 +148,12 @@ public partial class MainWindow
                 else data.Value.Runtime.Stop();
             if (current.Length == 0) { PauseScripts(); return; }
             var pool = _scriptWorkerPool ??= new();
+            var generation = _scriptPresentationGeneration;
             await Task.WhenAll(current.Select(async view =>
             {
                 if (!_scriptSessions.TryGetValue(view.Tile.Id, out var session)) _scriptSessions[view.Tile.Id] = session = new();
-                if (session.NextUpdate > DateTimeOffset.Now) return;
+                if (session.Rendering || session.NextUpdate > DateTimeOffset.Now.AddMilliseconds(15)) return;
+                session.Rendering = true;
                 session.NextUpdate = DateTimeOffset.Now.AddSeconds(5);
                 session.Attempts++;
                 try
@@ -193,17 +190,25 @@ public partial class MainWindow
                     Dictionary<string, TileDataSnapshot>? data = null;
                     if (manifest.Capabilities.Contains("data.sources"))
                     {
-                        try { data = ReadTileData(view.Tile, manifest, now); }
+                        try
+                        {
+                            if (_preview && _documentationSampleConnections)
+                            {
+                                var sample = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(TileStudioContext.Sample(manifest), ScriptTileProtocol.Json).GetProperty("data");
+                                data = manifest.DataSources.ToDictionary(pair => pair.Key, pair => new TileDataSnapshot("ready", sample.GetProperty(pair.Key).GetProperty("value").Clone(), now, now, false, null));
+                            }
+                            else data = ReadTileData(view.Tile, manifest, now);
+                        }
                         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or System.Security.Cryptography.CryptographicException or System.Text.Json.JsonException)
                         { data = manifest.DataSources.ToDictionary(p => p.Key, _ => new TileDataSnapshot("error", System.Text.Json.JsonSerializer.SerializeToElement<object?>(null), null, null, false, new("configuration"))); }
                     }
                     else RetireTileData(view.Tile.Id);
-                    var (frame, error) = await pool.RenderAsync(source, new
+                    var context = new
                     {
                         now = now.ToString("O"),
                         locale = L.Culture.Name,
                         language = L.Language,
-                        time = new { unixMs = now.ToUnixTimeMilliseconds(), monotonicMs = _preview && _documentationMonotonicMilliseconds is long tick ? tick : Environment.TickCount64, utc = now.UtcDateTime.ToString("O"), local = now.ToString("O"), offsetMinutes = now.Offset.TotalMinutes, timeZoneId = TimeZoneInfo.Local.Id },
+                        time = new { unixMs = now.ToUnixTimeMilliseconds(), monotonicMs = _preview && _documentationMonotonicMilliseconds is long tick ? tick : Environment.TickCount64, utc = now.UtcDateTime.ToString("O"), local = now.ToString("O"), offsetMinutes = now.Offset.TotalMinutes, timeZoneId = TimeZoneInfo.Local.Id, preview = _preview && _documentationHtmlRendering },
                         calendar = new { shortDate = now.ToString("d", L.Culture), weekday = now.ToString("dddd", L.Culture), month = now.ToString("MMMM", L.Culture), day = now.Day },
                         @event = input,
                         system = metrics,
@@ -212,25 +217,61 @@ public partial class MainWindow
                         size = view.Tile.Size.ToString().ToLowerInvariant(),
                         bounds = new { width = view.Button.ActualWidth, height = view.Button.ActualHeight, scale = Document.Preferences.TileScale },
                         settings = manifest.Settings,
-                        state = session.State
-                    });
+                        state = session.State,
+                        theme = new
+                        {
+                            mode = ThemeWindow.IsLight ? "light" : "dark",
+                            highContrast = SystemParameters.HighContrast,
+                            reducedMotion = !MotionEnabled,
+                            accent = Document.Preferences.Accent,
+                            customColor = view.Tile.UseCustomColor ? view.Tile.Color : null
+                        },
+                        appearance = new { showTitle = Document.Preferences.ShowLiveTileNames },
+                        title = TileDisplayName(view.Tile)
+                    };
+                    var (frame, error) = manifest.Renderer == "web" ? await RenderHtmlTileAsync(view.Tile, context, source, manifest) : await pool.RenderAsync(source, context);
                     if (!_scriptSessions.TryGetValue(view.Tile.Id, out var latest) || latest != session || !IsVisible && !_startupPreparing || _scriptWorkerPool != pool) return;
+                    if (generation != _scriptPresentationGeneration) { session.NextUpdate = DateTimeOffset.MinValue; return; }
                     _scriptAttempts.Add(view.Tile.Id);
                     if (input != null && session.Inputs.TryPeek(out var queued) && queued == input) session.Inputs.Dequeue();
                     if (session.Inputs.Count > 0) session.NextUpdate = DateTimeOffset.MinValue;
                     if (frame != null) { _scriptFrames[view.Tile.Id] = frame; session.State = frame.State; if (ScriptsReady) MarkStartup("tiles"); }
                     foreach (var target in _scriptViews.Where(target => target.Tile.Id == view.Tile.Id))
                     {
-                        if (frame != null) ApplyScriptFrame(target.Body, target.Button, target.Tile, frame);
+                        if (frame != null)
+                        {
+                            if (manifest.Renderer == "web")
+                            { SetWebTileFeedback(target.Body, false); target.Body.Children.Clear(); target.Body.Children.Add(new TextBlock { Text = frame.Text, Tag = "ScriptValue" }); }
+                            else ApplyScriptFrame(target.Body, target.Button, target.Tile, frame);
+                        }
                         target.Button.ToolTip = error == null ? TileDisplayName(target.Tile) : L.T(K.ErrorScriptPrefix) + error;
-                        if (frame == null && target.Body.Children.Count == 0) target.Body.Children.Add(new TextBlock { Text = L.T(K.ErrorScript), TextWrapping = TextWrapping.Wrap });
+                        if (frame == null && error != null)
+                        {
+                            if (manifest.Renderer == "web") SetWebTileFeedback(target.Body, true);
+                            target.Body.Children.Clear(); target.Body.Children.Add(new TextBlock { Text = L.T(K.ErrorScript), TextWrapping = TextWrapping.Wrap });
+                        }
                     }
                 }
                 catch (Exception ex) when (ex is IOException or InvalidDataException or InvalidOperationException or System.Text.Json.JsonException)
-                { _scriptAttempts.Add(view.Tile.Id); view.Button.ToolTip = L.T(K.ErrorScriptPrefix) + ex.Message; if (view.Body.Children.Count == 0) view.Body.Children.Add(new TextBlock { Text = L.T(K.ErrorScript) }); }
+                {
+                    if (generation != _scriptPresentationGeneration) { session.NextUpdate = DateTimeOffset.MinValue; return; }
+                    _scriptAttempts.Add(view.Tile.Id); view.Button.ToolTip = L.T(K.ErrorScriptPrefix) + ex.Message;
+                    if (_htmlTiles.ContainsKey(view.Tile.Id)) SetWebTileFeedback(view.Body, true);
+                    view.Body.Children.Clear(); view.Body.Children.Add(new TextBlock { Text = L.T(K.ErrorScript), TextWrapping = TextWrapping.Wrap });
+                }
+                finally { session.Rendering = false; }
             }));
         }
-        finally { _scriptRendering = false; }
+    }
+
+    private void SetWebTileFeedback(StackPanel body, bool visible)
+    {
+        body.Width = body.Height = visible ? double.NaN : 0;
+        body.Opacity = visible ? 1 : 0;
+        body.VerticalAlignment = VerticalAlignment.Center;
+        body.Margin = visible ? new(8) : new(0);
+        body.SetResourceReference(Panel.BackgroundProperty, "StartTileBrush");
+        body.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
     }
     private void ApplyScriptFrame(StackPanel body, Button button, Tile tile, ScriptTileFrame frame)
     {
@@ -310,6 +351,7 @@ public partial class MainWindow
     }
     private void PauseScripts()
     {
+        foreach (var html in _htmlTiles.Values) _ = html.SuspendAsync();
         _scriptWorkerPool?.Dispose(); _scriptWorkerPool = null; _systemMetrics?.SetEnabled(false);
         foreach (var data in _tileData.Values) data.Runtime.Stop();
         foreach (var session in _scriptSessions.Values) session.NextUpdate = DateTimeOffset.MinValue;

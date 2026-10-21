@@ -10,13 +10,27 @@
 
 > **Traduction par IA :** ce guide a été traduit de l’anglais à l’aide de l’IA et peut contenir des erreurs. Le [README anglais](README.md) reste la référence principale et contient des exemples supplémentaires. Les corrections sont bienvenues. Les captures utilisent une démonstration en anglais et des données d’exemple.
 
-<p align="center"><strong>Voir la démo de 29 secondes</strong><br><sub>1080p · Anglais · Sans son</sub></p>
+<p align="center"><strong>Voir la démo de 60 secondes</strong><br><sub>1080p · Anglais · Sans son</sub></p>
 
-https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
+[![ReStart product demonstration](docs/images/demo-poster.png)](https://github.com/LastResolution/ReStart/releases/download/v1.5.0/ReStart-demo.mp4)
 
 Le menu Démarrer plein écran de Windows 10 vous manque ? ReStart offre un espace familier à vos applications sous Windows 11 et Windows 10. Épinglez vos contenus, organisez l’écran à votre façon et ajoutez des vignettes que vous pouvez écrire en JavaScript.
 
 **Portable · Vignettes JavaScript · x64 et ARM64 · Huit langues · Aucune installation séparée de .NET**
+
+## Plus de contrôle, plus de place pour créer
+
+Verrouillez tout le placement ou certains groupes. Ctrl+Maj+L bascule le verrouillage global. Ctrl+E sélectionne, Ctrl+flèche déplace les tuiles, Ctrl+Maj+flèche leur groupe et Alt+1–4 change la taille. Ctrl+G regroupe la sélection ; Maj+F10 ouvre son menu. Annuler/Rétablir reste disponible. Un fond propre à ReStart peut être enregistré indépendamment du bureau.
+
+Dix-neuf tuiles HTML/CSS/JavaScript sont incluses. Tile Studio permet de modifier le code et le manifeste, de tester quatre tailles avec des données fictives hors ligne, puis de sauvegarder ou épingler. Nouveaux exemples : scène météo, tableau système, actualités RSS et jardin Canvas. Les aiguilles SVG suivent l’heure du PC. Les noms sont visibles par défaut et peuvent être masqués dans les paramètres.
+
+Pendant le déplacement, une copie semi-transparente de la vignette, du groupe ou de la sélection suit le pointeur. Le repère bleu indique la destination et les vignettes déplacées prévisualisent leur position avant le dépôt.
+
+![Tile Studio: HTML, CSS and JavaScript with four live previews](docs/images/tile-studio.png)
+
+![Weather scene, System dashboard, News board and Canvas garden](docs/images/web-examples.png)
+
+**Commandes de l’éditeur :** coloration de JavaScript, HTML, CSS et JSON ; **Tab / Maj+Tab** pour l’indentation ; **Format document / Ctrl+Maj+F** pour formater hors ligne avec une seule annulation. Feed headlines et News board défilent dans leur propre tuile. Les dossiers fermés affichent des aperçus animés uniformes. Les dispositions nouvelles ou réinitialisées utilisent Month dots et Orbit clock. La vérification facultative au démarrage signale une nouvelle version par un avis que vous pouvez fermer.
 
 ## Démarrage rapide
 
@@ -45,7 +59,7 @@ La roue dentée permet de régler les thèmes, le lancement à l’ouverture de 
 | Options de lancement | Activation par vignette, arguments, répertoire de travail et élévation pour les applications/raccourcis de bureau compatibles ; Windows gère l’UAC |
 | Navigation | Dépliage au survol facultatif, Documents/Téléchargements/Musique/Images/Vidéos/Réseau/dossier personnel sélectionnables, compte et alimentation |
 | Apparence | Cinq familles de couleurs avec variantes claires/sombres, mode système, arrière-plan/accent RVB personnalisés, fond d’écran, teinte de Démarrer, couleurs par vignette, contrôles et barres assortis, contraste élevé, animation facultative |
-| Vignettes dynamiques | 15 exemples JavaScript, quatre tailles adaptatives, actions locales au clic, mises à jour activables, configuration des données, création d’exemples, import et bibliothèque surveillée automatiquement |
+| Vignettes dynamiques | 19 exemples JavaScript, quatre tailles adaptatives, actions locales au clic, mises à jour activables, configuration des données, création d’exemples, import et bibliothèque surveillée automatiquement |
 | API de vignette | Heure du PC, langue/taille, état conservé, CPU/mémoire/réseau/batterie/stockage, photos sélectionnées, données JSON/Web API/RSS/Atom/fichiers mises en cache et intégration locale |
 | Langues | Anglais, japonais, allemand, français, espagnol, coréen, chinois simplifié et traditionnel, y compris les vignettes fournies |
 | Données et mises à jour | Paramètres locaux, import/export/réinitialisation, sauvegardes et migration, historique d’applications effaçable, version/build/licences, vérification sans clé API et installation manuelle |
@@ -78,7 +92,7 @@ Clic droit sur l’arrière-plan → **Add live tile**. Un clic agit dans la vig
 
 **La météo utilise Berlin comme exemple initial, pas votre position.** ReStart ne déduit pas votre région. Modifiez les coordonnées et le nom du lieu avec le [guide météo](docs/javascript-tiles.md#weather-location). Les identifiants sont chiffrés pour votre utilisateur Windows et exclus des exports. Le cache reste utilisable lors d’une panne ; masquer Démarrer interrompt les lectures.
 
-Une vignette comprend `manifest.json` et `tile.js`. `render(ctx)` lit un instantané limité et renvoie les données d’affichage natif, avec une disposition selon la taille. JavaScript ne dispose pas d’un accès général aux fichiers, au réseau ou au CLR. Placez les paquets sous `%LOCALAPPDATA%\ReStart\TileLibrary` pour leur détection automatique. [Exemples](examples/tiles) · [API JavaScript (anglais)](docs/javascript-tiles.md) · [Producteur local](examples/integrations/write-tile-data.ps1)
+Une tuile web contient manifest.json, index.html, tile.css, tile.js et des assets facultatifs. HTML/CSS, SVG, Canvas et transparence sont libres dans les quatre tailles fixes. Les anciens paquets JS natifs restent compatibles. WebView2 Runtime est requis. Le réseau direct nécessite une capacité déclarée et une autorisation individuelle ; aucune passerelle générale vers les fichiers, CLR ou le shell n’est exposée. [HTML/CSS/JavaScript API](docs/javascript-tiles.md) · [Examples](examples/tiles)
 
 ## Commandes usuelles
 

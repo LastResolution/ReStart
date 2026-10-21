@@ -57,7 +57,7 @@ internal sealed partial class SettingsWindow
         _startAccent = Check(content, L.T(K.SettingsStartAccent), _draft.ShowAccentOnStart, value =>
         { _draft.ShowAccentOnStart = value; if (value) { _draft.ColorThemeId = ""; _backgroundColor.Text = ""; } });
         Note(content, L.T(K.SettingsStartAccentHelp));
-        Check(content, L.T(K.SettingsWallpaper), _draft.ShowWallpaper, v => _draft.ShowWallpaper = v);
+        BuildBackgroundImageSettings(content);
         Check(content, L.T(K.SettingsColoredTiles), _draft.ColoredTiles, v => _draft.ColoredTiles = v);
         Check(content, L.T(K.SettingsAnimation), _draft.Animate, v => _draft.Animate = v);
         Select(content, L.T(K.SettingsGroupWidth), new[] { L.T(K.ColumnsThree), L.T(K.ColumnsFour) }, _draft.Columns == 8 ? 1 : 0, i => _draft.Columns = i == 1 ? 8 : 6);

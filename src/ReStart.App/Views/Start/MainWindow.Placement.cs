@@ -90,6 +90,16 @@ public partial class MainWindow
                 return (group, nearest ?? panel);
             hit = VisualTreeHelper.GetParent(hit);
         }
+        // A compact open folder must still accept the next child column. This
+        // transient drop zone adds no invisible layout/collision footprint.
+        foreach (var inline in VisualChildren<TilePanel>(GroupsPanel).Where(p => p.FolderOwner != null))
+        {
+            var origin = inline.TranslatePoint(new Point(), GroupsPanel);
+            var right = origin.X + Math.Min(Document.Preferences.Columns * Cell, inline.ActualWidth + Cell);
+            if (point.X < origin.X || point.X > right || point.Y < origin.Y || point.Y > origin.Y + inline.ActualHeight + Cell) continue;
+            var owner = Document.Groups.FirstOrDefault(g => g.Tiles.Contains(inline.FolderOwner!));
+            if (owner != null) return (owner, inline);
+        }
         var adjacent = GroupLayout.DropRecipient(GroupsPanel.Placements, point.X, point.Y, Cell);
         var destination = GroupsPanel.Children.OfType<StackPanel>().FirstOrDefault(s => s.Tag == adjacent)?.Children.OfType<TilePanel>().FirstOrDefault();
         return adjacent != null && destination != null ? (adjacent, destination) : null;
@@ -110,7 +120,9 @@ public partial class MainWindow
             .Where(p => p.Panel != null)
             .Select(p => (p.Group, Panel: p.Panel!, Overlap: FindFolderOverlap(tile, p.Panel!, GroupsPanel.TranslatePoint(pointer, p.Panel!))))
             .Where(p => p.Overlap != null).OrderByDescending(p => p.Overlap!.Ratio).ThenBy(p => p.Overlap!.Distance).FirstOrDefault();
-        return overlapping.Panel != null ? (overlapping.Group, overlapping.Panel) : centered;
+        if (overlapping.Panel != null) return (overlapping.Group, overlapping.Panel);
+        var leading = GroupAt(new(pointer.X - _dragOffset.X + .5, pointer.Y - _dragOffset.Y + .5));
+        return leading?.Panel.FolderOwner != null ? leading : centered ?? leading;
     }
 
     private sealed record SingleTileDrop(TileGroup? Group = null, TilePanel? Panel = null,
@@ -118,11 +130,13 @@ public partial class MainWindow
 
     private SingleTileDrop? ResolveSingleTileDrop(Tile tile, Point point, string sourceId, long? timestamp = null)
     {
+        if (!CanEditLayout || !CanEditTile(tile.Id)) return null;
         if (TileDropTarget(tile, point) is not { } target)
         {
             _folderHover.Reset(); StopFolderDwell();
             return new();
         }
+        if (!CanEditGroup(target.Group)) return null;
         var relative = GroupsPanel.TranslatePoint(point, target.Panel);
         var model = target.Panel.ToModelPoint(relative);
         var (column, row) = TileLayout.Snap(model.X - _dragOffset.X, model.Y - _dragOffset.Y, Cell, tile.Size, Document.Preferences.Columns);
@@ -135,13 +149,14 @@ public partial class MainWindow
         if (merge != null && target.Group.IsStandalone && !merge.IsFolder)
         {
             var plan = TileGrouping.Plan(Document, [tile], merge.Id, GroupsPanel.Columns, Cell);
-            return plan == null ? null : new(target.Group, target.Panel, column, row, GroupPlan: plan);
+            return plan == null || !PlacementAllowed(plan) ? null : new(target.Group, target.Panel, column, row, GroupPlan: plan);
         }
         return new(target.Group, target.Panel, column, row, merge);
     }
 
     private bool PreviewSingleTileDrop(Tile tile, Point point, string sourceId, long? timestamp = null)
     {
+        RestoreDropProjection();
         var drop = ResolveSingleTileDrop(tile, point, sourceId, timestamp);
         if (drop == null) { ClearDropPreview(); return false; }
         if (drop.GroupPlan is { } plan) ShowGroupCreationPreview(plan, drop.Group!.Id);
@@ -157,11 +172,13 @@ public partial class MainWindow
             ShowDropPreview(drop.Panel!, tile, drop.Column, drop.Row);
         else PreviewStandalone(tile, point);
         ShowPendingFolderPreview();
+        ProjectSingleTileDrop(tile, drop, point);
         return true;
     }
 
     private bool CommitSingleTileDrop(Tile tile, Point point, string sourceId)
     {
+        RestoreDropProjection();
         // Resolve before clearing the preview: the same dwell state and OLE
         // coordinates must decide both the visible destination and ownership.
         var drop = ResolveSingleTileDrop(tile, point, sourceId);
@@ -179,6 +196,7 @@ public partial class MainWindow
     {
         if (!HasDrag(e)) return;
         e.Handled = true;
+        if (!CanEditLayout) { e.Effects = DragDropEffects.None; ClearDropPreview(); return; }
         e.Effects = DragDropEffects.Move;
         var point = e.GetPosition(GroupsPanel);
         if (e.Data.GetData("ReStart.Selection") is string anchorId)
@@ -188,7 +206,7 @@ public partial class MainWindow
             _folderHover.Reset();
             StopFolderDwell();
             var group = Document.Groups.FirstOrDefault(g => g.Id == groupId);
-            if (group == null) { e.Effects = DragDropEffects.None; return; }
+            if (group == null || !CanEditGroup(group)) { e.Effects = DragDropEffects.None; return; }
             PreviewGroupOnBoard(group, point);
             return;
         }
@@ -232,6 +250,7 @@ public partial class MainWindow
     {
         if (!HasDrag(e)) return;
         e.Handled = true;
+        if (!CanEditLayout) { e.Effects = DragDropEffects.None; ClearDropPreview(); return; }
         var point = e.GetPosition(GroupsPanel);
         if (e.Data.GetData("ReStart.Selection") is string anchorId)
         { ClearDropPreview(); StopFolderDwell(); HandleSelectionDrop(e, anchorId, point, true); return; }
@@ -251,6 +270,7 @@ public partial class MainWindow
 
     private void MoveGroupOnBoard(TileGroup group, Point point)
     {
+        if (!CanEditGroup(group)) return;
         var (column, row, x) = BoardAnchor(point, group.IsStandalone);
         x = GroupDropX(group, x, row);
         row = GroupDropRow(group, x, row);
@@ -260,9 +280,13 @@ public partial class MainWindow
 
     private void PreviewGroupOnBoard(TileGroup group, Point point)
     {
+        if (!CanEditGroup(group)) { ClearDropPreview(); return; }
         var (column, row, x) = BoardAnchor(point, group.IsStandalone);
         x = GroupDropX(group, x, row);
         row = GroupDropRow(group, x, row);
+        var candidate = new LayoutDocument { Preferences = Document.Preferences, Groups = LayoutHistory.CopyGroups(Document.Groups) };
+        GroupLayout.Move(candidate, candidate.Groups.Single(g => g.Id == group.Id), column, row, GroupsPanel.Columns, Cell, x);
+        if (!PlacementAllowed(candidate.Groups)) { ClearDropPreview(); return; }
         var placements = GroupLayout.PreviewMove(Document, group, column, row, GroupsPanel.Columns, Cell, x);
         if (GroupsPanel.DragPlacements is { } previous && placements.SequenceEqual(previous)) return;
         var target = placements.Single(p => p.Group == group);

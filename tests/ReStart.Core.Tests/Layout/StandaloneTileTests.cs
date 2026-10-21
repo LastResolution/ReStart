@@ -5,6 +5,37 @@ namespace ReStart.Core.Tests;
 
 public sealed class StandaloneTileTests
 {
+    [Theory]
+    [InlineData(.7)]
+    [InlineData(1)]
+    [InlineData(1.5)]
+    public void EdgeSnappingPreservesDeliberateHorizontalGapsForEveryTileSize(double scale)
+    {
+        var cell = 52 * scale;
+        foreach (var firstSize in Enum.GetValues<TileSize>())
+            foreach (var movingSize in Enum.GetValues<TileSize>())
+                foreach (var standalone in new[] { false, true })
+                    foreach (var gapCells in standalone ? new[] { .5, 1, 1.5, 2 } : new[] { 1d, 1.5, 2 })
+                    {
+                        var first = new TileGroup { IsStandalone = standalone, X = 10, Column = 0, Row = 0, Tiles = [new() { Size = firstSize }] };
+                        var moving = new TileGroup { IsStandalone = standalone, X = 20, Column = 0, Row = 0, Tiles = [new() { Size = movingSize }] };
+                        var document = new LayoutDocument { Preferences = new() { TileScale = scale }, Groups = [first, moving] };
+                        var placed = GroupLayout.Pack(document.Groups, 4, 6, cell, preserveColumns: true);
+                        var anchor = placed[0]; var current = placed[1];
+                        foreach (var requested in new[] { anchor.Left + anchor.Width + gapCells * cell, anchor.Left - current.Width - gapCells * cell })
+                        {
+                            var snapped = GroupLayout.SnapBeside(placed, moving, requested, anchor.Top, current.Width, current.Height, cell);
+                            Assert.Equal(requested, snapped, 7);
+                            var preview = GroupLayout.PreviewMove(document, moving, 0, 0, 4, cell, snapped / cell);
+                            GroupLayout.Move(document, moving, 0, 0, 4, cell, snapped / cell);
+                            var committed = GroupLayout.Pack(document.Groups, 4, 6, cell, preserveColumns: true);
+                            Assert.Equal(preview.Single(p => p.Group == moving).Left, committed.Single(p => p.Group == moving).Left, 7);
+                            Assert.Equal(anchor.Left, committed.Single(p => p.Group == first).Left, 7);
+                            Assert.Equal(anchor.Top, committed.Single(p => p.Group == first).Top, 7);
+                        }
+                    }
+    }
+
     [Fact]
     public void AdjacentCellsAcceptATileWithoutChangingTheGroupsCollisionFootprint()
     {

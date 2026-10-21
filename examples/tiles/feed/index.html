@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>ReStart live tile</title>
+        <link rel="stylesheet" href="/tile.css" />
+    </head>
+    <body>
+        <article class="card">
+            <img id="photo" alt="" />
+            <div class="content">
+                <div id="kicker" class="kicker"></div>
+                <div id="story" data-restart-scroll>
+                    <div id="value" class="value"></div>
+                    <div id="detail" class="detail"></div>
+                    <div id="badge" class="badge"></div>
+                </div>
+            </div>
+            <svg id="visual" viewBox="0 0 100 100" aria-hidden="true"></svg>
+            <div id="title" class="title" data-restart-title></div>
+        </article>
+        <script src="/tile.js"></script>
+    </body>
+</html>

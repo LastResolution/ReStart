@@ -7,9 +7,9 @@ $source = (Resolve-Path -LiteralPath $Executable).Path
 $testRoot = Join-Path $repoRoot ('artifacts/placement/' + [Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $testRoot -Force | Out-Null
 # A fresh executable directory keeps persistence checks away from any prior preview data.
-foreach ($name in @('ReStart.exe', 'ReStart.dll', 'ReStart.Core.dll', 'ReStart.deps.json', 'ReStart.runtimeconfig.json')) {
-    $file = Join-Path (Split-Path -Parent $source) $name
-    if (Test-Path -LiteralPath $file) { Copy-Item -LiteralPath $file -Destination $testRoot }
+foreach ($entry in Get-ChildItem -LiteralPath (Split-Path -Parent $source)) {
+    if ($entry.Name -eq 'preview-data' -or $entry.Name -like '*.WebView2') { continue }
+    Copy-Item -LiteralPath $entry.FullName -Destination $testRoot -Recurse
 }
 $snapshot = Join-Path $testRoot 'placement.png'
 $process = Start-Process -FilePath (Join-Path $testRoot 'ReStart.exe') -ArgumentList @('--smoke-test', '--placement-test', '--snapshot', ('"' + $snapshot + '"')) -WindowStyle Hidden -PassThru

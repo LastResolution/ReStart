@@ -75,7 +75,7 @@ public sealed class BundledTileTests
     [Fact]
     public void EveryPackageRendersAllLanguagesAndSizesWithAndWithoutHostData()
     {
-        Assert.Equal(15, ScriptTilePackages.BundledIds.Count);
+        Assert.Equal(19, ScriptTilePackages.BundledIds.Count);
         foreach (var id in ScriptTilePackages.BundledIds)
         {
             var manifest = ScriptTilePackages.BundledManifest(id);
@@ -86,12 +86,14 @@ public sealed class BundledTileTests
                     foreach (var hostData in new[] { true, false })
                     {
                         var frame = JsTileRunner.Render(new(source, Context(manifest, language, size, hostData)));
-                        frame.Validate(); Assert.NotEmpty(frame.Text); Assert.NotEmpty(frame.BackgroundEnd);
+                        frame.Validate(); Assert.NotEmpty(frame.Text);
+                        var nativeCompatible = id is not ("weather-scene" or "system-dashboard" or "news-board" or "canvas-garden");
+                        if (nativeCompatible) Assert.NotEmpty(frame.BackgroundEnd);
                         var expectedLayout = id == "slideshow" && size != "small" ? "caption" : id == "weather" && !hostData ? "centered"
                             : id is "feed" or "json-monitor" ? size is "small" or "medium" ? "centered" : "overlay"
                             : size switch { "small" or "medium" => "centered", "large" => "stacked", _ => "split" };
-                        Assert.Equal(expectedLayout, frame.Layout);
-                        if (size == "small") { Assert.Empty(frame.Detail); Assert.Empty(frame.Visual); }
+                        if (nativeCompatible) Assert.Equal(expectedLayout, frame.Layout);
+                        if (nativeCompatible && size == "small") { Assert.Empty(frame.Detail); Assert.Empty(frame.Visual); }
                         var click = JsTileRunner.Render(new(source, Context(manifest, language, size, hostData, frame.State, true)));
                         click.Validate();
                         if (id == "focus") Assert.Equal(100000, click.State.GetProperty("pausedAt").GetInt64());

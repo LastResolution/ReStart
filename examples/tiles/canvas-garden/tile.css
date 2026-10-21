@@ -1,0 +1,93 @@
+* {
+    box-sizing: border-box;
+}
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent;
+}
+body {
+    font:
+        calc(12px * var(--tile-scale, 1)) "Segoe UI",
+        sans-serif;
+    color: #f3f8ff;
+}
+.tile {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    padding: calc(11px * var(--tile-scale, 1));
+    display: flex;
+    flex-direction: column;
+    gap: calc(6px * var(--tile-scale, 1));
+}
+.tile-name {
+    font-size: calc(12px * var(--tile-scale, 1));
+    line-height: calc(15px * var(--tile-scale, 1));
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: auto;
+    position: relative;
+    z-index: 2;
+}
+html[data-show-title="false"] .tile-name {
+    display: none;
+}
+.kicker {
+    font-size: calc(10px * var(--tile-scale, 1));
+    opacity: 0.75;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.value {
+    font-size: calc(30px * var(--tile-scale, 1));
+    font-weight: 300;
+    line-height: 1.06;
+}
+html[data-size="small"] .tile {
+    padding: calc(5px * var(--tile-scale, 1));
+}
+html[data-size="small"] .tile-name,
+html[data-size="small"] .kicker {
+    display: none;
+}
+html[data-reduced-motion="true"] *,
+html[data-reduced-motion="true"] *::before,
+html[data-reduced-motion="true"] *::after {
+    animation: none !important;
+    transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+.garden {
+    padding: 0;
+    background: linear-gradient(135deg, #102e43, #1a2346);
+}
+#garden {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+.garden .tile-name {
+    margin: 0;
+    position: absolute;
+    left: calc(11px * var(--tile-scale, 1));
+    right: calc(11px * var(--tile-scale, 1));
+    bottom: calc(9px * var(--tile-scale, 1));
+    text-shadow: 0 calc(1px * var(--tile-scale, 1))
+        calc(5px * var(--tile-scale, 1)) #0009;
+}

@@ -39,3 +39,13 @@ Custom options are available for supported desktop applications and application 
 **Clear app history** clears counts and discovery dates while retaining the catalog baseline. Activity is separate from layout export and is not uploaded. Disabling Most used preserves existing counts so they can be resumed or explicitly cleared. Windows app-usage history is not imported.
 
 Document destinations come from Windows Recent/Frequent lists only when allowed by the Windows document-history setting. ReStart does not copy those lists into its activity file. Public Windows APIs do not expose application task lists or custom/pinned destination categories; unsupported identities produce no history menu. See [compatibility](fidelity.md).
+
+## Placement protection and keyboard editing
+
+**Lock layout** protects placement, size and membership globally; a group menu can lock one group. Both start off. Locks also cover import/reset, undo/redo and indirect neighbor displacement. Launching, data connections and appearance remain available. Ctrl+Shift+L toggles the global lock.
+
+In Select tiles mode (Ctrl+E), arrows choose a tile, Space changes selection, Ctrl+Arrow moves the focused selection by one small cell, Ctrl+Shift+Arrow moves its group, and Alt+1–4 selects small/medium/wide/large. Ctrl+G collects the selection into a group; Shift+F10 opens its context menu. Valid edits are atomic undo steps. Locked or invalid destinations leave the original layout unchanged.
+
+**Show live tile names**, under JavaScript tiles, defaults on. Turning it off hides native live-widget labels and bundled web-tile title markers; normal app labels and accessibility/tooltip names remain. Custom web packages receive `ctx.appearance.showTitle` and should mark their own name with `data-restart-title`.
+
+Appearance can use the desktop wallpaper or a separately imported image. ReStart stores its own decoded copy and does not retain the original path. High contrast takes precedence.

@@ -26,11 +26,11 @@ public partial class MainWindow
             fixture.Document = new() { Preferences = new() { Language = "en", Columns = 8, ShowWallpaper = false, Animate = false } };
             fixture.ApplyAppearance();
             var tiles = ScriptTilePackages.BundledIds.Select(id => fixture._scriptPackages.Import(ScriptTilePackages.BundledManifestPath(id))).ToArray();
-            for (var group = 0; group < 3; group++)
+            for (var group = 0; group < (tiles.Length + 4) / 5; group++)
             {
                 var contents = tiles.Skip(group * 5).Take(5).ToList();
                 for (var i = 0; i < contents.Count; i++) { contents[i].Column = i % 2 * 4; contents[i].Row = i / 2 * 2; }
-                fixture.Document.Groups.Add(new() { Name = new[] { "Everyday", "Rhythm", "System & photos" }[group], Column = group, Row = 0, Tiles = contents });
+                fixture.Document.Groups.Add(new() { Name = new[] { "Everyday", "Rhythm", "System & photos", "HTML & Canvas" }[group], Column = group, Row = 0, Tiles = contents });
             }
             var images = Path.Combine(directory, "images"); Directory.CreateDirectory(images);
             WriteFixtureImage(Path.Combine(images, "a.png"), Colors.Teal);
@@ -71,6 +71,15 @@ public partial class MainWindow
                 fixture.RenderGroups(); fixture.UpdateLayout(); await RenderUntil(() => fixture.ScriptFrameCount == tiles.Length);
                 foreach (var view in fixture._scriptViews)
                 {
+                    if (fixture._htmlTiles.TryGetValue(view.Tile.Id, out var web))
+                    {
+                        var dimensions = System.Text.Json.JsonSerializer.Deserialize<string>(await web.InspectAsync("JSON.stringify({width:innerWidth,height:innerHeight})"));
+                        using var geometry = System.Text.Json.JsonDocument.Parse(dimensions!);
+                        Require(Math.Abs(geometry.RootElement.GetProperty("width").GetDouble() - view.Button.ActualWidth) <= 1 &&
+                            Math.Abs(geometry.RootElement.GetProperty("height").GetDouble() - view.Button.ActualHeight) <= 1,
+                            "A web tile viewport did not match its actual footprint.");
+                        continue;
+                    }
                     var plot = (Grid)view.Body.Parent;
                     var art = plot.Children.OfType<Controls.ScriptTileArt>().Single();
                     var frame = fixture._scriptFrames[view.Tile.Id];
@@ -121,6 +130,8 @@ public partial class MainWindow
                 // is not selected. It must recover without a manual refresh.
                 settings.SelectSection(L.T(K.SettingsStartup));
                 File.Copy(ScriptTilePackages.BundledManifestPath("clock"), Path.Combine(library, "manifest.json"));
+                foreach (var file in new[] { "index.html", "tile.css" })
+                    File.Copy(Path.Combine(Path.GetDirectoryName(ScriptTilePackages.BundledManifestPath("clock"))!, file), Path.Combine(library, file));
                 await WaitForLibrary(() => settings.LibraryTiles.Children.OfType<Button>().Any(b => !b.IsEnabled), "An incomplete library package was not reported.");
                 File.Copy(Path.Combine(Path.GetDirectoryName(ScriptTilePackages.BundledManifestPath("clock"))!, "tile.js"), Path.Combine(library, "tile.js"));
                 await WaitForLibrary(() => settings.LibraryTiles.Children.OfType<Button>().Count(b => b.IsEnabled) == 1, "The watched library did not discover the complete package.");
@@ -132,7 +143,7 @@ public partial class MainWindow
                 settings.UpdateLayout(); SaveFixtureElement(settings, Path.Combine(Path.GetDirectoryName(snapshotPath)!, "tile-library.png"));
                 var before = GroupLayout.Pack(fixture.Document.Groups, fixture.GroupsPanel.Columns, 8, fixture.Cell, preserveColumns: true).ToArray();
                 add.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); fixture.UpdateLayout();
-                Require(fixture.Document.Groups.Count == 4 && fixture.Document.Groups[^1].IsStandalone, "Library click did not create an independent pin.");
+                Require(fixture.Document.Groups.Count == before.Length + 1 && fixture.Document.Groups[^1].IsStandalone, "Library click did not create an independent pin.");
                 var after = GroupLayout.Pack(fixture.Document.Groups, fixture.GroupsPanel.Columns, 8, fixture.Cell, preserveColumns: true);
                 Require(before.All(p => after.Single(a => a.Group == p.Group) == p), "Adding a library tile changed an existing group rectangle.");
             }
@@ -179,10 +190,30 @@ public partial class MainWindow
             foreach (var view in fixture._scriptViews)
             {
                 var main = view.Body.Children.OfType<TextBlock>().Single(t => Equals(t.Tag, "ScriptValue"));
-                if (view.Tile.Size == TileSize.Small)
+                if (view.Tile.Size == TileSize.Small && !fixture._htmlTiles.ContainsKey(view.Tile.Id))
                     Require(main.ActualHeight >= 29 && main.ActualHeight <= view.Body.ActualHeight + .1,
                         "The small clock clips its second line instead of displaying both time components.");
             }
+            stage = "live folder presentation transitions";
+            var keep = responsive[^1]; var keepView = fixture._htmlTiles[keep.Id];
+            await keepView.InspectAsync("window.reparentMarker='retained'");
+            var liveFolder = new Tile { Label = "Live previews", Children = responsive.Take(2).ToList() };
+            fixture.Document.Groups[0].Tiles = [liveFolder, .. responsive.Skip(2)];
+            fixture.RenderGroups(); fixture.UpdateLayout();
+            Require(fixture._htmlTiles[responsive[0].Id].HasTransitionPreview, "Closing a native live folder exposed an empty surface before its miniature was ready.");
+            await RenderUntil(() => fixture.ScriptsReady);
+            Require(fixture._htmlTiles[responsive[0].Id].OffscreenOnly && !fixture._htmlTiles[responsive[0].Id].HasTransitionPreview,
+                "The closed folder failed to replace its retained frame with a live miniature.");
+            fixture.OpenFolder(liveFolder); fixture.UpdateLayout();
+            Require(fixture._htmlTiles[responsive[0].Id].HasTransitionPreview, "Opening a native live folder discarded its last miniature before painting.");
+            await RenderUntil(() => fixture.ScriptsReady);
+            Require(!fixture._htmlTiles[responsive[0].Id].OffscreenOnly && !fixture._htmlTiles[responsive[0].Id].HasTransitionPreview,
+                "The expanded folder did not reveal its ready interactive surface.");
+            fixture.CloseFolder(fixture, new()); fixture.UpdateLayout(); await RenderUntil(() => fixture.ScriptsReady);
+            keep.Row = 6; fixture.RenderGroups(); fixture.UpdateLayout(); await RenderUntil(() => fixture.ScriptsReady);
+            Require(ReferenceEquals(keepView, fixture._htmlTiles[keep.Id]) && await keepView.InspectAsync("window.reparentMarker") == "\"retained\"",
+                "A folder toggle or tile move reloaded an unrelated browser.");
+            await Task.WhenAll(fixture._htmlTiles.Values.Select(view => view.FreezeForDocumentationAsync()));
             fixture.SaveTileShowcase(Path.Combine(Path.GetDirectoryName(snapshotPath)!, "responsive-sizes.png"));
             stage = "position-independent tile geometry";
             var placementChecks = fixture.VerifyScriptGeometry(tiles[8], Path.GetDirectoryName(snapshotPath)!);

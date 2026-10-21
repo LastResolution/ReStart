@@ -10,13 +10,27 @@
 
 > **AI 번역:** 이 안내서는 영어를 바탕으로 AI로 번역했으며 오류가 있을 수 있습니다. [영어 README](README.md)가 기준 문서이며 추가 예제를 제공합니다. 번역 수정 제안을 환영합니다. 스크린샷은 영어 데모와 예시 데이터를 사용합니다.
 
-<p align="center"><strong>29초 데모 보기</strong><br><sub>1080p · 영어 · 소리 없음</sub></p>
+<p align="center"><strong>60초 데모 보기</strong><br><sub>1080p · 영어 · 소리 없음</sub></p>
 
-https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
+[![ReStart product demonstration](docs/images/demo-poster.png)](https://github.com/LastResolution/ReStart/releases/download/v1.5.0/ReStart-demo.mp4)
 
 Windows 10의 전체 화면 시작 메뉴가 그리우신가요? ReStart는 Windows 11과 Windows 10에서 익숙한 앱 공간을 제공합니다. 자주 쓰는 항목을 고정하고 원하는 대로 배치하며 JavaScript로 작성할 수 있는 라이브 타일을 추가하세요.
 
 **포터블 · JavaScript 라이브 타일 · x64 및 ARM64 · 8개 언어 · 별도 .NET 설치 불필요**
+
+## 더 자유로운 배치와 타일 제작
+
+전체 배치 또는 개별 그룹을 잠글 수 있습니다. Ctrl+Shift+L로 전체 잠금을 전환합니다. Ctrl+E로 선택하고 Ctrl+방향키로 타일, Ctrl+Shift+방향키로 그룹을 이동하며 Alt+1–4로 크기를 바꿉니다. Ctrl+G는 그룹화, Shift+F10은 메뉴 열기입니다. 실행 취소/다시 실행도 지원합니다. 바탕 화면과 별도의 배경 이미지를 저장할 수 있습니다.
+
+HTML/CSS/JavaScript 타일 19개를 제공합니다. Tile Studio에서 코드와 매니페스트를 편집하고 오프라인 샘플로 네 가지 크기를 확인한 뒤 저장하거나 고정할 수 있습니다. 날씨 풍경, 시스템 대시보드, RSS 뉴스 보드와 Canvas 정원을 추가했습니다. SVG 시계 바늘은 PC 시간을 따릅니다. 타일 이름은 기본으로 표시되며 설정에서 숨길 수 있습니다.
+
+드래그 중에는 타일, 그룹 또는 여러 선택 항목의 반투명 복사본이 포인터를 따라갑니다. 파란 표시로 이동 위치를 안내하고 밀려나는 타일도 놓기 전에 새 위치를 보여 줍니다.
+
+![Tile Studio: HTML, CSS and JavaScript with four live previews](docs/images/tile-studio.png)
+
+![Weather scene, System dashboard, News board and Canvas garden](docs/images/web-examples.png)
+
+**편집기 조작:** JavaScript, HTML, CSS, JSON 구문 강조; **Tab / Shift+Tab** 들여쓰기; **Format document / Ctrl+Shift+F** 오프라인 서식 정리를 지원하며 한 번에 실행 취소할 수 있습니다. Feed headlines와 News board는 타일 안에서 스크롤됩니다. 닫힌 폴더는 같은 크기의 라이브 미리보기를 표시합니다. 초기 및 초기화 배치는 Month dots와 Orbit clock을 사용합니다. 선택적인 시작 시 업데이트 확인은 새 버전을 닫을 수 있는 알림으로 안내합니다.
 
 ## 시작하기
 
@@ -45,7 +59,7 @@ Windows 10의 전체 화면 시작 메뉴가 그리우신가요? ReStart는 Wind
 | 실행 옵션 | 타일별 켜기/끄기, 인수, 작업 디렉터리, 지원되는 데스크톱 앱/바로 가기의 관리자 실행; UAC는 Windows가 처리 |
 | 탐색 | 선택적 마우스 올리기 확장, 문서/다운로드/음악/사진/동영상/네트워크/개인 폴더 개별 선택, 계정 및 전원 작업 |
 | 모양 | 밝음/어두움 변형이 있는 5개 색상 계열, 시스템 모드, 사용자 RGB 배경/강조색, 바탕 화면 배경, 시작 화면 색조, 개별 타일 색상, 테마 컨트롤/스크롤바, 고대비, 선택적 애니메이션 |
-| 라이브 타일 | JavaScript 예제 15개, 반응형 크기 4개, 로컬 클릭 동작, 실시간 갱신 켜기/끄기, 데이터 구성, 예제 생성, 패키지 가져오기, 자동 감시 라이브러리 |
+| 라이브 타일 | JavaScript 예제 19개, 반응형 크기 4개, 로컬 클릭 동작, 실시간 갱신 켜기/끄기, 데이터 구성, 예제 생성, 패키지 가져오기, 자동 감시 라이브러리 |
 | 타일 API | PC 시간, 언어/크기, 유지되는 상태, CPU/메모리/네트워크/배터리/저장 공간, 선택한 사진, 캐시된 JSON/Web API/RSS/Atom/파일 입력, 로컬 앱 연동 |
 | 언어 | 영어, 일본어, 독일어, 프랑스어, 스페인어, 한국어, 중국어 간체/번체; 기본 제공 타일 문구 포함 |
 | 데이터 및 업데이트 | 로컬 설정, 배치 가져오기/내보내기/초기화, 백업과 마이그레이션, 지울 수 있는 앱 활동, 버전/빌드/라이선스, API 키 없는 업데이트 확인과 수동 설치 |
@@ -78,7 +92,7 @@ Windows 10의 전체 화면 시작 메뉴가 그리우신가요? ReStart는 Wind
 
 **날씨의 초기 좌표는 예시용 베를린이며 PC 위치가 아닙니다.** ReStart는 지역을 추정하지 않습니다. [날씨 안내](docs/javascript-tiles.md#weather-location)에 따라 좌표와 표시 이름을 바꾸세요. 자격 증명은 현재 Windows 사용자용으로 암호화하며 내보내기에서 제외합니다. 연결 실패 시 캐시를 사용할 수 있고 시작 화면을 숨기면 읽기를 중지합니다.
 
-자체 타일은 `manifest.json`과 `tile.js`로 구성됩니다. `render(ctx)`는 제한된 데이터 스냅샷을 받아 크기별 배치 등 네이티브 표시 데이터를 반환합니다. JavaScript에 일반 파일/네트워크/CLR 접근 권한은 주어지지 않습니다. `%LOCALAPPDATA%\ReStart\TileLibrary` 아래에 패키지 폴더를 놓으면 자동 인식합니다. [예제](examples/tiles) · [JavaScript API(영어)](docs/javascript-tiles.md) · [로컬 데이터 생성 예제](examples/integrations/write-tile-data.ps1)
+웹 타일은 manifest.json, index.html, tile.css, tile.js와 선택적 assets로 구성됩니다. 네 가지 고정 크기 안에서 HTML/CSS, SVG, Canvas와 투명 배경을 사용할 수 있습니다. 기존 네이티브 JS도 지원합니다. WebView2 Runtime이 필요하며 직접 네트워크 접근에는 선언과 타일별 허용이 필요합니다. 일반 파일, CLR, 셸 브리지는 제공하지 않습니다. [HTML/CSS/JavaScript API](docs/javascript-tiles.md) · [Examples](examples/tiles)
 
 ## 조작
 

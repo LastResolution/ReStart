@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "title": "Photo moments",
   "localizedTitles": {
     "en": "Photo moments",
@@ -54,5 +54,6 @@
       }
     },
     "intervalSeconds": 15
-  }
+  },
+  "renderer": "web"
 }

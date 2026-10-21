@@ -10,13 +10,27 @@
 
 > **KI-Übersetzung:** Dieser Leitfaden wurde mithilfe von KI aus dem Englischen übersetzt und kann Fehler enthalten. Die [englische README](README.md) ist die maßgebliche Referenz mit weiteren Beispielen. Korrekturen sind willkommen. Die Screenshots verwenden eine englische Demo mit Beispieldaten.
 
-<p align="center"><strong>29-Sekunden-Demo ansehen</strong><br><sub>1080p · Englisch · Ohne Ton</sub></p>
+<p align="center"><strong>60-Sekunden-Demo ansehen</strong><br><sub>1080p · Englisch · Ohne Ton</sub></p>
 
-https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
+[![ReStart product demonstration](docs/images/demo-poster.png)](https://github.com/LastResolution/ReStart/releases/download/v1.5.0/ReStart-demo.mp4)
 
 Vermisst du das Vollbild-Startmenü von Windows 10? ReStart gibt deinen Apps unter Windows 11 und Windows 10 ein vertrautes Zuhause. Hefte häufig verwendete Inhalte an, ordne den Bildschirm frei an und ergänze Live-Kacheln, die du in JavaScript schreiben kannst.
 
 **Portabel · JavaScript-Live-Kacheln · x64 und ARM64 · Acht Sprachen · Keine separate .NET-Installation**
+
+## Mehr Kontrolle. Mehr Raum zum Gestalten.
+
+Sperre das gesamte Layout oder einzelne Gruppen. Strg+Umschalt+L schaltet die globale Sperre um. Strg+E wählt Kacheln; Strg+Pfeil verschiebt sie, Strg+Umschalt+Pfeil die Gruppe und Alt+1–4 ändert die Größe. Strg+G gruppiert eine Auswahl; Umschalt+F10 öffnet ihr Menü. Rückgängig/Wiederholen bleibt verfügbar. Ein eigenes Hintergrundbild kann unabhängig vom Desktop gespeichert werden.
+
+19 HTML/CSS/JavaScript-Kacheln sind enthalten. Tile Studio bearbeitet Quellen und Manifest, zeigt vier Größen mit Offline-Beispieldaten und speichert Entwürfe oder angeheftete Kacheln. Neu sind Wettergrafik, Systemübersicht, Nachrichtenwand und Canvas-Garten; die SVG-Uhr folgt der PC-Zeit. Live-Kachelnamen sind standardmäßig sichtbar und in den Einstellungen abschaltbar.
+
+Beim Ziehen folgt eine halbtransparente Kopie der Kachel, Gruppe oder Auswahl dem Mauszeiger. Die blaue Markierung zeigt das Ziel; verdrängte Kacheln zeigen ihre neue Position vor dem Ablegen.
+
+![Tile Studio: HTML, CSS and JavaScript with four live previews](docs/images/tile-studio.png)
+
+![Weather scene, System dashboard, News board and Canvas garden](docs/images/web-examples.png)
+
+**Editor-Steuerung:** Syntaxhervorhebung für JavaScript, HTML, CSS und JSON; **Tab / Umschalt+Tab** zum Einrücken; **Format document / Strg+Umschalt+F** zur Offline-Formatierung mit einem Rückgängig-Schritt. Feed headlines und News board scrollen innerhalb ihrer Kachel. Geschlossene Ordner zeigen gleich große Live-Vorschauen. Neue und zurückgesetzte Layouts nutzen Month dots und Orbit clock. Optionale Startprüfungen melden neue Versionen mit einem ausblendbaren Hinweis.
 
 ## Schnellstart
 
@@ -45,7 +59,7 @@ Vermisst du das Vollbild-Startmenü von Windows 10? ReStart gibt deinen Apps unt
 | Startoptionen | Pro Kachel aktivierbare Argumente, Arbeitsverzeichnis und Administratorstart für unterstützte Desktop-Apps/Verknüpfungen; Windows verwaltet UAC |
 | Navigation | Optionales Ausklappen bei Mausberührung, einzeln wählbare Dokumente/Downloads/Musik/Bilder/Videos/Netzwerk/persönlicher Ordner, Konto- und Energieaktionen |
 | Darstellung | Fünf Farbfamilien mit hellen/dunklen Varianten, Systemmodus, eigene RGB-Hintergrund-/Akzentfarben, Hintergrundbild, Start-Färbung, individuelle Kachelfarben, passende Steuerelemente/Scrollleisten, hoher Kontrast, optionale Animation |
-| Live-Kacheln | 15 JavaScript-Beispiele, vier responsive Größen, lokale Klickaktionen, Live-Updates ein/aus, Datenkonfiguration, Vorlagenerstellung, Paketimport und automatisch beobachtete Bibliothek |
+| Live-Kacheln | 19 JavaScript-Beispiele, vier responsive Größen, lokale Klickaktionen, Live-Updates ein/aus, Datenkonfiguration, Vorlagenerstellung, Paketimport und automatisch beobachtete Bibliothek |
 | Kachel-APIs | PC-Zeit, Sprache und Größe, gespeicherter Laufzeitzustand, CPU/RAM/Netzwerk/Akku/Speicher, ausgewählte Fotos, zwischengespeicherte Web-API-/JSON-/RSS-/Atom-/Dateidaten und lokale App-Integration |
 | Sprachen | Englisch, Japanisch, Deutsch, Französisch, Spanisch, Koreanisch, vereinfachtes und traditionelles Chinesisch; auch Texte der mitgelieferten Kacheln |
 | Daten und Updates | Lokale Einstellungen, Layoutimport/-export/-reset, Sicherungen/Migration, löschbare App-Nutzungsdaten, Version/Build/Lizenzen, Updateprüfung ohne API-Schlüssel und manuelle Installation |
@@ -78,7 +92,7 @@ Rechtsklick auf den Hintergrund → **Add live tile**. Klicks bedienen die Kache
 
 **Das Wetter startet mit Berlin als Beispiel, nicht mit deinem Standort.** Es gibt keine Standortermittlung. Ändere Koordinaten und Ortsnamen wie im [Wetter-Leitfaden](docs/javascript-tiles.md#weather-location) beschrieben. Zugangsdaten werden für deinen Windows-Benutzer verschlüsselt und nicht mit dem Layout exportiert. Fehler können mit zwischengespeicherten Werten überbrückt werden; beim Ausblenden stoppt das Lesen.
 
-Eine eigene Kachel besteht aus `manifest.json` und `tile.js`. `render(ctx)` bekommt einen begrenzten Daten-Snapshot und liefert native Anzeigedaten zurück, einschließlich größenabhängiger Layouts. JavaScript erhält keinen allgemeinen Datei-, Netzwerk- oder CLR-Zugriff. Lege Paketordner in `%LOCALAPPDATA%\ReStart\TileLibrary`; ReStart erkennt sie automatisch. [Beispiele](examples/tiles) · [JavaScript-API (Englisch)](docs/javascript-tiles.md) · [Lokaler Datenproduzent](examples/integrations/write-tile-data.ps1)
+Webkacheln bestehen aus manifest.json, index.html, tile.css und tile.js sowie optionalen assets. HTML/CSS, SVG, Canvas und transparente Flächen bleiben innerhalb der vier Größen frei gestaltbar. Native JS-Pakete werden weiter unterstützt. WebView2 Runtime ist erforderlich. Direkter Netzwerkzugriff braucht eine deklarierte Fähigkeit und eine separate Erlaubnis; allgemeine Datei-, CLR- und Shell-Brücken fehlen. [HTML/CSS/JavaScript API](docs/javascript-tiles.md) · [Examples](examples/tiles)
 
 ## Bedienung
 

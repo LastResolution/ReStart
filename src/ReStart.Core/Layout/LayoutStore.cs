@@ -10,6 +10,7 @@ public sealed class LayoutStore(string filePath, string? applicationVersion = nu
 {
     private string? _migrationSource;
     private string? _upgradeSource;
+    private bool _wasPersisted;
     /// <summary>Gets the versioned layout serialization settings; this is distinct from the JavaScript wire protocol.</summary>
     public static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -37,6 +38,7 @@ public sealed class LayoutStore(string filePath, string? applicationVersion = nu
     /// <returns>The loaded or recovered normalized layout; null when no usable document exists. Recovery details are exposed by the store.</returns>
     public LayoutDocument? Load()
     {
+        _wasPersisted = File.Exists(FilePath);
         RecoveryMessage = null;
         IsReadOnly = false;
         _migrationSource = null;
@@ -100,12 +102,13 @@ public sealed class LayoutStore(string filePath, string? applicationVersion = nu
 
     /// <summary>Normalizes and writes a temporary file, then replaces the destination while retaining its previous version as a backup.</summary>
     /// <param name="document">Document to normalize and persist atomically, retaining a last-good backup; read-only newer schemas are rejected.</param>
-    /// <exception cref="InvalidOperationException">A newer layout/application version made this store read-only.</exception>
+    /// <exception cref="InvalidOperationException">A newer layout/application version made this store read-only, or previously persisted data was externally deleted during this session.</exception>
     /// <exception cref="ArgumentException">The explicitly supplied producer application version is invalid.</exception>
     /// <exception cref="IOException">The temporary file, backup, or atomic replacement cannot be written.</exception>
     public void Save(LayoutDocument document)
     {
         if (IsReadOnly) throw new InvalidOperationException(L.T(K.ErrorFutureLayout));
+        if (_wasPersisted && !File.Exists(FilePath)) throw new InvalidOperationException(L.T(K.ErrorDataDeleted));
         if (applicationVersion != null && ReleaseVersion.Parse(applicationVersion) == null) throw new ArgumentException("Invalid producer version.", nameof(applicationVersion));
         document.Normalize();
         Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
@@ -135,6 +138,7 @@ public sealed class LayoutStore(string filePath, string? applicationVersion = nu
         File.WriteAllText(temp, JsonSerializer.Serialize(document, JsonOptions));
         if (File.Exists(FilePath)) File.Replace(temp, FilePath, FilePath + ".bak", true);
         else File.Move(temp, FilePath);
+        _wasPersisted = true;
         _migrationSource = null;
         _upgradeSource = null;
     }
