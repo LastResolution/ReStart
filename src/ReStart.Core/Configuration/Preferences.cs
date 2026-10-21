@@ -47,6 +47,10 @@ public sealed class Preferences
     public bool CloseOnDeactivate { get; set; } = true;
     /// <summary>Gets or sets whether the desktop wallpaper is used as the background.</summary>
     public bool ShowWallpaper { get; set; } = true;
+    /// <summary>Gets or sets whether enabled wallpaper uses a locally selected ReStart image instead of the desktop image.</summary>
+    public bool UseCustomBackground { get; set; }
+    /// <summary>Gets or sets the generated N-format GUID of a local background image; empty means no custom image. Source paths are never stored here.</summary>
+    public string CustomBackgroundId { get; set; } = "";
     /// <summary>Gets or sets whether app tiles use classic accent-colored backgrounds.</summary>
     public bool ColoredTiles { get; set; }
     /// <summary>Gets or sets whether the dark Start surface uses the selected accent color, as in late Windows 10.</summary>

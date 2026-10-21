@@ -758,4 +758,20 @@ public enum TextKey
     LaunchOptionsUnavailable,
     /// <summary>Choose an existing working directory.</summary>
     ErrorWorkingDirectory,
+    /// <summary>Background image</summary>
+    BackgroundSource,
+    /// <summary>None (use theme color)</summary>
+    BackgroundNone,
+    /// <summary>Desktop wallpaper</summary>
+    BackgroundDesktop,
+    /// <summary>ReStart image</summary>
+    BackgroundCustom,
+    /// <summary>Choose image…</summary>
+    BackgroundChoose,
+    /// <summary>Your chosen image is copied into local ReStart storage. Desktop changes do not affect it. High contrast hides background images.</summary>
+    BackgroundHelp,
+    /// <summary>Image copied. Save to apply.</summary>
+    BackgroundSelected,
+    /// <summary>Choose a readable image file of at most 32 MiB.</summary>
+    BackgroundInvalid,
 }

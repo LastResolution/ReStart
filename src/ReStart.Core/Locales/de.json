@@ -375,5 +375,13 @@
   "WorkingDirectory": "Ausführen in",
   "LaunchOptionsHelp": "Argumente werden an die App oder Verknüpfung übergeben. Pfade mit Leerzeichen in Anführungszeichen setzen. Leere Felder verwenden Shell-Standardwerte. Windows bestätigt Administratorrechte.",
   "LaunchOptionsUnavailable": "Eigene Startoptionen sind für unterstützte Desktop-Apps und App-Verknüpfungen verfügbar.",
-  "ErrorWorkingDirectory": "Einen vorhandenen Arbeitsordner auswählen."
+  "ErrorWorkingDirectory": "Einen vorhandenen Arbeitsordner auswählen.",
+  "BackgroundSource": "Hintergrundbild",
+  "BackgroundNone": "Keines (Designfarbe)",
+  "BackgroundDesktop": "Desktophintergrund",
+  "BackgroundCustom": "Eigenes ReStart-Bild",
+  "BackgroundChoose": "Bild auswählen…",
+  "BackgroundHelp": "Das Bild wird lokal für ReStart kopiert. Desktopänderungen beeinflussen es nicht. Hoher Kontrast blendet Bilder aus.",
+  "BackgroundSelected": "Bild kopiert. Zum Anwenden speichern.",
+  "BackgroundInvalid": "Wähle eine lesbare Bilddatei mit höchstens 32 MiB."
 }

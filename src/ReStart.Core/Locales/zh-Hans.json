@@ -375,5 +375,13 @@
   "WorkingDirectory": "起始位置",
   "LaunchOptionsHelp": "参数会传递给应用或快捷方式。包含空格的路径请加引号。空白字段使用默认值。管理员确认由 Windows 处理。",
   "LaunchOptionsUnavailable": "自定义启动选项适用于 Windows 支持的桌面应用和应用快捷方式。",
-  "ErrorWorkingDirectory": "请选择现有工作目录。"
+  "ErrorWorkingDirectory": "请选择现有工作目录。",
+  "BackgroundSource": "背景图片",
+  "BackgroundNone": "无（使用主题颜色）",
+  "BackgroundDesktop": "桌面壁纸",
+  "BackgroundCustom": "ReStart 专用图片",
+  "BackgroundChoose": "选择图片…",
+  "BackgroundHelp": "所选图片会复制到 ReStart 本地存储中，不受桌面壁纸变化影响。高对比度模式下不显示背景图片。",
+  "BackgroundSelected": "图片已复制，保存后生效。",
+  "BackgroundInvalid": "请选择不超过 32 MiB 的可读取图片。"
 }

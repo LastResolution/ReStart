@@ -375,5 +375,13 @@
   "WorkingDirectory": "作業フォルダー",
   "LaunchOptionsHelp": "引数はアプリまたはショートカットに渡します。空白を含むパスは引用符で囲んでください。空欄はWindowsの既定値を使用し、管理者実行の確認はWindowsが行います。",
   "LaunchOptionsUnavailable": "Windowsが対応するデスクトップアプリとアプリのショートカットで起動オプションを指定できます。",
-  "ErrorWorkingDirectory": "存在する作業フォルダーを指定してください。"
+  "ErrorWorkingDirectory": "存在する作業フォルダーを指定してください。",
+  "BackgroundSource": "背景画像",
+  "BackgroundNone": "なし（テーマの色）",
+  "BackgroundDesktop": "デスクトップの壁紙",
+  "BackgroundCustom": "ReStart 専用の画像",
+  "BackgroundChoose": "画像を選択…",
+  "BackgroundHelp": "選択した画像は ReStart のローカル保存先にコピーされます。デスクトップの変更には影響されません。ハイコントラストでは画像を表示しません。",
+  "BackgroundSelected": "画像をコピーしました。保存すると反映されます。",
+  "BackgroundInvalid": "読み取り可能な 32 MiB 以下の画像を選択してください。"
 }

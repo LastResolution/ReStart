@@ -375,5 +375,13 @@
   "WorkingDirectory": "Iniciar en",
   "LaunchOptionsHelp": "Los argumentos se pasan a la aplicación o acceso directo. Usa comillas en rutas con espacios. Los campos vacíos conservan los valores predeterminados. Windows solicita el consentimiento de administrador.",
   "LaunchOptionsUnavailable": "Las opciones personalizadas están disponibles para aplicaciones de escritorio y accesos directos compatibles.",
-  "ErrorWorkingDirectory": "Elige una carpeta de trabajo existente."
+  "ErrorWorkingDirectory": "Elige una carpeta de trabajo existente.",
+  "BackgroundSource": "Imagen de fondo",
+  "BackgroundNone": "Ninguna (color del tema)",
+  "BackgroundDesktop": "Fondo de escritorio",
+  "BackgroundCustom": "Imagen de ReStart",
+  "BackgroundChoose": "Elegir imagen…",
+  "BackgroundHelp": "La imagen se copia al almacenamiento local de ReStart. Los cambios del escritorio no la afectan. El contraste alto oculta las imágenes.",
+  "BackgroundSelected": "Imagen copiada. Guarda para aplicar.",
+  "BackgroundInvalid": "Elige una imagen legible de hasta 32 MiB."
 }

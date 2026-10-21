@@ -375,5 +375,13 @@
   "WorkingDirectory": "Start in",
   "LaunchOptionsHelp": "Arguments are passed to the app or shortcut. Quote paths containing spaces. Empty fields keep the Shell defaults. Windows handles administrator consent.",
   "LaunchOptionsUnavailable": "Custom launch options are available for desktop applications and application shortcuts supported by Windows.",
-  "ErrorWorkingDirectory": "Choose an existing working directory."
+  "ErrorWorkingDirectory": "Choose an existing working directory.",
+  "BackgroundSource": "Background image",
+  "BackgroundNone": "None (use theme color)",
+  "BackgroundDesktop": "Desktop wallpaper",
+  "BackgroundCustom": "ReStart image",
+  "BackgroundChoose": "Choose image…",
+  "BackgroundHelp": "Your chosen image is copied into local ReStart storage. Desktop changes do not affect it. High contrast hides background images.",
+  "BackgroundSelected": "Image copied. Save to apply.",
+  "BackgroundInvalid": "Choose a readable image file of at most 32 MiB."
 }

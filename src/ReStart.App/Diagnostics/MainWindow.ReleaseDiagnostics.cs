@@ -131,7 +131,19 @@ public partial class MainWindow
         Require(fixture.Wallpaper.Source != original && pixels[0] == 255 && pixels[2] == 0, "A wallpaper replaced at the same path is still cached.");
         fixture.Document.Preferences.ShowWallpaper = false; fixture.RefreshWallpaper(path);
         Require(fixture.Wallpaper.Source == null, "Disabling wallpaper retained the old image.");
-        return 4;
+        var images = new BackgroundImageStore(directory);
+        Require(images.Resolve("../wallpaper") == null, "Custom wallpaper accepted a path instead of an image identity.");
+        var id = new BackgroundImageStore(Path.GetDirectoryName(fixture._store.FilePath)!).Import(path);
+        fixture.Document.Preferences.CustomBackgroundId = id;
+        fixture.Document.Preferences.UseCustomBackground = fixture.Document.Preferences.ShowWallpaper = true;
+        File.Delete(path);
+        fixture.RefreshWallpaper();
+        Require(fixture.Wallpaper.Source is BitmapSource, "The custom image still depends on its original desktop file.");
+        var normalized = new LayoutDocument { Preferences = new() { CustomBackgroundId = "../wallpaper", UseCustomBackground = true } };
+        normalized.Normalize(); Require(normalized.Preferences.CustomBackgroundId == "", "A malformed custom image identity survived normalization.");
+        fixture.Document.Preferences.ShowWallpaper = false; fixture.Document.Preferences.UseCustomBackground = false;
+        fixture.RefreshWallpaper();
+        return 7;
     }
 
     private static IEnumerable<T> VisualChildren<T>(DependencyObject parent) where T : DependencyObject

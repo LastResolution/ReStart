@@ -375,5 +375,13 @@
   "WorkingDirectory": "起始位置",
   "LaunchOptionsHelp": "引數會傳遞給應用程式或捷徑。包含空格的路徑請加引號。空白欄位使用預設值。系統管理員確認由 Windows 處理。",
   "LaunchOptionsUnavailable": "自訂啟動選項適用於 Windows 支援的桌面應用程式與應用程式捷徑。",
-  "ErrorWorkingDirectory": "請選擇現有的工作目錄。"
+  "ErrorWorkingDirectory": "請選擇現有的工作目錄。",
+  "BackgroundSource": "背景圖片",
+  "BackgroundNone": "無（使用佈景主題色彩）",
+  "BackgroundDesktop": "桌面桌布",
+  "BackgroundCustom": "ReStart 專用圖片",
+  "BackgroundChoose": "選擇圖片…",
+  "BackgroundHelp": "所選圖片會複製到 ReStart 本機儲存空間，不受桌面桌布變更影響。高對比模式下不顯示背景圖片。",
+  "BackgroundSelected": "圖片已複製，儲存後套用。",
+  "BackgroundInvalid": "請選擇不超過 32 MiB 且可讀取的圖片。"
 }

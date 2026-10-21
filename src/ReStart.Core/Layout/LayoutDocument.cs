@@ -41,6 +41,7 @@ public sealed class LayoutDocument
         if (!Enum.IsDefined(Preferences.Theme)) Preferences.Theme = ThemeMode.Dark;
         Preferences.Accent = ThemePresets.IsColor(Preferences.Accent) ? Preferences.Accent.ToUpperInvariant() : "#0078D7";
         Preferences.BackgroundColor = ThemePresets.IsColor(Preferences.BackgroundColor) ? Preferences.BackgroundColor.ToUpperInvariant() : "";
+        if (!Guid.TryParseExact(Preferences.CustomBackgroundId, "N", out _)) Preferences.CustomBackgroundId = "";
         if (Preferences.ColorThemeId != null && !ThemePresets.All.Any(p => p.Id == Preferences.ColorThemeId)) Preferences.ColorThemeId = "";
         var ids = new HashSet<string>();
         foreach (var group in Groups)

@@ -51,11 +51,13 @@ public partial class MainWindow
 
     private void RefreshWallpaper(string? fixturePath = null)
     {
-        if (!Document.Preferences.ShowWallpaper || SystemParameters.HighContrast || _preview && fixturePath == null)
+        if (!Document.Preferences.ShowWallpaper || SystemParameters.HighContrast || _preview && fixturePath == null && !Document.Preferences.UseCustomBackground)
         { Wallpaper.Source = null; _wallpaperPath = null; return; }
         try
         {
-            var path = fixturePath ?? DesktopWallpaperSource.CurrentPath(_wallpaperMonitor ?? System.Windows.Forms.Screen.PrimaryScreen!.Bounds);
+            var path = fixturePath ?? (Document.Preferences.UseCustomBackground
+                ? new BackgroundImageStore(Path.GetDirectoryName(_store.FilePath)!).Resolve(Document.Preferences.CustomBackgroundId)
+                : DesktopWallpaperSource.CurrentPath(_wallpaperMonitor ?? System.Windows.Forms.Screen.PrimaryScreen!.Bounds));
             var file = path == null ? null : new FileInfo(path);
             if (file?.Exists != true) { Wallpaper.Source = null; _wallpaperPath = null; return; }
             if (_wallpaperPath == path && Wallpaper.Source != null && _wallpaperWriteTime == file.LastWriteTimeUtc && _wallpaperLength == file.Length) return;

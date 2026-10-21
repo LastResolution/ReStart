@@ -185,7 +185,7 @@ internal sealed partial class SettingsWindow : Window
     }
     private void Save(object sender, RoutedEventArgs e)
     {
-        if (!ValidateColors()) return;
+        if (!ValidateColors() || !ValidateBackgroundImage()) return;
         var previous = _main.Document.Preferences;
         StartupRegistration.Entry? registration = null;
         try

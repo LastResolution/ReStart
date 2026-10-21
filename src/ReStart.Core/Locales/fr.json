@@ -375,5 +375,13 @@
   "WorkingDirectory": "Démarrer dans",
   "LaunchOptionsHelp": "Les arguments sont transmis à l’application ou au raccourci. Entourez les chemins contenant des espaces de guillemets. Les champs vides gardent les valeurs par défaut. Windows gère le consentement administrateur.",
   "LaunchOptionsUnavailable": "Les options personnalisées sont disponibles pour les applications de bureau et raccourcis pris en charge.",
-  "ErrorWorkingDirectory": "Choisissez un dossier de travail existant."
+  "ErrorWorkingDirectory": "Choisissez un dossier de travail existant.",
+  "BackgroundSource": "Image d’arrière-plan",
+  "BackgroundNone": "Aucune (couleur du thème)",
+  "BackgroundDesktop": "Fond du Bureau",
+  "BackgroundCustom": "Image propre à ReStart",
+  "BackgroundChoose": "Choisir une image…",
+  "BackgroundHelp": "L’image est copiée dans le stockage local de ReStart. Les changements du Bureau ne l’affectent pas. Le contraste élevé masque les images.",
+  "BackgroundSelected": "Image copiée. Enregistrez pour l’appliquer.",
+  "BackgroundInvalid": "Choisissez une image lisible de 32 Mio maximum."
 }
