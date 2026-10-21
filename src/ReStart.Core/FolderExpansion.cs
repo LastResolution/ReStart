@@ -7,6 +7,12 @@ namespace ReStart.Core;
 /// <param name="Children">Packed child placements in folder-local small-cell coordinates.</param>
 public sealed record FolderExpansion(Tile Folder, int Row, int ChildRows, IReadOnlyList<TilePlacement> Children)
 {
+    /// <summary>Measures the columns actually occupied by roots and expanded children without reserving the configured wrap width.</summary>
+    /// <param name="roots">Packed root placements of the owning group; coordinates are read without mutation.</param>
+    /// <returns>The rightmost occupied cell edge across roots and children, with a minimum width of one small tile cell.</returns>
+    public int WidthInCells(IReadOnlyList<TilePlacement> roots)
+        => Math.Max(1, roots.Concat(Children).Select(p => p.Column + p.Width).DefaultIfEmpty(1).Max());
+
     /// <summary>Returns the added header, child-grid and separator height in DIPs.</summary>
     /// <param name="cell">Size of one small tile cell in device-independent pixels (DIPs).</param>
     /// <returns>Height inserted for the folder header, children and closing separator, in DIPs.</returns>

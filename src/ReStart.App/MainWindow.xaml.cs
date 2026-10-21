@@ -23,6 +23,7 @@ public partial class MainWindow : Window
     private readonly LayoutStore _store;
     private readonly bool _preview;
     private readonly AppCatalog _catalog;
+    private readonly HashSet<string> _previewAppIcons = [];
     private readonly Func<Task<List<AppEntry>>> _loadCatalog;
     private readonly bool _catalogFixture;
     private readonly Action<AppEntry>? _activationFixture;
@@ -182,7 +183,8 @@ public partial class MainWindow : Window
                 foreach (var app in _apps)
                 {
                     var actual = PreviewCatalog.Match(app, actualApps);
-                    if (actual != null && _catalog.Icons.TryGetValue(actual.Id, out var icon)) _catalog.Icons[app.Id] = icon;
+                    if (actual != null && _catalog.Icons.TryGetValue(actual.Id, out var icon))
+                    { _catalog.Icons[app.Id] = icon; _previewAppIcons.Add(app.Id); }
                 }
             }
             IconsReady = true;
@@ -402,7 +404,7 @@ public partial class MainWindow : Window
             var placements = TileLayout.Pack(group.Tiles, Document.Preferences.Columns);
             var expansion = FolderExpansion.Create(placements, Document.Preferences.Columns, _openFolder?.Id);
             var compact = group.IsStandalone && placements.Count == 1 && expansion == null;
-            var columns = compact ? placements[0].Width : expansion != null ? Document.Preferences.Columns : Math.Max(1, placements.Count == 0 ? 0 : placements.Max(p => p.Column + p.Width));
+            var columns = compact ? placements[0].Width : expansion?.WidthInCells(placements) ?? Math.Max(1, placements.Count == 0 ? 0 : placements.Max(p => p.Column + p.Width));
             var stack = new StackPanel { Background = Brushes.Transparent, Width = columns * Cell, Tag = group };
             if (!group.IsStandalone)
             {
@@ -527,7 +529,7 @@ public partial class MainWindow : Window
 
     private void UpdateLiveTiles()
     {
-        var now = DateTime.Now;
+        var now = _preview && _documentationNow is { } sampleTime ? sampleTime.DateTime : DateTime.Now;
         foreach (var (text, tile) in _liveLabels)
             text.Text = tile.Widget == "clock" ? now.ToString("HH:mm") : tile.Size == TileSize.Small ? now.Day.ToString(CultureInfo.CurrentCulture) : now.ToString("m", L.Culture) + "\n" + now.ToString("dddd", L.Culture);
     }

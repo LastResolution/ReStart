@@ -163,7 +163,7 @@ public partial class MainWindow
                 {
                     var (manifest, source) = _scriptPackages.Read(view.Tile.ScriptId);
                     session.NextUpdate = DateTimeOffset.Now.AddSeconds(manifest.RefreshSeconds);
-                    var now = DateTimeOffset.Now;
+                    var now = _preview && _documentationNow is { } sampleTime ? sampleTime : DateTimeOffset.Now;
                     var input = session.Inputs.TryPeek(out var pendingInput) ? pendingInput : null;
                     SystemMetricsSnapshot? metrics = null;
                     if (manifest.Capabilities.Contains("system.metrics"))

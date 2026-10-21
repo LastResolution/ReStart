@@ -130,7 +130,7 @@ public static class GroupLayout
         var expansion = FolderExpansion.Create(tiles, tileColumns, expandedFolderId);
         if (group.IsStandalone && tiles.Count == 1 && expansion == null)
             return [new(0, 0, tiles[0].Width * cell, tiles[0].Height * cell)];
-        var width = (expansion != null ? tileColumns : Math.Max(1, tiles.Count == 0 ? 0 : tiles.Max(t => t.Column + t.Width))) * cell;
+        var width = (expansion?.WidthInCells(tiles) ?? Math.Max(1, tiles.Count == 0 ? 0 : tiles.Max(t => t.Column + t.Width))) * cell;
         var rows = Math.Max(1, tiles.Count == 0 ? 0 : tiles.Max(t => t.Row + t.Height));
         var height = (group.IsStandalone ? 0 : HeaderHeight) + rows * cell + (expansion?.ExtraHeight(cell) ?? 0);
         return [new(0, 0, width, height)];

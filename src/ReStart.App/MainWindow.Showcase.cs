@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
+using System.Windows.Media;
 using ReStart.App.Services;
 using ReStart.Core;
 
@@ -8,6 +9,67 @@ namespace ReStart.App;
 
 public partial class MainWindow
 {
+    private DateTimeOffset? _documentationNow;
+
+    internal async Task RenderDocumentationAsync(string directory)
+    {
+        if (!_preview) throw new InvalidOperationException("Documentation rendering requires preview mode.");
+        await InitializeAsync(); _clock.Stop();
+        var missing = PreviewApps().Where(a => !_previewAppIcons.Contains(a.Id)).Select(a => a.Name).ToArray();
+        if (missing.Length > 0) throw new InvalidOperationException("Install the showcase apps before rendering: " + string.Join(", ", missing));
+        _startupPreparing = true;
+        var sampleDate = new DateTime(2026, 10, 18, 9, 41, 0, DateTimeKind.Unspecified);
+        _documentationNow = new(sampleDate, TimeZoneInfo.Local.GetUtcOffset(sampleDate));
+        try
+        {
+            var tiles = ScriptTilePackages.BundledIds.Take(12).Select(id => _scriptPackages.Import(ScriptTilePackages.BundledManifestPath(id))).ToArray();
+            var images = Path.Combine(directory, "fixture-data", "photos"); Directory.CreateDirectory(images);
+            WriteFixtureImage(Path.Combine(images, "a.png"), Colors.Teal);
+            WriteFixtureImage(Path.Combine(images, "b.png"), Colors.Coral);
+            var photo = tiles[11];
+            SlideshowSource.Bind(_scriptPackages.SlideshowBindingPath(photo.ScriptId), images);
+            await SaveLauncherShowcaseAsync(tiles, this, directory);
+            Document.Preferences.Theme = ReStart.Core.ThemeMode.Dark; ApplyAppearance(); RenderGroups(); UpdateLayout();
+            ShowGroupBoundaries(true); SaveScreenshot(Path.Combine(directory, "group-placement.png")); ShowGroupBoundaries(false);
+            _openFolder = Document.Groups.SelectMany(g => g.Tiles).Single(t => t.IsFolder);
+            var folderGroup = Document.Groups.Single(g => g.Tiles.Contains(_openFolder));
+            var closedOwner = GroupsPanel.Placements.Single(p => p.Group == folderGroup);
+            var sideNeighbors = GroupsPanel.Placements.Where(p => p.Left >= closedOwner.Left + closedOwner.Width).ToArray();
+            RenderGroups(); SaveScreenshot(Path.Combine(directory, "inline-folder.png"));
+            Require(sideNeighbors.All(p => GroupsPanel.Placements.Single(a => a.Group == p.Group).Top == p.Top), "A content-sized documentation folder displaced an unrelated side group.");
+            _openFolder = null; RenderGroups();
+            Document.Preferences.ShowRecentlyAdded = false; Document.Preferences.ShowMostUsed = false;
+            ShowAllApps(this, new()); SaveScreenshot(Path.Combine(directory, "app-list.png"));
+            _apps = _apps.Select(a => a with { FolderPath = a.Id is "notepad" or "calc" or "paint" ? "Accessories" : a.Id is "terminal" or "code" ? "Developer tools" : "" }).ToList();
+            var sampleFolder = Directory.GetDirectories(Path.Combine(directory, "showcase-files")).Single();
+            var folderEntry = FilePinning.FromPath(sampleFolder); await _catalog.LoadIconsAsync([folderEntry]);
+            foreach (var name in new[] { "Accessories", "Developer tools" })
+            {
+                if (_catalog.Icons.TryGetValue(folderEntry.Id, out var icon)) _catalog.FolderIcons[name] = icon;
+                _expandedAppFolders.Add("folder:" + name);
+            }
+            RenderApps(); SaveScreenshot(Path.Combine(directory, "app-folders.png"));
+            await SaveSearchShowcaseAsync(directory);
+            Require(!IsVisible, "Documentation rendering unexpectedly displayed a window.");
+        }
+        finally { _startupPreparing = false; _documentationNow = null; }
+    }
+
+    private async Task SaveSearchShowcaseAsync(string directory)
+    {
+        Document.Preferences.Theme = ReStart.Core.ThemeMode.Dark; RefreshLayout(); ResetToPinnedView();
+        var powerShell = new AppEntry("powershell", "Windows PowerShell", Path.Combine(Environment.SystemDirectory, @"WindowsPowerShell\v1.0\powershell.exe"), false);
+        var notes = Path.Combine(directory, "Power plan.txt"); File.WriteAllText(notes, "Fictional power plan document.");
+        var noteEntry = FilePinning.FromPath(notes);
+        _apps = [powerShell];
+        await _catalog.LoadIconsAsync([powerShell, noteEntry]);
+        _fileSearchFixture = (_, _) => Task.FromResult<(IReadOnlyList<AppEntry>, bool)>((new[] { noteEntry }, true));
+        SetSmokeSearch("Power");
+        for (var attempt = 0; attempt < 100 && !SearchResultNames.Contains("Power plan.txt"); attempt++) await Task.Delay(25);
+        Require(SearchResultNames.Contains("Power plan.txt"), "The offline search showcase did not render its file fixture.");
+        SetStatus(""); SaveScreenshot(Path.Combine(directory, "unified-search.png"));
+    }
+
     /// <summary>Captures the complete launcher with a fixed, nonpersonal app list and demonstration live data.</summary>
     private async Task SaveLauncherShowcaseAsync(Tile[] liveTiles, MainWindow iconSource, string directory)
     {
@@ -74,7 +136,8 @@ public partial class MainWindow
         foreach (var theme in new[] { ReStart.Core.ThemeMode.Dark, ReStart.Core.ThemeMode.Light })
         {
             Document.Preferences.Theme = theme;
-            ApplyAppearance(); RenderGroups(); RenderApps(); UpdateLayout();
+            ApplyAppearance(); RenderGroups(); RenderApps();
+            Root.Measure(new Size(Root.Width, Root.Height)); Root.Arrange(new Rect(0, 0, Root.Width, Root.Height)); UpdateLayout();
             for (var attempt = 0; attempt < 50; attempt++)
             {
                 foreach (var runtime in _scriptSessions.Values) runtime.NextUpdate = DateTimeOffset.MinValue;

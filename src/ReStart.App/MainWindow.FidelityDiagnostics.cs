@@ -275,12 +275,7 @@ public partial class MainWindow
                 fixture.SetRailOpen(false); fixture.SetSmokeSearch("Display");
                 fixture.SaveScreenshot(Path.Combine(directory, "settings-search-" + theme + ".png"));
             }
-            fixture.Document.Preferences.Theme = ReStart.Core.ThemeMode.Dark; fixture.RefreshLayout(); fixture.ResetToPinnedView();
-            fixture._apps = [new("display-studio", "Display Studio", "", false)];
-            fixture._fileSearchFixture = (_, _) => Task.FromResult<(IReadOnlyList<AppEntry>, bool)>((new[] { new AppEntry("display-notes", "Display notes.txt", "", false) }, true));
-            fixture.SetSmokeSearch("Display");
-            await Until(() => fixture.SearchResultNames.Contains("Display notes.txt"));
-            fixture.SetStatus(""); fixture.SaveScreenshot(Path.Combine(directory, "unified-search.png"));
+            await fixture.SaveSearchShowcaseAsync(directory);
             var indexed = await new IndexedFileSearch().FindAsync("ReStart_nonexistent_%_[fidelity]", CancellationToken.None);
             Check(indexed.Files.Count == 0, "The native index query ignored literal wildcard characters.");
             return new(checks, indexed.Available);

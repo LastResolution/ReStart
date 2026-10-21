@@ -5,6 +5,31 @@ namespace ReStart.Core.Tests;
 public sealed class FolderExpansionTests
 {
     [Theory]
+    [InlineData(6, .7)]
+    [InlineData(6, 1)]
+    [InlineData(6, 1.5)]
+    [InlineData(8, .7)]
+    [InlineData(8, 1)]
+    [InlineData(8, 1.5)]
+    public void ExpansionDoesNotReserveEmptyWrapColumnsOrDisplaceASideNeighbor(int columns, double scale)
+    {
+        var folder = new Tile { Column = 4, Row = 0, Children = [new(), new(), new()] };
+        var owner = new TileGroup { Column = 0, X = 0, Row = 0, Tiles = [new() { Column = 0, Row = 0 }, new() { Column = 2, Row = 0 }, folder] };
+        var neighbor = new TileGroup { Column = 0, X = 6.5, Row = 0, Tiles = [new() { Size = TileSize.Wide }] };
+        var below = new TileGroup { Column = 0, X = 0, Row = 6, Tiles = [new()] };
+        var cell = 52 * scale;
+        var groups = new[] { owner, neighbor, below };
+        var before = System.Text.Json.JsonSerializer.Serialize(groups);
+        var closed = GroupLayout.Pack(groups, 3, columns, cell, preserveColumns: true);
+        var opened = GroupLayout.Pack(groups, 3, columns, cell, expandedFolderId: folder.Id, preserveColumns: true);
+        Assert.Equal(6 * cell, opened[0].Width);
+        Assert.Equal(closed[1], opened[1]);
+        Assert.True(opened[2].Top >= opened[0].Top + opened[0].Height + GroupLayout.Gap);
+        Assert.Equal(before, System.Text.Json.JsonSerializer.Serialize(groups));
+        Assert.Equal(closed, GroupLayout.Pack(groups, 3, columns, cell, preserveColumns: true));
+    }
+
+    [Theory]
     [InlineData(false, 0.7, 6)]
     [InlineData(false, 1.0, 8)]
     [InlineData(false, 1.5, 6)]
