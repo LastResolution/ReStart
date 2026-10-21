@@ -12,12 +12,19 @@ for (const page of pages) {
   require(/<html\b[^>]*lang="en"/.test(html), `Missing English language: ${page}`);
   require(/<title>[^<]+<\/title>/.test(html), `Missing title: ${page}`);
   require(/<h1\b/.test(html) && (html.match(/<h1\b/g) || []).length === 1, `Expected one main heading: ${page}`);
-  require(html.includes('https://buymeacoffee.com/LastResolution'), `Missing support link: ${page}`);
+  const absoluteLinks = [...html.matchAll(/\bhref="(https:[^"]+)"/g)].map(match => new URL(match[1]));
+  require(absoluteLinks.some(url => url.protocol === 'https:' && url.hostname === 'buymeacoffee.com' &&
+    url.pathname === '/LastResolution' && !url.port && !url.username && !url.password), `Missing support link: ${page}`);
   const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
   require(new Set(ids).size === ids.length, `Duplicate element ID: ${page}`);
   for (const match of html.matchAll(/\b(?:href|src|data-light|data-dark)="([^"]+)"/g)) {
     const target = match[1];
-    if (/^https:\/\//.test(target)) { require(!target.includes('localhost'), `Invalid external address: ${page}`); continue; }
+    if (/^https:\/\//.test(target)) {
+      const url = new URL(target);
+      require(url.hostname !== 'localhost' && !url.hostname.endsWith('.localhost') && !url.username && !url.password,
+        `Invalid external address: ${page}`);
+      continue;
+    }
     require(!/^\/|^[a-z]+:/i.test(target), `Link will break under a Pages project prefix: ${page}: ${target}`);
     const [relative, fragment] = target.split('#');
     let resolved = path.resolve(path.dirname(filename), decodeURIComponent(relative || path.basename(filename)));
