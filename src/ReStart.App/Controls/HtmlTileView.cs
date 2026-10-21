@@ -203,7 +203,7 @@ internal sealed class HtmlTileView : Grid, IDisposable
                 Width = Math.Clamp(input.GetProperty("width").GetDouble(), 1, 4096); Height = Math.Clamp(input.GetProperty("height").GetDouble(), 1, 4096);
                 var bounds = new System.Drawing.Rectangle(0, 0, (int)Math.Ceiling(Width), (int)Math.Ceiling(Height));
                 if (_headlessController.Bounds != bounds)
-                { _headlessController.Bounds = bounds; await Task.Delay(50); }
+                    _headlessController.Bounds = bounds;
             }
             stage = "navigation";
             var signature = html + "\0" + css + "\0" + source + "\0" + network;
@@ -221,6 +221,21 @@ internal sealed class HtmlTileView : Grid, IDisposable
                 finally { core.NavigationCompleted -= Completed; }
             }
             if (!Own(core.Source)) throw new InvalidDataException(TextCatalog.T(K.ErrorWebTileLoad));
+            if (_headlessController != null)
+            {
+                // Controller bounds change before Chromium applies its viewport.
+                // Wait for the actual dimensions rather than a fixed delay, so
+                // responsive layouts also receive the right size under load.
+                var bounds = _headlessController.Bounds;
+                var ready = $"innerWidth === {bounds.Width} && innerHeight === {bounds.Height}";
+                var deadline = Environment.TickCount64 + 2000;
+                while (await core.ExecuteScriptAsync(ready) != "true")
+                {
+                    if (_disposed) return (null, null);
+                    if (Environment.TickCount64 >= deadline) throw new TimeoutException(TextCatalog.T(K.ErrorWebTileLoad));
+                    await Task.Delay(16);
+                }
+            }
             _reply = new(); _sequence++;
             stage = "render";
             core.PostWebMessageAsJson(JsonSerializer.Serialize(new { sequence = _sequence, context }, ScriptTileProtocol.Json));
