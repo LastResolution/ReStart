@@ -8,11 +8,13 @@
 </p>
 <!-- languages:end -->
 
+<p align="center"><a href="https://lastresolution.github.io/ReStart/">网站（英语）</a> · <a href="https://lastresolution.github.io/ReStart/developers/">开发者指南（英语）</a></p>
+
 > **AI 翻译：** 本指南使用 AI 从英文翻译，可能存在错误。[英文 README](README.md) 为主要参考，包含更多示例。欢迎修正翻译。截图使用英文演示环境和示例数据。
 
 <p align="center"><strong>观看 60 秒演示</strong><br><sub>1080p · 英文 · 无音频</sub></p>
 
-[![ReStart product demonstration](docs/images/demo-poster.png)](https://github.com/LastResolution/ReStart/releases/download/v1.5.0/ReStart-demo.mp4)
+https://github.com/user-attachments/assets/243a5c5a-46bc-4180-8a0c-cee71ab63f06
 
 怀念 Windows 10 的全屏开始菜单？ReStart 在 Windows 11 和 Windows 10 上为应用提供熟悉的空间。固定常用内容，自由安排布局，再加入可以用 JavaScript 编写的动态磁贴。
 

@@ -20,11 +20,13 @@
 </p>
 <!-- languages:end -->
 
+<p align="center"><a href="https://lastresolution.github.io/ReStart/">Webサイト（英語）</a> · <a href="https://lastresolution.github.io/ReStart/developers/">開発者向けガイド（英語）</a></p>
+
 > **AI翻訳:** この案内は英語を基にAIを用いて翻訳・編集しており、誤りが含まれる場合があります。[英語README](README.md)を原本とし、翻訳の修正を歓迎します。スクリーンショットは全言語版で英語のデモ環境を使用しています。
 
 <p align="center"><strong>60秒のデモを見る</strong><br><sub>1080p · 英語 · 音声なし</sub></p>
 
-[![ReStart product demonstration](docs/images/demo-poster.png)](https://github.com/LastResolution/ReStart/releases/download/v1.5.0/ReStart-demo.mp4)
+https://github.com/user-attachments/assets/243a5c5a-46bc-4180-8a0c-cee71ab63f06
 
 **Windows 10 のフルスクリーンスタートが恋しい人へ。** ReStart は Windows 11 と Windows 10 で使えるデスクトップランチャーです。いつものアプリをピン留めし、画面を自由に並べ、JavaScript で自分のライブタイルを作れます。
 

@@ -18,11 +18,13 @@
 </p>
 <!-- languages:end -->
 
+<p align="center"><a href="https://lastresolution.github.io/ReStart/">Website</a> · <a href="https://lastresolution.github.io/ReStart/developers/">Developer guide</a></p>
+
 English is the primary documentation. The translated guides are AI-assisted and may contain errors; corrections are welcome. All screenshots use an English demonstration environment.
 
 <p align="center"><strong>Watch the 60-second demo</strong><br><sub>1080p · English · No audio</sub></p>
 
-[![ReStart product demonstration](docs/images/demo-poster.png)](https://github.com/LastResolution/ReStart/releases/download/v1.5.0/ReStart-demo.mp4)
+https://github.com/user-attachments/assets/243a5c5a-46bc-4180-8a0c-cee71ab63f06
 
 **Miss the Windows 10 full-screen Start menu?** ReStart gives your apps a familiar home on Windows 11 and Windows 10. Pin what you use, arrange the screen your way, and add live tiles that you can build with HTML, CSS and JavaScript.
 
