@@ -148,6 +148,8 @@ A web tile contains `manifest.json`, `index.html`, `tile.css` and `tile.js`, plu
 
 Open **Tile Studio** from settings or the tile menu. Edit the source, preview all four sizes with offline sample data, test click actions, then save a draft or save and pin. Installed-tile edits keep the package ID, placement and local connection bindings.
 
+**Editor controls:** syntax highlighting for JavaScript, HTML, CSS and JSON; **Tab / Shift+Tab** for indentation; **Format document / Ctrl+Shift+F** for offline formatting with one-step undo. Feed headlines and News board scroll within their own tile. Closed folders show uniformly sized live previews. New and reset layouts use the included Month dots and Orbit clock. Optional startup checks show a dismissible notice when a newer release is available.
+
 ```json
 { "version": 2, "renderer": "web", "title": "My tile", "refreshSeconds": 1 }
 ```

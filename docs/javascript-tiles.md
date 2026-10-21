@@ -94,7 +94,17 @@ The other fourteen packages also include editable HTML/CSS. All nineteen package
 
 Open **Tile Studio** from settings, the **Add live tile** menu, or an installed tile's context menu. Choose a template, edit HTML/CSS/JS/manifest, and preview all four sizes. **Ctrl+Enter** previews and **Ctrl+S** saves. Automatic preview is optional. Click a preview to test a local action. Sample JSON is held only in the editing session: Studio does not read saved credentials, chosen files, photo folders or data connections, and direct networking stays disabled.
 
+The editor highlights JavaScript, HTML, CSS and JSON in both light and dark themes. **Tab** indents and **Shift+Tab** outdents the current selection using four spaces. **Format document** or **Ctrl+Shift+F** formats the active editable file with a bundled, offline Prettier formatter. Formatting parses source as data without executing the tile, preserves the caret, and is one undoable edit. It does not save the file. Invalid syntax leaves the original source intact; completion and language-server suggestions are not included.
+
 **Save to tile library** creates or updates one draft. **Save and pin** validates the preview and installs a separate copy without moving existing tiles. Editing an installed tile updates that package in place, retaining its ID, position and host bindings. If source files were deleted, Studio explains the repair before saving a replacement template. Back up a custom package before deleting app data.
+
+Installed packages are editable copies. An application update supplies the new bundled templates without overwriting those copies. Add a fresh bundled tile to try an updated example, or copy the desired changes into your installed package and reload it. Resetting the layout installs the current bundled Month dots and Orbit clock alongside locally discovered apps; it does not depend on a maintainer's app list.
+
+### Scrolling and folder previews
+
+Use `overflow: auto` or `overflow: scroll` on a bounded element for readable long content. The Feed headlines and News board packages keep their heading and optional tile name fixed while the story area scrolls. Mark one primary reading area with `data-restart-scroll` to route a wheel gesture elsewhere on the tile to that area. **Shift+wheel** scrolls horizontally; **Page Up/Down** scroll a focused tile. A scrollable tile retains its wheel gesture at either edge, so it does not unexpectedly move the launcher behind it. A tile without a scrollable area uses the launcher's normal scrolling.
+
+Closed tile folders render up to four live miniatures with uniform medium-size preview geometry. Opening the folder restores each child's saved size and interactive surface. Changing between the two presentations retains successful JSON state and pending local clicks; it does not change the stored layout.
 
 ### Browser boundary and resource limits
 

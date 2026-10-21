@@ -6,6 +6,8 @@ Versions are compared numerically with prerelease precedence. Drafts and release
 
 Requests use the fixed api.github.com repository endpoint and app version, without an Authorization header. Redirects are disabled. No layouts, application lists, photo selections or usage history are uploaded. Startup checks do not block input or catalog loading. Preview mode disables update networking.
 
+When **Check for updates at startup** is enabled and a newer eligible release is available, ReStart shows a themed, dismissible notice once during that run. **View release** opens the public release page; **Not now** dismisses the notice. If the launcher is hidden, it also requests a Windows tray notification, subject to the system's notification settings. Nothing downloads or installs automatically. Disabling the startup check also disables these notices; a manual check remains available in About.
+
 The checker opens the fixed repository release page. Download, checksum verification and installation are manual: exit the tray app, extract the complete ZIP and restart. No feed-provided executable is launched automatically.
 
 Upgrading from private development builds removes ReStart's obsolete saved credential target without reading its value. The update checker no longer reads, accepts or stores access tokens. Optional live-tile data-source credentials are separate, explicitly configured connections; they are never used for update checks.
