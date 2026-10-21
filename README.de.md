@@ -126,3 +126,16 @@ Für ARM64 `win-arm64` verwenden. ZIPs und Prüfsummen entstehen in `artifacts/p
 [Fehler/Ideen](https://github.com/LastResolution/ReStart/issues/new/choose) · [Mitwirken (Englisch)](CONTRIBUTING.md) · [Architektur (Englisch)](docs/architecture.md) · [Tests (Englisch)](docs/testing.md) · [Releases](https://github.com/LastResolution/ReStart/releases)
 
 ReStart ist ein unabhängiges, von Microsoft nicht unterstütztes MIT-Projekt, inspiriert vom späteren Windows-10-Vollbild-Startmenü. Screenshots und Animation zeigen die echte App mit einer englischen Demo, synthetischen Messwerten und erzeugten Fotofarben. Namen und Icons gehören ihren Rechteinhabern. [MIT-Lizenz](LICENSE) · [Support (Englisch)](SUPPORT.md)
+
+---
+
+<!-- support:start -->
+<h2 align="center">Unabhängige Entwicklung unterstützen</h2>
+<p align="center">
+  Gefällt dir ReStart? Unterstütze LastResolution dabei, nützliche Werkzeuge zu entwickeln und zu verbessern: ReStart und künftige Projekte.<br>
+  <sub>ReStart ist kostenlos und Open Source. Deine Unterstützung ist freiwillig.</sub>
+</p>
+<p align="center">
+  <a href="https://buymeacoffee.com/LastResolution"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" height="48" alt="Buy Me a Coffee · LastResolution" /></a>
+</p>
+<!-- support:end -->

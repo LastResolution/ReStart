@@ -326,3 +326,16 @@ dotnet build ReStart.slnx -c Release
 ReStart のコードは [MIT License](LICENSE) です。
 
 [セキュリティ](SECURITY.md) · [サポート](SUPPORT.md) · [英語表記でのブランチ保護](docs/github-protection.md)
+
+---
+
+<!-- support:start -->
+<h2 align="center">個人開発を応援する</h2>
+<p align="center">
+  ReStartが気に入ったら、LastResolutionによるReStartの改善や、これからの便利なツールづくりを応援できます。<br>
+  <sub>ReStartは無料のオープンソースソフトウェアです。支援は任意です。</sub>
+</p>
+<p align="center">
+  <a href="https://buymeacoffee.com/LastResolution"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" height="48" alt="Buy Me a Coffee · LastResolution" /></a>
+</p>
+<!-- support:end -->

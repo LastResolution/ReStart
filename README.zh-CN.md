@@ -126,3 +126,16 @@ ARM64 使用 `win-arm64`。ZIP 和校验文件生成在 `artifacts/packages`。�
 [问题与建议](https://github.com/LastResolution/ReStart/issues/new/choose) · [参与贡献（英文）](CONTRIBUTING.md) · [架构（英文）](docs/architecture.md) · [测试（英文）](docs/testing.md) · [发布](https://github.com/LastResolution/ReStart/releases)
 
 ReStart 是受后期 Windows 10 全屏开始菜单启发的独立 MIT 项目，与 Microsoft 无关联。图像展示真实应用的英文演示、合成指标和生成的照片色块。名称和图标归各权利人所有。[MIT 许可证](LICENSE) · [支持（英文）](SUPPORT.md)
+
+---
+
+<!-- support:start -->
+<h2 align="center">支持独立开发</h2>
+<p align="center">
+  喜欢 ReStart？欢迎支持 LastResolution 持续改进 ReStart，并开发更多实用工具。<br>
+  <sub>ReStart 免费且开源，支持完全自愿。</sub>
+</p>
+<p align="center">
+  <a href="https://buymeacoffee.com/LastResolution"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" height="48" alt="Buy Me a Coffee · LastResolution" /></a>
+</p>
+<!-- support:end -->
