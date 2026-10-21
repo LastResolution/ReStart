@@ -244,7 +244,7 @@ public partial class MainWindow
                 PromoText(dc, detail, 22, 1856, 113, PromoMuted, right: true);
                 var viewport = new Rect(64, 180, 1792, 840);
                 dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(80, 0, 0, 0)), null, new Rect(58, 185, 1804, 845), 18, 18);
-                var crop = stage == 5 ? new Rect(810, 0, 1050, 492.1875) : new Rect(0, 0, 1920, 900);
+                var crop = stage == 5 ? new Rect(810, 0, 1100, 515.625) : new Rect(0, 0, 1920, 900);
                 if (stage is 2 or 3) crop = new Rect(310, 0, 1200, 562.5);
                 dc.PushClip(new RectangleGeometry(viewport, 12, 12));
                 dc.PushTransform(new TranslateTransform(viewport.X, viewport.Y));
