@@ -24,6 +24,8 @@
 
 內建 19 個 HTML/CSS/JavaScript 動態磚。Tile Studio 可編輯原始碼與資訊清單，以離線範例資料預覽四種大小，再儲存草稿或釘選。新增天氣風景、系統儀表板、RSS 新聞看板及 Canvas 花園；SVG 時鐘指針依電腦時間運作。動態磚名稱預設顯示，可在設定中隱藏。
 
+拖曳時，動態磚、群組或多選項目的半透明副本會跟隨指標。藍色標記指示目標位置，被推開的動態磚也會在放下前預覽新位置。
+
 ![Tile Studio: HTML, CSS and JavaScript with four live previews](docs/images/tile-studio.png)
 
 ![Weather scene, System dashboard, News board and Canvas garden](docs/images/web-examples.png)

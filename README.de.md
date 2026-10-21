@@ -24,6 +24,8 @@ Sperre das gesamte Layout oder einzelne Gruppen. Strg+Umschalt+L schaltet die gl
 
 19 HTML/CSS/JavaScript-Kacheln sind enthalten. Tile Studio bearbeitet Quellen und Manifest, zeigt vier Größen mit Offline-Beispieldaten und speichert Entwürfe oder angeheftete Kacheln. Neu sind Wettergrafik, Systemübersicht, Nachrichtenwand und Canvas-Garten; die SVG-Uhr folgt der PC-Zeit. Live-Kachelnamen sind standardmäßig sichtbar und in den Einstellungen abschaltbar.
 
+Beim Ziehen folgt eine halbtransparente Kopie der Kachel, Gruppe oder Auswahl dem Mauszeiger. Die blaue Markierung zeigt das Ziel; verdrängte Kacheln zeigen ihre neue Position vor dem Ablegen.
+
 ![Tile Studio: HTML, CSS and JavaScript with four live previews](docs/images/tile-studio.png)
 
 ![Weather scene, System dashboard, News board and Canvas garden](docs/images/web-examples.png)

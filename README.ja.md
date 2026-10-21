@@ -38,6 +38,8 @@
 
 HTML/CSS/JavaScript製のライブタイルを19種類同梱。Tile Studioでソースとmanifestを編集し、オフラインのサンプル値で4サイズを確認して保存・ピン留めできます。天気のCSSアート、システムダッシュボード、RSSニュース、Canvasガーデンを追加し、オービット時計の秒針はPC時刻で動きます。設定の「ライブタイル名を表示」は初期値ONで、左下の名前を非表示にもできます。
 
+ドラッグ中はタイル・グループ・複数選択の半透明コピーがマウスに追従します。青い目印で移動先を示し、押し出されるタイルもドロップ前に配置をプレビューします。
+
 ![Tile Studio: HTML, CSS and JavaScript with four live previews](docs/images/tile-studio.png)
 
 ![Weather scene, System dashboard, News board and Canvas garden](docs/images/web-examples.png)

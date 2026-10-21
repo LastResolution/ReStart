@@ -24,6 +24,8 @@ Verrouillez tout le placement ou certains groupes. Ctrl+Maj+L bascule le verroui
 
 Dix-neuf tuiles HTML/CSS/JavaScript sont incluses. Tile Studio permet de modifier le code et le manifeste, de tester quatre tailles avec des données fictives hors ligne, puis de sauvegarder ou épingler. Nouveaux exemples : scène météo, tableau système, actualités RSS et jardin Canvas. Les aiguilles SVG suivent l’heure du PC. Les noms sont visibles par défaut et peuvent être masqués dans les paramètres.
 
+Pendant le déplacement, une copie semi-transparente de la vignette, du groupe ou de la sélection suit le pointeur. Le repère bleu indique la destination et les vignettes déplacées prévisualisent leur position avant le dépôt.
+
 ![Tile Studio: HTML, CSS and JavaScript with four live previews](docs/images/tile-studio.png)
 
 ![Weather scene, System dashboard, News board and Canvas garden](docs/images/web-examples.png)

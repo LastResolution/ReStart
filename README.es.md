@@ -24,6 +24,8 @@ Bloquea todo el diseño o grupos individuales. Ctrl+Mayús+L cambia el bloqueo g
 
 Incluye 19 mosaicos HTML/CSS/JavaScript. Tile Studio permite editar código y manifiesto, probar cuatro tamaños con datos de ejemplo sin conexión y guardar borradores o anclarlos. Los nuevos ejemplos muestran tiempo atmosférico, panel del sistema, noticias RSS y arte Canvas. Las agujas del reloj SVG siguen la hora del PC. Los nombres se muestran por defecto y pueden ocultarse en los ajustes.
 
+Al arrastrar, una copia semitransparente del mosaico, grupo o selección sigue al puntero. La marca azul indica el destino y los mosaicos desplazados muestran su posición antes de soltar.
+
 ![Tile Studio: HTML, CSS and JavaScript with four live previews](docs/images/tile-studio.png)
 
 ![Weather scene, System dashboard, News board and Canvas garden](docs/images/web-examples.png)

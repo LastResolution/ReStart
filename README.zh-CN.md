@@ -24,6 +24,8 @@
 
 内置 19 个 HTML/CSS/JavaScript 磁贴。Tile Studio 可编辑源码和清单，使用离线示例数据预览四种大小，再保存草稿或固定磁贴。新增天气风景、系统仪表板、RSS 新闻看板和 Canvas 花园；SVG 时钟指针按电脑时间运行。磁贴名称默认显示，可在设置中隐藏。
 
+拖动时，磁贴、分组或多选项目的半透明副本会跟随指针。蓝色标记指示目标位置，被挤开的磁贴也会在放下前预览新位置。
+
 ![Tile Studio: HTML, CSS and JavaScript with four live previews](docs/images/tile-studio.png)
 
 ![Weather scene, System dashboard, News board and Canvas garden](docs/images/web-examples.png)

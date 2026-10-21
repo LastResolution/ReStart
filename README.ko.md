@@ -24,6 +24,8 @@ Windows 10의 전체 화면 시작 메뉴가 그리우신가요? ReStart는 Wind
 
 HTML/CSS/JavaScript 타일 19개를 제공합니다. Tile Studio에서 코드와 매니페스트를 편집하고 오프라인 샘플로 네 가지 크기를 확인한 뒤 저장하거나 고정할 수 있습니다. 날씨 풍경, 시스템 대시보드, RSS 뉴스 보드와 Canvas 정원을 추가했습니다. SVG 시계 바늘은 PC 시간을 따릅니다. 타일 이름은 기본으로 표시되며 설정에서 숨길 수 있습니다.
 
+드래그 중에는 타일, 그룹 또는 여러 선택 항목의 반투명 복사본이 포인터를 따라갑니다. 파란 표시로 이동 위치를 안내하고 밀려나는 타일도 놓기 전에 새 위치를 보여 줍니다.
+
 ![Tile Studio: HTML, CSS and JavaScript with four live previews](docs/images/tile-studio.png)
 
 ![Weather scene, System dashboard, News board and Canvas garden](docs/images/web-examples.png)
