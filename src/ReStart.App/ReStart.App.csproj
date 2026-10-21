@@ -27,6 +27,7 @@
     <Using Include="System.IO" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
   </ItemGroup>
   <Target Name="CopyTileHost" AfterTargets="Build">

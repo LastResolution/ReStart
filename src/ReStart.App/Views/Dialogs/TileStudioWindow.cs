@@ -19,12 +19,12 @@ internal sealed class TileStudioWindow : Window
     private readonly bool _offscreen;
     private Tile? _tile;
     private string? _libraryId;
-    private readonly TextBox _source = Editor(ScriptTileProtocol.MaxSource);
-    private readonly TextBox _html = Editor(262144);
-    private readonly TextBox _css = Editor(262144);
-    private readonly TextBox _manifest = Editor(16384);
-    private readonly TextBox _samples = Editor(16384);
-    private readonly TextBox _input = Editor(131072);
+    private readonly TileCodeEditor _source = new("JavaScript", ScriptTileProtocol.MaxSource);
+    private readonly TileCodeEditor _html = new("HTML", 262144);
+    private readonly TileCodeEditor _css = new("CSS", 262144);
+    private readonly TileCodeEditor _manifest = new("Json", 16384);
+    private readonly TileCodeEditor _samples = new("Json", 16384);
+    private readonly TileCodeEditor _input = new("Json", 131072);
     private readonly TextBox _feedback = new() { IsReadOnly = true, TextWrapping = TextWrapping.Wrap, MaxHeight = 76, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Margin = new(0, 10, 0, 10) };
     private readonly CheckBox _auto = new() { IsChecked = true, Margin = new(12, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center };
     private readonly ComboBox _templates = new() { MinWidth = 180, MaxWidth = 280, Margin = new(8, 0, 8, 0) };
@@ -131,20 +131,6 @@ internal sealed class TileStudioWindow : Window
         Closed += (_, _) => { _closed = true; _revision++; _debounce.Stop(); _workers.Dispose(); foreach (var view in _webPreviews.Values) view.Dispose(); };
     }
 
-    private static TextBox Editor(int maximum) => new()
-    {
-        AcceptsReturn = true,
-        AcceptsTab = true,
-        FontFamily = new FontFamily("Cascadia Mono, Consolas"),
-        FontSize = 13,
-        MaxLength = maximum,
-        HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
-        VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-        TextWrapping = TextWrapping.NoWrap,
-        HorizontalAlignment = HorizontalAlignment.Stretch,
-        VerticalAlignment = VerticalAlignment.Stretch
-    };
-
     private static Button ActionButton(Panel panel, K key, Action action, bool accent = false)
     {
         var button = new Button { Content = L.T(key), Margin = new(0, 0, 8, 0) };
@@ -169,7 +155,7 @@ internal sealed class TileStudioWindow : Window
         finally { _loading = false; }
     }
 
-    private void Changed(object sender, TextChangedEventArgs e)
+    private void Changed(object? sender, EventArgs e)
     {
         if (_loading) return;
         _dirty = true; _revision++; SchedulePreview();
