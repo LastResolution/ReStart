@@ -17,7 +17,7 @@ public partial class MainWindow
         Document = new()
         {
             Preferences = new() { Language = "en", Theme = ReStart.Core.ThemeMode.Dark, Columns = 8, TileScale = 1.5, ShowWallpaper = false, Animate = false },
-            Groups = tiles.Select((tile, index) => new TileGroup { IsStandalone = true, X = 2 + index * 4.7, Row = 5, Tiles = [tile] }).ToList()
+            Groups = tiles.Select((tile, index) => new TileGroup { IsStandalone = true, Column = 0, X = 2 + index * 4.7, Row = 5, Tiles = [tile] }).ToList()
         };
         ApplyAppearance(); ResetToPinnedView(); RenderGroups(); SetStatus("");
         Root.Measure(new(Root.Width, Root.Height)); Root.Arrange(new Rect(0, 0, Root.Width, Root.Height)); FitPanels(); UpdateLayout();
