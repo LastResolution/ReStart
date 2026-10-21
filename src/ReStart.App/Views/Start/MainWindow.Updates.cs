@@ -1,4 +1,6 @@
 using System.Net.Http;
+using System.Windows;
+using ReStart.App.Controls;
 using ReStart.App.Services;
 using ReStart.Core;
 
@@ -12,6 +14,40 @@ public partial class MainWindow
     internal UpdateCheckResult? LastUpdateCheck { get; private set; }
     internal DateTimeOffset? LastUpdateCheckAt { get; private set; }
     internal event Action? UpdateCheckChanged;
+    internal event Action<UpdateRelease>? StartupUpdateAvailable;
+    private bool _startupUpdateNotified;
+    private UpdateNotice? _updateNotice;
+
+    private async Task CheckStartupUpdatesAsync()
+    {
+        var result = await CheckForUpdatesAsync();
+        PresentStartupUpdate(result);
+    }
+
+    private void PresentStartupUpdate(UpdateCheckResult result)
+    {
+        if (_exit || !Document.Preferences.CheckUpdatesOnStartup || _startupUpdateNotified || result.Status != UpdateCheckStatus.Available || result.Release == null) return;
+        _startupUpdateNotified = true;
+        ShowUpdateNotice(result.Release);
+        StartupUpdateAvailable?.Invoke(result.Release);
+    }
+
+    private void ShowUpdateNotice(UpdateRelease release)
+    {
+        if (_updateNotice != null) Root.Children.Remove(_updateNotice);
+        _updateNotice = new(release.Version.ToString(), AppBuildInfo.Version, () => OpenUpdateRelease(release), () =>
+        { Root.Children.Remove(_updateNotice!); _updateNotice = null; })
+        { HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new(24), MaxWidth = Math.Max(240, (Root.ActualWidth > 0 ? Root.ActualWidth : 488) - 48) };
+        Root.Children.Add(_updateNotice);
+    }
+
+    internal void OpenUpdateRelease(UpdateRelease release)
+    {
+        if (_preview) return;
+        Dismiss();
+        try { ShellLauncher.Launch(release.Page.AbsoluteUri); }
+        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception) { SetStatus(L.T(K.ErrorLaunch) + ex.Message); }
+    }
 
     internal Task<UpdateCheckResult> CheckForUpdatesAsync(bool? includePrereleases = null)
     {

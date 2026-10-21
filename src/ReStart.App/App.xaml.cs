@@ -18,6 +18,7 @@ public partial class App : Application
     private System.Windows.Forms.NotifyIcon? _tray;
     private MainWindow? _window;
     private PinRequestChannel? _pinRequests;
+    private UpdateRelease? _updateNotificationRelease;
 
     /// <summary>Acquires the instance lease before creating UI or registering shell hooks.</summary>
     protected override async void OnStartup(StartupEventArgs e)
@@ -84,6 +85,12 @@ public partial class App : Application
             if (_integration.Status is string status) _window.SetStatus(status);
         };
         CreateTray();
+        _window.StartupUpdateAvailable += release =>
+        {
+            if (_tray == null || _window.IsPresenting) return;
+            _updateNotificationRelease = release;
+            _tray.ShowBalloonTip(10000, "ReStart", L.F(K.UpdateAvailable, release.Version), System.Windows.Forms.ToolTipIcon.Info);
+        };
         if (pinPath != null) await _window.PinPathAsync(pinPath);
         else if (e.Args.Contains("--background")) _ = _window.InitializeAsync();
         else _window.Present();
@@ -112,6 +119,7 @@ public partial class App : Application
             Visible = true
         };
         _tray.DoubleClick += (_, _) => Dispatcher.Invoke(() => _window!.Toggle());
+        _tray.BalloonTipClicked += (_, _) => Dispatcher.Invoke(() => { if (_updateNotificationRelease is { } release) _window?.OpenUpdateRelease(release); });
     }
 
     private void RefreshTrayLanguage()

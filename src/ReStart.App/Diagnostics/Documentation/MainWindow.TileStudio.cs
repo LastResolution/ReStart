@@ -51,6 +51,7 @@ public partial class MainWindow
             Check(!studio.IsVisible, "Tile Studio unexpectedly opened a window.");
         }
         finally { studio.Close(); }
+        checks += VerifyUpdateNotices(directory);
         checks += await VerifyWebSamplesAsync(directory);
         checks += await VerifyWebScrollingAsync();
         checks += await VerifyFolderPreviewsAsync(directory);

@@ -190,7 +190,7 @@ public partial class MainWindow : Window
             RefreshSearchResults();
             if (_store.RecoveryMessage == null) SetStatus("");
             if (!_preview && !_store.IsReadOnly) SaveLayout();
-            if (!_preview && Document.Preferences.CheckUpdatesOnStartup) _ = CheckForUpdatesAsync();
+            if (!_preview && Document.Preferences.CheckUpdatesOnStartup) _ = CheckStartupUpdatesAsync();
             MarkStartup("complete");
         }
         catch (Exception ex)
