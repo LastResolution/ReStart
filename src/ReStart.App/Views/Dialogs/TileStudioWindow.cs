@@ -19,6 +19,7 @@ internal sealed class TileStudioWindow : Window
     private readonly TileSourceFormatter _formatter;
     private Button _formatButton = null!;
     private bool _formatting;
+    private DateTimeOffset? _documentationTime;
     private readonly bool _offscreen;
     private Tile? _tile;
     private string? _libraryId;
@@ -214,7 +215,7 @@ internal sealed class TileStudioWindow : Window
             if (manifest.Renderer == "web" && (System.Text.Encoding.UTF8.GetByteCount(html) > 262144 || System.Text.Encoding.UTF8.GetByteCount(css) > 262144))
                 throw new InvalidDataException(L.T(K.ErrorScriptRequestSize));
             var title = manifest.LocalizedTitles.GetValueOrDefault(L.Language, manifest.Title);
-            var now = DateTimeOffset.Now;
+            var now = _documentationTime ?? DateTimeOffset.Now;
             var errors = await Task.WhenAll(_cards.Keys.Select(async size =>
             {
                 var state = _states.GetValueOrDefault(size, JsonSerializer.SerializeToElement(new { }));
@@ -318,6 +319,8 @@ internal sealed class TileStudioWindow : Window
     /// <param name="document">Zero-based editor index: JavaScript, HTML, CSS, manifest, sample JSON or context.</param>
     internal void PrepareDocumentation(string template, int document)
     {
+        var sample = new DateTime(2026, 10, 18, 9, 41, 0, DateTimeKind.Unspecified);
+        _documentationTime = new(sample, TimeZoneInfo.Local.GetUtcOffset(sample));
         LoadTemplate(template); _dirty = false;
         _templates.SelectedIndex = ScriptTilePackages.BundledIds.ToList().IndexOf(template);
         _documents.SelectedIndex = document;

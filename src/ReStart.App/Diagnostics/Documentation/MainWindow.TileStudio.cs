@@ -59,8 +59,10 @@ public partial class MainWindow
         checks += await VerifyWebLayoutMatrixAsync(directory);
         _documentationHtmlRendering = true; _startupPreparing = true; Root.Width = 1920; Root.Height = 900;
         _documentationNow = new DateTimeOffset(2026, 10, 18, 9, 41, 0, TimeSpan.Zero);
+        Content = null;
+        using var galleryHost = HiddenRenderHost(Root, 1920, 900);
         try { await RenderCreativeGalleryAsync(directory); checks++; }
-        finally { _startupPreparing = false; _documentationNow = null; _documentationSampleConnections = false; }
+        finally { galleryHost.RootVisual = null; Content = Root; _startupPreparing = false; _documentationNow = null; _documentationSampleConnections = false; }
         File.WriteAllText(System.IO.Path.Combine(directory, "verification.json"), JsonSerializer.Serialize(new { success = true, checks }));
     }
 

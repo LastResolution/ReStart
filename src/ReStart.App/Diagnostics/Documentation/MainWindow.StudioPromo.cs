@@ -19,8 +19,10 @@ public partial class MainWindow
             Preferences = new() { Language = "en", Theme = ReStart.Core.ThemeMode.Dark, Columns = 8, TileScale = 1.5, ShowWallpaper = false, Animate = false },
             Groups = tiles.Select((tile, index) => new TileGroup { IsStandalone = true, X = 2 + index * 4.7, Row = 5, Tiles = [tile] }).ToList()
         };
-        ApplyAppearance(); ResetToPinnedView(); RenderGroups(); UpdateLayout();
+        ApplyAppearance(); ResetToPinnedView(); RenderGroups(); SetStatus("");
+        Root.Measure(new(Root.Width, Root.Height)); Root.Arrange(new Rect(0, 0, Root.Width, Root.Height)); FitPanels(); UpdateLayout();
         await WaitForDocumentationFramesAsync();
+        Require(GroupsPanel.Children.Count == 4 && GroupsPanel.ActualWidth > 1000 && ContentScroll.ViewportHeight > 500, "The creative gallery was clipped by an earlier fixture viewport.");
         SaveScreenshot(Path.Combine(directory, "web-examples.png"));
     }
 
