@@ -11,6 +11,8 @@ internal sealed class DropAdorner(UIElement target) : Adorner(target)
     public bool GroupTarget { get; set; }
     public Rect? GroupBounds { get; set; }
     public string Caption { get; set; } = "";
+    public double HoverProgress { get; set; }
+    public bool ShowHints { get; set; } = true;
     public IReadOnlyList<Rect>? SelectionBounds { get; set; }
     protected override void OnRender(DrawingContext dc)
     {
@@ -18,10 +20,12 @@ internal sealed class DropAdorner(UIElement target) : Adorner(target)
         var fill = accent.Clone(); fill.Opacity = 0.2;
         var pen = new Pen(accent, 3) { DashStyle = FolderTarget || GroupTarget ? DashStyles.Solid : DashStyles.Dash };
         foreach (var bounds in SelectionBounds ?? [CellBounds]) dc.DrawRectangle(fill, pen, bounds);
+        if (ShowHints && HoverProgress > 0 && !CellBounds.IsEmpty)
+            dc.DrawRectangle(accent, null, new Rect(CellBounds.Left, CellBounds.Bottom - 3, CellBounds.Width * Math.Clamp(HoverProgress, 0, 1), 3));
         if (GroupBounds is Rect group)
             dc.DrawRectangle(null, new Pen(accent, 2), group);
         if (FolderTarget) dc.DrawRoundedRectangle(null, pen, new Rect(CellBounds.X + 8, CellBounds.Y + 8, Math.Max(1, CellBounds.Width - 16), Math.Max(1, CellBounds.Height - 16)), 4, 4);
-        if (Caption.Length > 0)
+        if (ShowHints && Caption.Length > 0)
         {
             var text = new FormattedText(Caption, System.Globalization.CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, new Typeface("Segoe UI"), 12,
                 (Brush)Application.Current.FindResource("TextBrush"), VisualTreeHelper.GetDpi(this).PixelsPerDip);

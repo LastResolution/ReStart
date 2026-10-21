@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a reproducible problem. English or Japanese is welcome.
+description: Report a reproducible problem. English helps the community follow along; other languages are welcome.
 title: "[Bug]: "
 labels: [bug]
 body:

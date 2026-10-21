@@ -1,5 +1,5 @@
 ReStart v@VERSION@
-Full-screen Start, again. Japanese: README.ja.txt
+Full-screen Start, again.
 
 Run ReStart.exe. Keep TileHost, Examples, third-party and license notices.
 The portable package includes .NET; normal use needs no administrator rights.
@@ -8,10 +8,11 @@ Settings: left gear. Exit: tray menu. Sign-in startup is optional.
 
 Drag tiles/groups; empty-space drops create independent pins. Double-click
 group names to edit. Partly overlap an independent tile for about 0.3 seconds to collect a group;
-hold about one second over a grouped tile to create a folder. Existing folders
+hold about 0.6 seconds over a grouped tile to create a folder. Existing folders
 accept additions; one remaining child stays in its folder until moved out.
-Edit layout / Ctrl+E selects tiles without opening apps. Drag a selection together;
-Move to group collects it into a compact block. Done leaves editing.
+Select tiles in the sidebar/background menu, or Ctrl+E, selects without opening apps.
+Normal tile/group dragging is always available. Drag a selection together;
+Move to group collects it into a compact block. Finish selecting leaves the mode.
 Ctrl+Z undoes layout edits; Ctrl+Y or Ctrl+Shift+Z redoes. History is session-only.
 Type immediately to search. Explorer: Pin to ReStart (Windows 11: Show more options).
 Settings -> JavaScript tiles: fifteen bundled examples. Normal click operates
@@ -27,7 +28,8 @@ Data: %LOCALAPPDATA%\ReStart\layout.json; schema 1-3 upgrade to 4 with backups.
 Layout export excludes JS sources and photo/data bindings; keep tiles separately.
 
 Remove: disable startup and Explorer integration, exit, delete installation.
-Local data remains separately. Packages are unsigned. MIT License.
+Local data remains separately. MIT License.
+SHA-256 checksum files cover the complete ZIP.
 ReStart is independent of Microsoft. Source, build and implementation details:
 https://github.com/LastResolution/ReStart
 

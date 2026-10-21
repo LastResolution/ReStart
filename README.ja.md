@@ -5,15 +5,22 @@
   <a href="https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-x64.zip"><strong>Windows 版をダウンロード · x64</strong></a> ·
   <a href="https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip">ARM64</a> ·
   <a href="https://github.com/LastResolution/ReStart/releases/latest">Release notes</a> ·
-  <a href="docs/ja/javascript-tiles.md">タイルを作る</a> ·
-  <a href="CONTRIBUTING.ja.md">開発に参加</a> ·
-  <a href="README.md">English</a>
+  <a href="docs/javascript-tiles.md">タイルを作る</a> ·
+  <a href="CONTRIBUTING.md">開発に参加</a>
 </p>
 <p align="center">
   <a href="https://github.com/LastResolution/ReStart/actions/workflows/ci.yml"><img src="https://github.com/LastResolution/ReStart/actions/workflows/ci.yml/badge.svg" alt="Windows CI" /></a>
   <a href="https://github.com/LastResolution/ReStart/releases/latest"><img src="https://img.shields.io/github/v/release/LastResolution/ReStart?color=0078d4" alt="Latest release" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-0078d4" alt="MIT license" /></a>
 </p>
+
+<!-- languages:start -->
+<p align="center">
+  <a href="README.md">English</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.fr.md">Français</a> · <a href="README.ja.md">日本語</a> · <a href="README.ko.md">한국어</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.zh-TW.md">繁體中文</a>
+</p>
+<!-- languages:end -->
+
+> **AI翻訳:** この案内は英語を基にAIを用いて翻訳・編集しており、誤りが含まれる場合があります。[英語README](README.md)を原本とし、翻訳の修正を歓迎します。スクリーンショットは全言語版で英語のデモ環境を使用しています。
 
 ![アプリ・グループ・フォルダ・ライブタイルを含む全画面の ReStart](docs/images/start.png)
 
@@ -29,7 +36,7 @@
 2. 使い続けたい場所に **ZIP 全体を展開**します。`ReStart.exe` と同じ場所に `TileHost`、`Examples`、`third-party` を残してください。
 3. **ReStart.exe** を実行します。**Windows キー**で開いて、そのままアプリ名を入力すると検索できます。**Ctrl+Alt+Space** と通知領域のメニューからも開けます。
 
-歯車からテーマ、サインイン時の起動、Windows キー・Start ボタンとの連携、更新確認を設定できます。配布物は未署名で、[リリースページ](https://github.com/LastResolution/ReStart/releases/latest)にチェックサムを添付しています。
+歯車からテーマ、サインイン時の起動、Windows キー・Start ボタンとの連携、更新確認を設定できます。[リリースページ](https://github.com/LastResolution/ReStart/releases/latest)にチェックサムを添付しています。
 
 | すぐにアプリへ | 配置を自分のものに | 必要な情報をひと目で |
 | --- | --- | --- |
@@ -44,6 +51,7 @@
 - **誤起動せずに整理。** 編集モードでタイルを選択してまとめて移動し、Undo / Redo で操作を戻したりやり直したりできます。
 - **フォルダをその場で展開。** グループ内のタイルに重ねて待つとフォルダを作成。単独タイルに重ねるとグループを作成します。開くと影響する隣接項目だけを移動し、閉じると元の位置へ戻ります。
 - **ファイルもピン留め。** Explorer の **Pin to ReStart** からファイル・フォルダ・ショートカットを追加。通常は空きスペースに置き、メニューからグループも指定できます。
+- **検索と起動を自分向けに。** アプリ・Windowsの設定・インデックス済みファイルを検索。最近・よく使う文書、サイドバーのフォルダー、任意のアプリ履歴を選べます。タイルごとの起動引数や管理者実行にも対応。**設定 → スタートの動作**で機能を個別に切り替えられます。[設定一覧](docs/start-behavior.md)。
 - **ライブタイルをワンクリックで。** 背景やグループの右クリック → ライブタイルを追加、または設定から選択。ローカルライブラリに置いた自作パッケージも自動検出。4サイズに合わせた表示例も同梱します。
 - **好みの外観。** ミッドナイト・オーシャン・フォレスト・ローズ・サンドの全5配色にライト・ダーク版を用意。基本テーマとは別に選べ、システム設定にも追従します。背景色・アクセント色を手入力すると、そのRGB値を維持するカスタム配色になります。文字・操作部品・縦横のスクロールバー・スプラッシュがまとめて追従します。ライト・ダーク・システム・ハイコントラスト、壁紙、タイルごとの名前と色も使えます。
 - **アプリ一覧を更新。** 起動したままインストール・アンインストールしたアプリも、再表示時などにバックグラウンドで一覧へ反映します。
@@ -51,7 +59,7 @@
 - **8言語に対応。** 英語、日本語、ドイツ語、フランス語、スペイン語、韓国語、簡体字・繁体字中国語。ライブタイルの既定名は言語に追従し、変更した名前は維持します。
 - **更新を見通せる。** 単一起動、サインイン時の起動、設定移行のバックアップ、バージョン・ライセンス表示、APIキー不要の公開リリース確認。
 
-スクリーンショットはデモ配置、サンプル計測値、単色の写真素材を使っています。実際のタイルは許可した機能からPCの情報を読み取ります。[ライブタイル API とスタイリング例](docs/ja/javascript-tiles.md)を参照してください。
+スクリーンショットはデモ配置、サンプル計測値、単色の写真素材を使っています。実際のタイルは許可した機能からPCの情報を読み取ります。[ライブタイル API とスタイリング例](docs/javascript-tiles.md)を参照してください。
 
 <details>
 <summary>ライトテーマ・アプリ一覧を見る</summary>
@@ -62,7 +70,49 @@
 
 </details>
 
-Microsoft とは独立したプロジェクトです。Explorer のパッチは行わず、解除可能な連携を使います。従来の UWP タイル通知、Windows Search 全体、Cortana、ジャンプリスト、使用頻度による推薦は対象外です。[互換性](docs/ja/fidelity.md)と[検証手順](docs/ja/testing.md)を参照してください。
+Microsoft とは独立したプロジェクトです。Explorer のパッチは行わず、解除可能な連携を使います。従来の UWP タイル通知、Windows Search 全体、Cortana は対象外です。対応アプリでは最近使った文書・よく使う文書を表示し、アプリの使用履歴は任意で有効にできます。[互換性](docs/fidelity.md)と[検証手順](docs/testing.md)を参照してください。
+
+## 全機能一覧
+
+| 分野 | 対応機能 |
+| --- | --- |
+| 開閉とWindows連携 | Windowsキー・スタートボタンの任意の置き換え、Ctrl+Alt+Space、トレイ、フォーカス取得、別アプリ・タスクバー操作で閉じる、画面に合わせた表示、多重起動防止 |
+| 起動 | サインイン時の自動起動、バックグラウンド起動、テーマ対応の準備画面と先行入力、アイコンキャッシュ、アプリ登録情報の自動更新 |
+| タイルとグループ | 小・中・横長・大の4サイズ、単独ピン、内容幅に合わせた長方形グループ、自由な配置、半セル単位の横位置、縦横スクロール |
+| フォルダー | グループ内で重ねて作成、行内展開、子タイルの追加・取り出し・並べ替え、その場での名前変更と解除。中身が1つでも維持 |
+| 配置の編集 | 編集モード、複数選択と一括移動、選択・ピン留め解除、起動中のUndo/Redo、ドラッグ取消時の復元 |
+| D&Dの表示 | グループ・フォルダー・配置先の区別、待ち時間の進捗、ヒント、ホバー時の範囲、自動端スクロール。重ねて作るグループ・フォルダーは個別に無効化可能 |
+| ピン留め | アプリ、ファイル、ディレクトリ、ショートカット、Webサイト。Explorerやアプリ一覧・検索の右クリック、ドラッグ、追加先の明示指定 |
+| 検索 | 全半角・かなを正規化したアプリ検索、翻訳名・英語名で探せるWindows設定15項目、任意のインデックス済みファイル名検索、矢印・Enter操作、古い問い合わせの取消 |
+| すべてのアプリ | 画面幅に合わせたアルファベット順の列、スタートメニュー内フォルダーの展開、文字ジャンプ、キーボード操作、インストール・削除の反映、任意の最近追加・よく使うアプリ |
+| アプリの操作 | Windowsが提供する管理者実行、ファイルの場所、プロパティ、アンインストール。Windowsの設定と公開APIの範囲で最近・よく使う文書を表示 |
+| 起動オプション | タイルごとの有効・無効、追加引数、作業フォルダー、対応するデスクトップアプリ・ショートカットの管理者実行。UACの確認はWindowsが担当 |
+| サイドバー | 任意のホバー展開、ドキュメント・ダウンロード・音楽・画像・動画・ネットワーク・個人用フォルダーの個別選択、アカウントと電源操作 |
+| 外観 | 5種類のカラーテーマとライト・ダーク・システム設定、背景・アクセントのRGB指定、壁紙、スタートのアクセント色、旧式・個別タイル色、コントロール・両スクロールバー、ハイコントラスト、任意のアニメーション |
+| ライブタイル | JS製15種類を同梱、4サイズ対応、クリック時のローカル操作、更新の有効・無効、データ接続設定、サンプル作成、パッケージ取込、ローカルライブラリの自動検出 |
+| JS API | PC時刻、言語・サイズ・保持状態、CPU・メモリ・通信・バッテリー・ストレージ、選択フォルダーの写真、JSON・Web API・RSS・Atom・ローカルファイルのキャッシュとアプリ連携 |
+| 多言語 | 英語、日本語、ドイツ語、フランス語、スペイン語、韓国語、簡体字・繁体字中国語。UIと同梱タイルに対応 |
+| データと更新 | ローカル設定、配置の取込・書出し・初期化、バックアップとバージョン移行、消去可能なアプリ履歴、バージョン・ビルド・ライセンス、APIキー不要の更新確認と手動更新 |
+| 配布 | Windows 10/11のx64・ARM64向けポータブルZIP、ランタイム・ライセンス同梱、通常利用は管理者権限不要、Explorerを書き換えない解除可能な連携 |
+
+[ON/OFF設定と既定値](docs/start-behavior.md) · [対応範囲](docs/fidelity.md) · [JS API](docs/javascript-tiles.md)
+
+### 検索と起動の設定
+
+![アプリ・Windows設定・ファイルを分類した検索画面全体](docs/images/unified-search.png)
+
+<details>
+<summary><strong>動作の切り替えとタイルごとの起動オプション</strong></summary>
+
+| スタートの動作 | 起動オプション |
+| --- | --- |
+| ![動作のスイッチとサイドバーのフォルダー選択](docs/images/start-behavior.png) | ![追加引数・作業フォルダー・管理者実行](docs/images/launch-options.png) |
+
+![配置操作・履歴・検索の切り替え](docs/images/start-behavior-layout.png)
+
+設定・ファイル検索、文書メニュー、ホバー表示、重ねて作るグループ・フォルダー、端スクロール、ヒントを個別に無効化できます。「よく使うアプリ」の記録は既定で無効です。起動オプションも入力値を残して無効にできます。スクリーンショットは英語UIと架空のアプリ・文書を使っています。
+
+</details>
 
 ## ライブタイルで必要な情報を
 
@@ -92,9 +142,9 @@ Microsoft とは独立したプロジェクトです。Explorer のパッチは�
 
 Start の起動準備中と表示中に非同期で更新し、取得に失敗した場合は前回の値を保持します。非表示にすると取得を停止します。接続先と認証情報は現 Windows ユーザー向けに暗号化し、共有するレイアウトには含めません。パッケージを取り込んだだけでは接続しません。
 
-**天気の初期設定はベルリンの例で、PC の地域ではありません。** 位置推定は行いません。[地域の変更手順](docs/ja/javascript-tiles.md#天気の地域)から座標と表示名を変更できます。上の画像は架空のローカルデータで描画しています。
+**天気の初期設定はベルリンの例で、PC の地域ではありません。** 位置推定は行いません。[地域の変更手順](docs/javascript-tiles.md#weather-location)から座標と表示名を変更できます。上の画像は架空のローカルデータで描画しています。
 
-自作アプリは既存の localhost エンドポイントや JSON ファイルで連携できます。[ファイル生成例](examples/integrations/write-tile-data.ps1)と[データ連携ガイド](docs/ja/javascript-tiles.md#天気フィードweb-api他アプリのデータ)で、接続・セレクター・認証の指定を紹介しています。
+自作アプリは既存の localhost エンドポイントや JSON ファイルで連携できます。[ファイル生成例](examples/integrations/write-tile-data.ps1)と[データ連携ガイド](docs/javascript-tiles.md#weather-feeds-web-apis-and-application-data)で、接続・セレクター・認証の指定を紹介しています。
 
 ## タイルを作る
 
@@ -133,11 +183,11 @@ function render(ctx) {
 
 2ファイルを `%LOCALAPPDATA%\ReStart\TileLibrary` 内のサブフォルダへ置き、ギャラリーや右クリックから追加します。接続画面で `{"status":{"text":"Build passed"}}` を返す API またはファイルを選ぶと、`/status` で選択したオブジェクトが `ctx.data.service.value` に届きます。個人用 URL やキーは接続画面で指定し、パッケージには書きません。
 
-描画は ReStart がネイティブで行います。[同梱サンプル](examples/tiles)にはシステム情報・写真・サイズごとの配置・クリック操作もあります。[作成ガイド](docs/ja/javascript-tiles.md)と[API契約](docs/ja/api-contracts.md)を参照してください。
+描画は ReStart がネイティブで行います。[同梱サンプル](examples/tiles)にはシステム情報・写真・サイズごとの配置・クリック操作もあります。[作成ガイド](docs/javascript-tiles.md)と[API契約](docs/api-contracts.md)を参照してください。
 
 ## 使い方を共有する
 
-配置例、タイルのアイデア、不具合は [Issue](https://github.com/LastResolution/ReStart/issues/new/choose) へ。タイル、翻訳、アクセシビリティ、ランチャー本体への貢献も歓迎します。[開発参加ガイド](CONTRIBUTING.ja.md)を参照してください。
+配置例、タイルのアイデア、不具合は [Issue](https://github.com/LastResolution/ReStart/issues/new/choose) へ。タイル、翻訳、アクセシビリティ、ランチャー本体への貢献も歓迎します。[開発参加ガイド](CONTRIBUTING.md)を参照してください。
 
 <details>
 <summary><strong>初回起動と対応環境</strong></summary>
@@ -147,7 +197,7 @@ function render(ctx) {
 3. `ReStart.exe` を起動します。管理者権限や .NET の別途インストールは不要です。
 4. Windows キーを単押しすると ReStart が開きます。設定は左下の歯車です。
 
-ZIP 配布は未署名です。組織の実行ポリシーに従ってください。Windows 11 x64 が実機検証対象です。Windows 10 22H2 と ARM64 は対応ビルド対象ですが、実機検証は別途必要です。
+Windows 11 x64 が実機検証対象です。Windows 10 22H2 と ARM64 は対応ビルド対象ですが、実機検証は別途必要です。
 
 初回はアプリの登録情報を読み取ります。アイコンはバックグラウンドで取得します。既存の Windows スタートや Explorer のファイルを書き換えることはありません。ReStart 終了時にキーの捕捉を解除します。
 
@@ -161,7 +211,7 @@ ZIP 配布は未署名です。組織の実行ポリシーに従ってくださ�
 | Windows キー単押し | 開く / 閉じる。設定で無効化可能 |
 | `Ctrl+Alt+Space` | 開く / 閉じる |
 | `Esc` | 検索やフォルダーを閉じる。もう一度で ReStart を閉じる |
-| 文字入力 / `Ctrl+F` | アプリを検索 |
+| 文字入力 / `Ctrl+F` | アプリと、有効にしたWindows設定・ファイル名を検索 |
 | 検索欄で `Enter` | 強調表示した結果を起動。`↓` / `↑`で選択を変更 |
 | `Tab` / 矢印 / `Enter` | フォーカス移動 / 選択項目の起動 |
 | タイルを右クリック | サイズ、名前、移動先、フォルダー、解除 |
@@ -169,8 +219,8 @@ ZIP 配布は未署名です。組織の実行ポリシーに従ってくださ�
 | タイルを空き領域へドロップ | その位置に単独タイルとして配置 |
 | アプリ一覧・検索結果からドラッグ | タイル画面へ切り替えて配置。キャンセルで元の表示へ復帰 |
 | 単独タイルに半分ほど重ねて約0.3秒待ち、「グループを作成」でドロップ | 通常のグループにまとめる |
-| グループ内のタイルに重ねて約1秒待ち、フォルダーのプレビューでドロップ | フォルダーを作成。既存フォルダーなら中に追加 |
-| 「配置を編集」 / `Ctrl+E` | クリックでタイルを選択。アプリを起動せず、選択したタイルをまとめてドラッグ |
+| グループ内のタイルに重ねて約0.6秒待ち、フォルダーのプレビューでドロップ | フォルダーを作成。既存フォルダーなら中に追加 |
+| サイドバー・背景の右クリックの「タイルを選択」 / `Ctrl+E` | アプリを起動せずに複数選択。通常時もタイルやグループを直接ドラッグできます |
 | 編集中の `Ctrl+A` / `Delete` | ルートタイルをすべて選択 / 選択したタイルをピン留め解除 |
 | `Ctrl+Z` / `Ctrl+Y` または `Ctrl+Shift+Z` | 配置を元に戻す / やり直す。文字入力欄では通常の文字編集の取り消し |
 | グループ名をダブルクリック / `Enter` / `F2` | その場で名前を編集。`Enter`で確定、`Esc`で取消 |
@@ -194,11 +244,11 @@ ZIP 配布は未署名です。組織の実行ポリシーに従ってくださ�
 
 設定・レイアウトは `%LOCALAPPDATA%\ReStart\layout.json` に保存します。直前の保存が `layout.json.bak` に残ります。壊れたファイルは保全し、利用可能ならバックアップを読み込みます。将来の形式を古い ReStart で読み込んだ場合は上書きを禁止します。
 
-設定の形式は schema 4 です。旧 schema 1～3 と同じ形式内のアプリ更新で原本バックアップを残し、設定 → レイアウトとデータに移行記録を表示します。旧形式の名前なし・1個だけのグループは単独タイルへ移行します。旧版へ戻す場合は[移行と復元](docs/ja/migration.md)に従ってください。
+設定の形式は schema 4 です。旧 schema 1～3 と同じ形式内のアプリ更新で原本バックアップを残し、設定 → レイアウトとデータに移行記録を表示します。旧形式の名前なし・1個だけのグループは単独タイルへ移行します。旧版へ戻す場合は[移行と復元](docs/migration.md)に従ってください。
 
-設定 → 情報で版・ビルド・ライセンス全文、設定 → 更新で API キー不要の公開リリース確認を使えます。自動インストールは行いません。[更新チェック](docs/ja/updates.md)を参照してください。
+設定 → 情報で版・ビルド・ライセンス全文、設定 → 更新で API キー不要の公開リリース確認を使えます。自動インストールは行いません。[更新チェック](docs/updates.md)を参照してください。
 
-横スクロールと Shift＋ホイールに対応し、端へドラッグした場合だけ作業領域を広げます。[全体の動作確認](docs/ja/fidelity.md)で、本家に基づく動作・要望による拡張・未検証を整理しています。
+横スクロールと Shift＋ホイールに対応し、端へドラッグした場合だけ作業領域を広げます。[全体の動作確認](docs/fidelity.md)で、本家に基づく動作・要望による拡張・未検証を整理しています。
 
 レイアウトにはアプリ名、起動先、ファイルやフォルダーのパスが含まれます。エクスポートする際は共有内容を確認してください。インポートしても自動起動やキーフックの設定は引き継ぎません。
 
@@ -265,7 +315,7 @@ dotnet build ReStart.slnx -c Release
 - Actions の権限を絞り、外部 Actions はコミット SHA に固定します。
 - Dependabot が NuGet と GitHub Actions の更新を提案します。
 
-詳しくは [開発への参加](CONTRIBUTING.ja.md)、[アーキテクチャ](docs/ja/architecture.md)、[検証方法](docs/ja/testing.md)、[リリース手順](docs/ja/releasing.md) を参照してください。
+詳しくは [開発への参加](CONTRIBUTING.md)、[アーキテクチャ](docs/architecture.md)、[検証方法](docs/testing.md)、[リリース手順](docs/releasing.md) を参照してください。
 
 バージョンごとの変更は [GitHub Releases](https://github.com/LastResolution/ReStart/releases) に英語で記載します。
 
@@ -275,4 +325,4 @@ dotnet build ReStart.slnx -c Release
 
 ReStart のコードは [MIT License](LICENSE) です。
 
-[セキュリティ](SECURITY.ja.md) · [サポート](SUPPORT.ja.md) · [英語表記でのブランチ保護](docs/ja/github-protection.md)
+[セキュリティ](SECURITY.md) · [サポート](SUPPORT.md) · [英語表記でのブランチ保護](docs/github-protection.md)

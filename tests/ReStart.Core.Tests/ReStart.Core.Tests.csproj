@@ -21,13 +21,13 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\ReStart.Core\ReStart.Core.csproj" />
     <ProjectReference Include="..\..\src\ReStart.TileHost\ReStart.TileHost.csproj" />
-    <Compile Include="..\..\src\ReStart.App\Services\StartupRegistration.cs" Link="StartupRegistration.cs" />
-    <Compile Include="..\..\src\ReStart.App\Services\ExplorerPinRegistration.cs" Link="ExplorerPinRegistration.cs" />
-    <Compile Include="..\..\src\ReStart.App\Services\ScriptTileSession.cs" Link="ScriptTileSession.cs" />
-    <Compile Include="..\..\src\ReStart.App\Services\ScriptTileWorkerPool.cs" Link="ScriptTileWorkerPool.cs" />
-    <Compile Include="..\..\src\ReStart.App\Services\SystemMetricsSampler.cs" Link="SystemMetricsSampler.cs" />
-    <Compile Include="..\..\src\ReStart.App\Services\ScriptTilePackages.cs" Link="ScriptTilePackages.cs" />
-    <Compile Include="..\..\src\ReStart.App\Services\WorkerJob.cs" Link="WorkerJob.cs" />
+    <Compile Include="..\..\src\ReStart.App\Services\Shell\StartupRegistration.cs" Link="Services/Shell/StartupRegistration.cs" />
+    <Compile Include="..\..\src\ReStart.App\Services\Shell\ExplorerPinRegistration.cs" Link="Services/Shell/ExplorerPinRegistration.cs" />
+    <Compile Include="..\..\src\ReStart.App\Services\LiveTiles\ScriptTileSession.cs" Link="Services/LiveTiles/ScriptTileSession.cs" />
+    <Compile Include="..\..\src\ReStart.App\Services\LiveTiles\ScriptTileWorkerPool.cs" Link="Services/LiveTiles/ScriptTileWorkerPool.cs" />
+    <Compile Include="..\..\src\ReStart.App\Services\LiveTiles\SystemMetricsSampler.cs" Link="Services/LiveTiles/SystemMetricsSampler.cs" />
+    <Compile Include="..\..\src\ReStart.App\Services\LiveTiles\ScriptTilePackages.cs" Link="Services/LiveTiles/ScriptTilePackages.cs" />
+    <Compile Include="..\..\src\ReStart.App\Services\LiveTiles\WorkerJob.cs" Link="Services/LiveTiles/WorkerJob.cs" />
   </ItemGroup>
 
   <ItemGroup>

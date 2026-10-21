@@ -1,7 +1,5 @@
 # Testing
 
-[日本語](ja/testing.md)
-
 Run on Windows with the stable SDK in global.json. Exit ReStart when rebuilding its own output, or pass an isolated OutputPath as described in the README.
 
 ~~~powershell
@@ -9,6 +7,9 @@ dotnet restore ReStart.slnx --locked-mode
 dotnet format whitespace ReStart.slnx --verify-no-changes --no-restore
 ./scripts/check-api-docs.ps1 -SelfTest
 ./scripts/check-api-docs.ps1
+./scripts/check-architecture.ps1
+./scripts/check-readmes.ps1
+./scripts/test-privacy.ps1
 dotnet build ReStart.slnx -c Release --no-restore
 dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory artifacts/test-results
 ./scripts/smoke.ps1
@@ -16,6 +17,7 @@ dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory 
 ./scripts/test-navigation.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe -AppFolders
 ./scripts/test-first-input.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-search-selection.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+./scripts/test-fidelity.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-startup.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-appearance.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-motion.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
@@ -45,6 +47,7 @@ dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory 
 | startup | Delayed catalog, hidden prepared content, splash typeahead/cancellation/coalesced activation, initial photo/script/error frames, warm reopening, eight languages in dark/light/system modes and pixel-cache corruption/expiry/invalidation |
 | appearance | Eight languages across five families × dark/light/system modes, actual expanded-rail glyphs and alignment, splash theme resources, extreme RGB text/control/scrollbar contrast, invalid color rejection and ten native family-save/reopen/mode-switch/custom-RGB persistence paths |
 | app-menus | Pin/unpin/menu refresh, default/explicit directory destinations with immediate Shell icons, preview command availability, canonical verbs read for real/missing files; no shell verb invocation |
+| fidelity | Eight-language settings search/sidebar checks, async indexed-file cancellation and native query, feature switch save/reload, local history, menu categories, Unicode arguments/working directory and shortcut launches through a test-only handler, launch-options editor validation, stationary edge scrolling without saved-coordinate changes |
 | release-info | Version, licenses, original migration backup, upgrade record, Eight languages × light/dark settings, global tile and Start accent |
 | placement | Independent group anchors, collision preview/cancel, unchanged child cells, standalone footprint/no header, persistence, inline name events and normal/independent folder expansion |
 | folder-drops | Twelve real dispatcher-timer cases (independent → group / grouped → folder × normal/edit × same/mixed sizes), 192 source/target-size and grab-position cases, four deadline/edge/drift cases, earlier-neighbor header collisions, persisted identities, one-step undo/redo, cancellation, scrolling, batch grouping and folder-as-root grouping |

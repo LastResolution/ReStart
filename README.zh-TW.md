@@ -1,0 +1,128 @@
+<p align="center"><img src="assets/ReStart.png" width="96" alt="ReStart" /></p>
+<h1 align="center">ReStart</h1>
+<p align="center"><strong>讓全螢幕開始功能表回歸。</strong><br>你的應用程式、你的配置、你自己的動態磚。</p>
+
+<!-- languages:start -->
+<p align="center">
+  <a href="README.md">English</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.fr.md">Français</a> · <a href="README.ja.md">日本語</a> · <a href="README.ko.md">한국어</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.zh-TW.md">繁體中文</a>
+</p>
+<!-- languages:end -->
+
+> **AI 翻譯：** 本指南使用 AI 從英文翻譯，可能含有錯誤。[英文 README](README.md) 為主要參考，包含更多範例。歡迎協助修正。螢幕擷取畫面使用英文示範環境與範例資料。
+
+![包含應用程式、資料夾與動態磚的 ReStart](docs/images/start.png)
+
+懷念 Windows 10 的全螢幕開始功能表？ReStart 在 Windows 11 和 Windows 10 上提供熟悉的應用程式空間。釘選常用內容，自由安排配置，再加入能以 JavaScript 撰寫的動態磚。
+
+**可攜式 · JavaScript 動態磚 · x64 與 ARM64 · 八種語言 · 不必另外安裝 .NET**
+
+## 快速開始
+
+1. Intel/AMD 電腦下載 **[x64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-x64.zip)**；Windows on ARM 下載 **[ARM64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip)**。
+2. 解壓縮**整個 ZIP**。保留 `ReStart.exe` 旁的 `TileHost`、`Examples` 與 `third-party`。
+3. 執行 **ReStart.exe**，按 **Windows 鍵**後輸入應用程式名稱。也可用 **Ctrl+Alt+Space** 或通知區域選單開啟。
+
+齒輪設定可選擇佈景主題、登入時啟動、Windows 鍵/開始按鈕整合與更新。一般使用不需要系統管理員權限。提供 [SHA-256 校驗值](https://github.com/LastResolution/ReStart/releases/latest)。
+
+## 功能
+
+![ReStart 的開啟與關閉動畫](docs/images/start-motion.gif)
+
+| 類別 | 包含功能 |
+| --- | --- |
+| 開啟與關閉 | 選擇性接管 Windows 鍵及工作列開始按鈕、Ctrl+Alt+Space、通知區域控制、前景啟用、切換應用程式/工作列時關閉、依螢幕工作區域顯示、單一執行個體 |
+| 啟動 | 選擇性登入啟動、背景模式、跟隨主題的準備畫面與預先輸入、圖示快取、背景應用程式目錄重新整理 |
+| 動態磚與群組 | 四種大小、獨立釘選、依內容調整大小的可移動矩形群組、水平半格錨點、自動放置、雙向捲動 |
+| 資料夾 | 在群組內重疊建立、原位展開、新增/移除/排序、就地重新命名及解散；只剩一個項目仍保留資料夾 |
+| 配置編輯 | 編輯模式、多重選取、批次移動、工作階段內復原/重做；取消拖曳保留原配置 |
+| 拖曳回饋 | 區分群組/資料夾目標、停留進度、選擇性提示及群組邊界、邊緣自動捲動；可關閉自動群組/資料夾建立 |
+| 釘選內容 | 應用程式、檔案、目錄、捷徑、網站；檔案總管 **Pin to ReStart**、右鍵選單、從應用程式清單拖曳、明確指定目標 |
+| 搜尋 | 正規化應用程式名稱、包含英文別名的 15 個本地化 Windows 設定頁面、選擇性本機索引檔名、方向鍵/Enter、捨棄過期查詢 |
+| 所有應用程式 | 回應式字母欄、展開開始功能表目錄、字母選擇器、鍵盤導覽、即時反映安裝/解除安裝、最近新增與選擇性最常使用 |
+| 應用程式命令 | 可用的 Windows 系統管理員執行/檔案位置/內容/解除安裝；依 Windows 歷程設定與 API 支援提供最近/常用文件選單 |
+| 啟動選項 | 每個動態磚獨立啟用、引數、工作目錄、支援桌面程式/捷徑的系統管理員執行；UAC 由 Windows 處理 |
+| 導覽 | 選擇性暫留展開、個別選擇文件/下載/音樂/圖片/影片/網路/個人資料夾、帳戶及電源操作 |
+| 外觀 | 五種色系各有明暗變體、系統模式、自訂 RGB 背景/輔色、桌布、開始畫面著色、個別磚色彩、主題控制項/捲軸、高對比、選擇性動畫 |
+| 動態磚 | 15 個 JavaScript 範例、四種回應式大小、本機點擊動作、即時更新開關、資料設定、建立範例、匯入套件、自動監看本機程式庫 |
+| 動態磚 API | 電腦時間、語言/大小、保留狀態、CPU/記憶體/網路/電池/儲存、選定照片、快取 JSON/Web API/RSS/Atom/檔案輸入、本機程式整合 |
+| 語言 | 英文、日文、德文、法文、西班牙文、韓文、簡體中文、繁體中文，包括內建動態磚文字 |
+| 資料與更新 | 本機設定、配置匯入/匯出/重設、備份與移轉、可清除的程式活動、版本/組建/授權、免 API 金鑰更新檢查與手動安裝 |
+| 發行 | Windows 10/11 x64 與 ARM64 可攜式套件，內含執行階段及聲明，可還原整合且不修改 Explorer |
+
+[開關與預設值（英文）](docs/start-behavior.md) · [相容性（英文）](docs/fidelity.md)
+
+## 搜尋與設定
+
+![應用程式、Windows 設定及本機檔案搜尋結果](docs/images/unified-search.png)
+
+在 **Settings → Start behavior** 可分別關閉設定/檔案搜尋、文件選單、暫留效果、自動群組/資料夾、邊緣捲動與拖曳提示。最常使用程式的記錄預設關閉。
+
+| 開始功能表行為 | 個別動態磚啟動選項 |
+| --- | --- |
+| ![行為設定](docs/images/start-behavior.png) | ![引數、工作目錄及系統管理員執行](docs/images/launch-options.png) |
+
+關閉 **Use custom launch options** 仍會保留填入的欄位。未啟用時，捷徑維持 Windows 的一般啟動設定。
+
+## 動態磚與資料
+
+![內建動態磚](docs/images/live-tiles.png)
+
+- **時間與專注：** Orbit clock、Digital clock、Month dots、Focus cycle、Year in motion、Countdown。
+- **電腦：** CPU pulse、Memory flow、Network flow、Battery、Storage。
+- **照片：** Photo moments，指定資料夾，按一下切換下一張。
+- **資料連線：** Weather、Feed headlines、JSON monitor。
+
+在背景按右鍵 → **Add live tile**。按一下會執行磚內動作，例如暫停計時或切換照片。Weather/Feed/JSON 可在 **Configure data sources…** 填入網址或選擇檔案後儲存。**Refresh data now** 可要求最新資料。
+
+**天氣初始採用柏林範例座標，不是電腦位置。** ReStart 不會推測所在地區。依[天氣指南](docs/javascript-tiles.md#weather-location)變更座標與顯示名稱。認證資料依目前 Windows 使用者加密，不包含在配置匯出中。連線失敗時可顯示快取，隱藏開始畫面後停止讀取。
+
+自訂磚由 `manifest.json` 與 `tile.js` 組成。`render(ctx)` 接收有界資料快照，回傳原生顯示資料，可按大小改變配置。JavaScript 不具一般檔案、網路或 CLR 存取權。將套件資料夾放到 `%LOCALAPPDATA%\ReStart\TileLibrary` 即自動探索。[範例](examples/tiles) · [JavaScript API（英文）](docs/javascript-tiles.md) · [本機資料產生範例](examples/integrations/write-tile-data.ps1)
+
+## 操作
+
+| 操作 | 結果 |
+| --- | --- |
+| Windows 鍵 / `Ctrl+Alt+Space` | 開啟或關閉 |
+| 輸入 / `Ctrl+F` | 搜尋；Enter 啟動反白結果，方向鍵變更選取 |
+| `Esc` | 依序關閉搜尋、資料夾或覆疊，再關閉開始畫面 |
+| 拖曳動態磚 / 群組標題 | 移動；放到空白處建立獨立磚 |
+| 在獨立磚上部分重疊約 0.3 秒 | 預覽就緒後建立一般群組 |
+| 在群組內磚上重疊約 0.6 秒 | 建立資料夾；既有資料夾可接收新增項目 |
+| 側邊欄/背景選單的 **選取磚塊** / `Ctrl+E` | 多重選取而不開啟程式；平時也可以直接拖曳磚塊 |
+| 編輯時 `Ctrl+A` / `Delete` | 選取根磚 / 取消釘選所選項目 |
+| `Ctrl+Z` / `Ctrl+Y` 或 `Ctrl+Shift+Z` | 復原 / 重做配置 |
+| 鉛筆 / 按兩下名稱 | 就地重新命名群組或資料夾 |
+| `Shift` + 滾輪 | 水平捲動 |
+
+Windows 組合鍵會轉送給系統。配置歷程在工作階段內保留最多 100 次變更、上限 32 MiB；文字欄位保有自己的文字復原。再次開啟會回到釘選首頁。
+
+## 設定、隱私與更新
+
+設定位於 `%LOCALAPPDATA%\ReStart\layout.json`。選擇性的程式活動另外存於 `activity.json`，可清除。移轉會保留備份，參閱[說明（英文）](docs/migration.md)。About 顯示版本、組建與授權。
+
+更新檢查讀取公開 GitHub Releases，免 API 金鑰。退出 ReStart 後手動替換完整解壓縮安裝目錄。位置變更時重新儲存啟動註冊與檔案總管整合。沒有廣告或使用分析，不上傳程式清單、配置或照片選擇。設定的資料提供者會收到相應請求。[安全（英文）](SECURITY.md)
+
+移除時關閉登入啟動與檔案總管整合，從通知區域退出並刪除安裝目錄。只有同時要刪除設定與自訂磚時，才移除本機資料目錄。
+
+## 自行建置
+
+使用 Windows 與 `global.json` 選定的穩定版 [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)。覆寫檔案前先關閉執行中的程式。
+
+```powershell
+git clone https://github.com/LastResolution/ReStart.git
+cd ReStart
+dotnet restore ReStart.slnx --locked-mode
+dotnet build ReStart.slnx -c Release --no-restore
+dotnet test ReStart.slnx -c Release --no-build
+.\src\ReStart.App\bin\Release\net10.0-windows\ReStart.exe
+# 隔離預覽：
+dotnet run --project src/ReStart.App -c Release -- --preview
+# 含執行階段的可攜式套件：
+./scripts/package.ps1 -Runtime win-x64
+```
+
+ARM64 使用 `win-arm64`。ZIP 與校驗檔產生於 `artifacts/packages`。請始終發行完整 ZIP。
+
+[問題與建議](https://github.com/LastResolution/ReStart/issues/new/choose) · [參與貢獻（英文）](CONTRIBUTING.md) · [架構（英文）](docs/architecture.md) · [測試（英文）](docs/testing.md) · [發行](https://github.com/LastResolution/ReStart/releases)
+
+ReStart 是受後期 Windows 10 全螢幕開始功能表啟發的獨立 MIT 專案，與 Microsoft 無關。圖片顯示真正程式的英文示範、合成指標與產生的照片色塊。名稱和圖示屬於各權利人。[MIT 授權](LICENSE) · [支援（英文）](SUPPORT.md)

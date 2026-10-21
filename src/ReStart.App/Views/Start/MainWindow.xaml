@@ -1,0 +1,129 @@
+<Window x:Class="ReStart.App.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="clr-namespace:ReStart.App" xmlns:controls="clr-namespace:ReStart.App.Controls"
+        Title="ReStart" Style="{StaticResource {x:Type Window}}" WindowStyle="None" ResizeMode="NoResize" ShowInTaskbar="False" Topmost="True" UseLayoutRounding="True"
+        PreviewKeyDown="OnPreviewKeyDown" PreviewTextInput="OnPreviewTextInput" Deactivated="OnDeactivated" Closing="OnClosing">
+  <Window.Resources>
+    <Style x:Key="SearchResultAction" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+      <Setter Property="Focusable" Value="False" />
+      <Setter Property="IsTabStop" Value="False" />
+      <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
+      <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
+        <Border Background="Transparent" Padding="{TemplateBinding Padding}"><ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Center" /></Border>
+      </ControlTemplate></Setter.Value></Setter>
+    </Style>
+    <Style x:Key="SearchResultContainer" TargetType="ListBoxItem">
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+      <Setter Property="AutomationProperties.Name" Value="{Binding Content.Tag.Name, RelativeSource={RelativeSource Self}}" />
+      <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem">
+        <Border x:Name="Chrome" Background="{TemplateBinding Background}">
+          <Grid>
+            <Border x:Name="Current" Width="3" HorizontalAlignment="Left" Background="{DynamicResource FocusAccentBrush}" Visibility="Collapsed" />
+            <ContentPresenter Margin="6,0,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+          </Grid>
+        </Border>
+        <ControlTemplate.Triggers>
+          <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Chrome" Property="Background" Value="{DynamicResource HoverBrush}" /></Trigger>
+          <Trigger Property="IsSelected" Value="True">
+            <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource SearchSelectionBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource SearchSelectionTextBrush}" />
+            <Setter TargetName="Current" Property="Visibility" Value="Visible" />
+          </Trigger>
+        </ControlTemplate.Triggers>
+      </ControlTemplate></Setter.Value></Setter>
+    </Style>
+  </Window.Resources>
+  <Grid x:Name="Root" ClipToBounds="True">
+    <Image x:Name="Wallpaper" Stretch="UniformToFill" IsHitTestVisible="False">
+      <Image.Effect><BlurEffect Radius="35" /></Image.Effect>
+    </Image>
+    <Border x:Name="Tint" Background="#E8202020" IsHitTestVisible="False" />
+    <Grid>
+      <Grid.ColumnDefinitions><ColumnDefinition Width="48" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+      <Border Grid.Column="0" Background="#10000000" />
+      <Grid x:Name="NavigationRail" Grid.Column="0">
+        <StackPanel>
+          <Button Height="48" ToolTip="{local:Loc Key=ExpandMenu}" AutomationProperties.Name="{local:Loc Key=ExpandMenu}" Click="ToggleRail" HorizontalContentAlignment="Stretch" Padding="0"><controls:RailLabel Glyph="&#xE700;" GlyphSize="16" /></Button>
+          <Button x:Name="PinnedNav" Height="48" ToolTip="{local:Loc Key=NavPinned}" AutomationProperties.Name="{local:Loc Key=NavPinned}" Click="ShowPinned" HorizontalContentAlignment="Stretch" Padding="0"><controls:RailLabel Glyph="&#xE80A;" GlyphSize="16" /></Button>
+          <Button x:Name="AppsNav" Height="48" ToolTip="{local:Loc Key=NavAllApps}" AutomationProperties.Name="{local:Loc Key=NavAllApps}" Click="ShowAllApps" HorizontalContentAlignment="Stretch" Padding="0"><controls:RailLabel Glyph="&#xE71D;" GlyphSize="16" /></Button>
+          <Button x:Name="EditModeButton" Height="48" ToolTip="{local:Loc Key=SelectTilesHelp}" AutomationProperties.Name="{local:Loc Key=EditLayout}" Click="ToggleLayoutEditing" HorizontalContentAlignment="Stretch" Padding="0" IsEnabled="False"><controls:RailLabel Glyph="&#xE762;" GlyphSize="16" /></Button>
+        </StackPanel>
+        <StackPanel VerticalAlignment="Bottom" Margin="0,0,0,12">
+          <Button Height="48" ToolTip="{local:Loc Key=NavAccount}" AutomationProperties.Name="{local:Loc Key=NavAccount}" Click="OpenAccount" HorizontalContentAlignment="Stretch" Padding="0"><controls:RailLabel Glyph="&#xE77B;" /></Button>
+          <ScrollViewer x:Name="CollapsedFolderScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel x:Name="CollapsedFolderShortcuts" /></ScrollViewer>
+          <Button Height="48" ToolTip="{local:Loc Key=SettingsTitle}" AutomationProperties.Name="{local:Loc Key=SettingsTitle}" Click="OpenSettings" HorizontalContentAlignment="Stretch" Padding="0"><controls:RailLabel Glyph="&#xE713;" /></Button>
+          <Button Height="48" ToolTip="{local:Loc Key=NavPower}" AutomationProperties.Name="{local:Loc Key=NavPower}" Click="OpenPower" HorizontalContentAlignment="Stretch" Padding="0"><controls:RailLabel Glyph="&#xE7E8;" /></Button>
+        </StackPanel>
+      </Grid>
+      <Grid x:Name="MainContent" Grid.Column="1" Margin="34,20,34,18" RenderTransformOrigin="0.5,1">
+        <Grid.RenderTransform><ScaleTransform /></Grid.RenderTransform>
+        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="28" /></Grid.RowDefinitions>
+        <Grid x:Name="TopBar" Height="0" Opacity="0" ClipToBounds="True" IsHitTestVisible="False">
+          <TextBlock x:Name="ViewTitle" Text="{local:Loc Key=NavStart}" FontSize="24" FontWeight="Light" VerticalAlignment="Top" />
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+            <Button x:Name="AddButton" Content="{local:Loc Key=AddGroup}" ToolTip="{local:Loc Key=AddMenuTooltip}" Click="OpenAddMenu" Margin="0,0,14,0" />
+            <Grid Width="280">
+              <TextBox x:Name="SearchBox" AutomationProperties.Name="{local:Loc Key=SearchPlaceholder}" TextChanged="SearchChanged" Padding="35,8,30,8" Height="36" />
+              <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" Margin="12,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False" />
+              <TextBlock x:Name="SearchPlaceholder" Text="{local:Loc Key=SearchPlaceholder}" Margin="36,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}" IsHitTestVisible="False" />
+              <Button Content="×" AutomationProperties.Name="{local:Loc Key=SearchClear}" Width="30" HorizontalAlignment="Right" Padding="0" HorizontalContentAlignment="Center" Click="ClearSearch" />
+            </Grid>
+          </StackPanel>
+        </Grid>
+        <Border x:Name="EditBar" Grid.Row="1" Visibility="Collapsed" Background="{DynamicResource PanelBrush}" Padding="10" Margin="0,0,0,12">
+          <StackPanel>
+            <WrapPanel>
+              <TextBlock Text="{local:Loc Key=EditLayout}" FontSize="18" VerticalAlignment="Center" Margin="0,0,20,0" />
+              <Button x:Name="UndoButton" Content="{local:Loc Key=UndoLayout}" ToolTip="Ctrl+Z" Click="UndoLayoutClick" Margin="0,0,4,4" />
+              <Button x:Name="RedoButton" Content="{local:Loc Key=RedoLayout}" ToolTip="Ctrl+Y / Ctrl+Shift+Z" Click="RedoLayoutClick" Margin="0,0,12,4" />
+              <Button Content="{local:Loc Key=SelectAllTiles}" ToolTip="Ctrl+A" Click="SelectAllTilesClick" Margin="0,0,4,4" />
+              <Button x:Name="ClearSelectionButton" Content="{local:Loc Key=ClearTileSelection}" Click="ClearTileSelectionClick" Margin="0,0,12,4" />
+              <Button x:Name="MoveSelectionButton" Content="{local:Loc Key=MoveSelectedTiles}" Click="MoveSelectedTilesClick" Margin="0,0,4,4" />
+              <Button x:Name="UnpinSelectionButton" Content="{local:Loc Key=UnpinSelectedTiles}" Click="UnpinSelectedTilesClick" Margin="0,0,12,4" />
+              <Button x:Name="DoneEditingButton" Content="{local:Loc Key=FinishLayoutEditing}" Click="ToggleLayoutEditing" Margin="0,0,0,4" Background="{DynamicResource TileBrush}" />
+            </WrapPanel>
+            <TextBlock x:Name="SelectionSummary" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" Margin="0,4,0,0" />
+          </StackPanel>
+        </Border>
+        <ScrollViewer x:Name="ContentScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" PanningMode="Both">
+          <Grid>
+            <controls:GroupBoardPanel x:Name="GroupsPanel" HorizontalAlignment="Stretch" VerticalAlignment="Top" ViewportWidth="{Binding ViewportWidth, ElementName=ContentScroll}" MinHeight="{Binding ViewportHeight, ElementName=ContentScroll}" AllowDrop="True" />
+            <controls:AppListPanel x:Name="AppsPanel" Width="{Binding ViewportWidth, ElementName=ContentScroll}" HorizontalAlignment="Left" VerticalAlignment="Top" Visibility="Collapsed" />
+            <StackPanel x:Name="ResultsPanel" Width="{Binding ViewportWidth, ElementName=ContentScroll}" MaxWidth="720" HorizontalAlignment="Left" Visibility="Collapsed">
+              <TextBlock x:Name="SearchResultHeading" Margin="6,10,0,14" Foreground="{DynamicResource MutedBrush}" />
+              <ListBox x:Name="SearchResults" AutomationProperties.Name="{local:Loc Key=SearchTitle}" Background="Transparent" BorderThickness="0" Padding="0"
+                       ItemContainerStyle="{StaticResource SearchResultContainer}" KeyboardNavigation.TabNavigation="Once" KeyboardNavigation.DirectionalNavigation="Contained">
+                <ListBox.Template><ControlTemplate TargetType="ListBox"><ItemsPresenter /></ControlTemplate></ListBox.Template>
+                <ListBox.ItemsPanel><ItemsPanelTemplate><StackPanel /></ItemsPanelTemplate></ListBox.ItemsPanel>
+              </ListBox>
+              <TextBlock x:Name="SearchResultHint" Text="{local:Loc Key=SearchHint}" Visibility="Collapsed" Margin="6" FontSize="13" />
+            </StackPanel>
+          </Grid>
+        </ScrollViewer>
+        <Grid Grid.Row="3">
+          <TextBlock x:Name="StatusText" Text="{local:Loc Key=StatusLoading}" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" FontSize="12" TextTrimming="CharacterEllipsis" />
+        </Grid>
+      </Grid>
+    </Grid>
+    <Border x:Name="ExpandedRail" Width="260" HorizontalAlignment="Left" Background="{DynamicResource PanelBrush}" Visibility="Collapsed">
+      <Grid>
+        <StackPanel>
+          <Button HorizontalContentAlignment="Stretch" Padding="0" AutomationProperties.Name="{local:Loc Key=NavStart}" Height="48" Click="ToggleRail"><controls:RailLabel Glyph="&#xE700;" GlyphSize="16" Label="{local:Loc Key=NavStart}" /></Button>
+          <Button HorizontalContentAlignment="Stretch" Padding="0" AutomationProperties.Name="{local:Loc Key=NavPinned}" Height="48" Click="ShowPinned"><controls:RailLabel Glyph="&#xE80A;" GlyphSize="16" Label="{local:Loc Key=NavPinned}" /></Button>
+          <Button HorizontalContentAlignment="Stretch" Padding="0" AutomationProperties.Name="{local:Loc Key=NavAllApps}" Height="48" Click="ShowAllApps"><controls:RailLabel Glyph="&#xE71D;" GlyphSize="16" Label="{local:Loc Key=NavAllApps}" /></Button>
+          <Button x:Name="ExpandedEditModeButton" HorizontalContentAlignment="Stretch" Padding="0" ToolTip="{local:Loc Key=SelectTilesHelp}" AutomationProperties.Name="{local:Loc Key=EditLayout}" Height="48" Click="ToggleLayoutEditing" IsEnabled="False"><controls:RailLabel x:Name="EditRailLabel" Glyph="&#xE762;" GlyphSize="16" Label="{local:Loc Key=EditLayout}" /></Button>
+        </StackPanel>
+        <StackPanel VerticalAlignment="Bottom" Margin="0,0,0,12">
+          <Button HorizontalContentAlignment="Stretch" Padding="0" x:Name="UserButton" AutomationProperties.Name="{local:Loc Key=NavAccount}" Height="48" Click="OpenAccount"><controls:RailLabel x:Name="UserRailLabel" Glyph="&#xE77B;" /></Button>
+          <ScrollViewer x:Name="ExpandedFolderScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel x:Name="ExpandedFolderShortcuts" /></ScrollViewer>
+          <Button HorizontalContentAlignment="Stretch" Padding="0" AutomationProperties.Name="{local:Loc Key=SettingsTitle}" Height="48" Click="OpenSettings"><controls:RailLabel Glyph="&#xE713;" Label="{local:Loc Key=SettingsTitle}" /></Button>
+          <Button HorizontalContentAlignment="Stretch" Padding="0" AutomationProperties.Name="{local:Loc Key=NavPower}" Height="48" Click="OpenPower"><controls:RailLabel Glyph="&#xE7E8;" Label="{local:Loc Key=NavPower}" /></Button>
+        </StackPanel>
+      </Grid>
+    </Border>
+    <Border x:Name="AlphabetOverlay" Background="{DynamicResource PanelBrush}" Visibility="Collapsed" MaxWidth="620" MaxHeight="460" Padding="24" HorizontalAlignment="Center" VerticalAlignment="Center">
+      <DockPanel><Button DockPanel.Dock="Top" Content="{local:Loc Key=AlphabetTitle}" Click="CloseAlphabet" /><WrapPanel x:Name="AlphabetButtons" Margin="0,16,0,0" /></DockPanel>
+    </Border>
+  </Grid>
+</Window>

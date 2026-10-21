@@ -1,7 +1,5 @@
 # Architecture
 
-[日本語](ja/architecture.md)
-
 ReStart is a WPF desktop launcher. It owns its layout, search and live-tile protocol; it does not replace Explorer binaries.
 
 ## Components
@@ -16,6 +14,57 @@ ReStart is a WPF desktop launcher. It owns its layout, search and live-tile prot
 
 Most Core logic is independent of WPF. Windows-only synchronization and test-linked services declare their platform requirements.
 
+## Source organization
+
+The project roots keep entry points, project configuration and global imports. Feature code lives with its responsibility:
+
+| Location | Contents |
+| --- | --- |
+| `ReStart.Core/Apps`, `Search` | Catalog identities, pinning/activity models, app matching and indexed-query construction |
+| `ReStart.Core/Layout` | Tile/group models, geometry, folder expansion, editing, history, persistence and migration |
+| `ReStart.Core/Configuration`, `Appearance`, `Localization` | Preferences, palettes and translated text; locale JSON remains in `Locales` |
+| `ReStart.Core/LiveTiles`, `Updates`, `Windows` | Bounded tile/data contracts, public release parsing, input state and current-user instance/IPC coordination |
+| `ReStart.App/Views` | `Start`, `Settings`, `Startup` and `Dialogs`; each XAML/code-behind pair stays together |
+| `ReStart.App/Controls`, `Resources`, `Localization` | Reusable WPF controls, themed dictionaries and the localization markup extension |
+| `ReStart.App/Services` | `Catalog`, `Search`, `Shell`, `LiveTiles` and `Configuration`; native calls and process effects live here |
+| `ReStart.App/Diagnostics` | Native verification partials and isolated `Documentation` rendering; these are not UI feature services |
+| `tests/ReStart.Core.Tests` | Matching feature folders, including explicit Windows process/integration coverage |
+
+Shared model declarations have individual files, including `AppEntry`, `Tile`, `Preferences` and `LayoutDocument`. Existing namespaces and serialized types are preserved. Folder placement helps navigation; shared-state partials still belong to one class, and the ownership boundaries below remain the guide for extracting services. The architecture guard prevents feature files from accumulating in the project roots again.
+
+```mermaid
+flowchart LR
+    UI[ReStart.App: WPF orchestration] --> Core[ReStart.Core: models, plans, contracts]
+    UI --> Windows[App Services: Shell, hooks, index, credentials]
+    UI -->|bounded JSON pipes| Host[ReStart.TileHost: JavaScript evaluation]
+    Host --> Core
+```
+
+The App-to-TileHost project reference is a **build dependency only** (`ReferenceOutputAssembly=false`); the UI never invokes the worker's Jint engine in-process. Core references neither UI nor worker. The existing test project also links selected Windows services for process-level checks; these are explicitly Windows-gated rather than evidence that all tests are portable.
+
+## Ownership and change boundaries
+
+| State / effect | Owner | Boundary |
+| --- | --- | --- |
+| Persistent layout and preferences | `LayoutDocument` / `LayoutStore` | Atomic writes and schema migration; WPF geometry is never persisted |
+| Placement, folder and batch plans | Core planning types | Calculate from snapshots; preview and commit share results; cancellation does not mutate ownership |
+| Selection, popup/focus and drag lifetime | MainWindow interaction partials | Dispatcher-owned; callbacks revalidate visibility and current generation |
+| Search request lifetime | MainWindow search orchestration | Immediate apps/settings, debounced indexed files, cancellation and stale-query rejection; Windows COM remains in a service |
+| Catalog and icons | `AppCatalog` | Dedicated STA enumeration; completed snapshots and frozen images cross to UI |
+| Launch and Jump List effects | `AppShellCommands` / `AppJumpLists` | Canonical verbs and documented COM; never evaluate translated menu text |
+| Optional app activity | `AppActivity` / App persistence | Bounded local state; separate from exported layout and Windows document history |
+| Script processes and data reads | App worker pool / data services | Parent owns cancellation, limits and process lifetime; worker sees bounded snapshots |
+| Documentation images | Dedicated render entry point | English curated fixtures, no visible windows or real settings; matched installed icons, not an exported app inventory |
+
+`MainWindow` is still a substantial WPF coordinator. Its partial files are **not** separate architectural modules: they share private state. Keep pure layout rules in Core and new native effects in services. The next extractions are explicit:
+
+1. Move catalog/startup orchestration into a lifetime-owned coordinator once its cancellation and typeahead contracts can move together; retain native focus at the window boundary.
+2. Extract a search session with immutable categorized results and injectable providers, keeping WPF row focus/selection rendering in the view. Preserve identity across late results.
+3. Extract the script/data session registry as one disposable owner, then narrow the window to applying returned frames. Preserve hide/startup/exit cancellation semantics.
+4. Split native services into a Windows adapter project when another frontend or independent integration tests justify it; do not move Shell dependencies into Core.
+
+Each extraction must retain the existing native startup, focus, drag, folder, history and script regression checks. A complete MVVM rewrite or a new plugin system is not part of this change. This is a migration plan grounded in the present code, not a claim that those extractions are already complete. Project dependency checks enforce the current direction in CI.
+
 ## Placement and editing
 
 `TileLayout` reserves explicit cells before packing unplaced or colliding tiles. The four footprints are 1×1, 2×2, 4×2 and 4×4. Layout calculations do not mutate input models.
@@ -24,7 +73,7 @@ Most Core logic is independent of WPF. Windows-only synchronization and test-lin
 
 A schema-4 `TileGroup.IsStandalone` entry stores exactly one independent tile. It renders without a group header/menu and occupies only that tile's width and height. Its tile column supplies the offset inside the board column; its vertical anchor belongs to the board. This is an explicit ReStart extension requested for detached tiles, not a claim about Windows 10's internal model. Ordinary groups measure occupied content; the configured 6/8 cells limit internal wrapping. Group X anchors snap in half-cell steps.
 
-`GroupBoardPanel` uses the same rectangles for measure and arrange. `LayoutEditor.Detach` freezes visible anchors and moves ownership once. `FolderExpansion` adds temporary inline content without changing saved root rows. Expanded independent folders temporarily use the column width for their children while keeping the root tile's horizontal position.
+`GroupBoardPanel` uses the same rectangles for measure and arrange. `LayoutEditor.Detach` freezes visible anchors and moves ownership once. `FolderExpansion` adds temporary inline content without changing saved root rows. Its width is the maximum occupied edge of root and child placements, shared by Core collision bounds and WPF measurement; the configured wrap limit is not an empty minimum width. Expanded independent folders keep the root tile's horizontal position. Only groups that actually intersect the expanded footprint are displaced, and closing restores the saved baseline.
 
 `LayoutHistory` retains deep snapshots of groups and one-level children only, bounded to 100 edits and 32 MiB. Successful writes record one operation; identical saves retain redo. Editing after undo drops the redo branch. Preferences, upgrade metadata, live-script runtime state and external files remain outside history. Undo/redo persists through the same atomic store and restores its cursor if writing fails. History lives only in memory and survives hiding Start, not process exit.
 
@@ -32,7 +81,7 @@ Edit mode suppresses tile activation and uses stable IDs for selection across re
 
 Drop routing distinguishes root group cells, expanded folder children, tile-over-tile collection, and independent board space. Overlapping an independent non-folder tile creates an ordinary group through `TileGrouping.Plan`; it copies the layout, collects roots compactly and reserves earlier neighbors before placing the new header. The target's tile origin is retained when space permits; a header collision moves the new group down minimally instead of pushing an earlier neighbor below it. Grouped targets create folders; existing folders accept children in either container. Single selections can create folders; batches can enter existing folders or collect around an independent target. Nested folders are rejected. A one-child folder remains a folder until its last child is removed.
 
-Independent grouping starts at 40% overlap of the smaller tile area and arms after 300 ms. A tracked target stays eligible down to 30% overlap so small pointer drift does not restart the timer. Leaving that tolerance resets the dwell. Folder creation/addition retains its 65% overlap and 1000 ms dwell. These are ReStart interaction choices, not measured Windows shell constants.
+Independent grouping starts at 40% overlap of the smaller tile area and arms after 300 ms. A tracked target stays eligible down to 30% overlap so small pointer drift does not restart the timer. Leaving that tolerance resets the dwell. Folder creation/addition uses 65% entry overlap, 55% retained overlap and a 600 ms dwell. These are ReStart interaction choices, not measured Windows shell constants.
 
 Single-tile preview and commit share one resolver. Root overlap also resolves compact independent targets whose bounds do not contain a larger dragged tile's center. During OLE dragging, the dwell timer retains the latest drag-event position in viewport coordinates and reprojects it after scrolling. It does not poll WPF's mouse device, which can still report the original grab position while OLE owns pointer tracking. Leaving the content or ending/cancelling a drag retires the timer.
 

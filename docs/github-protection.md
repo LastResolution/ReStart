@@ -1,7 +1,5 @@
 # Protect the default branch
 
-[日本語](ja/github-protection.md)
-
 This repository's default branch is **main**. In Settings → Rulesets → New ruleset → New branch ruleset, use the exact English labels below. Public repositories support active rulesets on GitHub Free; a private-plan warning means rules are not enforced. [GitHub setup guide](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/creating-rulesets-for-a-repository).
 
 | Setting | Value |

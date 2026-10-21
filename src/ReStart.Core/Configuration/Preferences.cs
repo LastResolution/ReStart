@@ -1,0 +1,70 @@
+namespace ReStart.Core;
+
+/// <summary>Stores local UI and integration choices; imported layouts do not replace these settings.</summary>
+public sealed class Preferences
+{
+    /// <summary>Gets or sets whether search includes localized Windows settings entry points.</summary>
+    public bool SearchSettings { get; set; } = true;
+    /// <summary>Gets or sets whether app menus query Windows Recent/Frequent destinations; Windows history privacy settings also apply.</summary>
+    public bool ShowJumpLists { get; set; } = true;
+    /// <summary>Gets or sets whether dwelling over the collapsed navigation rail expands it automatically.</summary>
+    public bool ExpandNavigationOnHover { get; set; } = true;
+    /// <summary>Gets or sets whether tile surfaces brighten on pointer hover; keyboard focus remains visible.</summary>
+    public bool TileHoverHighlight { get; set; } = true;
+    /// <summary>Gets or sets whether dragging near a board edge scrolls and extends available board space.</summary>
+    public bool DragEdgeScrolling { get; set; } = true;
+    /// <summary>Gets or sets whether drop previews display explanatory captions and dwell progress; destination geometry remains visible.</summary>
+    public bool ShowDropHints { get; set; } = true;
+    /// <summary>Gets or sets whether overlapping independent tiles can create an ordinary group.</summary>
+    public bool GroupTilesOnDrop { get; set; } = true;
+    /// <summary>Gets or sets whether overlapping grouped tiles can create a tile folder; existing folders remain usable.</summary>
+    public bool CreateFoldersOnDrop { get; set; } = true;
+    /// <summary>Gets or sets whether hovering a normal group reveals its boundary. Edit and drag boundaries remain visible.</summary>
+    public bool ShowGroupBoundariesOnHover { get; set; } = true;
+    /// <summary>Gets or sets whether search includes up to twenty local Windows-indexed filesystem results.</summary>
+    public bool SearchFiles { get; set; } = true;
+    /// <summary>Gets or sets whether apps first observed after the initial catalog appear in Recently added for seven days.</summary>
+    public bool ShowRecentlyAdded { get; set; } = true;
+    /// <summary>Gets or sets whether successful ReStart app launches are counted locally and shown in Most used.</summary>
+    public bool ShowMostUsed { get; set; }
+    /// <summary>Gets or sets the optional navigation folders; unknown identifiers are ignored and null restores the default pair.</summary>
+    public List<string>? NavigationFolders { get; set; }
+    /// <summary>Gets or sets whether a per-user Explorer command pins files, directories and shortcuts to ReStart.</summary>
+    public bool ExplorerContextMenu { get; set; } = true;
+    /// <summary>Gets or sets whether one read-only update check runs at normal startup.</summary>
+    public bool CheckUpdatesOnStartup { get; set; } = true;
+    /// <summary>Gets or sets whether published prereleases are eligible for update notifications.</summary>
+    public bool IncludePrereleaseUpdates { get; set; }
+    /// <summary>Gets or sets a supported language tag or system for UI resource selection.</summary>
+    public string Language { get; set; } = "system";
+    /// <summary>Gets or sets whether a bare Windows-key press toggles ReStart.</summary>
+    public bool CaptureWindowsKey { get; set; } = true;
+    /// <summary>Gets or sets whether clicks on an identified native Windows Start button toggle ReStart.</summary>
+    public bool CaptureStartButton { get; set; } = true;
+    /// <summary>Gets or sets the saved startup preference; settings reconcile it with the real Run registration.</summary>
+    public bool StartWithWindows { get; set; }
+    /// <summary>Gets or sets whether switching apps or clicking the taskbar closes the menu.</summary>
+    public bool CloseOnDeactivate { get; set; } = true;
+    /// <summary>Gets or sets whether the desktop wallpaper is used as the background.</summary>
+    public bool ShowWallpaper { get; set; } = true;
+    /// <summary>Gets or sets whether app tiles use classic accent-colored backgrounds.</summary>
+    public bool ColoredTiles { get; set; }
+    /// <summary>Gets or sets whether the dark Start surface uses the selected accent color, as in late Windows 10.</summary>
+    public bool ShowAccentOnStart { get; set; }
+    /// <summary>Gets or sets whether showing the menu animates when system accessibility settings permit.</summary>
+    public bool Animate { get; set; } = true;
+    /// <summary>Gets or sets the requested application theme.</summary>
+    public ThemeMode Theme { get; set; } = ThemeMode.Dark;
+    /// <summary>Gets or sets the requested accent color.</summary>
+    public string Accent { get; set; } = "#0078D7";
+    /// <summary>Gets or sets an optional opaque RGB surface color; empty uses the selected base theme.</summary>
+    public string BackgroundColor { get; set; } = "";
+    /// <summary>Gets or sets the adaptive color family; empty means explicit custom RGB, while null identifies unlabelled legacy preferences.</summary>
+    public string? ColorThemeId { get; set; }
+    /// <summary>Gets or sets background tint opacity, normalized to 0.3 through 1.</summary>
+    public double BackgroundOpacity { get; set; } = 0.86;
+    /// <summary>Gets or sets the cell scale, normalized to 0.7 through 1.5.</summary>
+    public double TileScale { get; set; } = 1;
+    /// <summary>Gets or sets six or eight logical cells per tile group.</summary>
+    public int Columns { get; set; } = 6;
+}

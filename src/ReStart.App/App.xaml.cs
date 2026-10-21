@@ -23,6 +23,7 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        if (e.Args.Contains("--render-docs")) { await RenderDocumentationAsync(e.Args); return; }
         var preview = e.Args.Contains("--preview") || e.Args.Contains("--smoke-test");
         var smoke = e.Args.Contains("--smoke-test");
         var sid = WindowsIdentity.GetCurrent().User?.Value ?? Environment.UserName;
@@ -154,6 +155,7 @@ public partial class App : Application
             SearchSelectionSmokeResult? searchSelection = null;
             StartupSmokeResult? startupPreparation = null;
             AppearanceSmokeResult? appearance = null;
+            FidelitySmokeResult? fidelity = null;
             string? error = null;
             try
             {
@@ -173,12 +175,13 @@ public partial class App : Application
                 if (args.Contains("--search-selection-test")) searchSelection = await _window.VerifySearchSelectionAsync(path);
                 if (args.Contains("--startup-test")) startupPreparation = await _window.VerifyStartupAsync(path);
                 if (args.Contains("--appearance-test")) appearance = await _window.VerifyAppearanceAsync(path);
+                if (args.Contains("--fidelity-test")) fidelity = await _window.VerifyFidelityAsync(path);
                 _window.SaveScreenshot(path);
             }
             catch (Exception ex) when (ex is IOException or InvalidOperationException) { success = false; error = ex.Message; }
             try
             {
-                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, catalogFolders = _window.CatalogFolderCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, navigation, placement, appFolders, firstInput, appMenus, releaseInfo, scrolling, bundledTiles, pinIcons, motion, editing, folderDrops, tileData, searchSelection, startupPreparation, appearance, startup = _window.StartupMetrics, error, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
+                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, catalogFolders = _window.CatalogFolderCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, navigation, placement, appFolders, firstInput, appMenus, releaseInfo, scrolling, bundledTiles, pinIcons, motion, editing, folderDrops, tileData, searchSelection, startupPreparation, appearance, fidelity, startup = _window.StartupMetrics, error, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
             }
             catch (IOException) { success = false; }
             _window.Exit(); Shutdown(success ? 0 : 1);

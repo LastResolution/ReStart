@@ -1,7 +1,5 @@
 # Releases
 
-[日本語](ja/releasing.md)
-
 Use a short feature/fix branch, cohesive English commits and a pull request. Wait for **Windows build and tests**, **Clean portable win-x64** and **Clean portable win-arm64**, then squash merge and delete the branch. All release notes are written in English on GitHub Releases.
 
 ## Main protection
@@ -26,9 +24,11 @@ The manually dispatched workflow checks the project/tag version and main ancestr
 
 ## Check the payload
 
-The strict payload contains 41 files: the launcher, worker, fifteen manifest/JS pairs, six dependency/runtime notices, LICENSE and two READMEs. Runtime notices come from the exact resolved packs. Release builds omit debug metadata and map source paths to a neutral prefix. Packaging scans every ZIP entry, including binary UTF-8/UTF-16 strings, for generic credential and personal-path patterns without printing matched values.
+The strict payload contains 40 files: the launcher, worker, fifteen manifest/JS pairs, six dependency/runtime notices, LICENSE and the English portable README. Runtime notices come from the exact resolved packs. Release builds omit debug metadata and map source paths to a neutral prefix. Packaging scans every ZIP entry, including binary UTF-8/UTF-16 strings, for generic credential and personal-path patterns without printing matched values.
 
 Download the actual assets and verify SHA-256, PE architecture, product version/source ID and contents. Run the packaged x64 smoke, lifecycle and JS fixtures. ARM64 cross-builds do not establish hardware compatibility. See [testing](testing.md).
+
+The clean portable CI job and Release workflow extract the x64 ZIP into a fresh directory, then run the smoke, duplicate-launch and bundled-tile checks against that extracted executable before publication. They do not rely on loose build/publish files that could conceal a missing package dependency. Native checks run on the dedicated Windows runner.
 
 Packages are unsigned. Keep published tags immutable. Exit before replacing the complete portable installation. Settings live separately and retain upgrade backups; refresh startup/Explorer registration if the executable moved. In-app update checks use public releases without an API key; installation is manual.
 

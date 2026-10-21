@@ -10,7 +10,13 @@ artifacts/
 .local/
 *.log
 *.pfx
+*.p12
+*.p8
+*.pvk
 *.snk
+*.key
+*.jks
+*.keystore
 .env
 .env.*
 !.env.example
