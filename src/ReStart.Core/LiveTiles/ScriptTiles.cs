@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace ReStart.Core;
 
-/// <summary>Defines version 1 of a local JavaScript tile package; the only script entry is tile.js.</summary>
+/// <summary>Defines a local live-tile package: version 1 returns native display data; version 2 hosts HTML, CSS and browser JavaScript.</summary>
 public sealed class ScriptTileManifest
 {
     /// <summary>Gets or sets the schema: version 1 uses native frames; version 2 may use HTML/CSS through the web renderer.</summary>

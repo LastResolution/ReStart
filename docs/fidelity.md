@@ -42,6 +42,8 @@ The [November 2019 announcement](https://blogs.windows.com/windowsexperience/201
 
 Drag intent uses a 300 ms dwell for independent-tile groups and 600 ms for new folders inside a group. Folder overlap enters at 65% and retains the current target down to 55%; independent groups use 40%/30%. These are ReStart choices, not recovered shell constants. Preview captions and progress can be hidden. Edge scrolling follows a stationary viewport pointer without committing preview coordinates.
 
+Ordinary single-tile drops project displaced tiles and neighboring groups before committing, including inside open folders. The projection uses the same layout operations as a drop, keeps live browser instances, and restores the original visuals on cancellation. Overlap recipients remain stationary during group/folder intent detection so that moving feedback cannot change the target underneath the pointer.
+
 File queries use the local Windows SystemIndex with a 200 ms debounce, literal filename matching and a maximum of twenty existing local filesystem entries. There is no recursive fallback scan or remote search. The fifteen settings entry points support localized names and English aliases, rather than reproducing the complete Windows settings index.
 
 The public [IApplicationDocumentLists interface](https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nn-shobjidl_core-iapplicationdocumentlists) exposes Recent/Frequent only and needs an authoritative app identity. Unknown identities, disabled Windows history and unsupported command-bearing links contribute no destinations. Application task lists and custom/pinned categories are outside that API. Canonical app commands remain available separately.
