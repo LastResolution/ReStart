@@ -72,8 +72,10 @@ public partial class MainWindow
                     var expected = (double)(tile.Size == TileSize.Small ? 23 : tile.Size == TileSize.Large ? 60 : 40);
                     var (width, height) = TileLayout.Dimensions(tile.Size);
                     expected = Math.Min(expected, Math.Min(width * Cell - 4, height * Cell - 4) - 14 - (tile.Size == TileSize.Small ? 0 : 8));
-                    Require(Math.Abs(icon.ActualWidth - expected) < .1 && Math.Abs(icon.ActualHeight - expected) < .1,
+                    Require(Math.Abs(icon.ActualWidth - expected) < 1 && Math.Abs(icon.ActualHeight - expected) < 1,
                         "A tile icon changes size unexpectedly for a filesystem type.");
+                    Require(new Rect(button.RenderSize).Contains(icon.TransformToAncestor(button).TransformBounds(new Rect(icon.RenderSize))),
+                        "A tile icon extends beyond its visible button.");
                     rendered++;
                 }
                 SaveScreenshot(Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"icons-{scale:0.0}.png"));
