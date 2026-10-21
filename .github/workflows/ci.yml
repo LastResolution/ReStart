@@ -130,6 +130,11 @@ jobs:
       # Keep this first: a previous solution restore/build would mask missing assets.
       - name: Publish directly from a clean checkout
         run: ./scripts/package.ps1 -Runtime ${{ matrix.runtime }}
-      - name: Verify duplicate launch handling
+      - name: Verify the extracted portable package
         if: matrix.runtime == 'win-x64'
-        run: ./scripts/test-lifecycle.ps1 -Executable artifacts/publish/win-x64/ReStart.exe
+        run: |
+          Expand-Archive -LiteralPath artifacts/packages/ReStart-win-x64.zip -DestinationPath artifacts/portable-check/win-x64
+          $executable = 'artifacts/portable-check/win-x64/ReStart.exe'
+          ./scripts/smoke.ps1 -Executable $executable
+          ./scripts/test-lifecycle.ps1 -Executable $executable
+          ./scripts/test-bundled-tiles.ps1 -Executable $executable

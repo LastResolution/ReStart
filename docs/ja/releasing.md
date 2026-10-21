@@ -1,5 +1,7 @@
 # リリース
 
+x64の配布物はクリーンなCIとReleaseワークフローでZIPを新しいフォルダへ展開し、展開したEXEで起動・多重起動防止・同梱ライブタイルを公開前に検査します。ビルド先に残ったDLLで不足を隠さず、ネイティブ操作の確認は専用Windowsランナーで行います。ARM64の実機検証とは別です。
+
 [English](../releasing.md)
 
 短い作業ブランチ、まとまった英語コミット、PR を使います。**Windows build and tests**・**Clean portable win-x64**・**Clean portable win-arm64** の成功後に squash merge します。リリースノートは GitHub Releases に英語で記述し、重複するノートをソースツリーに置きません。

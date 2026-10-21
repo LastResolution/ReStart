@@ -30,6 +30,8 @@ The strict payload contains 41 files: the launcher, worker, fifteen manifest/JS 
 
 Download the actual assets and verify SHA-256, PE architecture, product version/source ID and contents. Run the packaged x64 smoke, lifecycle and JS fixtures. ARM64 cross-builds do not establish hardware compatibility. See [testing](testing.md).
 
+The clean portable CI job and Release workflow extract the x64 ZIP into a fresh directory, then run the smoke, duplicate-launch and bundled-tile checks against that extracted executable before publication. They do not rely on loose build/publish files that could conceal a missing package dependency. Native checks run on the dedicated Windows runner.
+
 Packages are unsigned. Keep published tags immutable. Exit before replacing the complete portable installation. Settings live separately and retain upgrade backups; refresh startup/Explorer registration if the executable moved. In-app update checks use public releases without an API key; installation is manual.
 
 After publication, run `./scripts/configure-public-security.ps1` and inspect the resulting CodeQL run and alerts. Confirm private vulnerability reporting, Dependabot alerts/security updates, secret scanning and push protection are enabled. Configuration alone does not establish a successful scan.
