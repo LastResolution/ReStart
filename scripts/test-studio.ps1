@@ -11,7 +11,7 @@ try {
     if (-not $process.WaitForExit(600000)) { $process.Kill(); throw 'Web tile and Tile Studio verification timed out.' }
     if ($process.ExitCode -ne 0) { Get-Content -LiteralPath $errors | Write-Output; throw 'Web tile and Tile Studio verification failed.' }
     $result = Get-Content -LiteralPath (Join-Path $directory 'verification.json') -Raw | ConvertFrom-Json
-    if (-not $result.success -or $result.checks -lt 8400) { throw 'Incomplete web tile verification.' }
+    if (-not $result.success -or $result.checks -lt 9300) { throw 'Incomplete web tile verification.' }
     $result
     Write-Output $directory
 }
