@@ -385,5 +385,11 @@
   "BackgroundSelected": "Bild kopiert. Zum Anwenden speichern.",
   "BackgroundInvalid": "Wähle eine lesbare Bilddatei mit höchstens 32 MiB.",
   "ErrorDataDeleted": "Lokale App-Daten wurden während des Betriebs gelöscht. Starte ReStart für einen Neuanfang neu. Das gelöschte Layout wird nicht aus dem Arbeitsspeicher wiederhergestellt.",
-  "ErrorScriptSourceMissing": "Kachelquelldateien fehlen. Installiere das Paket erneut oder ersetze den Quelltext im Kachelstudio."
+  "ErrorScriptSourceMissing": "Kachelquelldateien fehlen. Installiere das Paket erneut oder ersetze den Quelltext im Kachelstudio.",
+  "LockLayout": "Layout sperren",
+  "LockGroup": "Diese Gruppe sperren",
+  "LayoutLockHelp": "Sperren schützen Positionen, Größen und Zuordnungen. Apps, Namen und Farben bleiben nutzbar. Strg+Umschalt+L schaltet die Layoutsperre um.",
+  "LayoutLockedStatus": "Das Layout ist gesperrt. Entsperre es, um Positionen, Größen oder Inhalte zu ändern.",
+  "LayoutUnlockedStatus": "Layout entsperrt.",
+  "KeyboardLayoutHelp": "Pfeile: Fokus · Leertaste: Auswahl · Strg+Pfeile: Kacheln bewegen · Strg+Umschalt+Pfeile: Gruppe bewegen · Alt+1–4: Größe · Strg+G: neue Gruppe · Umschalt+F10: Menü · Strg+Z/Y: rückgängig/wiederholen"
 }

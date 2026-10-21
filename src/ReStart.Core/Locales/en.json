@@ -385,5 +385,11 @@
   "BackgroundSelected": "Image copied. Save to apply.",
   "BackgroundInvalid": "Choose a readable image file of at most 32 MiB.",
   "ErrorDataDeleted": "Local app data was deleted while ReStart was running. Restart ReStart to start fresh; the deleted layout will not be recreated from memory.",
-  "ErrorScriptSourceMissing": "Tile source files are missing. Reinstall the package or replace its source in Tile Studio."
+  "ErrorScriptSourceMissing": "Tile source files are missing. Reinstall the package or replace its source in Tile Studio.",
+  "LockLayout": "Lock layout",
+  "LockGroup": "Lock this group",
+  "LayoutLockHelp": "Locks protect positions, sizes and membership. Apps, names and colors still work. Press Ctrl+Shift+L to toggle the layout lock.",
+  "LayoutLockedStatus": "Layout is locked. Unlock it to change positions, sizes or contents.",
+  "LayoutUnlockedStatus": "Layout unlocked.",
+  "KeyboardLayoutHelp": "Arrows: focus · Space: select · Ctrl+arrows: move tiles · Ctrl+Shift+arrows: move group · Alt+1–4: size · Ctrl+G: new group · Shift+F10: tile menu · Ctrl+Z/Y: undo/redo"
 }

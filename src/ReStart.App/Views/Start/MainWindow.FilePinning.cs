@@ -18,7 +18,13 @@ public partial class MainWindow
             app = _apps.FirstOrDefault(a => !a.IsShellApp && string.Equals(a.LaunchTarget, app.LaunchTarget, StringComparison.OrdinalIgnoreCase)) ?? app;
             var before = System.Text.Json.JsonSerializer.Serialize(Document, LayoutStore.JsonOptions);
             Tile tile;
-            try { tile = PinApplication(app); _store.Save(Document); }
+            try
+            {
+                var original = LayoutHistory.CopyGroups(Document.Groups);
+                tile = PinApplication(app);
+                if (!LayoutLocks.AllowsChange(original, Document.Groups, Document.Preferences, GroupsPanel.Columns)) throw new InvalidOperationException(L.T(K.LayoutLockedStatus));
+                _store.Save(Document);
+            }
             catch
             {
                 Document = System.Text.Json.JsonSerializer.Deserialize<LayoutDocument>(before, LayoutStore.JsonOptions)!;
@@ -37,8 +43,8 @@ public partial class MainWindow
         { Present(); SetStatus(L.T(K.ErrorPinFailed) + ex.Message); return new(false, L.T(K.ErrorPinFailed) + ex.Message); }
     }
 
-    private Tile PinApplication(AppEntry app) => AppPinning.Pin(Document, app, availableColumns: GroupsPanel.Columns,
-        cell: Cell, viewportWidth: ContentScroll.ViewportWidth, preferredTop: ContentScroll.VerticalOffset);
+    private Tile PinApplication(AppEntry app) => CanEditLayout ? AppPinning.Pin(Document, app, availableColumns: GroupsPanel.Columns,
+        cell: Cell, viewportWidth: ContentScroll.ViewportWidth, preferredTop: ContentScroll.VerticalOffset) : throw new InvalidOperationException(L.T(K.LayoutLockedStatus));
 
     private async void ChoosePinPath(bool directory)
     {

@@ -347,6 +347,7 @@ public partial class MainWindow : Window
     /// <summary>Reapplies preferences and rebuilds visible groups and app views without changing saved labels.</summary>
     public void RefreshLayout()
     {
+        if (Document.Preferences.LayoutLocked) SetLayoutEditing(false);
         ApplyAppearance();
         RenderGroups();
         RenderApps();
@@ -369,6 +370,15 @@ public partial class MainWindow : Window
     {
         try
         {
+            if (_historyReady && recordHistory)
+            {
+                var previous = new LayoutDocument(); _layoutHistory.RestoreCurrent(previous);
+                if (!LayoutLocks.AllowsChange(previous.Groups, Document.Groups, Document.Preferences, GroupsPanel.Columns))
+                {
+                    _layoutHistory.RestoreCurrent(Document); Dispatcher.BeginInvoke(RenderGroups);
+                    SetStatus(L.T(K.LayoutLockedStatus)); return false;
+                }
+            }
             _store.Save(Document);
             _selectionPlanCache = null;
             if (_historyReady && recordHistory) _layoutHistory.Record(Document);
@@ -409,6 +419,7 @@ public partial class MainWindow : Window
             if (!group.IsStandalone)
             {
                 var header = new GroupHeader(group.Name) { Tag = group };
+                header.IsPlacementLocked = Document.Preferences.LayoutLocked || Document.Preferences.LockedGroupIds.Contains(group.Id);
                 header.Handle.Tag = group;
                 AutomationProperties.SetName(header.Handle, L.T(K.GroupPrefix) + group.Name);
                 WireInlineName(header, name =>
@@ -539,9 +550,9 @@ public partial class MainWindow : Window
     {
         var menu = CreateContextMenu();
         if (tile.IsFolder) Add(menu, L.T(K.OpenTileFolder), () => OpenFolder(tile));
-        Add(menu, L.T(K.SelectTileForEditing), () => SelectTileForEditing(tile.Id));
-        Add(menu, L.T(K.UnpinTile), () => { RemoveTile(tile.Id); CommitLayout(); });
-        var resize = new MenuItem { Header = L.T(K.ResizeTile) };
+        Add(menu, L.T(K.SelectTileForEditing), () => SelectTileForEditing(tile.Id)).IsEnabled = CanEditTile(tile.Id);
+        Add(menu, L.T(K.UnpinTile), () => { RemoveTile(tile.Id); CommitLayout(); }).IsEnabled = CanEditTile(tile.Id);
+        var resize = new MenuItem { Header = L.T(K.ResizeTile), IsEnabled = CanEditTile(tile.Id) };
         foreach (var (size, label) in new[] { (TileSize.Small, L.T(K.TileSmall)), (TileSize.Medium, L.T(K.TileMedium)), (TileSize.Wide, L.T(K.TileWide)), (TileSize.Large, L.T(K.TileLarge)) })
         {
             var item = new MenuItem { Header = label, IsCheckable = true, IsChecked = tile.Size == size };
@@ -567,10 +578,10 @@ public partial class MainWindow : Window
         });
         if (tile.Widget.Length > 0) Add(menu, tile.Live ? L.T(K.DisableLiveTile) : L.T(K.EnableLiveTile), () => { tile.Live = !tile.Live; CommitLayout(); });
         if (tile.Widget == "script") AddScriptMenu(menu, tile);
-        var move = new MenuItem { Header = L.T(K.MoveToGroup) };
+        var move = new MenuItem { Header = L.T(K.MoveToGroup), IsEnabled = CanEditTile(tile.Id) };
         foreach (var group in Document.Groups.Where(g => !g.IsStandalone))
         {
-            var item = new MenuItem { Header = group.Name };
+            var item = new MenuItem { Header = group.Name, IsEnabled = CanEditGroup(group) };
             item.Click += (_, _) => { LayoutEditor.Move(Document, tile, group); CommitLayout(); };
             move.Items.Add(item);
         }
@@ -580,18 +591,18 @@ public partial class MainWindow : Window
             var folders = new MenuItem { Header = L.T(K.CreateFolder) };
             foreach (var target in Document.Groups.SelectMany(g => g.Tiles).Where(t => t.Id != tile.Id && t.Widget.Length == 0))
             {
-                var item = new MenuItem { Header = TileDisplayName(target) };
+                var item = new MenuItem { Header = TileDisplayName(target), IsEnabled = CanEditTile(target.Id) };
                 item.Click += (_, _) => { MergeFolder(tile, target); CommitLayout(); };
                 folders.Items.Add(item);
             }
-            folders.IsEnabled = folders.Items.Count > 0;
+            folders.IsEnabled = folders.Items.Count > 0 && CanEditTile(tile.Id);
             extras.Items.Add(folders);
         }
         else Add(extras, L.T(K.UnpackFolder), () =>
         {
             LayoutEditor.UnpackFolder(Document, tile);
             CommitLayout();
-        });
+        }).IsEnabled = CanEditTile(tile.Id);
         menu.Items.Add(extras);
         AddLayoutEditingMenu(menu);
         return menu;
@@ -606,21 +617,24 @@ public partial class MainWindow : Window
         {
             if (Confirm(L.F(K.ConfirmDeleteGroup, group.Name)))
             { Document.Groups.Remove(group); CommitLayout(); }
-        });
+        }).IsEnabled = CanEditGroup(group);
+        AddGroupLockMenu(menu, group);
         AddLayoutEditingMenu(menu);
         return menu;
     }
 
-    private static void Add(ItemsControl menu, string label, Action action)
+    private static MenuItem Add(ItemsControl menu, string label, Action action)
     {
         var item = new MenuItem { Header = label };
         item.Click += (_, _) => action();
-        menu.Items.Add(item);
+        menu.Items.Add(item); return item;
     }
 
     private void BeginDrag(Button button, MouseEventArgs e, string format, string id)
     {
-        if (e.LeftButton != MouseButtonState.Pressed || _dragging) return;
+        if (e.LeftButton != MouseButtonState.Pressed || _dragging || !CanEditLayout
+            || format == "ReStart.Group" && Document.Groups.FirstOrDefault(g => g.Id == id) is { } dragGroup && !CanEditGroup(dragGroup)
+            || format == "ReStart.Tile" && !CanEditTile(id)) return;
         var point = e.GetPosition(this);
         if (Math.Abs(point.X - _dragOrigin.X) < SystemParameters.MinimumHorizontalDragDistance && Math.Abs(point.Y - _dragOrigin.Y) < SystemParameters.MinimumVerticalDragDistance) return;
         _dragging = true;
@@ -842,6 +856,7 @@ public partial class MainWindow : Window
 
     private void PinCustom(Tile tile)
     {
+        if (!CanEditLayout) { SetStatus(L.T(K.LayoutLockedStatus)); return; }
         LayoutEditor.PinIndependent(Document, tile, GroupsPanel.Columns, Cell, ContentScroll.ViewportWidth, ContentScroll.VerticalOffset);
         CommitLayout();
     }
@@ -884,7 +899,13 @@ public partial class MainWindow : Window
     }
     private void OpenDocuments(object sender, RoutedEventArgs e) => LaunchPath(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
     private void OpenPictures(object sender, RoutedEventArgs e) => LaunchPath(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures));
-    private void LaunchPath(string path) => Launch(new(path, path, path, false));
+    private void LaunchPath(string path)
+    {
+        if (_preview) { Launch(new(path, path, path, false)); return; }
+        // Utility folders remain available while placement editing is active.
+        try { ShellLauncher.Launch(path); Dismiss(immediately: true); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception) { SetStatus(ex.Message); }
+    }
     private void OpenAccount(object sender, RoutedEventArgs e)
     {
         var menu = CreateContextMenu();
@@ -965,6 +986,7 @@ public partial class MainWindow : Window
     /// <param name="document">Replacement layout to normalize and save; failure restores the previous document and history state.</param>
     public void ReplaceDocument(LayoutDocument document)
     {
+        if (!LayoutLocks.AllowsChange(Document.Groups, document.Groups, Document.Preferences, GroupsPanel.Columns)) throw new InvalidOperationException(L.T(K.LayoutLockedStatus));
         _store.Save(document);
         Document = document;
         _selectionPlanCache = null;

@@ -385,5 +385,11 @@
   "BackgroundSelected": "Imagen copiada. Guarda para aplicar.",
   "BackgroundInvalid": "Elige una imagen legible de hasta 32 MiB.",
   "ErrorDataDeleted": "Los datos locales se eliminaron mientras ReStart estaba abierto. Reinícialo para empezar de nuevo; no se reconstruirá el diseño eliminado desde la memoria.",
-  "ErrorScriptSourceMissing": "Faltan los archivos del mosaico. Reinstala el paquete o sustituye el código en el estudio de mosaicos."
+  "ErrorScriptSourceMissing": "Faltan los archivos del mosaico. Reinstala el paquete o sustituye el código en el estudio de mosaicos.",
+  "LockLayout": "Bloquear diseño",
+  "LockGroup": "Bloquear este grupo",
+  "LayoutLockHelp": "Protege posiciones, tamaños y pertenencia. Puedes abrir apps y cambiar nombres y colores. Ctrl+Mayús+L alterna el bloqueo.",
+  "LayoutLockedStatus": "El diseño está bloqueado. Desbloquéalo para cambiar posiciones, tamaños o contenido.",
+  "LayoutUnlockedStatus": "Diseño desbloqueado.",
+  "KeyboardLayoutHelp": "Flechas: foco · Espacio: seleccionar · Ctrl+flechas: mover mosaicos · Ctrl+Mayús+flechas: mover grupo · Alt+1–4: tamaño · Ctrl+G: grupo nuevo · Mayús+F10: menú · Ctrl+Z/Y: deshacer/rehacer"
 }

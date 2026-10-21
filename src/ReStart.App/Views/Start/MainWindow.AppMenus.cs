@@ -17,6 +17,7 @@ public partial class MainWindow
         var extras = new MenuItem { Header = "ReStart" };
         pin.Click += (_, _) =>
         {
+            if (!CanEditLayout || Document.Groups.Where(g => !CanEditGroup(g)).Any(g => g.Tiles.Any(t => t.AppId == app.Id || t.Children.Any(c => c.AppId == app.Id)))) return;
             if (AppPinning.IsPinned(Document, app))
             { AppPinning.Unpin(Document, app); CommitLayout(); SetStatus(L.F(K.StatusUnpinned, app.Name)); }
             else
@@ -28,20 +29,22 @@ public partial class MainWindow
         void Refresh()
         {
             pin.Header = L.T(AppPinning.IsPinned(Document, app) ? K.UnpinTile : K.PinToStart);
+            pin.IsEnabled = CanEditLayout && !Document.Groups.Where(g => !CanEditGroup(g)).Any(g => g.Tiles.Any(t => t.AppId == app.Id || t.Children.Any(c => c.AppId == app.Id)));
+            extras.IsEnabled = CanEditLayout;
             extras.Items.Clear();
             extras.Visibility = AppPinning.IsPinned(Document, app) ? Visibility.Collapsed : Visibility.Visible;
             var groups = new MenuItem { Header = L.T(K.PinToGroupMenu) };
-            foreach (var group in Document.Groups.Where(g => !g.IsStandalone))
+            foreach (var group in Document.Groups.Where(g => !g.IsStandalone && CanEditGroup(g)))
                 Add(groups, group.Name.Length == 0 ? L.T(K.UnnamedGroup) : group.Name, () =>
                 {
-                    if (!Document.Groups.Contains(group)) return;
+                    if (!Document.Groups.Contains(group) || !CanEditGroup(group)) return;
                     PinMenuApplication(app, group); CommitLayout(); SetStatus(L.F(K.StatusPinned, app.Name));
                 });
             groups.IsEnabled = groups.Items.Count > 0;
             extras.Items.Add(groups);
             Add(extras, L.T(K.PinNewGroup), () =>
             {
-                if (AppPinning.IsPinned(Document, app)) return;
+                if (!CanEditLayout || AppPinning.IsPinned(Document, app)) return;
                 var group = new TileGroup { Name = "" };
                 Document.Groups.Add(group);
                 PinMenuApplication(app, group);
@@ -55,6 +58,7 @@ public partial class MainWindow
 
     private Tile PinMenuApplication(AppEntry app, TileGroup? destination = null)
     {
+        if (!CanEditLayout || destination != null && !CanEditGroup(destination)) throw new InvalidOperationException(L.T(K.LayoutLockedStatus));
         var tile = destination == null ? PinApplication(app) : AppPinning.Pin(Document, app, destination);
         if (!_catalog.Icons.ContainsKey(app.Id)) _ = RefreshPinnedIconAsync(app);
         return tile;

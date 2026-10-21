@@ -385,5 +385,11 @@
   "BackgroundSelected": "画像をコピーしました。保存すると反映されます。",
   "BackgroundInvalid": "読み取り可能な 32 MiB 以下の画像を選択してください。",
   "ErrorDataDeleted": "起動中にローカルデータが削除されました。ReStart を再起動すると初期状態になります。削除済みの配置はメモリから再作成しません。",
-  "ErrorScriptSourceMissing": "タイルのソースが見つかりません。パッケージを再追加するか、タイル制作画面でソースを置き換えてください。"
+  "ErrorScriptSourceMissing": "タイルのソースが見つかりません。パッケージを再追加するか、タイル制作画面でソースを置き換えてください。",
+  "LockLayout": "配置をロック",
+  "LockGroup": "このグループをロック",
+  "LayoutLockHelp": "ロック中は位置・サイズ・所属を保護します。アプリの起動、名前と色の変更は可能です。Ctrl+Shift+L で配置ロックを切り替えます。",
+  "LayoutLockedStatus": "配置がロックされています。位置・サイズ・内容を変更するには解除してください。",
+  "LayoutUnlockedStatus": "配置のロックを解除しました。",
+  "KeyboardLayoutHelp": "矢印: フォーカス · Space: 選択 · Ctrl+矢印: タイル移動 · Ctrl+Shift+矢印: グループ移動 · Alt+1〜4: サイズ · Ctrl+G: 新規グループ · Shift+F10: メニュー · Ctrl+Z/Y: 元に戻す／やり直す"
 }

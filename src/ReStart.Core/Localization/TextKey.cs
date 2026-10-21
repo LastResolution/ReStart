@@ -778,4 +778,16 @@ public enum TextKey
     ErrorDataDeleted,
     /// <summary>Tile source files are missing. Reinstall the package or replace its source in Tile Studio.</summary>
     ErrorScriptSourceMissing,
+    /// <summary>Lock layout</summary>
+    LockLayout,
+    /// <summary>Lock this group</summary>
+    LockGroup,
+    /// <summary>Locks protect positions, sizes and membership. Apps, names and colors still work. Press Ctrl+Shift+L to toggle the layout lock.</summary>
+    LayoutLockHelp,
+    /// <summary>Layout is locked. Unlock it to change positions, sizes or contents.</summary>
+    LayoutLockedStatus,
+    /// <summary>Layout unlocked.</summary>
+    LayoutUnlockedStatus,
+    /// <summary>Arrows: focus · Space: select · Ctrl+arrows: move tiles · Ctrl+Shift+arrows: move group · Alt+1–4: size · Ctrl+G: new group · Shift+F10: tile menu · Ctrl+Z/Y: undo/redo</summary>
+    KeyboardLayoutHelp,
 }

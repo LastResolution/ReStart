@@ -22,6 +22,8 @@ internal sealed partial class SettingsWindow
         Check(panel, L.T(K.SearchFilesSetting), _draft.SearchFiles, value => _draft.SearchFiles = value);
         Check(panel, L.T(K.SettingsJumpLists), _draft.ShowJumpLists, value => _draft.ShowJumpLists = value);
         Heading(panel, L.T(K.SettingsLayout));
+        Check(panel, L.T(K.LockLayout), _draft.LayoutLocked, value => _draft.LayoutLocked = value);
+        Note(panel, L.T(K.LayoutLockHelp));
         Check(panel, L.T(K.SettingsTileHover), _draft.TileHoverHighlight, value => _draft.TileHoverHighlight = value);
         Check(panel, L.T(K.SettingsGroupHover), _draft.ShowGroupBoundariesOnHover, value => _draft.ShowGroupBoundariesOnHover = value);
         Check(panel, L.T(K.SettingsDropGroups), _draft.GroupTilesOnDrop, value => _draft.GroupTilesOnDrop = value);

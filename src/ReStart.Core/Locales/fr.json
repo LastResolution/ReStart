@@ -385,5 +385,11 @@
   "BackgroundSelected": "Image copiée. Enregistrez pour l’appliquer.",
   "BackgroundInvalid": "Choisissez une image lisible de 32 Mio maximum.",
   "ErrorDataDeleted": "Les données locales ont été supprimées pendant l’exécution. Redémarrez ReStart pour repartir de zéro ; la disposition supprimée ne sera pas recréée depuis la mémoire.",
-  "ErrorScriptSourceMissing": "Les fichiers sources de la tuile sont introuvables. Réinstallez le paquet ou remplacez le code dans le studio de tuiles."
+  "ErrorScriptSourceMissing": "Les fichiers sources de la tuile sont introuvables. Réinstallez le paquet ou remplacez le code dans le studio de tuiles.",
+  "LockLayout": "Verrouiller la disposition",
+  "LockGroup": "Verrouiller ce groupe",
+  "LayoutLockHelp": "Protège positions, tailles et appartenance. Les applications, noms et couleurs restent utilisables. Ctrl+Maj+L active ou désactive le verrouillage.",
+  "LayoutLockedStatus": "La disposition est verrouillée. Déverrouillez-la pour modifier positions, tailles ou contenu.",
+  "LayoutUnlockedStatus": "Disposition déverrouillée.",
+  "KeyboardLayoutHelp": "Flèches : focus · Espace : sélectionner · Ctrl+flèches : déplacer les tuiles · Ctrl+Maj+flèches : déplacer le groupe · Alt+1–4 : taille · Ctrl+G : nouveau groupe · Maj+F10 : menu · Ctrl+Z/Y : annuler/rétablir"
 }

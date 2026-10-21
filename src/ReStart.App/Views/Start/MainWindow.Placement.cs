@@ -118,11 +118,13 @@ public partial class MainWindow
 
     private SingleTileDrop? ResolveSingleTileDrop(Tile tile, Point point, string sourceId, long? timestamp = null)
     {
+        if (!CanEditLayout || !CanEditTile(tile.Id)) return null;
         if (TileDropTarget(tile, point) is not { } target)
         {
             _folderHover.Reset(); StopFolderDwell();
             return new();
         }
+        if (!CanEditGroup(target.Group)) return null;
         var relative = GroupsPanel.TranslatePoint(point, target.Panel);
         var model = target.Panel.ToModelPoint(relative);
         var (column, row) = TileLayout.Snap(model.X - _dragOffset.X, model.Y - _dragOffset.Y, Cell, tile.Size, Document.Preferences.Columns);
@@ -135,7 +137,7 @@ public partial class MainWindow
         if (merge != null && target.Group.IsStandalone && !merge.IsFolder)
         {
             var plan = TileGrouping.Plan(Document, [tile], merge.Id, GroupsPanel.Columns, Cell);
-            return plan == null ? null : new(target.Group, target.Panel, column, row, GroupPlan: plan);
+            return plan == null || !PlacementAllowed(plan) ? null : new(target.Group, target.Panel, column, row, GroupPlan: plan);
         }
         return new(target.Group, target.Panel, column, row, merge);
     }
@@ -179,6 +181,7 @@ public partial class MainWindow
     {
         if (!HasDrag(e)) return;
         e.Handled = true;
+        if (!CanEditLayout) { e.Effects = DragDropEffects.None; ClearDropPreview(); return; }
         e.Effects = DragDropEffects.Move;
         var point = e.GetPosition(GroupsPanel);
         if (e.Data.GetData("ReStart.Selection") is string anchorId)
@@ -188,7 +191,7 @@ public partial class MainWindow
             _folderHover.Reset();
             StopFolderDwell();
             var group = Document.Groups.FirstOrDefault(g => g.Id == groupId);
-            if (group == null) { e.Effects = DragDropEffects.None; return; }
+            if (group == null || !CanEditGroup(group)) { e.Effects = DragDropEffects.None; return; }
             PreviewGroupOnBoard(group, point);
             return;
         }
@@ -232,6 +235,7 @@ public partial class MainWindow
     {
         if (!HasDrag(e)) return;
         e.Handled = true;
+        if (!CanEditLayout) { e.Effects = DragDropEffects.None; ClearDropPreview(); return; }
         var point = e.GetPosition(GroupsPanel);
         if (e.Data.GetData("ReStart.Selection") is string anchorId)
         { ClearDropPreview(); StopFolderDwell(); HandleSelectionDrop(e, anchorId, point, true); return; }
@@ -251,6 +255,7 @@ public partial class MainWindow
 
     private void MoveGroupOnBoard(TileGroup group, Point point)
     {
+        if (!CanEditGroup(group)) return;
         var (column, row, x) = BoardAnchor(point, group.IsStandalone);
         x = GroupDropX(group, x, row);
         row = GroupDropRow(group, x, row);
@@ -260,9 +265,13 @@ public partial class MainWindow
 
     private void PreviewGroupOnBoard(TileGroup group, Point point)
     {
+        if (!CanEditGroup(group)) { ClearDropPreview(); return; }
         var (column, row, x) = BoardAnchor(point, group.IsStandalone);
         x = GroupDropX(group, x, row);
         row = GroupDropRow(group, x, row);
+        var candidate = new LayoutDocument { Preferences = Document.Preferences, Groups = LayoutHistory.CopyGroups(Document.Groups) };
+        GroupLayout.Move(candidate, candidate.Groups.Single(g => g.Id == group.Id), column, row, GroupsPanel.Columns, Cell, x);
+        if (!PlacementAllowed(candidate.Groups)) { ClearDropPreview(); return; }
         var placements = GroupLayout.PreviewMove(Document, group, column, row, GroupsPanel.Columns, Cell, x);
         if (GroupsPanel.DragPlacements is { } previous && placements.SequenceEqual(previous)) return;
         var target = placements.Single(p => p.Group == group);

@@ -385,5 +385,11 @@
   "BackgroundSelected": "图片已复制，保存后生效。",
   "BackgroundInvalid": "请选择不超过 32 MiB 的可读取图片。",
   "ErrorDataDeleted": "ReStart 运行期间本地数据被删除。请重启以重新开始；不会从内存中重建已删除的布局。",
-  "ErrorScriptSourceMissing": "找不到磁贴源文件。请重新安装包，或在磁贴工作室中替换源代码。"
+  "ErrorScriptSourceMissing": "找不到磁贴源文件。请重新安装包，或在磁贴工作室中替换源代码。",
+  "LockLayout": "锁定布局",
+  "LockGroup": "锁定此分组",
+  "LayoutLockHelp": "保护位置、大小和归属；仍可启动应用、更改名称和颜色。按 Ctrl+Shift+L 切换布局锁定。",
+  "LayoutLockedStatus": "布局已锁定。请解锁以更改位置、大小或内容。",
+  "LayoutUnlockedStatus": "布局已解锁。",
+  "KeyboardLayoutHelp": "方向键：焦点 · Space：选择 · Ctrl+方向键：移动磁贴 · Ctrl+Shift+方向键：移动分组 · Alt+1–4：大小 · Ctrl+G：新分组 · Shift+F10：菜单 · Ctrl+Z/Y：撤销/重做"
 }

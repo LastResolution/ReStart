@@ -3,6 +3,10 @@ namespace ReStart.Core;
 /// <summary>Stores local UI and integration choices; imported layouts do not replace these settings.</summary>
 public sealed class Preferences
 {
+    /// <summary>Gets or sets whether tile/group positions, sizes and membership are protected from editing; launch and appearance remain available.</summary>
+    public bool LayoutLocked { get; set; }
+    /// <summary>Gets or sets stable IDs of groups whose geometry and membership are protected independently of the global lock. Locks are outside undo history.</summary>
+    public List<string> LockedGroupIds { get; set; } = [];
     /// <summary>Gets or sets whether search includes localized Windows settings entry points.</summary>
     public bool SearchSettings { get; set; } = true;
     /// <summary>Gets or sets whether app menus query Windows Recent/Frequent destinations; Windows history privacy settings also apply.</summary>

@@ -26,6 +26,11 @@ internal sealed class GroupHeader : Grid
         VerticalAlignment = VerticalAlignment.Center
     };
     internal bool IsEditing { get; private set; }
+    private readonly ColumnDefinition _lockColumn = new() { Width = new(0) };
+    internal bool IsPlacementLocked
+    {
+        set { _lockColumn.Width = new(value ? 20 : 0); }
+    }
     internal event Action? EditStarted;
     internal event Action<string?, bool>? EditEnded;
 
@@ -35,9 +40,12 @@ internal sealed class GroupHeader : Grid
         _name = name;
         _placeholder = placeholder;
         ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
+        ColumnDefinitions.Add(_lockColumn);
         ColumnDefinitions.Add(new() { Width = new GridLength(28) });
         Handle.Content = DisplayName;
-        SetColumn(EditButton, 1); SetColumnSpan(_editor, 2);
+        var locked = new TextBlock { Text = "\uE72E", FontFamily = new("Segoe MDL2 Assets"), FontSize = 12, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center, ToolTip = L.T(K.LockGroup), ClipToBounds = true };
+        SetColumn(locked, 1); Children.Add(locked);
+        SetColumn(EditButton, 2); SetColumnSpan(_editor, 3);
         EditButton.ToolTip = L.T(placeholder == K.NameGroup ? K.RenameGroup : K.RenameTile);
         System.Windows.Automation.AutomationProperties.SetName(EditButton, (string)EditButton.ToolTip);
         Children.Add(Handle);

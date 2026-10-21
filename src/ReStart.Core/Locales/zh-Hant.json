@@ -385,5 +385,11 @@
   "BackgroundSelected": "圖片已複製，儲存後套用。",
   "BackgroundInvalid": "請選擇不超過 32 MiB 且可讀取的圖片。",
   "ErrorDataDeleted": "ReStart 執行期間本機資料遭刪除。請重新啟動以重新開始；不會從記憶體重建已刪除的配置。",
-  "ErrorScriptSourceMissing": "找不到動態磚原始檔。請重新安裝套件，或在動態磚工作室中更換原始碼。"
+  "ErrorScriptSourceMissing": "找不到動態磚原始檔。請重新安裝套件，或在動態磚工作室中更換原始碼。",
+  "LockLayout": "鎖定配置",
+  "LockGroup": "鎖定此群組",
+  "LayoutLockHelp": "保護位置、大小和歸屬；仍可啟動應用程式、變更名稱和色彩。按 Ctrl+Shift+L 切換配置鎖定。",
+  "LayoutLockedStatus": "配置已鎖定。請解鎖以變更位置、大小或內容。",
+  "LayoutUnlockedStatus": "配置已解鎖。",
+  "KeyboardLayoutHelp": "方向鍵：焦點 · Space：選取 · Ctrl+方向鍵：移動動態磚 · Ctrl+Shift+方向鍵：移動群組 · Alt+1–4：大小 · Ctrl+G：新群組 · Shift+F10：選單 · Ctrl+Z/Y：復原/重做"
 }
