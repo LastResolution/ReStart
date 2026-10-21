@@ -28,10 +28,16 @@ jobs:
         run: ./scripts/check-privacy.ps1
       - name: Verify privacy guard rejection cases
         run: ./scripts/test-privacy.ps1
+      - name: Verify signed package validation and rejection cases
+        run: ./scripts/test-signed-package.ps1
       - name: Verify public API documentation and guard rejection cases
         run: |
           ./scripts/check-api-docs.ps1 -SelfTest
           ./scripts/check-api-docs.ps1
+      - name: Verify architecture and localized README links
+        run: |
+          ./scripts/check-architecture.ps1
+          ./scripts/check-readmes.ps1
       - run: dotnet format whitespace ReStart.slnx --verify-no-changes --no-restore
       - run: dotnet build ReStart.slnx -c Release --no-restore
       - run: dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory artifacts/test-results

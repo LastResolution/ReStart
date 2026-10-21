@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <parameters>
+    <parameter name="version" required="true" />
+    <parameter name="productVersion" required="true" />
+  </parameters>
+  <!-- The outer ZIP is the GitHub Actions artifact container. -->
+  <zip-file>
+    <zip-file path="ReStart-win-*.zip">
+      <pe-file path="ReStart.exe" product-name="ReStart" product-version="${productVersion}" file-version="${version}.0">
+        <authenticode-sign hash-algorithm="sha256" description="ReStart" description-url="https://github.com/LastResolution/ReStart" />
+      </pe-file>
+      <pe-file path="TileHost/ReStart.TileHost.exe" product-name="ReStart" product-version="${productVersion}" file-version="${version}.0">
+        <authenticode-sign hash-algorithm="sha256" description="ReStart tile host" description-url="https://github.com/LastResolution/ReStart" />
+      </pe-file>
+    </zip-file>
+  </zip-file>
+</artifact-configuration>

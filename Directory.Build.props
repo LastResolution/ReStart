@@ -14,6 +14,7 @@
     <NuGetLockFilePath Condition="'$(RuntimeIdentifier)' != ''">$(MSBuildProjectDirectory)/obj/packages.$(RuntimeIdentifier).lock.json</NuGetLockFilePath>
     <Version>1.3.1</Version>
     <Authors>ReStart contributors</Authors>
+    <Product>ReStart</Product>
     <RepositoryUrl>https://github.com/LastResolution/ReStart</RepositoryUrl>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>

@@ -35,7 +35,7 @@ if ($Staged) {
 }
 $patterns = [ordered]@{
     'GitHub token' = '(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{40,})'
-    'private key' = '-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----'
+    'private key' = '-----BEGIN (?:(?:RSA |EC |OPENSSH |DSA |ENCRYPTED )?PRIVATE KEY|PGP PRIVATE KEY BLOCK)-----'
     'AWS access key' = 'AKIA[0-9A-Z]{16}'
     'OpenAI key' = '(?<![A-Za-z0-9_-])sk-(?:(?:proj-|svcacct-)[A-Za-z0-9_-]{40,}|[A-Za-z0-9]{40,})(?![A-Za-z0-9_-])'
     'Slack token' = 'xox[baprs]-[A-Za-z0-9-]{20,}'
@@ -45,7 +45,7 @@ $patterns = [ordered]@{
 }
 $findings = [Collections.Generic.List[string]]::new()
 function Test-PrivateBytes([byte[]]$Bytes, [string]$DisplayPath) {
-    if ($DisplayPath -match '(?i)\.(?:pfx|p12|snk|key|jks|keystore)$') {
+    if ($DisplayPath -match '(?i)\.(?:pfx|p12|p8|pvk|snk|key|jks|keystore)$') {
         $findings.Add("$DisplayPath — private signing container")
     }
     $raw = [Text.Encoding]::UTF8.GetString($Bytes)

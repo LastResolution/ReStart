@@ -22,7 +22,9 @@ gh workflow run release.yml -f tag=v1.0.0
 gh run list --workflow release.yml
 ```
 
-The manually dispatched workflow checks the project/tag version and main ancestry, builds/tests, and packages x64 and ARM64 in clean Windows jobs. Publication requires an existing draft with notes. It uploads both ZIPs and SHA-256 sidecars, then publishes a stable release when the repository is public; private repositories retain the draft. An existing published release cannot be overwritten by this workflow. Actions are SHA-pinned, and only publication has `contents: write`.
+Dispatch the workflow from main. It checks the project/tag version and main ancestry, builds/tests, and packages x64 and ARM64 in clean Windows jobs. Publication requires an existing draft with notes. It uploads both ZIPs and SHA-256 sidecars, then publishes a stable release when the repository is public; private repositories retain the draft. An existing published release cannot be overwritten by this workflow. Actions are SHA-pinned, and only publication has `contents: write`. Public package jobs create GitHub build-provenance attestations of the final ZIPs using short-lived OIDC credentials. Attestations are separate from Windows code signatures.
+
+The `release-signing` environment protects signing access. [Code signing policy and setup](code-signing.md) covers SignPath enrollment, provider approval, environment variables and the submitter secret. Leave `RESTART_SIGNING_PROVIDER` unset/`none` until enrollment is complete. When `signpath` is enabled, both own EXEs must have trusted timestamped signatures from the configured certificate, and all unsigned content must match the build. Failure blocks publication. SHA-256 sidecars are recomputed after signing, never reused from the unsigned ZIP. Never commit or upload PFX/private-key containers.
 
 ## Check the payload
 
@@ -30,6 +32,6 @@ The strict payload contains 41 files: the launcher, worker, fifteen manifest/JS 
 
 Download the actual assets and verify SHA-256, PE architecture, product version/source ID and contents. Run the packaged x64 smoke, lifecycle and JS fixtures. ARM64 cross-builds do not establish hardware compatibility. See [testing](testing.md).
 
-Packages are unsigned. Keep published tags immutable. Exit before replacing the complete portable installation. Settings live separately and retain upgrade backups; refresh startup/Explorer registration if the executable moved. In-app update checks use public releases without an API key; installation is manual.
+Currently published packages are unsigned; enrollment and a verified production signing run are still pending. Keep published tags immutable. Exit before replacing the complete portable installation. Settings live separately and retain upgrade backups; refresh startup/Explorer registration if the executable moved. In-app update checks use public releases without an API key; installation is manual.
 
 After publication, run `./scripts/configure-public-security.ps1` and inspect the resulting CodeQL run and alerts. Confirm private vulnerability reporting, Dependabot alerts/security updates, secret scanning and push protection are enabled. Configuration alone does not establish a successful scan.

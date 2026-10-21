@@ -11,6 +11,8 @@ artifacts/
 *.log
 *.pfx
 *.p12
+*.p8
+*.pvk
 *.snk
 *.key
 *.jks

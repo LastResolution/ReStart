@@ -12,16 +12,17 @@ try {
     $env:GIT_AUTHOR_EMAIL = '1+fixture@users.noreply.github.com'
     $env:GIT_COMMITTER_EMAIL = '1+fixture@users.noreply.github.com'
     $fixture = Join-Path $testRoot 'fixture.txt'
-    foreach ($mode in @('clean', 'culture', 'path', 'token', 'author', 'committer', 'pfx', 'p12', 'snk', 'key', 'jks', 'keystore')) {
+    foreach ($mode in @('clean', 'culture', 'path', 'token', 'author', 'committer', 'encrypted-key', 'pfx', 'p12', 'p8', 'pvk', 'snk', 'key', 'jks', 'keystore')) {
         git read-tree --empty
         if ($LASTEXITCODE -ne 0) { throw 'Cannot create isolated test index.' }
         $value = switch ($mode) {
             'path' { ('C:' + '\Users\FixtureUser\sample.txt') }
             'token' { ('ghp_' + ('a' * 36)) }
             'culture' { ('asi-lk' + 'sk-' + ('sk-SKsl-SIes-ES' * 8)) }
+            'encrypted-key' { ('-----BEGIN ' + 'ENCRYPTED PRIVATE KEY-----') }
             default { 'No private data.' }
         }
-        $candidate = if ($mode -in @('pfx', 'p12', 'snk', 'key', 'jks', 'keystore')) { Join-Path $testRoot "signing.$mode" } else { $fixture }
+        $candidate = if ($mode -in @('pfx', 'p12', 'p8', 'pvk', 'snk', 'key', 'jks', 'keystore')) { Join-Path $testRoot "signing.$mode" } else { $fixture }
         [IO.File]::WriteAllText($candidate, $value)
         git add --force -- $candidate
         if ($LASTEXITCODE -ne 0) { throw 'Cannot stage privacy fixture.' }
@@ -32,7 +33,7 @@ try {
         catch { $rejected = $true }
         if ($rejected -ne ($mode -notin @('clean', 'culture'))) { throw "Unexpected privacy result: $mode" }
     }
-    foreach ($extension in @('pfx', 'p12', 'snk', 'key', 'jks', 'keystore')) {
+    foreach ($extension in @('pfx', 'p12', 'p8', 'pvk', 'snk', 'key', 'jks', 'keystore')) {
         $zip = Join-Path $testRoot "signing-$extension.zip"
         $archive = [IO.Compression.ZipFile]::Open($zip, [IO.Compression.ZipArchiveMode]::Create)
         try { $null = $archive.CreateEntry("signing.$extension") }

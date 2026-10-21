@@ -8,7 +8,7 @@ Settings: left gear. Exit: tray menu. Sign-in startup is optional.
 
 Drag tiles/groups; empty-space drops create independent pins. Double-click
 group names to edit. Partly overlap an independent tile for about 0.3 seconds to collect a group;
-hold about one second over a grouped tile to create a folder. Existing folders
+hold about 0.6 seconds over a grouped tile to create a folder. Existing folders
 accept additions; one remaining child stays in its folder until moved out.
 Edit layout / Ctrl+E selects tiles without opening apps. Drag a selection together;
 Move to group collects it into a compact block. Done leaves editing.
@@ -27,7 +27,9 @@ Data: %LOCALAPPDATA%\ReStart\layout.json; schema 1-3 upgrade to 4 with backups.
 Layout export excludes JS sources and photo/data bindings; keep tiles separately.
 
 Remove: disable startup and Explorer integration, exit, delete installation.
-Local data remains separately. Packages are unsigned. MIT License.
+Local data remains separately. MIT License.
+Check the release notes for code-signing status. Verify Digital Signatures on
+both ReStart.exe and TileHost/ReStart.TileHost.exe. SHA-256 files cover the ZIP.
 ReStart is independent of Microsoft. Source, build and implementation details:
 https://github.com/LastResolution/ReStart
 
