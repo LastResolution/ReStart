@@ -683,7 +683,13 @@ public partial class MainWindow : Window
         var previousView = new DragViewState(_allApps, _searchRequested, SearchBox.Text, ContentScroll.VerticalOffset, ContentScroll.HorizontalOffset);
         try
         {
-            StartDragGhost(button, format, id, TranslatePoint(_dragOrigin, Root));
+            var grab = TranslatePoint(_dragOrigin, Root);
+            // Closing an expanded folder can move a group's header before OLE
+            // begins. Keep the original handle-relative grab, not its old row.
+            if (format == "ReStart.Group" && GroupsPanel.Children.OfType<StackPanel>().FirstOrDefault(view => view.Tag is TileGroup group && group.Id == id)
+                ?.Children.OfType<GroupHeader>().FirstOrDefault() is { } header) grab = header.Handle.TranslatePoint(_dragOffset, Root);
+            StartDragGhost(button, format, id, grab);
+            MoveDragGhost(TranslatePoint(point, Root));
             previousView = PrepareDragView(format);
             // A list/search row can disappear when switching to tiles. Keep the
             // OLE drag source attached to the window for the whole operation.
