@@ -143,7 +143,7 @@ public partial class MainWindow
                 settings.UpdateLayout(); SaveFixtureElement(settings, Path.Combine(Path.GetDirectoryName(snapshotPath)!, "tile-library.png"));
                 var before = GroupLayout.Pack(fixture.Document.Groups, fixture.GroupsPanel.Columns, 8, fixture.Cell, preserveColumns: true).ToArray();
                 add.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); fixture.UpdateLayout();
-                Require(fixture.Document.Groups.Count == 4 && fixture.Document.Groups[^1].IsStandalone, "Library click did not create an independent pin.");
+                Require(fixture.Document.Groups.Count == before.Length + 1 && fixture.Document.Groups[^1].IsStandalone, "Library click did not create an independent pin.");
                 var after = GroupLayout.Pack(fixture.Document.Groups, fixture.GroupsPanel.Columns, 8, fixture.Cell, preserveColumns: true);
                 Require(before.All(p => after.Single(a => a.Group == p.Group) == p), "Adding a library tile changed an existing group rectangle.");
             }
