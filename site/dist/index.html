@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>ReStart — Bring full-screen Start back.</title>
+  <meta name="description" content="A familiar home for your Windows apps. Arrange your pins, find what you need, and make room for JavaScript live tiles. Free, open source, and portable.">
+  <meta property="og:title" content="ReStart — Bring full-screen Start back.">
+  <meta property="og:description" content="Your apps, your layout, your own live tiles. A free, open-source full-screen Start menu for Windows.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://lastresolution.github.io/ReStart/assets/social-preview.jpg">
+  <meta property="og:image:width" content="1280"><meta property="og:image:height" content="640">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/logo.png" type="image/png">
+  <script>document.documentElement.classList.replace('no-js','js');try{const p=localStorage.getItem('restart-site-theme')||'system';document.documentElement.dataset.theme=p==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):p;document.documentElement.dataset.preference=p;}catch{document.documentElement.dataset.theme=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}</script>
+  <link rel="stylesheet" href="assets/styles.css">
+  <script src="assets/site.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="header-inner shell">
+      <a class="brand" href="./" aria-label="ReStart home"><img src="assets/logo.png" width="32" height="32" alt=""><span>ReStart</span></a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">Menu <span aria-hidden="true">☰</span></button>
+      <nav id="primary-nav" class="primary-nav" aria-label="Main navigation">
+        <a href="#features">Features</a><a href="#live-tiles">Live tiles</a><a href="developers/">Developers</a>
+        <a href="https://github.com/LastResolution/ReStart">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+      <label class="theme-control"><span class="sr-only">Color theme</span><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.4 1.4m11.2 11.2L19 19M5 19l1.4-1.4M17.6 6.4 19 5"/></svg><select data-theme-picker aria-label="Color theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero shell" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="tiny-grid" aria-hidden="true"><i></i><i></i><i></i><i></i></span>A familiar place to begin</p>
+        <h1 id="hero-title">Bring full-screen<br><span>Start back.</span></h1>
+        <p class="hero-lead">Your apps deserve more than a list.</p>
+        <p class="hero-description">Give them a familiar home on Windows 11 and Windows 10. Arrange your pins, find what you need, and make room for live tiles.</p>
+        <div class="hero-actions"><a class="button primary" href="https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-x64.zip"><svg aria-hidden="true" viewBox="0 0 20 20"><path d="M10 2v10m-4-4 4 4 4-4M3 13v4h14v-4"/></svg>Download for Windows</a><a class="text-link" href="#demo">Watch the demo <span aria-hidden="true">↗</span></a></div>
+        <p class="download-note">x64 · <a href="https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip">Get ARM64</a> · Free &amp; open source</p>
+      </div>
+      <div class="hero-product">
+        <div class="product-caption"><span class="status-dot" aria-hidden="true"></span>Your desktop, with room to breathe.</div>
+        <div class="product-screen"><img data-theme-image data-light="assets/start-light.png" data-dark="assets/start-dark.png" src="assets/start-dark.png" width="1920" height="1080" alt="ReStart full-screen Start showing pinned apps, folders, clocks and PC activity tiles in an English demonstration layout." fetchpriority="high"></div>
+        <div class="product-bottom"><span>Real app. English demo layout.</span><button class="text-link" type="button" data-open-screenshot>View full screen <span aria-hidden="true">↗</span></button></div>
+      </div>
+    </section>
+
+    <div class="facts shell" aria-label="At a glance"><span>Portable by design</span><span>x64 &amp; ARM64</span><span>15 JavaScript tiles</span><span>Eight languages</span><span>MIT licensed</span></div>
+
+    <section id="features" class="section shell" aria-labelledby="features-title">
+      <div class="section-heading"><p class="eyebrow">A desktop that feels like yours</p><h2 id="features-title">Everything in its place.<br>Exactly where you put it.</h2><p>Keep the things you open every day close. Give everything else a place to belong.</p></div>
+      <div class="feature-tabs" data-tabs>
+        <div class="tab-list" role="tablist" aria-label="Explore ReStart">
+          <button id="tab-arrange" role="tab" aria-selected="true" aria-controls="panel-arrange" tabindex="0" type="button"><span class="tab-number">01</span><span>Arrange your space<small>Tiles, groups and folders</small></span><span aria-hidden="true">↗</span></button>
+          <button id="tab-find" role="tab" aria-selected="false" aria-controls="panel-find" tabindex="-1" type="button"><span class="tab-number">02</span><span>Find your next thing<small>Open Start. Start typing.</small></span><span aria-hidden="true">↗</span></button>
+          <button id="tab-colors" role="tab" aria-selected="false" aria-controls="panel-colors" tabindex="-1" type="button"><span class="tab-number">03</span><span>Set the mood<small>Your colors, light or dark</small></span><span aria-hidden="true">↗</span></button>
+        </div>
+        <div class="tab-panels">
+          <article id="panel-arrange" role="tabpanel" aria-labelledby="tab-arrange" tabindex="0"><div class="feature-image"><img src="assets/inline-folder.png" width="1920" height="1080" alt="An expanded tile folder alongside independent app pins and live tile groups." loading="lazy"></div><div class="feature-copy"><h3>A place for everything.</h3><p>Four tile sizes. Movable groups. Folders that expand in place. Pin an app, a document, a directory or a shortcut, then drag things into a layout that makes sense to you.</p><p class="detail-note">Select several tiles to move them together. Undo or redo a layout edit without starting over.</p></div></article>
+          <article id="panel-find" role="tabpanel" aria-labelledby="tab-find" tabindex="0"><div class="feature-image search-image"><img src="assets/search.png" width="1920" height="1080" alt="ReStart search with an app selected as the best match, plus Windows settings and local filename results." loading="lazy"></div><div class="feature-copy"><h3>Less looking. More doing.</h3><p>Press the Windows key and type. Find an app, supported Windows settings, or indexed local filenames. The selected result is ready for Enter.</p><p class="detail-note">Windows-key integration and local file search are optional. You decide what belongs in Start.</p></div></article>
+          <article id="panel-colors" role="tabpanel" aria-labelledby="tab-colors" tabindex="0"><div class="feature-image"><img src="assets/start-light.png" width="1920" height="1080" alt="The same full-screen launcher in a light theme, with clear app icons and colorful live tiles." loading="lazy"></div><div class="feature-copy"><h3>Make room for your colors.</h3><p>Follow your Windows theme or choose light or dark. Explore five color families, set your own accent and background colors, or bring in your desktop wallpaper.</p><p class="detail-note">High contrast and reduced motion follow your Windows accessibility settings.</p></div></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="live-tiles" class="live-section section" aria-labelledby="tiles-title"><div class="shell live-grid">
+      <div class="live-art"><img src="assets/live-tiles.png" width="1314" height="450" alt="A gallery of included live tiles: clock, CPU, memory, focus timer, calendar, network, battery, storage and photos." loading="lazy"></div>
+      <div class="live-copy"><p class="eyebrow">More than shortcuts</p><h2 id="tiles-title">A little life<br>on your desktop.</h2><p>Time, focus, PC activity, your chosen photos, weather and headlines. Fifteen included tiles turn a launcher into a glanceable part of your day.</p><ul class="plain-list"><li><span class="list-mark" aria-hidden="true">↗</span>Connect weather, RSS, Web APIs or local JSON.</li><li><span class="list-mark" aria-hidden="true">↗</span>Choose photos from a folder on your PC.</li><li><span class="list-mark" aria-hidden="true">↗</span>Write your own tiles in JavaScript.</li></ul><a class="text-link" href="developers/">Make something of your own <span aria-hidden="true">→</span></a><p class="detail-note">Data connections are opt-in. The weather sample uses Berlin until you change its coordinates.</p></div>
+    </div></section>
+
+    <section id="demo" class="section shell demo-section" aria-labelledby="demo-title"><div class="demo-heading"><p class="eyebrow">See it in action</p><h2 id="demo-title">A familiar feeling,<br>in 29 seconds.</h2><p>Apps, live tiles, search and a layout that moves with you.</p><span class="detail-note">English demonstration · 1080p · No audio</span></div><div class="video-frame"><video controls playsinline preload="none" poster="assets/start-dark.png" aria-label="29-second ReStart product demonstration"><source src="assets/demo.mp4" type="video/mp4"><p>Your browser cannot play this video. <a href="assets/demo.mp4">Download the MP4</a>.</p></video></div></section>
+
+    <section id="download" class="download-section section" aria-labelledby="download-title"><div class="shell download-grid"><div><p class="eyebrow">Ready when you are</p><h2 id="download-title">Unzip. Open.<br>Make it yours.</h2><p>No separate .NET installation. No administrator rights for everyday use. Your first layout is built from apps installed on your PC.</p><div class="download-actions"><a class="button primary" href="https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-x64.zip">Download x64 <span aria-hidden="true">↓</span></a><a class="button secondary" href="https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip">Download ARM64 <span aria-hidden="true">↓</span></a></div><p class="download-note"><a href="https://github.com/LastResolution/ReStart/releases/latest">Release notes &amp; checksums</a> · Windows 10 / Windows 11</p></div><ol class="install-steps"><li><span>01</span><div><h3>Get the ZIP</h3><p>x64 for most Intel or AMD PCs. ARM64 for Windows on ARM.</p></div></li><li><span>02</span><div><h3>Extract the whole package</h3><p>Keep the supporting folders beside <code>ReStart.exe</code>.</p></div></li><li><span>03</span><div><h3>Find your Start</h3><p>Open ReStart, then use the Windows key, <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Space</kbd>, or the tray menu.</p></div></li></ol></div></section>
+
+    <section class="section shell faq-grid" aria-labelledby="faq-title"><div><p class="eyebrow">A few useful answers</p><h2 id="faq-title">Before you<br>make yourself at home.</h2></div><div class="faq-list">
+      <details><summary>Does it replace Explorer?</summary><p>ReStart runs as an independent app. Its optional Windows-key and taskbar Start-button integrations are reversible. It does not patch Explorer or inject a DLL.</p></details>
+      <details><summary>Does it upload my app list?</summary><p>No advertising or usage analytics are included. Your app list, layouts and photo-folder selections are not uploaded. If you enable a tile connection, its provider receives the requests and parameters you choose. <a href="https://github.com/LastResolution/ReStart/blob/main/SECURITY.md">Read the security policy.</a></p></details>
+      <details><summary>Can I use my own language?</summary><p>ReStart supports English, German, Spanish, French, Japanese, Korean, Simplified Chinese and Traditional Chinese. Translations are AI-assisted; corrections are welcome.</p></details>
+      <details><summary>How do I update?</summary><p>ReStart can check public GitHub Releases. Download the new ZIP and replace the complete extracted package after closing the app. Local settings stay separate from the app folder. <a href="https://github.com/LastResolution/ReStart/blob/main/docs/updates.md">Update guide.</a></p></details>
+      <details><summary>Is it made by Microsoft?</summary><p>No. ReStart is an independent, MIT-licensed project inspired by the late Windows 10 full-screen Start menu. Windows and the illustrated app names are trademarks of their respective owners.</p></details>
+    </div></section>
+
+    <section class="support-section shell" aria-label="Support development"><div><p class="eyebrow">Built in the open</p><h2>A small project.<br>More ideas ahead.</h2><p>Try it. Share it. Report a rough edge. Help shape what comes next.</p></div><div class="support-actions"><a class="button secondary" href="https://github.com/LastResolution/ReStart">Explore the project <span aria-hidden="true">↗</span></a><a class="coffee-link" href="https://buymeacoffee.com/LastResolution"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h12v8a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5V7Zm12 1h2a3 3 0 1 1 0 6h-2M7 3v1m4-1v1m4-1v1"/></svg>Buy Me a Coffee <span aria-hidden="true">↗</span></a></div></section>
+  </main>
+
+  <footer class="site-footer shell"><a class="brand" href="./"><img src="assets/logo.png" alt="" width="26" height="26"><span>ReStart</span></a><p>Made for your desktop. Built in the open.</p><nav aria-label="Footer"><a href="developers/">Developers</a><a href="https://github.com/LastResolution/ReStart/issues">Feedback</a><a href="https://github.com/LastResolution/ReStart/blob/main/LICENSE">MIT license</a><a href="https://buymeacoffee.com/LastResolution">Buy Me a Coffee</a></nav></footer>
+  <dialog class="screenshot-dialog" aria-label="Full ReStart screenshot"><button type="button" class="dialog-close" data-close-screenshot aria-label="Close full-screen screenshot">Close <span aria-hidden="true">×</span></button><img data-theme-image data-light="assets/start-light.png" data-dark="assets/start-dark.png" src="assets/start-dark.png" width="1920" height="1080" alt="Complete full-screen ReStart demonstration, with apps and live tiles."></dialog>
+</body>
+</html>
