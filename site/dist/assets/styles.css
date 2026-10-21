@@ -113,6 +113,9 @@
   .tab-number { font:12px "Cascadia Code",Consolas,monospace; color:var(--accent); line-height:2.1; }
   .feature-image { border:1px solid var(--line); border-radius:6px; overflow:hidden; background:#1e1e1e; aspect-ratio:2.35; }
   .feature-image img { width:100%; }
+  .feature-image.studio-image { aspect-ratio:auto; margin-top:24px; }
+  .tile-gallery { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .tile-gallery img { width:100%; height:auto; }
   .feature-image.search-image { aspect-ratio:2.2; }
   .feature-copy { padding-top:25px; max-width:700px; }
   .feature-copy>p { color:var(--muted); }

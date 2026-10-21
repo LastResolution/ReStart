@@ -1,6 +1,6 @@
 # ReStart project website
 
-Buildless, English-first static pages prepared for GitHub Pages. No publishing workflow is enabled: deployment requires the maintainer's explicit instruction after reviewing the preview.
+Buildless, English-first landing and developer pages for GitHub Pages. The deployment workflow publishes only the verified contents of `site/dist`.
 
 ## Local preview
 
@@ -28,10 +28,10 @@ The full-screen screenshot viewer fits the complete image inside the viewport. I
 node site/scripts/verify-site.mjs
 ```
 
-Check both pages at desktop, tablet and narrow mobile widths, with light/dark/system themes and reduced motion. Exercise the mobile menu, keyboard tabs, screenshot dialog, FAQ disclosures, video and all download/support links. The developer page distinguishes released native tiles from the HTML/CSS format in development; update that availability note only when a release ships.
+Check both pages at desktop, tablet and narrow mobile widths, with light/dark/system themes and reduced motion. Exercise the mobile menu, keyboard tabs, screenshot dialog, FAQ disclosures, video and all download/support links. Keep the nineteen web packages, Tile Studio controls and release availability synchronized with the app documentation.
 
-## Publishing later
+## Deployment
 
-The intended deployment artifact is the contents of `site/dist`. Once approved, configure GitHub Pages to use GitHub Actions and add a manually triggered workflow that uploads only that directory. Do not publish the repository root or development files. Review the default `lastresolution.github.io/ReStart/` social metadata if a custom domain is selected.
+Configure the repository's Pages source as GitHub Actions. `.github/workflows/pages.yml` verifies relative links and static assets, then deploys on a change to `site/**` on `main`, or through a manual dispatch. The repository root and development files are excluded. Review the `lastresolution.github.io/ReStart/` social metadata if a custom domain is selected.
 
 The site uses the project's existing MIT license. Product screenshots show an English synthetic demonstration environment. Illustrated app names/icons remain their owners' trademarks; see `docs/third-party.md`. The promotional social image is an AI-assisted composition of the project identity and demonstration UI.
