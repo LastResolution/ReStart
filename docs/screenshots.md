@@ -1,7 +1,5 @@
 # Documentation images
 
-[日本語](ja/screenshots.md)
-
 README screenshots use **English across the whole image**, including app/tile names, live-tile titles, weekdays, dates, settings and example documents. They use curated common applications, fictional files, synthetic aggregate metrics and generated photo colors. Do not capture a personal desktop or export a user's installed-app list into documentation.
 
 ## Full launcher and animation

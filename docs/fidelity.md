@@ -1,7 +1,5 @@
 # Compatibility
 
-[日本語](ja/fidelity.md)
-
 ReStart is an independent implementation inspired by late Windows 10 full-screen Start. It does not include Microsoft Start code or replace Explorer binaries. Matching features does not imply identical animation, geometry or internal behavior.
 
 ## Platform

@@ -1,7 +1,5 @@
 # Security policy
 
-[日本語](SECURITY.ja.md)
-
 Security fixes target the latest published release. Update earlier versions before reporting; mention if the problem also reproduces on current main. Packages are unsigned.
 
 Report vulnerabilities through [GitHub private vulnerability reporting](https://github.com/LastResolution/ReStart/security/advisories/new), under Security → Report a vulnerability. Include the affected version/build, Windows version, impact, minimal reproduction and any relevant package/manifest. Redact personal paths and credentials. Do not put exploit details in public Issues or PRs. The maintainer will triage privately and coordinate a fix and disclosure. Ordinary UI bugs belong in Issues.

@@ -1,7 +1,5 @@
 # Update checks
 
-[日本語](ja/updates.md)
-
 Settings → Updates checks public GitHub releases manually or optionally at startup. No API key, account or token is required. Stable releases are selected by default; prereleases can be included explicitly.
 
 Versions are compared numerically with prerelease precedence. Drafts and releases missing the current architecture ZIP or SHA-256 sidecar are excluded. At most five pages of 100 releases are read; incomplete/malformed data is never called up to date. Rate limits, service errors and connection failures are reported separately.

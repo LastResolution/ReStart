@@ -1,7 +1,5 @@
 # Architecture
 
-[日本語](ja/architecture.md)
-
 ReStart is a WPF desktop launcher. It owns its layout, search and live-tile protocol; it does not replace Explorer binaries.
 
 ## Components

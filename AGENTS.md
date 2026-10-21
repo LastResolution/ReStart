@@ -10,4 +10,4 @@
 - Use the maintainer's GitHub noreply identity for commits in this workspace. Run `scripts/check-privacy.ps1 -Staged` before committing; never copy private author emails or absolute user paths into tracked files.
 - Keep `docs/fidelity.md` honest about implemented, partially reproduced, unverified, and unavailable behaviors. Never describe a feature as identical to Windows 10 without evidence.
 - Preserve the shell: no Explorer patching or injected DLLs. Hooks must be reversible, short, and disposed on exit.
-- Keep primary documentation, README and release notes in English; update the Japanese counterparts when behavior or release procedures change.
+- Keep detailed documentation, contributor/security/support policies, portable-package guidance and release notes in English. Maintain all eight README translations with visible AI-translation notices and links to the canonical English documentation; do not introduce language-specific documentation duplicates.

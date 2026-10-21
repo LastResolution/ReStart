@@ -1,7 +1,5 @@
 # Testing
 
-[日本語](ja/testing.md)
-
 Run on Windows with the stable SDK in global.json. Exit ReStart when rebuilding its own output, or pass an isolated OutputPath as described in the README.
 
 ~~~powershell

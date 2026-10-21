@@ -5,8 +5,8 @@
   <a href="https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-x64.zip"><strong>Windows 版をダウンロード · x64</strong></a> ·
   <a href="https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip">ARM64</a> ·
   <a href="https://github.com/LastResolution/ReStart/releases/latest">Release notes</a> ·
-  <a href="docs/ja/javascript-tiles.md">タイルを作る</a> ·
-  <a href="CONTRIBUTING.ja.md">開発に参加</a>
+  <a href="docs/javascript-tiles.md">タイルを作る</a> ·
+  <a href="CONTRIBUTING.md">開発に参加</a>
 </p>
 <p align="center">
   <a href="https://github.com/LastResolution/ReStart/actions/workflows/ci.yml"><img src="https://github.com/LastResolution/ReStart/actions/workflows/ci.yml/badge.svg" alt="Windows CI" /></a>
@@ -51,7 +51,7 @@
 - **誤起動せずに整理。** 編集モードでタイルを選択してまとめて移動し、Undo / Redo で操作を戻したりやり直したりできます。
 - **フォルダをその場で展開。** グループ内のタイルに重ねて待つとフォルダを作成。単独タイルに重ねるとグループを作成します。開くと影響する隣接項目だけを移動し、閉じると元の位置へ戻ります。
 - **ファイルもピン留め。** Explorer の **Pin to ReStart** からファイル・フォルダ・ショートカットを追加。通常は空きスペースに置き、メニューからグループも指定できます。
-- **検索と起動を自分向けに。** アプリ・Windowsの設定・インデックス済みファイルを検索。最近・よく使う文書、サイドバーのフォルダー、任意のアプリ履歴を選べます。タイルごとの起動引数や管理者実行にも対応。**設定 → スタートの動作**で機能を個別に切り替えられます。[設定一覧](docs/ja/start-behavior.md)。
+- **検索と起動を自分向けに。** アプリ・Windowsの設定・インデックス済みファイルを検索。最近・よく使う文書、サイドバーのフォルダー、任意のアプリ履歴を選べます。タイルごとの起動引数や管理者実行にも対応。**設定 → スタートの動作**で機能を個別に切り替えられます。[設定一覧](docs/start-behavior.md)。
 - **ライブタイルをワンクリックで。** 背景やグループの右クリック → ライブタイルを追加、または設定から選択。ローカルライブラリに置いた自作パッケージも自動検出。4サイズに合わせた表示例も同梱します。
 - **好みの外観。** ミッドナイト・オーシャン・フォレスト・ローズ・サンドの全5配色にライト・ダーク版を用意。基本テーマとは別に選べ、システム設定にも追従します。背景色・アクセント色を手入力すると、そのRGB値を維持するカスタム配色になります。文字・操作部品・縦横のスクロールバー・スプラッシュがまとめて追従します。ライト・ダーク・システム・ハイコントラスト、壁紙、タイルごとの名前と色も使えます。
 - **アプリ一覧を更新。** 起動したままインストール・アンインストールしたアプリも、再表示時などにバックグラウンドで一覧へ反映します。
@@ -59,7 +59,7 @@
 - **8言語に対応。** 英語、日本語、ドイツ語、フランス語、スペイン語、韓国語、簡体字・繁体字中国語。ライブタイルの既定名は言語に追従し、変更した名前は維持します。
 - **更新を見通せる。** 単一起動、サインイン時の起動、設定移行のバックアップ、バージョン・ライセンス表示、APIキー不要の公開リリース確認。
 
-スクリーンショットはデモ配置、サンプル計測値、単色の写真素材を使っています。実際のタイルは許可した機能からPCの情報を読み取ります。[ライブタイル API とスタイリング例](docs/ja/javascript-tiles.md)を参照してください。
+スクリーンショットはデモ配置、サンプル計測値、単色の写真素材を使っています。実際のタイルは許可した機能からPCの情報を読み取ります。[ライブタイル API とスタイリング例](docs/javascript-tiles.md)を参照してください。
 
 <details>
 <summary>ライトテーマ・アプリ一覧を見る</summary>
@@ -70,7 +70,7 @@
 
 </details>
 
-Microsoft とは独立したプロジェクトです。Explorer のパッチは行わず、解除可能な連携を使います。従来の UWP タイル通知、Windows Search 全体、Cortana、ジャンプリスト、使用頻度による推薦は対象外です。[互換性](docs/ja/fidelity.md)と[検証手順](docs/ja/testing.md)を参照してください。
+Microsoft とは独立したプロジェクトです。Explorer のパッチは行わず、解除可能な連携を使います。従来の UWP タイル通知、Windows Search 全体、Cortana は対象外です。対応アプリでは最近使った文書・よく使う文書を表示し、アプリの使用履歴は任意で有効にできます。[互換性](docs/fidelity.md)と[検証手順](docs/testing.md)を参照してください。
 
 ## 全機能一覧
 
@@ -95,7 +95,7 @@ Microsoft とは独立したプロジェクトです。Explorer のパッチは�
 | データと更新 | ローカル設定、配置の取込・書出し・初期化、バックアップとバージョン移行、消去可能なアプリ履歴、バージョン・ビルド・ライセンス、APIキー不要の更新確認と手動更新 |
 | 配布 | Windows 10/11のx64・ARM64向けポータブルZIP、ランタイム・ライセンス同梱、通常利用は管理者権限不要、Explorerを書き換えない解除可能な連携 |
 
-[ON/OFF設定と既定値](docs/ja/start-behavior.md) · [対応範囲](docs/ja/fidelity.md) · [JS API](docs/ja/javascript-tiles.md)
+[ON/OFF設定と既定値](docs/start-behavior.md) · [対応範囲](docs/fidelity.md) · [JS API](docs/javascript-tiles.md)
 
 ### 検索と起動の設定
 
@@ -142,9 +142,9 @@ Microsoft とは独立したプロジェクトです。Explorer のパッチは�
 
 Start の起動準備中と表示中に非同期で更新し、取得に失敗した場合は前回の値を保持します。非表示にすると取得を停止します。接続先と認証情報は現 Windows ユーザー向けに暗号化し、共有するレイアウトには含めません。パッケージを取り込んだだけでは接続しません。
 
-**天気の初期設定はベルリンの例で、PC の地域ではありません。** 位置推定は行いません。[地域の変更手順](docs/ja/javascript-tiles.md#天気の地域)から座標と表示名を変更できます。上の画像は架空のローカルデータで描画しています。
+**天気の初期設定はベルリンの例で、PC の地域ではありません。** 位置推定は行いません。[地域の変更手順](docs/javascript-tiles.md#weather-location)から座標と表示名を変更できます。上の画像は架空のローカルデータで描画しています。
 
-自作アプリは既存の localhost エンドポイントや JSON ファイルで連携できます。[ファイル生成例](examples/integrations/write-tile-data.ps1)と[データ連携ガイド](docs/ja/javascript-tiles.md#天気フィードweb-api他アプリのデータ)で、接続・セレクター・認証の指定を紹介しています。
+自作アプリは既存の localhost エンドポイントや JSON ファイルで連携できます。[ファイル生成例](examples/integrations/write-tile-data.ps1)と[データ連携ガイド](docs/javascript-tiles.md#weather-feeds-web-apis-and-application-data)で、接続・セレクター・認証の指定を紹介しています。
 
 ## タイルを作る
 
@@ -183,11 +183,11 @@ function render(ctx) {
 
 2ファイルを `%LOCALAPPDATA%\ReStart\TileLibrary` 内のサブフォルダへ置き、ギャラリーや右クリックから追加します。接続画面で `{"status":{"text":"Build passed"}}` を返す API またはファイルを選ぶと、`/status` で選択したオブジェクトが `ctx.data.service.value` に届きます。個人用 URL やキーは接続画面で指定し、パッケージには書きません。
 
-描画は ReStart がネイティブで行います。[同梱サンプル](examples/tiles)にはシステム情報・写真・サイズごとの配置・クリック操作もあります。[作成ガイド](docs/ja/javascript-tiles.md)と[API契約](docs/ja/api-contracts.md)を参照してください。
+描画は ReStart がネイティブで行います。[同梱サンプル](examples/tiles)にはシステム情報・写真・サイズごとの配置・クリック操作もあります。[作成ガイド](docs/javascript-tiles.md)と[API契約](docs/api-contracts.md)を参照してください。
 
 ## 使い方を共有する
 
-配置例、タイルのアイデア、不具合は [Issue](https://github.com/LastResolution/ReStart/issues/new/choose) へ。タイル、翻訳、アクセシビリティ、ランチャー本体への貢献も歓迎します。[開発参加ガイド](CONTRIBUTING.ja.md)を参照してください。
+配置例、タイルのアイデア、不具合は [Issue](https://github.com/LastResolution/ReStart/issues/new/choose) へ。タイル、翻訳、アクセシビリティ、ランチャー本体への貢献も歓迎します。[開発参加ガイド](CONTRIBUTING.md)を参照してください。
 
 <details>
 <summary><strong>初回起動と対応環境</strong></summary>
@@ -244,11 +244,11 @@ Windows 11 x64 が実機検証対象です。Windows 10 22H2 と ARM64 は対応
 
 設定・レイアウトは `%LOCALAPPDATA%\ReStart\layout.json` に保存します。直前の保存が `layout.json.bak` に残ります。壊れたファイルは保全し、利用可能ならバックアップを読み込みます。将来の形式を古い ReStart で読み込んだ場合は上書きを禁止します。
 
-設定の形式は schema 4 です。旧 schema 1～3 と同じ形式内のアプリ更新で原本バックアップを残し、設定 → レイアウトとデータに移行記録を表示します。旧形式の名前なし・1個だけのグループは単独タイルへ移行します。旧版へ戻す場合は[移行と復元](docs/ja/migration.md)に従ってください。
+設定の形式は schema 4 です。旧 schema 1～3 と同じ形式内のアプリ更新で原本バックアップを残し、設定 → レイアウトとデータに移行記録を表示します。旧形式の名前なし・1個だけのグループは単独タイルへ移行します。旧版へ戻す場合は[移行と復元](docs/migration.md)に従ってください。
 
-設定 → 情報で版・ビルド・ライセンス全文、設定 → 更新で API キー不要の公開リリース確認を使えます。自動インストールは行いません。[更新チェック](docs/ja/updates.md)を参照してください。
+設定 → 情報で版・ビルド・ライセンス全文、設定 → 更新で API キー不要の公開リリース確認を使えます。自動インストールは行いません。[更新チェック](docs/updates.md)を参照してください。
 
-横スクロールと Shift＋ホイールに対応し、端へドラッグした場合だけ作業領域を広げます。[全体の動作確認](docs/ja/fidelity.md)で、本家に基づく動作・要望による拡張・未検証を整理しています。
+横スクロールと Shift＋ホイールに対応し、端へドラッグした場合だけ作業領域を広げます。[全体の動作確認](docs/fidelity.md)で、本家に基づく動作・要望による拡張・未検証を整理しています。
 
 レイアウトにはアプリ名、起動先、ファイルやフォルダーのパスが含まれます。エクスポートする際は共有内容を確認してください。インポートしても自動起動やキーフックの設定は引き継ぎません。
 
@@ -315,7 +315,7 @@ dotnet build ReStart.slnx -c Release
 - Actions の権限を絞り、外部 Actions はコミット SHA に固定します。
 - Dependabot が NuGet と GitHub Actions の更新を提案します。
 
-詳しくは [開発への参加](CONTRIBUTING.ja.md)、[アーキテクチャ](docs/ja/architecture.md)、[検証方法](docs/ja/testing.md)、[リリース手順](docs/ja/releasing.md) を参照してください。
+詳しくは [開発への参加](CONTRIBUTING.md)、[アーキテクチャ](docs/architecture.md)、[検証方法](docs/testing.md)、[リリース手順](docs/releasing.md) を参照してください。
 
 バージョンごとの変更は [GitHub Releases](https://github.com/LastResolution/ReStart/releases) に英語で記載します。
 
@@ -325,4 +325,4 @@ dotnet build ReStart.slnx -c Release
 
 ReStart のコードは [MIT License](LICENSE) です。
 
-[セキュリティ](SECURITY.ja.md) · [サポート](SUPPORT.ja.md) · [英語表記でのブランチ保護](docs/ja/github-protection.md)
+[セキュリティ](SECURITY.md) · [サポート](SUPPORT.md) · [英語表記でのブランチ保護](docs/github-protection.md)

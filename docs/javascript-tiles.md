@@ -1,7 +1,5 @@
 # JavaScript live tiles
 
-[日本語](ja/javascript-tiles.md)
-
 ![Bundled gallery](images/live-tiles.png)
 
 Right-click the background or a group → Add live tile, or open Settings → JavaScript tiles, to choose fifteen ready-to-use packages. Adding one does not open a code editor. Connected tiles open native connection settings; no requests start until you save an enabled connection. Normal clicks send a local event; right-click to edit JS/settings, reload, configure data or select a photo folder. Create sample is an explicit authoring action that opens Notepad.

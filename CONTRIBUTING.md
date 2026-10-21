@@ -1,7 +1,5 @@
 # Contributing
 
-[日本語](CONTRIBUTING.ja.md)
-
 ReStart independently recreates Windows 10 full-screen Start. State the Windows version and primary evidence behind visual or behavioral changes. Implementation is not proof of exact fidelity.
 
 ## Workflow
@@ -49,11 +47,11 @@ Use [native fixture checks](docs/testing.md) for changed interactions. Test mean
 
 ## Text, comments and documentation
 
-Use semantic `TextKey` identifiers with all eight `Locales/*.json` catalogs; no Japanese source strings as translation keys. Update all translations and formatting tests together. OS names and user labels are not translated.
+Use semantic `TextKey` identifiers with all eight `Locales/*.json` catalogs; do not use localized text as translation keys. Update all translations and formatting tests together. OS names and user labels are not translated.
 
 Write English XML comments for public/protected APIs. CS1591 is treated as an error in App, Core and TileHost. Explain units, side effects, invariants and caller responsibilities where they matter.
 
-English documentation is primary. Maintain linked Japanese counterparts for behavior/procedures; future release notes are English only. See [localization](docs/localization.md) and [API contracts](docs/api-contracts.md).
+Maintain detailed documentation, repository policies, portable-package guidance and release notes in English. Keep README guides in all eight supported languages, mark AI-assisted translations and link them to the canonical English documentation. See [localization](docs/localization.md) and [API contracts](docs/api-contracts.md).
 
 Report ordinary defects through Issues, removing personal information from attachments. Use the [security policy](SECURITY.md) for vulnerabilities.
 

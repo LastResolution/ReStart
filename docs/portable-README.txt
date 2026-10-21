@@ -1,5 +1,5 @@
 ReStart v@VERSION@
-Full-screen Start, again. Japanese: README.ja.txt
+Full-screen Start, again.
 
 Run ReStart.exe. Keep TileHost, Examples, third-party and license notices.
 The portable package includes .NET; normal use needs no administrator rights.

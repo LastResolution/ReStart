@@ -1,7 +1,5 @@
 # API and state contracts
 
-[日本語](ja/api-contracts.md)
-
 App, Core and TileHost emit XML documentation. Missing public/protected comments fail the build (CS1591). Describe preconditions, ownership and side effects rather than repeating a member's name.
 
 | Boundary | Contract |
