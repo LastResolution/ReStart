@@ -22,6 +22,14 @@ Open **ReStart settings → Start behavior** to choose how Start responds. Each 
 
 **Animation** in Appearance controls opening, closing, tile press transitions and local folder reveal. Windows reduced-motion and high-contrast settings take precedence. Hover brightening has its own switch.
 
+## Initial layout and reset
+
+The first run creates two groups from the installed app catalog. **Everyday** selects at most one browser, mail, photo, music, store, messaging and video app; **Tools** selects up to four editor, calculator, code, drawing and terminal apps, then adds File Explorer and Windows Settings. Known app identities take priority over exact English or translated app names. Helpers, installers and unrelated apps do not qualify merely because their names contain a familiar word. Selection is deterministic and preserves each selected catalog entry's launch target.
+
+Month dots and Orbit clock are included in Everyday. Each group has at least six tiles: when installed apps are missing, distinct bundled examples fill the remaining places using local time or system metrics. Weather, feeds, arbitrary Web APIs and photo sources are not configured automatically. ReStart does not inspect document contents, scan personal folders or read Windows app-usage history to choose initial pins. File Explorer opens the current user's home folder, resolved locally at runtime.
+
+Tile and group positions are packed automatically for the available board width. This seed runs only when no saved layout exists, or when **Reset layout** is explicitly confirmed. An upgrade never replaces existing pins; a deliberately empty saved layout remains empty. Reset preserves preferences while replacing pins.
+
 ## Search
 
 App results appear immediately. Settings results cover fifteen Windows pages with translated names and English aliases. File search waits 200 ms after typing and queries only the local Windows index for up to twenty existing filesystem entries. It matches literal filenames and never recursively scans disks. A disabled/unavailable index leaves app and settings search operational and displays a localized explanation. Arrow keys and Enter always operate on the selected visible result; late file results preserve that selection.
