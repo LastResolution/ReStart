@@ -8,8 +8,9 @@ namespace ReStart.Core;
 public sealed record FolderExpansion(Tile Folder, int Row, int ChildRows, IReadOnlyList<TilePlacement> Children)
 {
     /// <summary>Measures the columns actually occupied by roots and expanded children without reserving the configured wrap width.</summary>
-    /// <param name="roots">Packed root placements of the owning group; coordinates are read without mutation.</param>
+    /// <param name="roots">Non-null packed root placements of the owning group; coordinates are read without mutation. An empty collection adds no width.</param>
     /// <returns>The rightmost occupied cell edge across roots and children, with a minimum width of one small tile cell.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="roots"/> is null.</exception>
     public int WidthInCells(IReadOnlyList<TilePlacement> roots)
         => Math.Max(1, roots.Concat(Children).Select(p => p.Column + p.Width).DefaultIfEmpty(1).Max());
 

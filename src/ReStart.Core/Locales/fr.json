@@ -67,7 +67,7 @@
   "AppFallback": "Application",
   "ErrorCatalogLoad": "Impossible de charger les applications : ",
   "PinApp": "Épingler une application",
-  "SearchPlaceholder": "Rechercher des applications",
+  "SearchPlaceholder": "Rechercher",
   "StatusLoading": "Chargement des applications…",
   "CommonImport": "Importer",
   "AppExplorer": "Explorateur de fichiers",

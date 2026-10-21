@@ -67,7 +67,7 @@
   "AppFallback": "App",
   "ErrorCatalogLoad": "Could not load apps: ",
   "PinApp": "Pin an app",
-  "SearchPlaceholder": "Search apps",
+  "SearchPlaceholder": "Search",
   "StatusLoading": "Loading apps…",
   "CommonImport": "Import",
   "AppExplorer": "File Explorer",
