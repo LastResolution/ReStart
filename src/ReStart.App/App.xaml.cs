@@ -24,7 +24,7 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        if (e.Args.Contains("--render-docs") || e.Args.Contains("--render-promo") || e.Args.Contains("--render-studio")) { await RenderDocumentationAsync(e.Args); return; }
+        if (e.Args.Contains("--render-docs") || e.Args.Contains("--render-promo") || e.Args.Contains("--render-studio") || e.Args.Contains("--verify-platform")) { await RenderDocumentationAsync(e.Args); return; }
         var preview = e.Args.Contains("--preview") || e.Args.Contains("--smoke-test");
         var smoke = e.Args.Contains("--smoke-test");
         if (preview) DispatcherUnhandledException += (_, error) =>

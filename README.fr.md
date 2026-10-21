@@ -69,6 +69,10 @@ La roue dentée permet de régler les thèmes, le lancement à l’ouverture de 
 
 [Options et valeurs par défaut (anglais)](docs/start-behavior.md) · [Compatibilité (anglais)](docs/fidelity.md)
 
+**Une disposition initiale utile.** Au premier lancement et lors d’une réinitialisation, les applications installées sont choisies par fonction à partir de leur identifiant et de leur nom traduit exact. Des tuiles hors ligne fournies, sans doublons, complètent les groupes jusqu’à six tuiles au minimum. Les dispositions enregistrées sont conservées. [Sélection et réinitialisation (anglais)](docs/start-behavior.md#initial-layout-and-reset).
+
+**Couverture mesurée de la plateforme.** Les tests natifs couvrent deux écrans à 100 % et les fournisseurs d’accessibilité de la navigation, des tuiles et de la sélection de recherche, dans huit langues et les deux thèmes. Les interactions à DPI différents, le tactile physique et la voix de Narrator nécessitent des tests distincts. [Résultats et appareils (anglais)](docs/fidelity.md#observed-platform-coverage).
+
 ## Rechercher et configurer
 
 ![Résultats d’applications, de paramètres Windows et de fichiers locaux](docs/images/unified-search.png)

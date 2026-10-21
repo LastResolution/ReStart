@@ -69,6 +69,10 @@ HTML/CSS/JavaScript 타일 19개를 제공합니다. Tile Studio에서 코드와
 
 [기능 스위치와 기본값(영어)](docs/start-behavior.md) · [호환성(영어)](docs/fidelity.md)
 
+**실용적인 초기 배치.** 첫 실행과 배치 초기화 시 앱 ID와 정확한 번역 이름을 사용해 설치된 앱을 용도별로 선택합니다. 앱이 적으면 중복되지 않는 기본 오프라인 타일로 그룹마다 최소 6개를 채웁니다. 저장된 배치는 유지됩니다. [선택 및 초기화 동작(영어)](docs/start-behavior.md#initial-layout-and-reset).
+
+**측정된 플랫폼 검증 범위.** 네이티브 검사는 100% 배율의 화면 2개와 8개 언어·두 테마의 탐색, 타일, 검색 선택 접근성 공급자를 검증합니다. 서로 다른 DPI에서의 조작, 실제 터치 입력, Narrator 음성 출력은 별도 검사가 필요합니다. [결과 및 기기 범위(영어)](docs/fidelity.md#observed-platform-coverage).
+
 ## 검색 및 구성
 
 ![앱, Windows 설정, 로컬 파일 검색 결과](docs/images/unified-search.png)

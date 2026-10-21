@@ -69,6 +69,10 @@ https://github.com/user-attachments/assets/243a5c5a-46bc-4180-8a0c-cee71ab63f06
 
 [開關與預設值（英文）](docs/start-behavior.md) · [相容性（英文）](docs/fidelity.md)
 
+**實用的初始配置。** 首次啟動及重設配置時，會依應用程式識別碼與精確的本地化名稱，按用途選擇已安裝的應用程式。數量不足時，以不重複的內建離線動態磚補足，讓每組至少有六個動態磚。已儲存的配置維持不變。[選擇與重設方式（英文）](docs/start-behavior.md#initial-layout-and-reset)。
+
+**實際量測的驗證範圍。** 原生檢查涵蓋兩個採用 100% 縮放的螢幕，以及八種語言、兩種佈景主題下導覽、動態磚和搜尋選取項目的協助工具提供者。不同 DPI 下的互動、實體觸控與 Narrator 語音仍需另外驗證。[結果與裝置涵蓋範圍（英文）](docs/fidelity.md#observed-platform-coverage)。
+
 ## 搜尋與設定
 
 ![應用程式、Windows 設定及本機檔案搜尋結果](docs/images/unified-search.png)

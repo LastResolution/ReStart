@@ -4,7 +4,19 @@ ReStart is an independent implementation inspired by late Windows 10 full-screen
 
 ## Platform
 
-Portable builds target Windows 10/11 on x64 and ARM64. Development and native automated checks run on Windows 11 x64. ARM64 hardware, Windows 10 22H2, mixed-DPI/multiple-monitor combinations, touch, Narrator and all IME/physical shortcut sequences need device testing. Automated routed/composition events establish app behavior, not physical OS input compatibility.
+Portable builds target Windows 10/11 on x64 and ARM64. Development and native automated checks run on Windows 11 x64. Connected-monitor placement and accessibility providers have reproducible native checks; their observed coverage is recorded below. Windows 10 22H2 and ARM64 hardware remain separate device targets. Automated routed/composition events and UI Automation providers do not establish physical input or spoken screen-reader behavior.
+
+### Observed platform coverage
+
+On October 22, 2026, `test-platform.ps1` passed 341 checks on Windows 11 x64 using fictional apps and isolated settings. No user catalog or account picture was loaded, no window was shown, and foreground focus was unchanged.
+
+| Area | Checked | Still to exercise |
+| --- | --- | --- |
+| Connected monitors | One native WPF host moved across two 1920×1080 displays at 100% / 96 DPI, then back; working-area bounds, native/WPF DPI agreement, DIP-to-pixel fit and point-to-monitor mapping, including negative desktop coordinates | Different DPI values on the two displays, portrait layouts, display reconnects and visible launcher/Start-button interactions |
+| Accessibility providers | Sixteen language/theme cases: all eight languages in light and dark; named invokable navigation/app-tile buttons, editable search and the named selected search result | Narrator's spoken output, announcement timing, full reading/navigation order and browser tile content |
+| Touch | Windows reports no digitizer and zero touch contacts on the test machine | Physical tap, long press, dragging, panning and edge scrolling on a touch device |
+
+Narrator is installed on the test machine. Its availability is not a completed Narrator test. UI Automation checks inspect the accessibility interface used by assistive technologies; they do not listen to speech. Likewise, setting a tile scale or rendering at a synthetic size does not count as a mixed-DPI monitor test. Rerun the [platform fixture](testing.md#platform-and-accessibility-checks) on the actual configuration being evaluated.
 
 ## Behavior
 

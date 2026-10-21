@@ -62,7 +62,7 @@ public partial class MainWindow : Window
     /// <summary>Gets the number of icons loaded for diagnostics.</summary>
     public int IconCount => _catalog.Icons.Count;
     /// <summary>Creates a localized default layout from the currently loaded app catalog.</summary>
-    /// <returns>A new seed layout based on the current app catalog with fresh copies of bundled clock/calendar packages; does not replace or save the current document.</returns>
+    /// <returns>A new seed layout selected by installed app roles, with fresh offline bundled packages filling sparse groups; does not replace or save the current document.</returns>
     public LayoutDocument CreateInitialLayout() => SeedLayout.Create(_apps, _scriptPackages);
 
     /// <summary>Hosts the full-screen launcher and coordinates local models, native input, and tile rendering.</summary>

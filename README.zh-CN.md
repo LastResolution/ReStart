@@ -69,6 +69,10 @@ https://github.com/user-attachments/assets/243a5c5a-46bc-4180-8a0c-cee71ab63f06
 
 [开关与默认值（英文）](docs/start-behavior.md) · [兼容性（英文）](docs/fidelity.md)
 
+**实用的初始布局。** 首次启动和重置布局时，会根据应用标识及精确的本地化名称，按用途选择已安装的应用。应用不足时，用不重复的内置离线磁贴补充，使每组至少有六个磁贴。已有的已保存布局保持不变。[选择与重置方式（英文）](docs/start-behavior.md#initial-layout-and-reset)。
+
+**实际测量的验证范围。** 原生检查覆盖两块采用 100% 缩放的屏幕，以及八种语言、两种主题下导航、磁贴和搜索选中项的辅助功能提供程序。不同 DPI 下的交互、实体触控和 Narrator 语音仍需单独验证。[结果与设备覆盖范围（英文）](docs/fidelity.md#observed-platform-coverage)。
+
 ## 搜索与配置
 
 ![应用、Windows 设置及本地文件搜索结果](docs/images/unified-search.png)
