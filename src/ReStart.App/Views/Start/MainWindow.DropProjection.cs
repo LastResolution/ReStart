@@ -17,6 +17,7 @@ public partial class MainWindow
         foreach (var (element, transform) in _dropTransforms) element.RenderTransform = transform;
         _dropTransforms.Clear();
         if (changed) GroupsPanel.UpdateLayout();
+        if (changed) _groupBoundaries?.InvalidateVisual();
     }
 
     private void ProjectSingleTileDrop(Tile source, SingleTileDrop drop, Point point)
