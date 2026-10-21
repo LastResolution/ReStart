@@ -446,7 +446,8 @@ public partial class MainWindow : Window
     {
         if (CollapsedFolderScroll != null)
         {
-            var available = Math.Max(48, Root.ActualHeight - 312);
+            // Four top actions, three fixed footer actions and the footer/gap margins.
+            var available = Math.Max(0, Root.ActualHeight - (4 * 48 + 3 * 48 + 24));
             CollapsedFolderScroll.MaxHeight = available; ExpandedFolderScroll.MaxHeight = available;
         }
         if (ContentScroll.ActualWidth < 1) return;
@@ -951,7 +952,7 @@ public partial class MainWindow : Window
     private bool Confirm(string text)
     {
         var result = false;
-        WithDialog(() => result = MessageBox.Show(this, text, "ReStart", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes);
+        WithDialog(() => result = ConfirmationWindow.Ask(this, text));
         return result;
     }
     private string? Prompt(string title, string value)

@@ -224,7 +224,7 @@ internal sealed partial class SettingsWindow : Window
         try
         {
             var imported = LayoutStore.Read(dialog.FileName);
-            if (MessageBox.Show(this, L.T(K.ConfirmImport), "ReStart", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+            if (!ConfirmationWindow.Ask(this, L.T(K.ConfirmImport))) return;
             // Preferences are local to this PC; importing a layout must not enable hooks or autostart.
             imported.Preferences = _main.Document.Preferences;
             _main.ReplaceDocument(imported); _dataChanged = true; _feedback.Text = L.T(K.StatusImported);
@@ -233,7 +233,7 @@ internal sealed partial class SettingsWindow : Window
     }
     private void Reset()
     {
-        if (MessageBox.Show(this, L.T(K.ConfirmReset), "ReStart", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+        if (!ConfirmationWindow.Ask(this, L.T(K.ConfirmReset))) return;
         var document = _main.CreateInitialLayout(); document.Preferences = _main.Document.Preferences;
         try { _main.ReplaceDocument(document); _dataChanged = true; _feedback.Text = L.T(K.StatusLayoutReset); }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException) { _feedback.Text = L.T(K.ErrorSave) + ex.Message; }

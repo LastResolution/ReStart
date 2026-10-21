@@ -77,10 +77,9 @@ public partial class MainWindow
         foreach (var shortcut in FolderShortcuts.Where(s => enabled.Contains(s.Id, StringComparer.OrdinalIgnoreCase)))
             foreach (var expanded in new[] { false, true })
             {
-                var button = new Button { Height = 48, Padding = new(0), ToolTip = L.T(shortcut.Label), HorizontalContentAlignment = expanded ? HorizontalAlignment.Stretch : HorizontalAlignment.Center };
+                var button = new Button { Height = 48, Padding = new(0), ToolTip = L.T(shortcut.Label), HorizontalContentAlignment = HorizontalAlignment.Stretch };
                 System.Windows.Automation.AutomationProperties.SetName(button, L.T(shortcut.Label));
-                button.Content = expanded ? new RailLabel { Glyph = shortcut.Glyph, Label = L.T(shortcut.Label) }
-                    : new TextBlock { FontFamily = new FontFamily("Segoe MDL2 Assets"), Text = shortcut.Glyph, FontSize = 18 };
+                button.Content = new RailLabel { Glyph = shortcut.Glyph, Label = expanded ? L.T(shortcut.Label) : "" };
                 button.Click += (_, _) => LaunchPath(shortcut.Target());
                 (expanded ? ExpandedFolderShortcuts : CollapsedFolderShortcuts).Children.Add(button);
             }

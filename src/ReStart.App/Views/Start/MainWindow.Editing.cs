@@ -99,7 +99,16 @@ public partial class MainWindow
     {
         if (EditModeButton == null) return;
         EditModeButton.IsEnabled = _ready && !_store.IsReadOnly;
-        EditModeButton.Content = L.T(_layoutEditing ? K.FinishLayoutEditing : K.EditLayout);
+        ExpandedEditModeButton.IsEnabled = EditModeButton.IsEnabled;
+        var label = L.T(_layoutEditing ? K.FinishLayoutEditing : K.EditLayout);
+        EditRailLabel.Label = label;
+        AutomationProperties.SetName(EditModeButton, label); AutomationProperties.SetName(ExpandedEditModeButton, label);
+        if (_layoutEditing)
+        {
+            EditModeButton.SetResourceReference(BackgroundProperty, "TileBrush");
+            ExpandedEditModeButton.SetResourceReference(BackgroundProperty, "TileBrush");
+        }
+        else { EditModeButton.Background = Brushes.Transparent; ExpandedEditModeButton.Background = Brushes.Transparent; }
         UndoButton.IsEnabled = _historyReady && _layoutHistory.CanUndo && !_store.IsReadOnly;
         RedoButton.IsEnabled = _historyReady && _layoutHistory.CanRedo && !_store.IsReadOnly;
         SelectionSummary.Text = L.F(K.SelectedTileCount, _selectedTileIds.Count) + " · " + L.T(K.LayoutEditingHint);

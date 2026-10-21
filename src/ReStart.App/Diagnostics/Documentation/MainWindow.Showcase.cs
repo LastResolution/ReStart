@@ -29,6 +29,11 @@ public partial class MainWindow
             var photo = tiles[11];
             SlideshowSource.Bind(_scriptPackages.SlideshowBindingPath(photo.ScriptId), images);
             await SaveLauncherShowcaseAsync(tiles, this, directory);
+            SaveNavigationShowcases(directory);
+            SetLayoutEditing(true);
+            foreach (var tile in Document.Groups[0].Tiles.Take(2)) ToggleTileSelection(tile.Id);
+            SaveScreenshot(Path.Combine(directory, "selection-mode.png"));
+            SetLayoutEditing(false);
             Document.Preferences.Theme = ReStart.Core.ThemeMode.Dark; ApplyAppearance(); RenderGroups(); UpdateLayout();
             ShowGroupBoundaries(true); SaveScreenshot(Path.Combine(directory, "group-placement.png")); ShowGroupBoundaries(false);
             _openFolder = Document.Groups.SelectMany(g => g.Tiles).Single(t => t.IsFolder);
@@ -53,6 +58,37 @@ public partial class MainWindow
             Require(!IsVisible, "Documentation rendering unexpectedly displayed a window.");
         }
         finally { _startupPreparing = false; _documentationNow = null; }
+    }
+
+    private void SaveNavigationShowcases(string directory)
+    {
+        foreach (var language in L.SupportedLanguages)
+            foreach (var theme in new[] { ReStart.Core.ThemeMode.Dark, ReStart.Core.ThemeMode.Light })
+                foreach (var height in new[] { 480d, 1080d })
+                {
+                    Root.Height = height;
+                    Document.Preferences.Language = language; Document.Preferences.Theme = theme;
+                    Document.Preferences.NavigationFolders = FolderShortcuts.Select(s => s.Id).ToList();
+                    ApplyAppearance(); RenderGroups(); SetRailOpen(true);
+                    Root.Measure(new(Root.Width, height)); Root.Arrange(new Rect(0, 0, Root.Width, height)); FitPanels(); UpdateLayout();
+                    Root.Measure(new(Root.Width, height)); Root.Arrange(new Rect(0, 0, Root.Width, height)); UpdateLayout();
+                    Require(NavigationGlyphsStayAligned(), "Expanded navigation moved/resized an icon in " + language + "/" + theme + "/" + height);
+                    if (language == "en" && height == 1080)
+                    {
+                        SaveScreenshot(Path.Combine(directory, $"sidebar-expanded-{theme}.png"));
+                        SetRailOpen(false); SaveScreenshot(Path.Combine(directory, $"sidebar-collapsed-{theme}.png"));
+                        var confirmation = new ConfirmationWindow(L.F(K.ConfirmDeleteGroup, "Sample group"));
+                        var content = (FrameworkElement)confirmation.Content;
+                        content.Measure(new Size(confirmation.Width, confirmation.MaxHeight));
+                        content.Arrange(new Rect(new Point(), content.DesiredSize)); content.UpdateLayout();
+                        SaveFixtureElement(confirmation, Path.Combine(directory, $"confirmation-{theme}.png"));
+                        Require(!confirmation.IsVisible, "Documentation unexpectedly displayed a confirmation window.");
+                        confirmation.Close();
+                    }
+                }
+        Root.Height = 1080;
+        Document.Preferences.Language = "en"; Document.Preferences.Theme = ReStart.Core.ThemeMode.Dark; Document.Preferences.NavigationFolders = null;
+        ApplyAppearance(); SetRailOpen(false); RenderGroups();
     }
 
     private async Task SaveSearchShowcaseAsync(string directory)

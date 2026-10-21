@@ -38,10 +38,12 @@ public partial class MainWindow
                 Check(settings.Any(a => a.LaunchTarget == "ms-settings:display"), "Localized settings search did not resolve Display.");
                 fixture.Document.Preferences.NavigationFolders = FolderShortcuts.Select(s => s.Id).ToList();
                 fixture.RefreshNavigationShortcuts(); fixture.UpdateLayout();
+                fixture.SetRailOpen(true); fixture.UpdateLayout();
                 Check(fixture.CollapsedFolderShortcuts.Children.Count == 7 && fixture.ExpandedFolderShortcuts.Children.Count == 7,
                     "Navigation shortcut preferences do not match both sidebar variants.");
                 Check(fixture.ExpandedFolderShortcuts.Children.OfType<Button>().All(b => AutomationProperties.GetName(b).Length > 0
                     && b.Content is RailLabel), "A navigation shortcut lost its accessible label or fixed icon column.");
+                Check(fixture.NavigationGlyphsStayAligned(), "Scrollable navigation shortcuts changed geometry on expansion.");
             }
             L.SetLanguage("en");
             fixture.Document.Preferences.Language = "en";

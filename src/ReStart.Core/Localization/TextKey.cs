@@ -41,8 +41,10 @@ public enum TextKey
     DropCreateGroup,
     /// <summary>Explains the pending tile-over-tile folder dwell before it is armed.</summary>
     HoldToCreateFolder,
-    /// <summary>Edit layout</summary>
+    /// <summary>Select tiles</summary>
     EditLayout,
+    /// <summary>Explains multi-selection and its shortcut while making direct dragging discoverable.</summary>
+    SelectTilesHelp,
     /// <summary>Undo</summary>
     UndoLayout,
     /// <summary>Redo</summary>
@@ -55,7 +57,7 @@ public enum TextKey
     MoveSelectedTiles,
     /// <summary>Unpin selected</summary>
     UnpinSelectedTiles,
-    /// <summary>Done</summary>
+    /// <summary>Finish selecting</summary>
     FinishLayoutEditing,
     /// <summary>{0} selected</summary>
     SelectedTileCount,
@@ -63,7 +65,7 @@ public enum TextKey
     LayoutEditingHint,
     /// <summary>Selected</summary>
     TileSelected,
-    /// <summary>Select for editing</summary>
+    /// <summary>Select tile</summary>
     SelectTileForEditing,
     /// <summary>Open folder</summary>
     OpenTileFolder,
@@ -179,7 +181,7 @@ public enum TextKey
     ErrorCatalogLoad,
     /// <summary>Pin an app</summary>
     PinApp,
-    /// <summary>Search apps</summary>
+    /// <summary>Search</summary>
     SearchPlaceholder,
     /// <summary>Loading apps…</summary>
     StatusLoading,
@@ -197,6 +199,12 @@ public enum TextKey
     AddCalendar,
     /// <summary>Cancel</summary>
     CommonCancel,
+    /// <summary>Localized confirmation dialog title.</summary>
+    CommonConfirm,
+    /// <summary>Affirmative confirmation action.</summary>
+    CommonYes,
+    /// <summary>Negative confirmation action and safe default.</summary>
+    CommonNo,
     /// <summary>Clock</summary>
     AppClock,
     /// <summary>Group:</summary>

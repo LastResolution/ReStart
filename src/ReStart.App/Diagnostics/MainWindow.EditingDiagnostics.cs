@@ -2,6 +2,8 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Automation;
+using ReStart.App.Controls;
 using ReStart.Core;
 
 namespace ReStart.App;
@@ -156,7 +158,10 @@ public partial class MainWindow
                 {
                     fixture.Document.Preferences.Language = language; fixture.Document.Preferences.Theme = theme;
                     fixture.ApplyAppearance(); fixture.RenderGroups(); fixture.UpdateLayout();
-                    Require(fixture.SelectionSummary.Text.Contains(L.T(K.LayoutEditingHint)) && Equals(fixture.EditModeButton.Content, L.T(K.FinishLayoutEditing)), "Editing chrome is not localized.");
+                    Require(fixture.SelectionSummary.Text.Contains(L.T(K.LayoutEditingHint)) && fixture.EditRailLabel.Label == L.T(K.FinishLayoutEditing)
+                        && AutomationProperties.GetName(fixture.EditModeButton) == L.T(K.FinishLayoutEditing), "Selection chrome is not localized.");
+                    Require(fixture.EditModeButton.Content is RailLabel && fixture.EditModeButton.IsDescendantOf(fixture.NavigationRail)
+                        && fixture.ExpandedEditModeButton.IsDescendantOf(fixture.ExpandedRail), "Selection mode is not available from both sidebar variants.");
                     Require(fixture.EditBar.ActualHeight > 0 && fixture.EditBar.ActualWidth <= fixture.ContentScroll.ActualWidth + 1, "The editing toolbar overflows its viewport.");
                     themes++;
                 }

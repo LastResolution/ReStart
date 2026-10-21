@@ -33,11 +33,40 @@ public partial class MainWindow
                         Check(SystemParameters.HighContrast || ColorOf("PanelBrush") == background && Contrast(ColorOf("TextBrush"), background) >= 4.5
                             && Contrast(ColorOf("TextBrush"), ColorOf("ControlBrush")) >= 4.5, "A preset surface or control lost its readable text palette.");
                         var labels = VisualChildren<RailLabel>(fixture.ExpandedRail).ToArray();
-                        Check(labels.Length == 8 && labels.All(label => label.Glyph.Length == 1 && label.Icon.FontFamily.Source == "Segoe MDL2 Assets"
+                        Check(labels.Length == 9 && labels.All(label => label.Glyph.Length == 1 && label.Icon.FontFamily.Source == "Segoe MDL2 Assets"
                             && new Typeface(label.Icon.FontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal).TryGetGlyphTypeface(out var font) && font.CharacterToGlyphMap.ContainsKey(label.Glyph[0])
                             && label.Caption.Text.Length > 0 && Math.Abs(label.Icon.TransformToAncestor(fixture.ExpandedRail).Transform(new Point(label.Icon.ActualWidth / 2, 0)).X - 24) < 1),
                             "Expanded navigation lost its symbol font, labels or aligned icon column.");
                         Check(VisualChildren<Button>(fixture.ExpandedRail).All(b => AutomationProperties.GetName(b).Length > 0), "An expanded navigation action has no accessible name.");
+                        Check(fixture.NavigationGlyphsStayAligned(), "Expanding navigation moved or resized a glyph.");
+                        if (preset.Id == "midnight" && mode is ReStart.Core.ThemeMode.Dark or ReStart.Core.ThemeMode.Light)
+                            foreach (var accept in new[] { false, true })
+                            {
+                                var question = L.F(K.ConfirmDeleteGroup, "Sample group");
+                                var confirmation = new ConfirmationWindow(question) { Owner = fixture };
+                                Exception? dialogError = null;
+                                confirmation.Loaded += (_, _) => confirmation.Dispatcher.BeginInvoke(() =>
+                                {
+                                    try
+                                    {
+                                        confirmation.UpdateLayout();
+                                        Check(((SolidColorBrush)confirmation.Background).Color == ColorOf("PanelBrush")
+                                            && ((SolidColorBrush)confirmation.Foreground).Color == ColorOf("TextBrush")
+                                            && ((SolidColorBrush)confirmation.AcceptButton.Background).Color == ColorOf("AccentBrush"), "Confirmation lost the application palette.");
+                                        Check(confirmation.CancelButton.IsDefault && confirmation.CancelButton.IsCancel && !confirmation.AcceptButton.IsDefault
+                                            && confirmation.CancelButton.IsKeyboardFocused, "Confirmation does not default safely to No.");
+                                        Check(Equals(confirmation.AcceptButton.Content, L.T(K.CommonYes)) && Equals(confirmation.CancelButton.Content, L.T(K.CommonNo))
+                                            && VisualChildren<TextBlock>(confirmation).Any(t => t.Text == question), "Confirmation actions or question are not localized.");
+                                        if (!accept && tag is "en" or "ja") SaveStartupScreenshot(confirmation, Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"confirmation-{tag}-{mode}.png"));
+                                        (accept ? confirmation.AcceptButton : confirmation.CancelButton).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                                    }
+                                    catch (Exception ex) { dialogError = ex; confirmation.Close(); }
+                                });
+                                var accepted = confirmation.ShowDialog() == true;
+                                if (dialogError != null) throw new InvalidOperationException("Confirmation fixture failed.", dialogError);
+                                Check(accepted == accept, "Confirmation returned the wrong result.");
+                                fixture.Activate();
+                            }
                         var splash = new StartupWindow(() => false) { Owner = fixture, Topmost = false };
                         try
                         {
