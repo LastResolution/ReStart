@@ -399,6 +399,7 @@ public partial class MainWindow : Window
         foreach (var runtime in _scriptSessions.Values) runtime.NextUpdate = DateTimeOffset.MinValue;
         if (_openFolder != null && (!_openFolder.IsFolder || !Document.Groups.Any(g => g.Tiles.Contains(_openFolder)))) _openFolder = null;
         GroupsPanel.ExpandedFolderId = _openFolder?.Id;
+        RememberChangingHtmlPresentations();
         GroupsPanel.Children.Clear();
         _selectionViews.Clear();
         _liveLabels.Clear();

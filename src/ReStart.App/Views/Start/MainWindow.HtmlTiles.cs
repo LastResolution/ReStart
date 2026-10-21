@@ -61,8 +61,10 @@ public partial class MainWindow
     {
         _usedHtmlTiles.Add(tile.Id);
         var offscreen = thumbnail || _preview && _documentationHtmlRendering;
+        ImageSource? retained = null;
         if (_htmlTiles.TryGetValue(tile.Id, out var previous) && previous.OffscreenOnly != offscreen)
         {
+            retained = previous.RetainedPresentation;
             _htmlTiles.Remove(tile.Id); previous.Dispose(); _scriptFrames.Remove(tile.Id);
             // Replacing the browser invalidates in-flight replies, but opening a
             // folder must retain its timer state and queued local interactions.
@@ -73,10 +75,19 @@ public partial class MainWindow
         {
             _scriptFrames.Remove(tile.Id);
             _htmlTiles[tile.Id] = view = new(_scriptPackages.BrowserDataRoot, tile.Id, offscreen);
+            view.ShowTransitionPreview(retained);
             if (_scriptSessions.TryGetValue(tile.Id, out var session)) session.NextUpdate = DateTimeOffset.MinValue;
         }
         if (view.Parent is Panel panel) panel.Children.Remove(view);
         return view;
+    }
+
+    private void RememberChangingHtmlPresentations()
+    {
+        var miniatures = Document.Groups.SelectMany(group => group.Tiles).Where(tile => tile.IsFolder && tile != _openFolder)
+            .SelectMany(folder => folder.Children.Take(4)).Select(tile => tile.Id).ToHashSet();
+        foreach (var (id, view) in _htmlTiles)
+            if (view.OffscreenOnly != (miniatures.Contains(id) || _preview && _documentationHtmlRendering)) view.RememberPresentation();
     }
 
     private void RetireHtmlTiles(bool all = false)

@@ -65,9 +65,9 @@ public partial class MainWindow
             retained.State = System.Text.Json.JsonSerializer.SerializeToElement(new { seconds = true });
             retained.Inputs.Enqueue(new("click", 123));
             _documentationHtmlRendering = false;
-            HtmlView(clock);
+            Check(HtmlView(clock).HasTransitionPreview, "Opening a live folder discarded its last visible preview before the browser was ready.");
             _documentationHtmlRendering = true;
-            HtmlView(clock, thumbnail: true);
+            Check(HtmlView(clock, thumbnail: true).HasTransitionPreview, "Closing a live folder exposed an empty browser surface during its transition.");
             Check(_scriptSessions[clock.Id].State.GetProperty("seconds").GetBoolean() && _scriptSessions[clock.Id].Inputs.Count == 1,
                 "Switching between a miniature and an interactive browser discarded state or input.");
             RenderGroups(); UpdateLayout(); await WaitForDocumentationFramesAsync();

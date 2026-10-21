@@ -27,6 +27,9 @@ internal sealed class HtmlTileView : Grid, IDisposable
     private byte[]? _imageBytes;
     private IReadOnlyDictionary<string, ScriptTilePackages.WebAsset>? _assets;
     private Image? _documentationImage;
+    private Image? _transitionImage;
+    private ImageSource? _retainedPresentation;
+    private int _visibilityGeneration;
     private HwndSource? _offscreenHost;
     private readonly bool _offscreenOnly;
     private CoreWebView2Controller? _headlessController;
@@ -44,9 +47,45 @@ internal sealed class HtmlTileView : Grid, IDisposable
             if (_disposed) return;
             if (_offscreenHost?.RootVisual == _browser)
             { _offscreenHost.RootVisual = null; _browser.Width = _browser.Height = double.NaN; Children.Insert(0, _browser); }
-            _browser.Visibility = Visibility.Visible; Core?.Resume();
+            ResumePresentation();
         };
-        IsVisibleChanged += (_, _) => { if (_disposed) return; if (IsVisible) { _browser.Visibility = Visibility.Visible; Core?.Resume(); } else _ = SuspendAsync(); };
+        IsVisibleChanged += (_, _) => { if (_disposed) return; if (IsVisible) ResumePresentation(); else _ = PauseWhenStillHiddenAsync(); };
+    }
+
+    private void ResumePresentation()
+    {
+        if (_disposed) return;
+        _visibilityGeneration++;
+        _browser.Visibility = Visibility.Visible;
+        if (_headlessController != null) _headlessController.IsVisible = true;
+        Core?.Resume();
+    }
+
+    private async Task PauseWhenStillHiddenAsync()
+    {
+        var generation = ++_visibilityGeneration;
+        // A synchronous board redraw reparents the same browser. Let that
+        // transaction finish before treating its temporary detachment as hide.
+        await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Background);
+        if (!_disposed && !IsVisible && generation == _visibilityGeneration) await SuspendAsync();
+    }
+
+    internal void RememberPresentation()
+    {
+        _retainedPresentation = _documentationImage?.Source ?? _transitionImage?.Source;
+        if (_retainedPresentation != null || ActualWidth < 1 || ActualHeight < 1 || ActualWidth > 4096 || ActualHeight > 4096) return;
+        var bitmap = new RenderTargetBitmap((int)Math.Ceiling(ActualWidth), (int)Math.Ceiling(ActualHeight), 96, 96, PixelFormats.Pbgra32);
+        bitmap.Render(this); bitmap.Freeze(); _retainedPresentation = bitmap;
+    }
+
+    internal ImageSource? RetainedPresentation => _retainedPresentation ?? _documentationImage?.Source ?? _transitionImage?.Source;
+    internal bool HasTransitionPreview => _transitionImage != null;
+
+    internal void ShowTransitionPreview(ImageSource? source)
+    {
+        if (source == null) return;
+        _transitionImage = new() { Source = source, Stretch = Stretch.Fill, IsHitTestVisible = false };
+        Children.Add(_transitionImage);
     }
 
     private async Task InitializeAsync()
@@ -156,7 +195,7 @@ internal sealed class HtmlTileView : Grid, IDisposable
             }
             await (_initialization ??= InitializeAsync()).WaitAsync(TimeSpan.FromSeconds(15));
             if (_disposed) return (null, null);
-            var core = Core!; _browser.Visibility = Visibility.Visible; core.Resume();
+            var core = Core!; ResumePresentation();
             if (_headlessController != null)
             {
                 _headlessController.IsVisible = true;
@@ -185,7 +224,14 @@ internal sealed class HtmlTileView : Grid, IDisposable
             _reply = new(); _sequence++;
             stage = "render";
             core.PostWebMessageAsJson(JsonSerializer.Serialize(new { sequence = _sequence, context }, ScriptTileProtocol.Json));
-            return (await _reply.Task.WaitAsync(TimeSpan.FromSeconds(3)), null);
+            var frame = await _reply.Task.WaitAsync(TimeSpan.FromSeconds(3));
+            if (!_offscreenOnly && _transitionImage is { } transition)
+            {
+                await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Render);
+                await Task.Delay(60);
+                if (!_disposed && _transitionImage == transition) { Children.Remove(transition); _transitionImage = null; }
+            }
+            return (frame, null);
         }
         catch (Exception ex) when (ex is InvalidOperationException or IOException or UnauthorizedAccessException or InvalidDataException or TimeoutException or System.Runtime.InteropServices.COMException or WebView2RuntimeNotFoundException)
         { return (null, ex is WebView2RuntimeNotFoundException ? TextCatalog.T(K.ErrorWebTileRuntime) : ex.Message + " (" + stage + ")"); }
@@ -252,6 +298,7 @@ internal sealed class HtmlTileView : Grid, IDisposable
         if (_headlessController != null) _headlessController.IsVisible = false;
         try { await Core.TrySuspendAsync(); }
         catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException) { }
+        if (!_disposed && IsVisible) ResumePresentation();
     }
 
     internal async Task CaptureAsync(Stream stream)
@@ -276,6 +323,7 @@ internal sealed class HtmlTileView : Grid, IDisposable
         if (_documentationImage != null) Children.Remove(_documentationImage);
         _documentationImage = new() { Source = image, Stretch = Stretch.Fill, IsHitTestVisible = false };
         Children.Add(_documentationImage);
+        if (_transitionImage != null) { Children.Remove(_transitionImage); _transitionImage = null; }
     }
 
     public void Dispose()
