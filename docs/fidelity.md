@@ -21,7 +21,7 @@ Portable builds target Windows 10/11 on x64 and ARM64. Development and native au
 | Desktop integration | Reversible Windows-key and Start-button capture, tray, optional sign-in startup and Explorer pin commands; no shell injection |
 | Motion | Separate window fade, bottom-anchored zoom and bottom-to-top tile reveal; animated dismissal, interrupted reopen and reduced-motion support |
 | Appearance | Dark, light, system and high contrast; wallpaper blur/tint approximates the original composition |
-| Live tiles | Local clock/calendar and JavaScript packages, including opt-in cached Web API/feed/file inputs; these are ReStart extensions, without legacy UWP notifications or background delivery |
+| Live tiles | Local clock/calendar, native JS compatibility and HTML/CSS/browser JavaScript packages, including opt-in cached Web API/feed/file inputs; these are ReStart extensions, without legacy UWP notifications or background delivery |
 | App history | Optional Recently added and Most used, based on local discovery dates and opt-in successful ReStart launches. Existing apps are baselined; history can be cleared. Windows usage history is not imported |
 | Data | Schema migration with original-file backups and protection against newer producers; no direct Windows layout import |
 | Updates | Public GitHub Releases without an API key; manual installation |
@@ -42,6 +42,10 @@ The [November 2019 announcement](https://blogs.windows.com/windowsexperience/201
 
 Drag intent uses a 300 ms dwell for independent-tile groups and 600 ms for new folders inside a group. Folder overlap enters at 65% and retains the current target down to 55%; independent groups use 40%/30%. These are ReStart choices, not recovered shell constants. Preview captions and progress can be hidden. Edge scrolling follows a stationary viewport pointer without committing preview coordinates.
 
+Ordinary single-tile drops project displaced tiles and neighboring groups before committing, including inside open folders. The projection uses the same layout operations as a drop, keeps live browser instances, and restores the original visuals on cancellation. Overlap recipients remain stationary during group/folder intent detection so that moving feedback cannot change the target underneath the pointer.
+
+Tiles, groups, app-list rows and multiple selections use a translucent pointer-following snapshot while their original views are dimmed. The grab position and relative selection geometry are retained; oversized selections scale down to a bounded preview. This is a ReStart interaction improvement. The overlay never receives input, and leaving the launcher or cancelling a drag hides it without changing the layout.
+
 File queries use the local Windows SystemIndex with a 200 ms debounce, literal filename matching and a maximum of twenty existing local filesystem entries. There is no recursive fallback scan or remote search. The fifteen settings entry points support localized names and English aliases, rather than reproducing the complete Windows settings index.
 
 The public [IApplicationDocumentLists interface](https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nn-shobjidl_core-iapplicationdocumentlists) exposes Recent/Frequent only and needs an authoritative app identity. Unknown identities, disabled Windows history and unsupported command-bearing links contribute no destinations. Application task lists and custom/pinned categories are outside that API. Canonical app commands remain available separately.
@@ -51,3 +55,5 @@ See [Start behavior](start-behavior.md) for feature switches, defaults and local
 - [Microsoft: Make Start full screen](https://blogs.windows.com/windowsexperience/2017/09/11/windows-10-tip-make-start-full-screen/)
 - [Microsoft: Full-screen Start layout changes in build 10547](https://blogs.windows.com/windows-insider/2015/09/18/announcing-windows-10-insider-preview-build-10547/)
 - [Microsoft: Windows 10 Start layout](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/configuration/customize-and-export-start-layout)
+
+Placement locks, full keyboard placement editing, Tile Studio, separate owned background images and browser live tiles are ReStart extensions. They are not claims about the Windows 10 shell. Nineteen web examples are checked at four sizes and in eight languages through a real hidden browser fixture; browser sandbox restrictions and runtime requirements are documented in the tile guide.

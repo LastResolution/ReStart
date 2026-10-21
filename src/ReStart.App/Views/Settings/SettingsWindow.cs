@@ -89,6 +89,7 @@ internal sealed partial class SettingsWindow : Window
         Note(content, L.T(K.SettingsPrivacy));
         BuildMigrationInfo(content);
         content = Section(L.T(K.SettingsScriptTiles));
+        Check(content, L.T(K.ShowLiveTileNames), _draft.ShowLiveTileNames, v => _draft.ShowLiveTileNames = v);
         Heading(content, L.T(K.BundledTiles));
         var bundled = new WrapPanel { Margin = new(0, 0, 0, 16) };
         foreach (var id in ScriptTilePackages.BundledIds)
@@ -127,7 +128,7 @@ internal sealed partial class SettingsWindow : Window
         Note(content, L.T(K.SystemMetricsHelp));
         Note(content, L.T(K.ScriptAuthoringHelp));
         var scriptButtons = new WrapPanel();
-        DataButton(scriptButtons, L.T(K.CreateScriptSample), () => { _main.CreateScriptTile(); _feedback.Text = L.T(K.StatusScriptAdded); });
+        DataButton(scriptButtons, L.T(K.StudioTitle), () => _main.OpenTileStudio(owner: this));
         DataButton(scriptButtons, L.T(K.ImportScriptTile), () => { _main.ImportScriptTile(); });
         content.Children.Add(scriptButtons);
         Note(content, L.T(K.ScriptCapabilitiesHelp));
@@ -177,6 +178,19 @@ internal sealed partial class SettingsWindow : Window
         var button = new Button { Content = label, Margin = new(0, 0, 8, 6), Background = Resource("TileBrush") };
         button.Click += (_, _) => action(); panel.Children.Add(button); return button;
     }
+    private void OpenExternal(string target)
+    {
+        try
+        {
+            ShellLauncher.Launch(target);
+            // A modal owner remains topmost while its dialog is open. Close the
+            // dialog first, then dismiss Start after ShowDialog has unwound.
+            Closed += (_, _) => _main.Dispatcher.BeginInvoke(() => _main.Dismiss(immediately: true));
+            Close();
+        }
+        catch (Exception ex) when (ex is IOException or InvalidOperationException or System.ComponentModel.Win32Exception)
+        { _feedback.Text = ex.Message; }
+    }
     internal void SelectSection(string name)
     {
         var button = _sectionButtons[name];
@@ -185,7 +199,7 @@ internal sealed partial class SettingsWindow : Window
     }
     private void Save(object sender, RoutedEventArgs e)
     {
-        if (!ValidateColors()) return;
+        if (!ValidateColors() || !ValidateBackgroundImage()) return;
         var previous = _main.Document.Preferences;
         StartupRegistration.Entry? registration = null;
         try

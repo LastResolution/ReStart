@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "title": "CPU pulse",
   "localizedTitles": {
     "en": "CPU pulse",
@@ -53,5 +53,6 @@
         "waiting": "正在取得資料"
       }
     }
-  }
+  },
+  "renderer": "web"
 }

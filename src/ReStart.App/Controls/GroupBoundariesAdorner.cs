@@ -16,7 +16,9 @@ internal sealed class GroupBoundariesAdorner(GroupBoardPanel board) : Adorner(bo
         foreach (var placement in board.Placements.Where(p => !p.Group.IsStandalone && (ShowAll || p.Group == HoveredGroup)))
         {
             var brush = ((Brush)board.FindResource("TextBrush")).CloneCurrentValue();
-            var bounds = new Rect(placement.Left, placement.Top, placement.Width, placement.Height);
+            var view = board.Children.OfType<FrameworkElement>().FirstOrDefault(element => ReferenceEquals(element.Tag, placement.Group));
+            var origin = view?.TranslatePoint(new(), board) ?? new Point(placement.Left, placement.Top);
+            var bounds = new Rect(origin, new Size(placement.Width, placement.Height));
             if (ShowAll)
             {
                 brush.Opacity = .25;

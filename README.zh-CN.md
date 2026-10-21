@@ -10,13 +10,27 @@
 
 > **AI 翻译：** 本指南使用 AI 从英文翻译，可能存在错误。[英文 README](README.md) 为主要参考，包含更多示例。欢迎修正翻译。截图使用英文演示环境和示例数据。
 
-<p align="center"><strong>观看 29 秒演示</strong><br><sub>1080p · 英文 · 无音频</sub></p>
+<p align="center"><strong>观看 60 秒演示</strong><br><sub>1080p · 英文 · 无音频</sub></p>
 
-https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
+[![ReStart product demonstration](docs/images/demo-poster.png)](https://github.com/LastResolution/ReStart/releases/download/v1.5.0/ReStart-demo.mp4)
 
 怀念 Windows 10 的全屏开始菜单？ReStart 在 Windows 11 和 Windows 10 上为应用提供熟悉的空间。固定常用内容，自由安排布局，再加入可以用 JavaScript 编写的动态磁贴。
 
 **便携 · JavaScript 动态磁贴 · x64 和 ARM64 · 八种语言 · 无需单独安装 .NET**
+
+## 更多布局控制与创作空间
+
+可锁定全部布局或单个组。Ctrl+Shift+L 切换全局锁定；Ctrl+E 选择磁贴，Ctrl+方向键移动磁贴，Ctrl+Shift+方向键移动组，Alt+1–4 更改大小，Ctrl+G 将所选磁贴分组，Shift+F10 打开菜单。仍支持撤销/重做。还可保存独立于桌面的背景图片。
+
+内置 19 个 HTML/CSS/JavaScript 磁贴。Tile Studio 可编辑源码和清单，使用离线示例数据预览四种大小，再保存草稿或固定磁贴。新增天气风景、系统仪表板、RSS 新闻看板和 Canvas 花园；SVG 时钟指针按电脑时间运行。磁贴名称默认显示，可在设置中隐藏。
+
+拖动时，磁贴、分组或多选项目的半透明副本会跟随指针。蓝色标记指示目标位置，被挤开的磁贴也会在放下前预览新位置。
+
+![Tile Studio: HTML, CSS and JavaScript with four live previews](docs/images/tile-studio.png)
+
+![Weather scene, System dashboard, News board and Canvas garden](docs/images/web-examples.png)
+
+**编辑器操作：** 支持 JavaScript、HTML、CSS 和 JSON 语法高亮，**Tab / Shift+Tab** 缩进，以及 **Format document / Ctrl+Shift+F** 离线格式化；一次撤销即可恢复。Feed headlines 和 News board 在磁贴内部滚动。关闭的文件夹显示大小一致的动态预览。初始和重置布局使用随附的 Month dots 和 Orbit clock。可选的启动更新检查会通过可关闭的通知提示新版本。
 
 ## 快速开始
 
@@ -45,7 +59,7 @@ https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
 | 启动选项 | 每个磁贴独立启用、参数、工作目录、受支持桌面应用/快捷方式的管理员运行；Windows 负责 UAC |
 | 导航 | 可选悬停展开、单独选择文档/下载/音乐/图片/视频/网络/个人文件夹、账户和电源操作 |
 | 外观 | 五种色系及各自的明暗变体、系统模式、自定义 RGB 背景/强调色、桌面壁纸、开始菜单着色、单个磁贴颜色、主题控件/滚动条、高对比度、可选动画 |
-| 动态磁贴 | 15 个 JavaScript 示例、四种响应式尺寸、本地点击动作、实时更新开关、数据配置、创建示例、导入包、自动监视本地库 |
+| 动态磁贴 | 19 个 JavaScript 示例、四种响应式尺寸、本地点击动作、实时更新开关、数据配置、创建示例、导入包、自动监视本地库 |
 | 磁贴 API | 电脑时间、语言/尺寸、保留状态、CPU/内存/网络/电池/存储、所选照片、缓存 JSON/Web API/RSS/Atom/文件输入、本地应用集成 |
 | 语言 | 英语、日语、德语、法语、西班牙语、韩语、简体中文、繁体中文，包括内置磁贴文案 |
 | 数据和更新 | 本地设置、布局导入/导出/重置、备份和迁移、可清除的应用活动、版本/构建/许可证、无需 API 密钥的更新检查和手动安装 |
@@ -78,7 +92,7 @@ https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
 
 **天气初始使用柏林示例坐标，不是电脑的位置。** ReStart 不推测你的地区。请按[天气指南](docs/javascript-tiles.md#weather-location)修改坐标和显示名称。凭据按当前 Windows 用户加密并排除在布局导出之外。连接失败时可显示缓存；隐藏开始菜单后停止读取。
 
-自定义磁贴由 `manifest.json` 和 `tile.js` 组成。`render(ctx)` 接收有界的数据快照并返回原生显示数据，可按尺寸改变布局。JavaScript 没有通用文件、网络或 CLR 访问权限。把包文件夹放入 `%LOCALAPPDATA%\ReStart\TileLibrary` 即可自动发现。[示例](examples/tiles) · [JavaScript API（英文）](docs/javascript-tiles.md) · [本地数据生成示例](examples/integrations/write-tile-data.ps1)
+Web 磁贴包含 manifest.json、index.html、tile.css、tile.js 及可选 assets。在四种固定大小内可自由使用 HTML/CSS、SVG、Canvas 和透明背景，仍兼容原生 JS 包。需要 WebView2 Runtime；直接联网必须声明能力并逐磁贴授权，不提供通用文件、CLR 或 shell 桥接。 [HTML/CSS/JavaScript API](docs/javascript-tiles.md) · [Examples](examples/tiles)
 
 ## 操作
 

@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "title": "Focus cycle",
   "localizedTitles": {
     "en": "Focus cycle",
@@ -69,5 +69,6 @@
     },
     "focusMinutes": 25,
     "restMinutes": 5
-  }
+  },
+  "renderer": "web"
 }

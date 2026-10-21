@@ -34,7 +34,7 @@ internal sealed partial class SettingsWindow
         else Note(panel, L.T(K.MigrationNone));
         Note(panel, L.T(K.MigrationRollbackHelp));
         var actions = new WrapPanel();
-        var open = DataButton(actions, L.T(K.OpenDataFolder), () => ShellLauncher.Launch(Path.GetDirectoryName(_store.FilePath)!));
+        var open = DataButton(actions, L.T(K.OpenDataFolder), () => OpenExternal(Path.GetDirectoryName(_store.FilePath)!));
         open.IsEnabled = !_main.IsPreview;
         panel.Children.Add(actions);
     }

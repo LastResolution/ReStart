@@ -65,6 +65,7 @@ jobs:
           ./scripts/smoke.ps1 -Executable $executable
           ./scripts/test-lifecycle.ps1 -Executable $executable
           ./scripts/test-bundled-tiles.ps1 -Executable $executable
+          ./scripts/test-studio.ps1 -Executable $executable
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ReStart-${{ matrix.runtime }}

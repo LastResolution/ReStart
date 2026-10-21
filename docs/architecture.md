@@ -7,7 +7,7 @@ ReStart is a WPF desktop launcher. It owns its layout, search and live-tile prot
 | Project | Responsibility |
 | --- | --- |
 | `ReStart.Core` | Models, tile/group geometry, layout mutations, search, localization, persistence, release parsing and input state |
-| `ReStart.App` | WPF views, shell catalog/commands, hooks, tray, settings, update checks and worker lifetime |
+| `ReStart.App` | WPF views, shell catalog/commands, hooks, tray, settings, update checks and worker/browser lifetime and Tile Studio |
 | `ReStart.TileHost` | Jint worker exchanging bounded JSON messages |
 | `ReStart.Core.Tests` | Domain invariants, persistence recovery, update feeds and isolated Windows integration tests |
 | `scripts` / `.github` | Native fixtures, portable packages, CI and releases |
@@ -138,3 +138,13 @@ Typed `TextKey` references resolve eight embedded JSON catalogs. Custom labels a
 Visible live tiles share four workers, a fresh Jint realm per render, and bounded JSON input/output over current-user-only asynchronous named pipes. The parent enforces a timeout independently of pipe cancellation and owns resource-limited Job Objects. Hiding Start retires workers; successful JSON state survives hiding but resets on reload/exit. Capability-gated host samplers and selected-folder images never expose general file/network APIs. A watched library discovers metadata without executing sources. This is process isolation, not an OS privilege sandbox. See [the API guide](javascript-tiles.md).
 
 The optional data.sources path is owned by the UI host, outside Jint: TileDataTransport shares four bounded asynchronous read slots; TileDataSource coalesces requests, revalidates, backs off and retains the last good snapshot. ScriptDataRuntime adapts named inputs to JSON context and cancels them when hidden. ScriptDataBindings encrypts explicit connections with current-user DPAPI in data-bindings.dat. Import/export never transfers those bindings. No JS-provided runtime URL is accepted and no response triggers shell execution.
+
+## Web tiles and authoring
+
+Version 2 packages use `HtmlTileView`, backed by WebView2 composition controls so browser surfaces remain inside WPF selection, drag, clipping and focus visuals. Views are cached by tile ID across board redraws, reparented on the dispatcher, suspended on hide and disposed on retirement. Each has a generated HTTPS origin; a resource handler serves explicit in-memory package files/assets and an optional opaque image. It never maps the installed folder. A JSON message bridge delivers context/state and optional synthetic clicks; no CLR/OS object is exposed. Declared direct networking also needs an installed-tile grant. Imports retain only grants already present for matching local tile/package IDs.
+
+Native version 1 packages continue through the isolated worker pool. Scheduling tracks each tile independently: an awaiting tile does not prevent another due tile from updating. A short dispatcher poll avoids missing a one-second deadline by a few milliseconds. Browser clocks/Canvas may animate locally between snapshots; the Orbit dial reads PC wall time rather than an old queued snapshot, and respects reduced motion.
+
+Tile Studio owns source editors, offline sample context and four preview sessions. Web previews always disable direct networking and never read saved bindings or user files. Library and installed saves validate UTF-8 limits and replace a manifest last with rollback, preserving stable installed IDs and host bindings. The package owns HTML/CSS; the host owns tile footprint, selection and integration.
+
+Global/group placement locks are preferences outside undo history. Core planning checks effective geometry and membership before committing; keyboard editing and drag/drop share the persistence gate. Separate backgrounds are decoded into managed GUID-named PNGs, without storing their original paths. Account pictures come from read-only Windows account metadata, with glyph fallback; synthetic preview mode never reads them. A session whose persisted layout is externally deleted cannot silently recreate it on exit.

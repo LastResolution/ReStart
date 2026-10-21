@@ -15,8 +15,11 @@ Normal tile/group dragging is always available. Drag a selection together;
 Move to group collects it into a compact block. Finish selecting leaves the mode.
 Ctrl+Z undoes layout edits; Ctrl+Y or Ctrl+Shift+Z redoes. History is session-only.
 Type immediately to search. Explorer: Pin to ReStart (Windows 11: Show more options).
-Settings -> JavaScript tiles: fifteen bundled examples. Normal click operates
-the tile; use right-click to edit JS/settings or choose a photo folder.
+Settings -> JavaScript tiles: nineteen HTML/CSS/JavaScript examples. Normal click operates
+the tile; use Tile Studio to edit and preview all four sizes, or choose a photo folder.
+HTML tiles require Microsoft Edge WebView2 Runtime (installed separately by Microsoft).
+Legacy native JS packages remain supported. Tile names are shown by default and
+can be hidden in settings; direct web networking requires per-tile permission.
 Host APIs provide PC time, aggregate metrics and opt-in cached Web API/feed/file data.
 Configure data sources sets the URL/file and optional credential, encrypted locally.
 Weather defaults to Berlin coordinates, not the PC location; see the online tile guide.

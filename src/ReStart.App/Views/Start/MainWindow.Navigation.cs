@@ -70,6 +70,8 @@ public partial class MainWindow
 
     private void RefreshNavigationShortcuts()
     {
+        var picture = _preview || SystemParameters.HighContrast ? null : ReStart.App.Services.AccountPictureSource.Current();
+        CollapsedAccountLabel.Picture = picture; UserRailLabel.Picture = picture;
         if (!Document.Preferences.ExpandNavigationOnHover) _railHoverTimer?.Stop();
         if (CollapsedFolderShortcuts == null) return;
         CollapsedFolderShortcuts.Children.Clear(); ExpandedFolderShortcuts.Children.Clear();

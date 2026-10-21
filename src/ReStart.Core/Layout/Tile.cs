@@ -3,6 +3,8 @@ namespace ReStart.Core;
 /// <summary>Stores a persistent root tile or one-level folder child.</summary>
 public sealed class Tile
 {
+    /// <summary>Gets or sets explicit permission for a web tile's declared network capability; false blocks browser network requests.</summary>
+    public bool AllowWebNetwork { get; set; }
     /// <summary>Gets or sets a stable identifier unique within the layout.</summary>
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     /// <summary>Gets or sets the source application identity or built-in tile identity.</summary>

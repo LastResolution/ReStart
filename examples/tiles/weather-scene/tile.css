@@ -1,0 +1,302 @@
+* {
+    box-sizing: border-box;
+}
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent;
+}
+body {
+    font:
+        calc(12px * var(--tile-scale, 1)) "Segoe UI",
+        sans-serif;
+    color: #f3f8ff;
+}
+.tile {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    padding: calc(11px * var(--tile-scale, 1));
+    display: flex;
+    flex-direction: column;
+    gap: calc(6px * var(--tile-scale, 1));
+}
+.tile-name {
+    font-size: calc(12px * var(--tile-scale, 1));
+    line-height: calc(15px * var(--tile-scale, 1));
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: auto;
+    position: relative;
+    z-index: 2;
+}
+html[data-show-title="false"] .tile-name {
+    display: none;
+}
+.kicker {
+    font-size: calc(10px * var(--tile-scale, 1));
+    opacity: 0.75;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.value {
+    font-size: calc(30px * var(--tile-scale, 1));
+    font-weight: 300;
+    line-height: 1.06;
+}
+html[data-size="small"] .tile {
+    padding: calc(5px * var(--tile-scale, 1));
+}
+html[data-size="small"] .tile-name,
+html[data-size="small"] .kicker {
+    display: none;
+}
+html[data-reduced-motion="true"] *,
+html[data-reduced-motion="true"] *::before,
+html[data-reduced-motion="true"] *::after {
+    animation: none !important;
+    transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+.sky {
+    background: linear-gradient(145deg, #087ea8, #102a55);
+}
+.sun {
+    position: absolute;
+    width: calc(68px * var(--tile-scale, 1));
+    height: calc(68px * var(--tile-scale, 1));
+    border-radius: 50%;
+    background: #ffda78;
+    right: 12%;
+    top: 12%;
+    box-shadow: 0 0 calc(45px * var(--tile-scale, 1)) #ffe8ad44;
+    animation: sun-breathe 4s ease-in-out infinite alternate;
+}
+.cloud {
+    position: absolute;
+    right: 4%;
+    top: 31%;
+    width: calc(90px * var(--tile-scale, 1));
+    height: calc(30px * var(--tile-scale, 1));
+    border-radius: calc(40px * var(--tile-scale, 1));
+    background: #d2e8ef;
+    opacity: 0;
+}
+.cloud::before,
+.cloud::after {
+    content: "";
+    position: absolute;
+    background: inherit;
+    border-radius: 50%;
+    width: calc(38px * var(--tile-scale, 1));
+    height: calc(38px * var(--tile-scale, 1));
+    top: calc(-18px * var(--tile-scale, 1));
+    left: calc(14px * var(--tile-scale, 1));
+}
+.cloud::after {
+    width: calc(49px * var(--tile-scale, 1));
+    height: calc(49px * var(--tile-scale, 1));
+    top: calc(-26px * var(--tile-scale, 1));
+    left: calc(35px * var(--tile-scale, 1));
+}
+.rain {
+    position: absolute;
+    right: 9%;
+    top: 52%;
+    width: calc(60px * var(--tile-scale, 1));
+    height: calc(35px * var(--tile-scale, 1));
+    background: repeating-linear-gradient(
+        110deg,
+        transparent 0 calc(10px * var(--tile-scale, 1)),
+        #8ad4f2 calc(10px * var(--tile-scale, 1))
+            calc(12px * var(--tile-scale, 1)),
+        transparent calc(12px * var(--tile-scale, 1))
+            calc(20px * var(--tile-scale, 1))
+    );
+    opacity: 0;
+}
+.weather-copy {
+    margin-top: auto;
+    margin-bottom: auto;
+    position: relative;
+    z-index: 1;
+    width: 62%;
+}
+#wind {
+    font-size: calc(10px * var(--tile-scale, 1));
+    opacity: 0.8;
+    margin-top: calc(7px * var(--tile-scale, 1));
+}
+.sky[data-weather="cloud"] .cloud,
+.sky[data-weather="rain"] .cloud,
+.sky[data-weather="snow"] .cloud {
+    opacity: 0.9;
+}
+.sky[data-weather="rain"] .rain {
+    opacity: 0.7;
+    animation: rain-fall 0.7s linear infinite;
+}
+.sky[data-weather="rain"],
+.sky[data-weather="snow"] {
+    background: linear-gradient(145deg, #3b6478, #202c47);
+}
+.sky[data-weather="rain"] .sun,
+.sky[data-weather="snow"] .sun {
+    opacity: 0.15;
+}
+[data-size="medium"] .value {
+    font-size: calc(25px * var(--tile-scale, 1));
+}
+[data-size="medium"] #wind {
+    display: none;
+}
+[data-size="small"] .value {
+    font-size: calc(16px * var(--tile-scale, 1));
+}
+[data-size="small"] .sun {
+    width: calc(24px * var(--tile-scale, 1));
+    height: calc(24px * var(--tile-scale, 1));
+    right: calc(4px * var(--tile-scale, 1));
+    top: calc(4px * var(--tile-scale, 1));
+}
+[data-size="small"] .weather-copy {
+    width: 100%;
+    margin-top: auto;
+    margin-bottom: 0;
+}
+[data-size="small"] .cloud,
+[data-size="small"] .rain,
+[data-size="small"] #wind {
+    display: none;
+}
+@keyframes sun-breathe {
+    to {
+        transform: scale(1.06);
+    }
+}
+@keyframes rain-fall {
+    to {
+        background-position: calc(-20px * var(--tile-scale, 1))
+            calc(12px * var(--tile-scale, 1));
+    }
+}
+
+/* Reserve the name row before sizing the weather content. */
+.sky {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+}
+.weather-copy {
+    margin: 0;
+    align-self: center;
+}
+.sky .tile-name {
+    margin-top: 0;
+}
+[data-size="wide"] .weather-copy .value {
+    font-size: calc(26px * var(--tile-scale, 1));
+    line-height: 1.02;
+}
+[data-size="wide"] .weather-copy .kicker {
+    font-size: calc(9px * var(--tile-scale, 1));
+    line-height: calc(11px * var(--tile-scale, 1));
+}
+[data-size="wide"] #wind {
+    font-size: calc(9px * var(--tile-scale, 1));
+    line-height: calc(11px * var(--tile-scale, 1));
+    margin-top: calc(3px * var(--tile-scale, 1));
+}
+
+/* Artwork is clipped to its own column, away from the readable copy. */
+.weather-art {
+    container-type: size;
+    position: absolute;
+    left: 57%;
+    right: 0;
+    top: 0;
+    bottom: calc(29px * var(--tile-scale, 1));
+    overflow: hidden;
+    pointer-events: none;
+}
+.weather-copy {
+    width: 55%;
+}
+.weather-copy .value,
+#wind {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.weather-art .sun {
+    width: min(72cqw, 70cqh);
+    height: min(72cqw, 70cqh);
+    aspect-ratio: 1;
+    right: 13%;
+    top: 12%;
+    box-shadow: none;
+}
+.weather-art .cloud {
+    width: 90%;
+    height: 26%;
+    right: 0;
+    top: 41%;
+}
+.weather-art .cloud::before {
+    width: 44%;
+    height: auto;
+    aspect-ratio: 1;
+    top: -50%;
+    left: 9%;
+}
+.weather-art .cloud::after {
+    width: 54%;
+    height: auto;
+    aspect-ratio: 1;
+    top: -74%;
+    left: 37%;
+}
+.weather-art .rain {
+    width: 75%;
+    height: 27%;
+    right: 7%;
+    top: 66%;
+}
+[data-size="medium"] .weather-copy {
+    width: 53%;
+}
+[data-size="medium"] .weather-art {
+    left: 58%;
+    bottom: calc(26px * var(--tile-scale, 1));
+}
+[data-size="medium"] .value {
+    font-size: calc(20px * var(--tile-scale, 1));
+}
+[data-size="small"] .weather-art {
+    left: 60%;
+    top: 0;
+    bottom: 45%;
+}
+[data-size="small"] .weather-art .sun {
+    top: 10%;
+}
+[data-size="small"] .weather-copy {
+    width: 100%;
+    align-self: end;
+}
+html[data-show-title="false"] .weather-art {
+    bottom: 0;
+}

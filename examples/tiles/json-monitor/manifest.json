@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "title": "JSON monitor",
   "localizedTitles": {
     "en": "JSON monitor",
@@ -76,5 +76,6 @@
         "cached": "快取"
       }
     }
-  }
+  },
+  "renderer": "web"
 }

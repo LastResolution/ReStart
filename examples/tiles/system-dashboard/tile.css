@@ -1,0 +1,222 @@
+* {
+    box-sizing: border-box;
+}
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent;
+}
+body {
+    font:
+        calc(12px * var(--tile-scale, 1)) "Segoe UI",
+        sans-serif;
+    color: #f3f8ff;
+}
+.tile {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    padding: calc(11px * var(--tile-scale, 1));
+    display: flex;
+    flex-direction: column;
+    gap: calc(6px * var(--tile-scale, 1));
+}
+.tile-name {
+    font-size: calc(12px * var(--tile-scale, 1));
+    line-height: calc(15px * var(--tile-scale, 1));
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: auto;
+    position: relative;
+    z-index: 2;
+}
+html[data-show-title="false"] .tile-name {
+    display: none;
+}
+.kicker {
+    font-size: calc(10px * var(--tile-scale, 1));
+    opacity: 0.75;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.value {
+    font-size: calc(30px * var(--tile-scale, 1));
+    font-weight: 300;
+    line-height: 1.06;
+}
+html[data-size="small"] .tile {
+    padding: calc(5px * var(--tile-scale, 1));
+}
+html[data-size="small"] .tile-name,
+html[data-size="small"] .kicker {
+    display: none;
+}
+html[data-reduced-motion="true"] *,
+html[data-reduced-motion="true"] *::before,
+html[data-reduced-motion="true"] *::after {
+    animation: none !important;
+    transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+.dashboard {
+    background: linear-gradient(125deg, #102f36, #11223c);
+}
+.meters {
+    display: flex;
+    gap: calc(12px * var(--tile-scale, 1));
+    justify-content: space-around;
+    flex: 1;
+    align-items: center;
+}
+.meter {
+    display: grid;
+    justify-items: center;
+    gap: calc(4px * var(--tile-scale, 1));
+    font-size: calc(10px * var(--tile-scale, 1));
+    min-width: 0;
+}
+.dial {
+    --progress: 0;
+    --color: #56ded0;
+    position: relative;
+    width: calc(66px * var(--tile-scale, 1));
+    height: calc(66px * var(--tile-scale, 1));
+    border-radius: 50%;
+    background: conic-gradient(
+        var(--color) calc(var(--progress) * 1%),
+        #ffffff12 0
+    );
+    display: grid;
+    place-items: center;
+}
+.dial::before {
+    content: "";
+    position: absolute;
+    inset: calc(5px * var(--tile-scale, 1));
+    border-radius: 50%;
+    background: #142e3b;
+}
+.dial .value {
+    position: relative;
+    z-index: 1;
+    font-size: calc(20px * var(--tile-scale, 1));
+}
+.memory .dial {
+    --color: #b7acff;
+}
+.network {
+    display: flex;
+    gap: calc(8px * var(--tile-scale, 1));
+    font-size: calc(10px * var(--tile-scale, 1));
+    flex-wrap: wrap;
+}
+.network > span:last-of-type {
+    margin-left: auto;
+}
+.traffic-track {
+    width: 100%;
+    height: calc(3px * var(--tile-scale, 1));
+    background: #ffffff18;
+}
+.traffic-track i {
+    display: block;
+    width: var(--traffic, 0%);
+    height: 100%;
+    background: #82d5ff;
+    transition: width 0.6s;
+}
+[data-size="large"] .dial {
+    width: calc(80px * var(--tile-scale, 1));
+    height: calc(80px * var(--tile-scale, 1));
+}
+[data-size="medium"] .network,
+[data-size="medium"] .kicker {
+    display: none;
+}
+[data-size="medium"] .dial {
+    width: calc(35px * var(--tile-scale, 1));
+    height: calc(35px * var(--tile-scale, 1));
+}
+[data-size="medium"] .dial .value {
+    font-size: calc(13px * var(--tile-scale, 1));
+}
+[data-size="medium"] .meters {
+    gap: calc(5px * var(--tile-scale, 1));
+}
+[data-size="medium"] .meter {
+    font-size: calc(8px * var(--tile-scale, 1));
+}
+[data-size="small"] .memory,
+[data-size="small"] .network,
+[data-size="small"] .cpu > span {
+    display: none;
+}
+[data-size="small"] .dial {
+    width: calc(34px * var(--tile-scale, 1));
+    height: calc(34px * var(--tile-scale, 1));
+}
+[data-size="small"] .dial::before {
+    inset: calc(3px * var(--tile-scale, 1));
+}
+[data-size="small"] .dial .value {
+    font-size: calc(11px * var(--tile-scale, 1));
+}
+
+/* Wide and square compact tiles use two gauges; extra detail belongs to Large. */
+.dashboard {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) calc(15px * var(--tile-scale, 1));
+}
+.dashboard > .kicker,
+.dashboard > .network {
+    display: none;
+}
+.dashboard .tile-name {
+    margin-top: 0;
+}
+.dashboard .meters {
+    min-height: 0;
+}
+[data-size="wide"] .dial {
+    width: calc(40px * var(--tile-scale, 1));
+    height: calc(40px * var(--tile-scale, 1));
+}
+[data-size="wide"] .dial::before {
+    inset: calc(4px * var(--tile-scale, 1));
+}
+[data-size="wide"] .dial .value {
+    font-size: calc(17px * var(--tile-scale, 1));
+}
+[data-size="wide"] .meter {
+    gap: calc(2px * var(--tile-scale, 1));
+    font-size: calc(9px * var(--tile-scale, 1));
+    line-height: calc(10px * var(--tile-scale, 1));
+}
+[data-size="large"] .dashboard {
+    grid-template-rows: auto minmax(0, 1fr) auto calc(
+            15px * var(--tile-scale, 1)
+        );
+}
+[data-size="large"] .dashboard > .kicker {
+    display: block;
+}
+[data-size="large"] .dashboard > .network {
+    display: flex;
+}
+[data-size="small"] .dashboard {
+    grid-template-rows: minmax(0, 1fr);
+}

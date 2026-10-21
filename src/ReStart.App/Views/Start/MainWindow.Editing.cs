@@ -22,13 +22,14 @@ public partial class MainWindow
 
     private void SetLayoutEditing(bool editing)
     {
-        if (_layoutEditing == editing || editing && (!_ready || _store.IsReadOnly)) return;
+        if (_layoutEditing == editing || editing && (!_ready || !CanEditLayout)) return;
         _editingGroupHeader?.EndEdit(true);
         if (editing) ResetToPinnedView();
         _layoutEditing = editing;
         _selectionPlanCache = null;
         _selectedTileIds.Clear();
         EditBar.Visibility = editing ? Visibility.Visible : Visibility.Collapsed;
+        EditBar.ToolTip = L.T(K.KeyboardLayoutHelp);
         ShowGroupBoundaries(editing);
         RefreshTileSelection();
         if (editing) DoneEditingButton.Focus();
@@ -63,7 +64,7 @@ public partial class MainWindow
 
     private void ToggleTileSelection(string id)
     {
-        if (!_layoutEditing || FindTile(id) is not Tile tile) return;
+        if (!_layoutEditing || !CanEditTile(id) || FindTile(id) is not Tile tile) return;
         if (!_selectedTileIds.Remove(id))
         {
             // A folder and its children must never participate in the same move.
@@ -76,6 +77,7 @@ public partial class MainWindow
 
     private void SelectTileForEditing(string id)
     {
+        if (!CanEditTile(id)) { SetStatus(L.T(K.LayoutLockedStatus)); return; }
         var parentId = Document.Groups.SelectMany(g => g.Tiles).FirstOrDefault(t => t.Children.Any(c => c.Id == id))?.Id;
         SetLayoutEditing(true);
         if (parentId != null && _openFolder?.Id != parentId && FindTile(parentId) is Tile parent) OpenFolder(parent);
@@ -84,7 +86,7 @@ public partial class MainWindow
 
     private void RefreshTileSelection()
     {
-        _selectedTileIds.RemoveWhere(id => FindTile(id) == null || _layoutEditing && !_selectionViews.ContainsKey(id));
+        _selectedTileIds.RemoveWhere(id => FindTile(id) == null || !CanEditTile(id) || _layoutEditing && !_selectionViews.ContainsKey(id));
         foreach (var (id, view) in _selectionViews)
         {
             var selected = _layoutEditing && _selectedTileIds.Contains(id);
@@ -98,7 +100,7 @@ public partial class MainWindow
     private void UpdateEditingChrome()
     {
         if (EditModeButton == null) return;
-        EditModeButton.IsEnabled = _ready && !_store.IsReadOnly;
+        EditModeButton.IsEnabled = _ready && CanEditLayout;
         ExpandedEditModeButton.IsEnabled = EditModeButton.IsEnabled;
         var label = L.T(_layoutEditing ? K.FinishLayoutEditing : K.EditLayout);
         EditRailLabel.Label = label;
@@ -109,8 +111,8 @@ public partial class MainWindow
             ExpandedEditModeButton.SetResourceReference(BackgroundProperty, "TileBrush");
         }
         else { EditModeButton.Background = Brushes.Transparent; ExpandedEditModeButton.Background = Brushes.Transparent; }
-        UndoButton.IsEnabled = _historyReady && _layoutHistory.CanUndo && !_store.IsReadOnly;
-        RedoButton.IsEnabled = _historyReady && _layoutHistory.CanRedo && !_store.IsReadOnly;
+        UndoButton.IsEnabled = _historyReady && _layoutHistory.CanUndo && CanEditLayout;
+        RedoButton.IsEnabled = _historyReady && _layoutHistory.CanRedo && CanEditLayout;
         SelectionSummary.Text = L.F(K.SelectedTileCount, _selectedTileIds.Count) + " · " + L.T(K.LayoutEditingHint);
         ClearSelectionButton.IsEnabled = MoveSelectionButton.IsEnabled = UnpinSelectionButton.IsEnabled = _selectedTileIds.Count > 0;
     }
@@ -119,13 +121,13 @@ public partial class MainWindow
     private void SelectAllTilesClick(object sender, RoutedEventArgs e)
     {
         _selectedTileIds.Clear();
-        foreach (var root in Document.Groups.SelectMany(g => g.Tiles)) _selectedTileIds.Add(root.Id);
+        foreach (var root in Document.Groups.SelectMany(g => g.Tiles).Where(t => CanEditTile(t.Id))) _selectedTileIds.Add(root.Id);
         RefreshTileSelection();
     }
 
     private void UnpinSelectedTilesClick(object sender, RoutedEventArgs e)
     {
-        if (!_layoutEditing || _selectedTileIds.Count == 0) return;
+        if (!_layoutEditing || _selectedTileIds.Count == 0 || _selectedTileIds.Any(id => !CanEditTile(id))) return;
         foreach (var id in _selectedTileIds.ToArray()) RemoveTile(id);
         CommitLayout();
     }
@@ -135,9 +137,15 @@ public partial class MainWindow
 
     private void RestoreLayoutHistory(bool redo)
     {
-        if (!_historyReady || _dragging || _store.IsReadOnly || _editingGroupHeader?.IsEditing == true) return;
+        if (!_historyReady || _dragging || !CanEditLayout || _editingGroupHeader?.IsEditing == true) return;
         var folderId = _openFolder?.Id;
+        var before = Document.Groups;
         if (!(redo ? _layoutHistory.Redo(Document) : _layoutHistory.Undo(Document))) return;
+        if (!LayoutLocks.AllowsChange(before, Document.Groups, Document.Preferences, GroupsPanel.Columns))
+        {
+            if (redo) _layoutHistory.Undo(Document); else _layoutHistory.Redo(Document);
+            SetStatus(L.T(K.LayoutLockedStatus)); return;
+        }
         if (!TrySaveLayout(recordHistory: false))
         {
             // Failed persistence also rolls back the history cursor, keeping the
@@ -152,6 +160,9 @@ public partial class MainWindow
     private void AddLayoutEditingMenu(ContextMenu menu)
     {
         menu.Items.Add(new Separator());
+        var locked = new MenuItem { Header = L.T(K.LockLayout), IsCheckable = true, InputGestureText = "Ctrl+Shift+L" };
+        locked.Click += (_, _) => SetLayoutLocked(locked.IsChecked);
+        menu.Items.Add(locked);
         var edit = new MenuItem { Header = L.T(_layoutEditing ? K.FinishLayoutEditing : K.EditLayout), InputGestureText = "Ctrl+E" };
         edit.Click += ToggleLayoutEditing;
         var undo = new MenuItem { Header = L.T(K.UndoLayout), InputGestureText = "Ctrl+Z" };
@@ -161,10 +172,12 @@ public partial class MainWindow
         menu.Items.Add(edit); menu.Items.Add(undo); menu.Items.Add(redo);
         menu.Opened += (_, _) =>
         {
+            locked.IsChecked = Document.Preferences.LayoutLocked;
+            locked.IsEnabled = !_store.IsReadOnly;
             edit.Header = L.T(_layoutEditing ? K.FinishLayoutEditing : K.EditLayout);
-            edit.IsEnabled = _ready && !_store.IsReadOnly;
-            undo.IsEnabled = _historyReady && _layoutHistory.CanUndo && !_store.IsReadOnly;
-            redo.IsEnabled = _historyReady && _layoutHistory.CanRedo && !_store.IsReadOnly;
+            edit.IsEnabled = _ready && CanEditLayout;
+            undo.IsEnabled = _historyReady && _layoutHistory.CanUndo && CanEditLayout;
+            redo.IsEnabled = _historyReady && _layoutHistory.CanRedo && CanEditLayout;
         };
     }
 
@@ -173,12 +186,18 @@ public partial class MainWindow
         var modifiers = Keyboard.Modifiers;
         var text = Ancestor<TextBox>(e.OriginalSource as DependencyObject);
         var editingText = text != null && (text != SearchBox || TopBar.Height > 0);
-        if (e.Key == Key.E && modifiers == ModifierKeys.Control) SetLayoutEditing(!_layoutEditing);
+        if (!editingText && e.Key == Key.L && modifiers == (ModifierKeys.Control | ModifierKeys.Shift)) SetLayoutLocked(!Document.Preferences.LayoutLocked);
+        else if (e.Key == Key.E && modifiers == ModifierKeys.Control)
+        {
+            SetLayoutEditing(!_layoutEditing);
+            if (_layoutEditing) FocusEditingTile(null);
+        }
         else if (!editingText && e.Key == Key.Z && modifiers == ModifierKeys.Control) RestoreLayoutHistory(false);
         else if (!editingText && (e.Key == Key.Y && modifiers == ModifierKeys.Control || e.Key == Key.Z && modifiers == (ModifierKeys.Control | ModifierKeys.Shift))) RestoreLayoutHistory(true);
         else if (_layoutEditing && !editingText)
         {
-            if (e.Key == Key.A && modifiers == ModifierKeys.Control) SelectAllTilesClick(this, new());
+            if (HandlePlacementKeyboard(e.Key == Key.System ? e.SystemKey : e.Key, modifiers)) { }
+            else if (e.Key == Key.A && modifiers == ModifierKeys.Control) SelectAllTilesClick(this, new());
             else if (e.Key == Key.Escape)
             { if (_selectedTileIds.Count > 0) ClearTileSelectionClick(this, new()); else SetLayoutEditing(false); }
             else if (e.Key == Key.Delete && modifiers == ModifierKeys.None) UnpinSelectedTilesClick(this, new());
@@ -196,8 +215,9 @@ public partial class MainWindow
 
     private List<TileGroup>? PlanSelectionDrop(string anchorId, Point point)
     {
-        if (!_layoutEditing || _selectionDragPositions is not { Count: > 0 } selection) return null;
+        if (!_layoutEditing || _selectionDragPositions is not { Count: > 0 } selection || selection.Any(s => !CanEditTile(s.Id))) return null;
         var target = FindTile(anchorId) is Tile anchor ? TileDropTarget(anchor, point) : GroupAt(point);
+        if (target is { } lockedTarget && !CanEditGroup(lockedTarget.Group)) return null;
         if (target is { } destination && (!destination.Group.IsStandalone || destination.Panel.FolderOwner != null))
         {
             var local = destination.Panel.ToModelPoint(GroupsPanel.TranslatePoint(point, destination.Panel));
@@ -211,8 +231,12 @@ public partial class MainWindow
         if (target is { } independent && FindTile(anchorId) is Tile lead)
         {
             var closed = FolderHoverTarget(lead, independent.Panel, GroupsPanel.TranslatePoint(point, independent.Panel), anchorId);
-            if (closed != null) return closed.IsFolder ? CachedSelectionPlan(selection, anchorId, null, closed.Id, 0, 0)
-                : TileGrouping.Plan(Document, selection.Select(s => FindTile(s.Id)!).ToArray(), closed.Id, GroupsPanel.Columns, Cell);
+            if (closed != null)
+            {
+                var grouped = closed.IsFolder ? CachedSelectionPlan(selection, anchorId, null, closed.Id, 0, 0)
+                    : TileGrouping.Plan(Document, selection.Select(s => FindTile(s.Id)!).ToArray(), closed.Id, GroupsPanel.Columns, Cell);
+                return grouped != null && PlacementAllowed(grouped) ? grouped : null;
+            }
         }
         else { _folderHover.Reset(); StopFolderDwell(); }
         var (_, row, x) = BoardAnchor(point, true);
@@ -224,6 +248,7 @@ public partial class MainWindow
         var key = new SelectionPlanKey(Document.Groups, selection, anchor, group, folder, x, y, GroupsPanel.Columns, Document.Preferences.Columns, Cell);
         if (_selectionPlanCache is { } previous && previous.Key == key) return previous.Groups;
         var groups = TileBatchMove.Plan(Document, selection, anchor, group, folder, x, y, GroupsPanel.Columns, Cell);
+        if (groups != null && !PlacementAllowed(groups)) groups = null;
         _selectionPlanCache = (key, groups);
         return groups;
     }
@@ -266,7 +291,7 @@ public partial class MainWindow
                 bounds.Add(new(g.Left + (compact ? 0 : t.Column * Cell), g.Top + header + (expansion?.TileY(t, Cell) ?? t.Row * Cell), t.Width * Cell - 4, t.Height * Cell - 4));
             if (expansion != null)
                 foreach (var t in expansion.Children.Where(t => _selectedTileIds.Contains(t.Tile.Id)))
-                    bounds.Add(new(g.Left + t.Column * Cell, g.Top + header + expansion.Row * Cell + GroupLayout.HeaderHeight + t.Row * Cell, t.Width * Cell - 4, t.Height * Cell - 4));
+                    bounds.Add(new(g.Left + t.Column * Cell, g.Top + header + expansion.Row * Cell + GroupLayout.HeaderHeight + Controls.InlineFolderView.ContentTopInset + t.Row * Cell, t.Width * Cell - 4, t.Height * Cell - 4));
         }
         return bounds;
     }
@@ -274,7 +299,7 @@ public partial class MainWindow
     private void MoveSelectedTilesClick(object sender, RoutedEventArgs e)
     {
         var menu = CreateContextMenu();
-        foreach (var group in Document.Groups.Where(g => !g.IsStandalone))
+        foreach (var group in Document.Groups.Where(g => !g.IsStandalone && CanEditGroup(g)))
             Add(menu, group.Name.Length == 0 ? L.T(K.UnnamedGroup) : group.Name, () => MoveSelectionToGroup(group));
         Add(menu, L.T(K.NewGroup), () => MoveSelectionToGroup(null));
         OpenMenu(menu, MoveSelectionButton);
@@ -284,7 +309,7 @@ public partial class MainWindow
     {
         var selected = Document.Groups.SelectMany(g => g.Tiles).SelectMany(t => new[] { t }.Concat(t.Children))
             .Where(t => _selectedTileIds.Contains(t.Id)).ToArray();
-        if (!_layoutEditing || selected.Length == 0) return;
+        if (!_layoutEditing || selected.Length == 0 || selected.Any(t => !CanEditTile(t.Id)) || destination != null && !CanEditGroup(destination)) return;
         // Menu moves collect tiles into a compact block. Dragging instead keeps
         // the selection's visible relative positions, including intentional gaps.
         var copies = LayoutHistory.CopyGroups([new() { Tiles = [.. selected] }])[0].Tiles;
@@ -294,7 +319,7 @@ public partial class MainWindow
         var targetId = destination?.Id;
         if (targetId == null) { var created = new TileGroup { Name = "" }; working.Groups.Add(created); targetId = created.Id; }
         var plan = TileBatchMove.Plan(working, selection, selection[0].Id, targetId, null, 0, 0, GroupsPanel.Columns, Cell);
-        if (plan == null) { SetStatus(L.T(K.SelectionDoesNotFit)); return; }
+        if (plan == null || !PlacementAllowed(plan)) { SetStatus(L.T(K.SelectionDoesNotFit)); return; }
         Document.Groups = plan; CommitLayout();
     }
 }

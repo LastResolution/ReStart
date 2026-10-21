@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "title": "Battery",
   "localizedTitles": {
     "en": "Battery",
@@ -61,5 +61,6 @@
         "noBattery": "沒有電池"
       }
     }
-  }
+  },
+  "renderer": "web"
 }

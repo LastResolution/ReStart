@@ -10,6 +10,21 @@ public sealed class LayoutStoreTests : IDisposable
     private string FilePath => Path.Combine(_directory, "layout.json");
 
     [Fact]
+    public void DeletedDataIsNotResurrectedFromTheRunningSession()
+    {
+        var store = new LayoutStore(FilePath);
+        store.Save(new() { Groups = [new() { Name = "Previous session" }] });
+        var original = store.Load()!;
+        File.Delete(FilePath);
+        Assert.Throws<InvalidOperationException>(() => store.Save(original));
+        Assert.False(File.Exists(FilePath));
+        var restarted = new LayoutStore(FilePath);
+        Assert.Null(restarted.Load());
+        restarted.Save(new());
+        Assert.Empty(restarted.Load()!.Groups);
+    }
+
+    [Fact]
     public void PreservesFoldersAndSettingsAcrossSaves()
     {
         var store = new LayoutStore(FilePath);

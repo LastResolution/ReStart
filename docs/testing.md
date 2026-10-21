@@ -29,6 +29,7 @@ dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory 
 ./scripts/test-scrolling.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-file-pinning.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-bundled-tiles.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+./scripts/test-studio.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-tile-data.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/package.ps1 -Runtime win-x64
 ./scripts/test-lifecycle.ps1 -Executable artifacts/publish/win-x64/ReStart.exe
@@ -53,7 +54,7 @@ dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory 
 | folder-drops | Twelve real dispatcher-timer cases (independent → group / grouped → folder × normal/edit × same/mixed sizes), 192 source/target-size and grab-position cases, four deadline/edge/drift cases, earlier-neighbor header collisions, persisted identities, one-step undo/redo, cancellation, scrolling, batch grouping and folder-as-root grouping |
 | editing | Native selection clicks suppress launches, rigid previews/cancel/commit, one-step undo/redo/unpin, existing/expanded folder moves, parent-child exclusion, real save-lock rollback, eight languages × two themes, Escape and reopen |
 | scrolling | Twelve axis/theme cases and 32 stationary-pointer scrolled-group previews without offset feedback or repeated layout |
-| bundled-tiles | Fifteen packages, four sizes, local clicks, retained state, photo binding/file handles, custom colors and a real host CPU-to-frame path |
+| bundled-tiles | Nineteen packages, four sizes, local clicks, retained state, photo binding/file handles, custom colors and a real host CPU-to-frame path |
 | tile-data | Actual worker rendering for weather/feed/local JSON, feed clicks, file producer updates, DPAPI round-trip/corruption, no imported bindings, saved-secret handling, eight languages × two themes and hide cleanup; no external requests |
 | file-pinning | Cold directory pin, single-instance transfers, exact shortcut target, deduplication and rejected missing targets |
 | icons | Nine Shell file/folder/shortcut patterns, four sizes × three scales, folder previews and status expiry/replacement |
@@ -85,3 +86,5 @@ dotnet test tests/ReStart.Core.Tests/ReStart.Core.Tests.csproj -c Release -p:Deb
 | Accessibility | Narrator, focus visibility, touch/long press |
 
 Do not execute power, uninstall or elevation commands as a routine smoke check. Automated events do not establish physical shortcut behavior. See [compatibility](fidelity.md) for platform coverage.
+
+The headless Studio fixture uses hidden native hosts and a real WebView2 renderer, without showing windows or loading a user catalog/account picture. Its layout matrix covers 8,352 combinations of package, size, scale, language, theme, optional names and data/weather states. Additional checks cover readable custom colors, independent story scrolling and board routing, scheduled closed-folder preview updates, retained transition frames, synthetic portrait resolution, icon clipping, update notices, syntax tokens, Tab/Shift+Tab, four offline formatters and one-step formatting undo. Ninety-six collision cases check preview/commit agreement, stationary stability, cancellation and unchanged models across all size pairs, app/live tiles, groups, folders and independent entries. Drag-image checks cover all four sizes and tile/group/selection/app sources: nonempty translucent snapshots, preserved grab offsets, bounded size, no input interception or model changes, leaving/re-entering the window and complete cleanup. The SVG clock hand must advance from PC time without another host update. Production composition/reparenting is additionally exercised by native bundled/startup fixtures on CI.
