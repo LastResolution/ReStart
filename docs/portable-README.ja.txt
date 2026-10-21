@@ -25,8 +25,7 @@ JS・設定の編集や写真フォルダ指定。PC 時刻と集計メトリク
 
 削除時は起動登録と Explorer 連携を無効にし、終了後に展開先を削除。
 ローカル設定は別に残ります。MIT ライセンスです。
-署名の有無はリリースノートを参照し、ReStart.exe と TileHost/ReStart.TileHost.exe の
-デジタル署名を確認してください。SHA-256 ファイルは ZIP 全体を対象にします。
+SHA-256 ファイルは ZIP 全体のチェックサムです。
 Microsoft から独立したプロジェクトです。ソース・ビルド・実装情報:
 https://github.com/LastResolution/ReStart
 

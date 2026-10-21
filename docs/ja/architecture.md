@@ -24,7 +24,6 @@ WPFのReStart.AppがReStart.Coreのモデル・配置計画を参照し、Window
 | 起動と文書履歴 | AppShellCommands / AppJumpLists。公開COMとcanonical verbのみ |
 | 任意のアプリ利用記録 | AppActivityとApp側保存。配置出力・Windows文書履歴から分離 |
 | JSとデータ取得 | 親側プール・データサービス。取消・上限・プロセス寿命を所有 |
-| 署名と公開 | 保護環境とSignPath。鍵をコードや設定に置かず、署名結果を検証。利用承認は準備中 |
 | README画像 | 専用レンダラー。画面を表示せず英語サンプルだけを生成。実アイコンを照合し、実際の全アプリ一覧を出力しない |
 
 MainWindowはまだ大きなWPF調整役で、partialによるファイル分割だけでは独立したモジュールになっていません。現時点の境界をCIで検査し、今後は次の順序で分離します。

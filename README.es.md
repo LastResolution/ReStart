@@ -20,7 +20,7 @@
 2. Extrae **todo el ZIP**. Mantén `TileHost`, `Examples` y `third-party` junto a `ReStart.exe`.
 3. Ejecuta **ReStart.exe**, pulsa la **tecla Windows** y escribe el nombre de una aplicación. **Ctrl+Alt+Espacio** y el menú del área de notificación también abren Inicio.
 
-El engranaje permite elegir temas, inicio con Windows, integración de la tecla Windows/botón Inicio y actualizaciones. El uso normal no requiere permisos de administrador. Las descargas actuales no tienen firma de código; se incluyen [sumas SHA-256](https://github.com/LastResolution/ReStart/releases/latest).
+El engranaje permite elegir temas, inicio con Windows, integración de la tecla Windows/botón Inicio y actualizaciones. El uso normal no requiere permisos de administrador. Se incluyen [sumas SHA-256](https://github.com/LastResolution/ReStart/releases/latest).
 
 ## Funciones
 

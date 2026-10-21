@@ -20,7 +20,7 @@ Windows 10의 전체 화면 시작 메뉴가 그리우신가요? ReStart는 Wind
 2. **ZIP 전체를** 압축 해제합니다. `TileHost`, `Examples`, `third-party`를 `ReStart.exe` 옆에 유지합니다.
 3. **ReStart.exe**를 실행하고 **Windows 키**를 누른 다음 앱 이름을 입력합니다. **Ctrl+Alt+Space**와 트레이 메뉴로도 열 수 있습니다.
 
-톱니바퀴에서 테마, 로그인 시 시작, Windows 키/시작 버튼 연동, 업데이트를 설정합니다. 일반 사용에는 관리자 권한이 필요 없습니다. 현재 다운로드는 코드 서명되지 않았으며 [SHA-256 체크섬](https://github.com/LastResolution/ReStart/releases/latest)을 제공합니다.
+톱니바퀴에서 테마, 로그인 시 시작, Windows 키/시작 버튼 연동, 업데이트를 설정합니다. 일반 사용에는 관리자 권한이 필요 없습니다. [SHA-256 체크섬](https://github.com/LastResolution/ReStart/releases/latest)을 제공합니다.
 
 ## 기능
 

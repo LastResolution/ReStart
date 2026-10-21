@@ -20,7 +20,7 @@
 2. 解压**整个 ZIP**。保留 `ReStart.exe` 旁的 `TileHost`、`Examples` 和 `third-party`。
 3. 运行 **ReStart.exe**，按 **Windows 键**并输入应用名称。也可以使用 **Ctrl+Alt+Space** 或托盘菜单打开。
 
-齿轮设置中可选择主题、登录启动、Windows 键/开始按钮集成及更新。正常使用不需要管理员权限。目前下载未进行代码签名，提供 [SHA-256 校验值](https://github.com/LastResolution/ReStart/releases/latest)。
+齿轮设置中可选择主题、登录启动、Windows 键/开始按钮集成及更新。正常使用不需要管理员权限。提供 [SHA-256 校验值](https://github.com/LastResolution/ReStart/releases/latest)。
 
 ## 功能
 

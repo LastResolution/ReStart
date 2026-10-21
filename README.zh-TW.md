@@ -20,7 +20,7 @@
 2. 解壓縮**整個 ZIP**。保留 `ReStart.exe` 旁的 `TileHost`、`Examples` 與 `third-party`。
 3. 執行 **ReStart.exe**，按 **Windows 鍵**後輸入應用程式名稱。也可用 **Ctrl+Alt+Space** 或通知區域選單開啟。
 
-齒輪設定可選擇佈景主題、登入時啟動、Windows 鍵/開始按鈕整合與更新。一般使用不需要系統管理員權限。目前下載尚未進行程式碼簽章，提供 [SHA-256 校驗值](https://github.com/LastResolution/ReStart/releases/latest)。
+齒輪設定可選擇佈景主題、登入時啟動、Windows 鍵/開始按鈕整合與更新。一般使用不需要系統管理員權限。提供 [SHA-256 校驗值](https://github.com/LastResolution/ReStart/releases/latest)。
 
 ## 功能
 

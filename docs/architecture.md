@@ -22,8 +22,6 @@ flowchart LR
     UI --> Windows[App Services: Shell, hooks, index, credentials]
     UI -->|bounded JSON pipes| Host[ReStart.TileHost: JavaScript evaluation]
     Host --> Core
-    Release[GitHub release jobs] -->|two own EXEs| Sign[SignPath: enrollment pending]
-    Sign -->|verified signed ZIP| Release
 ```
 
 The App-to-TileHost project reference is a **build dependency only** (`ReferenceOutputAssembly=false`); the UI never invokes the worker's Jint engine in-process. Core references neither UI nor worker. The existing test project also links selected Windows services for process-level checks; these are explicitly Windows-gated rather than evidence that all tests are portable.
@@ -40,7 +38,6 @@ The App-to-TileHost project reference is a **build dependency only** (`Reference
 | Launch and Jump List effects | `AppShellCommands` / `AppJumpLists` | Canonical verbs and documented COM; never evaluate translated menu text |
 | Optional app activity | `AppActivity` / App persistence | Bounded local state; separate from exported layout and Windows document history |
 | Script processes and data reads | App worker pool / data services | Parent owns cancellation, limits and process lifetime; worker sees bounded snapshots |
-| Signing credentials and release approval | Protected release environment / SignPath | No keys in app configuration or source; signed output is verified before publication |
 | Documentation images | Dedicated render entry point | English curated fixtures, no visible windows or real settings; matched installed icons, not an exported app inventory |
 
 `MainWindow` is still a substantial WPF coordinator. Its partial files are **not** separate architectural modules: they share private state. Keep pure layout rules in Core and new native effects in services. The next extractions are explicit:

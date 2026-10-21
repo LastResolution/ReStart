@@ -28,8 +28,6 @@ jobs:
         run: ./scripts/check-privacy.ps1
       - name: Verify privacy guard rejection cases
         run: ./scripts/test-privacy.ps1
-      - name: Verify signed package validation and rejection cases
-        run: ./scripts/test-signed-package.ps1
       - name: Verify public API documentation and guard rejection cases
         run: |
           ./scripts/check-api-docs.ps1 -SelfTest

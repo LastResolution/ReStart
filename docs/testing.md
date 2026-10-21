@@ -12,7 +12,6 @@ dotnet format whitespace ReStart.slnx --verify-no-changes --no-restore
 ./scripts/check-architecture.ps1
 ./scripts/check-readmes.ps1
 ./scripts/test-privacy.ps1
-./scripts/test-signed-package.ps1
 dotnet build ReStart.slnx -c Release --no-restore
 dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory artifacts/test-results
 ./scripts/smoke.ps1

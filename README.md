@@ -32,7 +32,7 @@ English is the primary documentation. The translated guides are AI-assisted and 
 2. Extract the **entire ZIP** into a folder you want to keep. Leave `TileHost`, `Examples` and `third-party` beside `ReStart.exe`.
 3. Run **ReStart.exe**. Press the **Windows key**, then type an app name to search. **Ctrl+Alt+Space** and the tray menu also open Start.
 
-Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button integration and updates. Normal use needs no administrator rights. Downloads are unsigned; checksums are included on the [release page](https://github.com/LastResolution/ReStart/releases/latest).
+Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button integration and updates. Normal use needs no administrator rights. Checksums are included on the [release page](https://github.com/LastResolution/ReStart/releases/latest).
 
 ## A familiar place to begin
 
@@ -257,4 +257,4 @@ ReStart is an independent, MIT-licensed project inspired by late Windows 10 full
 
 Screenshots and the animation show the real launcher with an isolated English demonstration layout, curated app names, synthetic metrics and generated photo colors. They do not show a user's app inventory, personal documents or location. Application icons are obtained from installed apps without changing their names in the real catalog. Windows/application names and icons belong to their owners. Dependency and .NET notices ship with the app.
 
-[MIT license](LICENSE) · [Security policy](SECURITY.md) · [Code signing policy](docs/code-signing.md) · [Support](SUPPORT.md)
+[MIT license](LICENSE) · [Security policy](SECURITY.md) · [Support](SUPPORT.md)

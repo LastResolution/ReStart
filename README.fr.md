@@ -20,7 +20,7 @@ Le menu Démarrer plein écran de Windows 10 vous manque ? ReStart offre un espa
 2. Extrayez **l’intégralité du ZIP**. Conservez `TileHost`, `Examples` et `third-party` à côté de `ReStart.exe`.
 3. Lancez **ReStart.exe**, appuyez sur la **touche Windows**, puis saisissez le nom d’une application. **Ctrl+Alt+Espace** et le menu de la zone de notification ouvrent également Démarrer.
 
-La roue dentée permet de régler les thèmes, le lancement à l’ouverture de session, l’intégration de la touche Windows/du bouton Démarrer et les mises à jour. L’usage normal ne nécessite pas de droits administrateur. Les téléchargements actuels ne sont pas signés ; les [sommes SHA-256](https://github.com/LastResolution/ReStart/releases/latest) sont fournies.
+La roue dentée permet de régler les thèmes, le lancement à l’ouverture de session, l’intégration de la touche Windows/du bouton Démarrer et les mises à jour. L’usage normal ne nécessite pas de droits administrateur. Les [sommes SHA-256](https://github.com/LastResolution/ReStart/releases/latest) sont fournies.
 
 ## Fonctionnalités
 

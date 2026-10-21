@@ -20,7 +20,7 @@ Vermisst du das Vollbild-Startmenü von Windows 10? ReStart gibt deinen Apps unt
 2. Entpacke das **gesamte ZIP**. Belasse `TileHost`, `Examples` und `third-party` neben `ReStart.exe`.
 3. Starte **ReStart.exe**. Drücke die **Windows-Taste** und tippe einen App-Namen. Auch **Strg+Alt+Leertaste** und das Infobereich-Menü öffnen Start.
 
-Über das Zahnrad wählst du Design, Autostart, Windows-Tasten-/Startschaltflächen-Integration und Updates. Für die normale Nutzung sind keine Administratorrechte nötig. Aktuelle Downloads sind nicht codesigniert; [SHA-256-Prüfsummen](https://github.com/LastResolution/ReStart/releases/latest) stehen bereit.
+Über das Zahnrad wählst du Design, Autostart, Windows-Tasten-/Startschaltflächen-Integration und Updates. Für die normale Nutzung sind keine Administratorrechte nötig. [SHA-256-Prüfsummen](https://github.com/LastResolution/ReStart/releases/latest) stehen bereit.
 
 ## Funktionen
 

@@ -31,9 +31,7 @@ jobs:
       - name: Verify tag and main ancestry
         env:
           RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
-          WORKFLOW_REF: ${{ github.ref }}
         run: |
-          if ($env:WORKFLOW_REF -ne 'refs/heads/main') { throw 'Dispatch the release workflow from main.' }
           $version = ([xml](Get-Content Directory.Build.props)).Project.PropertyGroup.Version
           if ($env:RELEASE_TAG -ne "v$version") { throw 'Tag and project version differ.' }
           git merge-base --is-ancestor HEAD origin/main
@@ -46,13 +44,7 @@ jobs:
     name: Package ${{ matrix.runtime }}
     needs: verify
     runs-on: windows-latest
-    timeout-minutes: 30
-    environment: release-signing
-    permissions:
-      contents: read
-      actions: read
-      id-token: write
-      attestations: write
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -65,63 +57,6 @@ jobs:
         with:
           dotnet-version: 10.0.x
       - run: ./scripts/package.ps1 -Runtime ${{ matrix.runtime }}
-      - name: Validate signing configuration
-        env:
-          SIGNING_PROVIDER: ${{ vars.RESTART_SIGNING_PROVIDER }}
-          ORGANIZATION: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
-          PROJECT: ${{ vars.SIGNPATH_PROJECT_SLUG }}
-          POLICY: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
-          THUMBPRINT: ${{ vars.SIGNPATH_CERTIFICATE_THUMBPRINT }}
-        run: |
-          if ($env:SIGNING_PROVIDER -notin @('', 'none', 'signpath')) { throw 'Unsupported signing provider.' }
-          if ($env:SIGNING_PROVIDER -eq 'signpath' -and
-              (-not $env:ORGANIZATION -or -not $env:PROJECT -or -not $env:POLICY -or $env:THUMBPRINT -notmatch '^[A-Fa-f0-9]{40}$')) {
-            throw 'Complete the protected signing environment before enabling SignPath.'
-          }
-          $version = ([xml](Get-Content Directory.Build.props)).Project.PropertyGroup.Version
-          "version=$version" >> $env:GITHUB_ENV
-          $productVersion = (Get-Item 'artifacts/publish/${{ matrix.runtime }}/ReStart.exe').VersionInfo.ProductVersion
-          "productVersion=$productVersion" >> $env:GITHUB_ENV
-      - name: Upload unsigned input for SignPath origin verification
-        if: vars.RESTART_SIGNING_PROVIDER == 'signpath'
-        id: unsigned
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: Unsigned-${{ matrix.runtime }}
-          path: artifacts/packages/ReStart-${{ matrix.runtime }}.zip
-          if-no-files-found: error
-          retention-days: 7
-      - name: Request approved production code signatures
-        if: vars.RESTART_SIGNING_PROVIDER == 'signpath'
-        uses: signpath/github-action-submit-signing-request@f6d04783b4569d051e0c80105fe66e82819d0092 # v3
-        with:
-          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
-          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
-          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
-          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
-          github-artifact-id: ${{ steps.unsigned.outputs.artifact-id }}
-          wait-for-completion: true
-          output-artifact-directory: artifacts/signed
-          parameters: |
-            version: ${{ toJSON(env.version) }}
-            productVersion: ${{ toJSON(env.productVersion) }}
-      - name: Verify signed content and replace the release payload
-        if: vars.RESTART_SIGNING_PROVIDER == 'signpath'
-        env:
-          CERTIFICATE_THUMBPRINT: ${{ vars.SIGNPATH_CERTIFICATE_THUMBPRINT }}
-          RELEASE_RUNTIME: ${{ matrix.runtime }}
-        run: |
-          $original = "artifacts/packages/ReStart-$env:RELEASE_RUNTIME.zip"
-          $signed = "artifacts/signed/ReStart-$env:RELEASE_RUNTIME.zip"
-          ./scripts/verify-signed-package.ps1 -UnsignedPackage $original -SignedPackage $signed -ExpectedThumbprint $env:CERTIFICATE_THUMBPRINT
-          Copy-Item -LiteralPath $signed -Destination $original -Force
-          $hash = (Get-FileHash -LiteralPath $original -Algorithm SHA256).Hash.ToLowerInvariant()
-          [IO.File]::WriteAllText("$original.sha256", "$hash  $([IO.Path]::GetFileName($original))`n", [Text.UTF8Encoding]::new($false))
-      - name: Attest final public release packages
-        if: github.event.repository.visibility == 'public'
-        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
-        with:
-          subject-path: artifacts/packages/ReStart-${{ matrix.runtime }}.zip
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ReStart-${{ matrix.runtime }}

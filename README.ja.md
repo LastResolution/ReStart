@@ -34,7 +34,7 @@
 2. 使い続けたい場所に **ZIP 全体を展開**します。`ReStart.exe` と同じ場所に `TileHost`、`Examples`、`third-party` を残してください。
 3. **ReStart.exe** を実行します。**Windows キー**で開いて、そのままアプリ名を入力すると検索できます。**Ctrl+Alt+Space** と通知領域のメニューからも開けます。
 
-歯車からテーマ、サインイン時の起動、Windows キー・Start ボタンとの連携、更新確認を設定できます。配布物は未署名で、[リリースページ](https://github.com/LastResolution/ReStart/releases/latest)にチェックサムを添付しています。
+歯車からテーマ、サインイン時の起動、Windows キー・Start ボタンとの連携、更新確認を設定できます。[リリースページ](https://github.com/LastResolution/ReStart/releases/latest)にチェックサムを添付しています。
 
 | すぐにアプリへ | 配置を自分のものに | 必要な情報をひと目で |
 | --- | --- | --- |
@@ -195,7 +195,7 @@ function render(ctx) {
 3. `ReStart.exe` を起動します。管理者権限や .NET の別途インストールは不要です。
 4. Windows キーを単押しすると ReStart が開きます。設定は左下の歯車です。
 
-ZIP 配布は未署名です。組織の実行ポリシーに従ってください。Windows 11 x64 が実機検証対象です。Windows 10 22H2 と ARM64 は対応ビルド対象ですが、実機検証は別途必要です。
+Windows 11 x64 が実機検証対象です。Windows 10 22H2 と ARM64 は対応ビルド対象ですが、実機検証は別途必要です。
 
 初回はアプリの登録情報を読み取ります。アイコンはバックグラウンドで取得します。既存の Windows スタートや Explorer のファイルを書き換えることはありません。ReStart 終了時にキーの捕捉を解除します。
 
@@ -323,4 +323,4 @@ dotnet build ReStart.slnx -c Release
 
 ReStart のコードは [MIT License](LICENSE) です。
 
-[セキュリティ](SECURITY.ja.md) · [Code signing policy](docs/ja/code-signing.md) · [サポート](SUPPORT.ja.md) · [英語表記でのブランチ保護](docs/ja/github-protection.md)
+[セキュリティ](SECURITY.ja.md) · [サポート](SUPPORT.ja.md) · [英語表記でのブランチ保護](docs/ja/github-protection.md)

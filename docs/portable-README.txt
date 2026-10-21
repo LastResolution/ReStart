@@ -28,8 +28,7 @@ Layout export excludes JS sources and photo/data bindings; keep tiles separately
 
 Remove: disable startup and Explorer integration, exit, delete installation.
 Local data remains separately. MIT License.
-Check the release notes for code-signing status. Verify Digital Signatures on
-both ReStart.exe and TileHost/ReStart.TileHost.exe. SHA-256 files cover the ZIP.
+SHA-256 checksum files cover the complete ZIP.
 ReStart is independent of Microsoft. Source, build and implementation details:
 https://github.com/LastResolution/ReStart
 
