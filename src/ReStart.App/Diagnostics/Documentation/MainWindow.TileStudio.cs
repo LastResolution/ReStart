@@ -53,6 +53,7 @@ public partial class MainWindow
         }
         finally { studio.Close(); }
         checks += VerifyUpdateNotices(directory);
+        checks += VerifyPresentationAssets(directory);
         checks += await VerifyWebSamplesAsync(directory);
         checks += await VerifyWebScrollingAsync();
         checks += await VerifyFolderPreviewsAsync(directory);

@@ -23,6 +23,7 @@ internal sealed class RailLabel : Grid
         // Both rail variants share the 44-DIP content slot inside a 48-DIP
         // button. Caption font metrics must never move or resize the glyph.
         Height = 44;
+        RenderOptions.SetBitmapScalingMode(Portrait, BitmapScalingMode.HighQuality);
         ColumnDefinitions.Add(new() { Width = new(44) }); ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
         Children.Add(Icon); Children.Add(Portrait); SetColumn(Caption, 1); Children.Add(Caption);
     }

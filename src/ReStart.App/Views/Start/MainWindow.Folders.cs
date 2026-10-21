@@ -10,7 +10,9 @@ public partial class MainWindow
 {
     private FrameworkElement CreateFolderPreview(Tile folder)
     {
-        var extent = folder.Size == TileSize.Small ? 30 : folder.Size == TileSize.Large ? 132 : 70;
+        var (width, height) = TileLayout.Dimensions(folder.Size);
+        var available = Math.Min(width * Cell - 4, height * Cell - 4) - 14;
+        var extent = Math.Min(available, (folder.Size == TileSize.Small ? 30 : folder.Size == TileSize.Large ? 132 : 70) * Document.Preferences.TileScale);
         var mini = new UniformGridProxy
         {
             Columns = 2,
@@ -18,15 +20,16 @@ public partial class MainWindow
             Width = extent,
             Height = extent,
             IsHitTestVisible = false,
+            UseLayoutRounding = true,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center
         };
         foreach (var child in folder.Children.Take(4))
         {
-            // A fixed medium-size preview prevents the saved child size from
+            // A uniform small-size preview prevents the saved child size from
             // changing miniature alignment. The persistent child is untouched.
             var copy = System.Text.Json.JsonSerializer.Deserialize<Tile>(System.Text.Json.JsonSerializer.Serialize(child, LayoutStore.JsonOptions), LayoutStore.JsonOptions)!;
-            copy.Size = TileSize.Medium;
+            copy.Size = TileSize.Small;
             if (copy.Widget.Length == 0)
             {
                 var icon = CreateIcon(copy, extent / 3); icon.Margin = new(0);
@@ -36,7 +39,7 @@ public partial class MainWindow
             {
                 _folderThumbnailIds.Add(copy.Id);
                 var tile = CreateTileButton(copy, studioPreview: true, folderThumbnail: true);
-                tile.Width = tile.Height = 2 * Cell - 4;
+                tile.Width = tile.Height = Cell - 4;
                 mini.Children.Add(new Viewbox { Child = tile, Stretch = System.Windows.Media.Stretch.Uniform, Margin = new(1) });
             }
         }

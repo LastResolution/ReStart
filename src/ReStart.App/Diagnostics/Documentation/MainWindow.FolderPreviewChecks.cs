@@ -55,7 +55,7 @@ public partial class MainWindow
             };
             _openFolder = null; RenderGroups(); UpdateLayout();
             await WaitForDocumentationFramesAsync();
-            Check(_scriptViews.Count == 4 && _scriptViews.All(v => v.Tile.Size == TileSize.Medium), "Mixed child sizes leaked into miniature geometry.");
+            Check(_scriptViews.Count == 4 && _scriptViews.All(v => v.Tile.Size == TileSize.Small), "Mixed child sizes leaked into miniature geometry.");
             Check(children.Select(t => t.Size).SequenceEqual(sizes), "Rendering miniatures mutated saved child sizes.");
             Check(_htmlTiles.Values.All(view => view.BrowserReady && view.Children.OfType<Image>().Any(i => i.Source != null)), "A closed folder used generic icons instead of rendered web previews.");
             RenderGroups(); UpdateLayout();
@@ -77,7 +77,7 @@ public partial class MainWindow
             SaveScreenshot(Path.Combine(directory, "live-folder-open.png"));
             CloseFolder(this, new()); UpdateLayout(); await WaitForDocumentationFramesAsync();
             Check(_scriptViews.Count == 4 && ScriptsReady, "Closing a live folder stopped its previews.");
-            foreach (var view in _htmlTiles.Values) Check(await view.InspectAsync("document.documentElement.dataset.size") == "\"medium\"", "A reopened miniature kept its former large viewport.");
+            foreach (var view in _htmlTiles.Values) Check(await view.InspectAsync("document.documentElement.dataset.size") == "\"small\"", "A reopened miniature kept its former large viewport.");
             var counter = _scriptPackages.Import(ScriptTilePackages.BundledManifestPath("clock"));
             File.WriteAllText(Path.Combine(_scriptPackages.Folder(counter.ScriptId), "tile.js"),
                 "function render(ctx){const count=(ctx.state.count||0)+1;document.getElementById('value').textContent=String(count);return {text:String(count),state:{count}}}");

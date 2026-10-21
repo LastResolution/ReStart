@@ -104,7 +104,7 @@ Installed packages are editable copies. An application update supplies the new b
 
 Use `overflow: auto` or `overflow: scroll` on a bounded element for readable long content. The Feed headlines and News board packages keep their heading and optional tile name fixed while the story area scrolls. Mark one primary reading area with `data-restart-scroll` to route a wheel gesture elsewhere on the tile to that area. **Shift+wheel** scrolls horizontally; **Page Up/Down** scroll a focused tile. A scrollable tile retains its wheel gesture at either edge, so it does not unexpectedly move the launcher behind it. A tile without a scrollable area uses the launcher's normal scrolling.
 
-Closed tile folders render up to four live miniatures with uniform medium-size preview geometry. Opening the folder restores each child's saved size and interactive surface. Changing between the two presentations retains successful JSON state and pending local clicks; it does not change the stored layout.
+Closed tile folders render up to four live miniatures with uniform small-size preview geometry. Opening the folder restores each child's saved size and interactive surface. Changing between the two presentations retains successful JSON state and pending local clicks; it does not change the stored layout.
 
 ### Browser boundary and resource limits
 

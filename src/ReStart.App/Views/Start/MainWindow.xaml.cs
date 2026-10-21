@@ -525,7 +525,12 @@ public partial class MainWindow : Window
             _liveLabels.Add((live, tile));
             grid.Children.Add(live);
         }
-        else grid.Children.Add(CreateIcon(tile, tile.Size == TileSize.Small ? 23 : tile.Size == TileSize.Large ? 60 : 40));
+        else
+        {
+            var (width, height) = TileLayout.Dimensions(tile.Size);
+            var available = Math.Min(width * Cell - 4, height * Cell - 4) - 14 - (tile.Size == TileSize.Small ? 0 : 8);
+            grid.Children.Add(CreateIcon(tile, Math.Max(1, Math.Min(available, tile.Size == TileSize.Small ? 23 : tile.Size == TileSize.Large ? 60 : 40))));
+        }
         if (tile.Size != TileSize.Small && !tile.IsFolder && !webTile && (tile.Widget.Length == 0 || Document.Preferences.ShowLiveTileNames))
             grid.Children.Add(new TextBlock { Text = displayName, Tag = tile, FontSize = 12, VerticalAlignment = VerticalAlignment.Bottom, TextTrimming = TextTrimming.CharacterEllipsis, Margin = new(2, 0, 1, 0) });
         button.Content = grid;
@@ -550,7 +555,10 @@ public partial class MainWindow : Window
     private FrameworkElement CreateIcon(Tile tile, double size)
     {
         if (_catalog.Icons.TryGetValue(tile.AppId, out var source))
-            return new Image { Source = source, Width = size, Height = size, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center, Margin = new(0, 0, 0, tile.Size == TileSize.Small ? 0 : 8) };
+        {
+            var image = new Image { Source = source, Width = size, Height = size, Stretch = Stretch.Uniform, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center, Margin = new(0, 0, 0, tile.Size == TileSize.Small ? 0 : 8) };
+            RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.HighQuality); return image;
+        }
         var glyph = tile.Widget == "calendar" ? "\uE787" : tile.Widget == "clock" ? "\uE823" : tile.AppId == "restart:explorer" ? "\uE8B7" : tile.AppId == "restart:settings" || tile.Target.StartsWith("ms-settings:", StringComparison.OrdinalIgnoreCase) ? "\uE713" : "\uE71D";
         return new TextBlock { Text = glyph, FontFamily = new("Segoe MDL2 Assets"), FontSize = size * 0.8, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center, Margin = new(0, 0, 0, tile.Size == TileSize.Small ? 0 : 8) };
     }
