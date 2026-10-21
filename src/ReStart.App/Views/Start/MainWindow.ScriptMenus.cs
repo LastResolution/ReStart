@@ -9,6 +9,8 @@ public partial class MainWindow
     private MenuItem AddLiveTileMenu(ItemsControl menu)
     {
         var add = new MenuItem { Header = L.T(K.AddLiveTile) };
+        Add(add, L.T(K.StudioTitle), CreateScriptTile);
+        add.Items.Add(new Separator());
         foreach (var id in ScriptTilePackages.BundledIds)
             try
             {

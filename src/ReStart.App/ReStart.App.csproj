@@ -1,7 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
+    <!-- Keep the documented developer output location stable while targeting the Windows composition APIs. -->
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>bin/$(Configuration)/net10.0-windows/</OutputPath>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <!-- WPF owns DPI via the manifest; WinForms is used only for tray/monitor APIs. -->
@@ -22,6 +25,9 @@
     <Using Remove="System.Windows.Forms" />
     <Using Remove="System.Drawing" />
     <Using Include="System.IO" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
   </ItemGroup>
   <Target Name="CopyTileHost" AfterTargets="Build">
     <MSBuild Projects="../ReStart.TileHost/ReStart.TileHost.csproj" Targets="GetTargetPath" Properties="Configuration=$(Configuration)">

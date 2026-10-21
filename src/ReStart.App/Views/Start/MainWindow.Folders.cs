@@ -8,6 +8,41 @@ namespace ReStart.App;
 
 public partial class MainWindow
 {
+    private FrameworkElement CreateFolderPreview(Tile folder)
+    {
+        var extent = folder.Size == TileSize.Small ? 30 : folder.Size == TileSize.Large ? 132 : 70;
+        var mini = new UniformGridProxy
+        {
+            Columns = 2,
+            Rows = 2,
+            Width = extent,
+            Height = extent,
+            IsHitTestVisible = false,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        foreach (var child in folder.Children.Take(4))
+        {
+            // A fixed medium-size preview prevents the saved child size from
+            // changing miniature alignment. The persistent child is untouched.
+            var copy = System.Text.Json.JsonSerializer.Deserialize<Tile>(System.Text.Json.JsonSerializer.Serialize(child, LayoutStore.JsonOptions), LayoutStore.JsonOptions)!;
+            copy.Size = TileSize.Medium;
+            if (copy.Widget.Length == 0)
+            {
+                var icon = CreateIcon(copy, extent / 3); icon.Margin = new(0);
+                mini.Children.Add(new Border { Child = icon, Margin = new(1) });
+            }
+            else
+            {
+                _folderThumbnailIds.Add(copy.Id);
+                var tile = CreateTileButton(copy, studioPreview: true, folderThumbnail: true);
+                tile.Width = tile.Height = 2 * Cell - 4;
+                mini.Children.Add(new Viewbox { Child = tile, Stretch = System.Windows.Media.Stretch.Uniform, Margin = new(1) });
+            }
+        }
+        return mini;
+    }
+
     private DispatcherTimer? _nameRefreshTimer;
     private bool _animateFolderOnRender;
     private string TileDisplayName(Tile tile)

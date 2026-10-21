@@ -1,0 +1,64 @@
+{
+  "version": 2,
+  "renderer": "web",
+  "refreshSeconds": 1,
+  "capabilities": [
+    "system.metrics"
+  ],
+  "settings": {
+    "labels": {
+      "en": {
+        "cpu": "CPU",
+        "memory": "Memory",
+        "receive": "Receive"
+      },
+      "ja": {
+        "cpu": "CPU",
+        "memory": "メモリ",
+        "receive": "受信"
+      },
+      "de": {
+        "cpu": "CPU",
+        "memory": "Speicher",
+        "receive": "Empfang"
+      },
+      "es": {
+        "cpu": "CPU",
+        "memory": "Memoria",
+        "receive": "Recepción"
+      },
+      "fr": {
+        "cpu": "CPU",
+        "memory": "Mémoire",
+        "receive": "Réception"
+      },
+      "ko": {
+        "cpu": "CPU",
+        "memory": "메모리",
+        "receive": "수신"
+      },
+      "zh-Hans": {
+        "cpu": "CPU",
+        "memory": "内存",
+        "receive": "接收"
+      },
+      "zh-Hant": {
+        "cpu": "CPU",
+        "memory": "記憶體",
+        "receive": "接收"
+      }
+    },
+    "color": "#133039"
+  },
+  "title": "System dashboard",
+  "localizedTitles": {
+    "en": "System dashboard",
+    "ja": "システムダッシュボード",
+    "de": "Systemübersicht",
+    "es": "Panel del sistema",
+    "fr": "Tableau système",
+    "ko": "시스템 대시보드",
+    "zh-Hans": "系统仪表板",
+    "zh-Hant": "系統儀表板"
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "title": "Countdown",
   "localizedTitles": {
     "en": "Countdown",
@@ -52,5 +52,6 @@
       }
     },
     "target": ""
-  }
+  },
+  "renderer": "web"
 }

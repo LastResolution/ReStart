@@ -7,8 +7,10 @@ namespace ReStart.Core;
 /// <summary>Defines version 1 of a local JavaScript tile package; the only script entry is tile.js.</summary>
 public sealed class ScriptTileManifest
 {
-    /// <summary>Gets or sets the package schema version; only version 1 is accepted.</summary>
+    /// <summary>Gets or sets the schema: version 1 uses native frames; version 2 may use HTML/CSS through the web renderer.</summary>
     public int Version { get; set; } = 1;
+    /// <summary>Gets or sets native for isolated JSON frames, or web for a version 2 HTML/CSS/JavaScript document.</summary>
+    public string Renderer { get; set; } = "native";
     /// <summary>Gets or sets the initial tile label, limited to 80 characters.</summary>
     public string Title { get; set; } = "JavaScript";
     /// <summary>Gets or sets optional initial display titles keyed by supported language tag.</summary>
@@ -24,11 +26,12 @@ public sealed class ScriptTileManifest
     /// <summary>Rejects an invalid schema or values outside the documented tile API limits.</summary>
     public void Validate()
     {
-        if (Version != 1 || string.IsNullOrWhiteSpace(Title) || Title.Length > 80 || RefreshSeconds is < 1 or > 3600 ||
+        if (Version is not (1 or 2) || Renderer is not ("native" or "web") || Renderer == "web" && Version != 2 || string.IsNullOrWhiteSpace(Title) || Title.Length > 80 || RefreshSeconds is < 1 or > 3600 ||
             Settings.ValueKind != JsonValueKind.Object || Settings.GetRawText().Length > 8192 || LocalizedTitles == null || LocalizedTitles.Count > 16
             || LocalizedTitles.Any(p => !TextCatalog.SupportedLanguages.Contains(p.Key) || string.IsNullOrWhiteSpace(p.Value) || p.Value.Length > 80)
-            || Capabilities == null || Capabilities.Length > 3 || Capabilities.Distinct(StringComparer.Ordinal).Count() != Capabilities.Length
-            || Capabilities.Any(c => c is not ("system.metrics" or "images.slideshow" or "data.sources"))
+            || Capabilities == null || Capabilities.Length > 4 || Capabilities.Distinct(StringComparer.Ordinal).Count() != Capabilities.Length
+            || Capabilities.Any(c => c is not ("system.metrics" or "images.slideshow" or "data.sources" or "web.network"))
+            || Capabilities.Contains("web.network") && Renderer != "web"
             || DataSources == null || DataSources.Count > 4 || DataSources.Any(p => !Regex.IsMatch(p.Key, "^[a-z][a-z0-9_-]{0,31}$", RegexOptions.CultureInvariant) || p.Value == null || !p.Value.IsValid())
             || DataSources.Count > 0 && !Capabilities.Contains("data.sources"))
             throw new InvalidDataException(TextCatalog.T(K.ErrorScriptManifestInvalid));

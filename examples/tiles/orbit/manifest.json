@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "title": "Orbit clock",
   "localizedTitles": {
     "en": "Orbit clock",
@@ -43,5 +43,6 @@
         "caption": "軌道時鐘"
       }
     }
-  }
+  },
+  "renderer": "web"
 }

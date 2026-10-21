@@ -11,3 +11,9 @@ Settings → Layout and data shows source/target app and schema versions, UTC da
 To roll back: exit ReStart, separately copy current data and tiles, restore the matching older backup to layout.json, then launch that older app. Recheck startup/Explorer registration if the executable moved. JS sources and photo-folder bindings are not part of layout import/export; retain the installed tiles directory separately.
 
 Damaged files are preserved as .corrupt-<timestamp>; a valid rotating backup may be recovered. Future files are not renamed or overwritten. See [testing](testing.md).
+
+## Version 1.5 additions
+
+The schema remains 4. New preferences are additive: live tile names default on, placement locks default off, and a separate background is selected explicitly. Native tile packages remain supported. Web packages use manifest version 2 and retain generated installed IDs; direct web networking defaults off and imports cannot grant it. A same-schema app upgrade preserves its original backup as described above. A newer producer version remains protected from writes by an older app.
+
+Custom background PNGs, installed tile source/assets and local tile-library drafts live beside the layout but are not embedded in layout exports. Keep these directories when backing up. If the whole data directory is deleted while the process runs, that session refuses to recreate the deleted layout. Restart to build fresh defaults. Missing custom tile source is reported explicitly and can be repaired in Tile Studio; the app does not invent the deleted source or credentials.

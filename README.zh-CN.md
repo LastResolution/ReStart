@@ -18,6 +18,12 @@ https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
 
 **便携 · JavaScript 动态磁贴 · x64 和 ARM64 · 八种语言 · 无需单独安装 .NET**
 
+## 更多布局控制与创作空间
+
+可锁定全部布局或单个组。Ctrl+Shift+L 切换全局锁定；Ctrl+E 选择磁贴，Ctrl+方向键移动磁贴，Ctrl+Shift+方向键移动组，Alt+1–4 更改大小，Ctrl+G 将所选磁贴分组，Shift+F10 打开菜单。仍支持撤销/重做。还可保存独立于桌面的背景图片。
+
+内置 19 个 HTML/CSS/JavaScript 磁贴。Tile Studio 可编辑源码和清单，使用离线示例数据预览四种大小，再保存草稿或固定磁贴。新增天气风景、系统仪表板、RSS 新闻看板和 Canvas 花园；SVG 时钟指针按电脑时间运行。磁贴名称默认显示，可在设置中隐藏。
+
 ## 快速开始
 
 1. Intel/AMD 电脑下载 **[x64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-x64.zip)**；Windows on ARM 下载 **[ARM64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip)**。
@@ -45,7 +51,7 @@ https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
 | 启动选项 | 每个磁贴独立启用、参数、工作目录、受支持桌面应用/快捷方式的管理员运行；Windows 负责 UAC |
 | 导航 | 可选悬停展开、单独选择文档/下载/音乐/图片/视频/网络/个人文件夹、账户和电源操作 |
 | 外观 | 五种色系及各自的明暗变体、系统模式、自定义 RGB 背景/强调色、桌面壁纸、开始菜单着色、单个磁贴颜色、主题控件/滚动条、高对比度、可选动画 |
-| 动态磁贴 | 15 个 JavaScript 示例、四种响应式尺寸、本地点击动作、实时更新开关、数据配置、创建示例、导入包、自动监视本地库 |
+| 动态磁贴 | 19 个 JavaScript 示例、四种响应式尺寸、本地点击动作、实时更新开关、数据配置、创建示例、导入包、自动监视本地库 |
 | 磁贴 API | 电脑时间、语言/尺寸、保留状态、CPU/内存/网络/电池/存储、所选照片、缓存 JSON/Web API/RSS/Atom/文件输入、本地应用集成 |
 | 语言 | 英语、日语、德语、法语、西班牙语、韩语、简体中文、繁体中文，包括内置磁贴文案 |
 | 数据和更新 | 本地设置、布局导入/导出/重置、备份和迁移、可清除的应用活动、版本/构建/许可证、无需 API 密钥的更新检查和手动安装 |
@@ -78,7 +84,7 @@ https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
 
 **天气初始使用柏林示例坐标，不是电脑的位置。** ReStart 不推测你的地区。请按[天气指南](docs/javascript-tiles.md#weather-location)修改坐标和显示名称。凭据按当前 Windows 用户加密并排除在布局导出之外。连接失败时可显示缓存；隐藏开始菜单后停止读取。
 
-自定义磁贴由 `manifest.json` 和 `tile.js` 组成。`render(ctx)` 接收有界的数据快照并返回原生显示数据，可按尺寸改变布局。JavaScript 没有通用文件、网络或 CLR 访问权限。把包文件夹放入 `%LOCALAPPDATA%\ReStart\TileLibrary` 即可自动发现。[示例](examples/tiles) · [JavaScript API（英文）](docs/javascript-tiles.md) · [本地数据生成示例](examples/integrations/write-tile-data.ps1)
+Web 磁贴包含 manifest.json、index.html、tile.css、tile.js 及可选 assets。在四种固定大小内可自由使用 HTML/CSS、SVG、Canvas 和透明背景，仍兼容原生 JS 包。需要 WebView2 Runtime；直接联网必须声明能力并逐磁贴授权，不提供通用文件、CLR 或 shell 桥接。 [HTML/CSS/JavaScript API](docs/javascript-tiles.md) · [Examples](examples/tiles)
 
 ## 操作
 

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>ReStart live tile</title>
+        <link rel="stylesheet" href="/tile.css" />
+    </head>
+    <body>
+        <article class="tile sky">
+            <div class="weather-art" aria-hidden="true">
+                <div class="sun"></div>
+                <div class="cloud"></div>
+                <div class="rain"></div>
+            </div>
+            <div class="weather-copy">
+                <div id="condition" class="kicker"></div>
+                <div id="temperature" class="value"></div>
+                <div id="wind"></div>
+            </div>
+            <div id="tile-name" class="tile-name" data-restart-title></div>
+        </article>
+        <script src="/tile.js"></script>
+    </body>
+</html>

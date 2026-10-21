@@ -24,9 +24,9 @@ English is the primary documentation. The translated guides are AI-assisted and 
 
 https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
 
-**Miss the Windows 10 full-screen Start menu?** ReStart gives your apps a familiar home on Windows 11 and Windows 10. Pin what you use, arrange the screen your way, and add live tiles that you can write in JavaScript.
+**Miss the Windows 10 full-screen Start menu?** ReStart gives your apps a familiar home on Windows 11 and Windows 10. Pin what you use, arrange the screen your way, and add live tiles that you can build with HTML, CSS and JavaScript.
 
-**Portable · JavaScript live tiles · x64 & ARM64 · Eight languages · No separate .NET installation**
+**Portable · HTML/CSS/JavaScript live tiles · x64 & ARM64 · Eight languages · No separate .NET installation**
 
 [Explore the tiles](#give-your-tiles-something-to-say) · [Connect your data](#connect-weather-headlines-and-app-data) · [Write a tile](#write-your-own) · [Build from source](#build-it-yourself)
 
@@ -43,7 +43,7 @@ Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button
 ![ReStart opening and closing with apps and live tiles](docs/images/start-motion.gif)
 
 - **Make room for your apps.** Four tile sizes, movable groups, independent tiles and folders that expand in place. Drag, resize and rename without leaving Start.
-- **Choose several tiles without accidental launches.** Use **Select tiles** in the sidebar or background context menu, or press **Ctrl+E**. Move a selection together, then undo or redo the whole operation. Individual tiles and groups can always be dragged directly.
+- **Choose several tiles without accidental launches.** Use **Select tiles** in the sidebar or background context menu, or press **Ctrl+E**. Move a selection together, then undo or redo the whole operation. Individual tiles and groups can be dragged directly while unlocked. Global and per-group placement locks prevent accidental changes; Ctrl+Arrow moves selected tiles without a mouse.
 - **Keep your files close.** Pin a document, directory or shortcut from Explorer's **Pin to ReStart** command.
 - **Find the next thing.** Search apps, Windows settings and indexed local filenames. App menus can show recent/frequent documents. Choose sidebar folders, optional app history and per-tile launch options. Control each feature in **Settings → Start behavior**. [Explore the switches](docs/start-behavior.md).
 - **Open and type.** The first launch prepares icons and live tiles behind a localized progress screen with the app logo. Keystrokes typed while loading carry into Start automatically. Enter launches the highlighted search result; reopening returns to your pinned home. Installed and removed apps refresh in the background while ReStart keeps running.
@@ -56,6 +56,14 @@ Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button
 
 </details>
 
+## More control, more room to create
+
+- **Protect your layout:** lock every placement or one group. Use **Ctrl+Shift+L** for the global lock.
+- **Edit with the keyboard:** **Ctrl+E** selects tiles, arrows choose one, **Ctrl+Arrow** moves it, **Ctrl+Shift+Arrow** moves its group, and **Alt+1–4** changes its size. **Ctrl+G** groups a selection; **Shift+F10** opens its menu. Undo/redo remains available.
+- **Choose a separate background:** keep the desktop wallpaper or import an image just for ReStart. The app stores its own decoded copy, without keeping the original source path.
+- **Create in Tile Studio:** HTML, CSS, browser JavaScript, all four size previews and offline sample input. Nineteen bundled examples provide a starting point.
+- **Keep the names you want:** live tile names are shown by default and can be hidden in settings. Tooltips and accessibility names remain available.
+
 ## Everything at a glance
 
 | Area | Included features |
@@ -64,16 +72,16 @@ Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button
 | Startup | Optional sign-in startup, silent background mode, a themed preparation screen with typeahead, icon caching and background catalog refresh |
 | Tiles and groups | Small, medium, wide and large tiles; independent pins; movable rectangular groups with content-sized bounds; half-cell horizontal anchors; automatic placement and scrolling in both directions |
 | Folders | Create by overlap inside a group, open inline, add/remove/reorder children, rename inline and unpack; one remaining child keeps its folder |
-| Layout editing | Edit mode, multi-selection, group moves, select/unpin actions and session Undo/Redo; cancelled drags preserve the original layout |
+| Layout editing | Global/per-group placement locks, keyboard placement/resize/group moves, edit mode, multi-selection and session Undo/Redo; cancelled drags preserve the original layout |
 | Drag feedback | Distinct group/folder/drop destinations, dwell progress, optional hints, hover boundaries and stationary edge scrolling; automatic group/folder creation can be switched off |
 | Pin anything | Apps, files, directories, shortcuts and websites; Explorer's Pin to ReStart, app/search context menus, drag from app lists, and explicit destinations |
 | Search | Unicode-width/kana-normalized app names, fifteen localized Windows settings pages with English aliases, optional local indexed filenames, selected-result Enter/arrow navigation and cancellation of stale file queries |
 | All apps | Responsive alphabetical columns, Start-menu directory expansion, letter picker, keyboard navigation, live installation/removal refresh, optional Recently added and opt-in Most used |
 | App commands | Available Windows administrator, file-location, properties and uninstall actions; optional Recent/Frequent document menus, subject to Windows history settings and API support |
 | Launch options | Per-tile enable/disable, additional arguments, working directory and administrator execution for supported desktop apps/shortcuts; Windows handles UAC |
-| Navigation | Optional hover expansion; individually selectable Documents, Downloads, Music, Pictures, Videos, Network and Personal folder; account and power actions |
-| Appearance | Five color families in light/dark/system modes, custom background/accent RGB, wallpaper, Start accent tint, classic or individual tile colors, themed controls/scrollbars, high contrast and optional motion |
-| Live tiles | Fifteen bundled JavaScript tiles, four responsive sizes, local click actions, live updates on/off, per-tile data configuration, sample creation, package import and an automatically watched local tile library |
+| Navigation | Optional hover expansion; individually selectable Documents, Downloads, Music, Pictures, Videos, Network and Personal folder; Windows account picture, account and power actions |
+| Appearance | Five color families in light/dark/system modes, custom background/accent RGB, desktop or separate locally stored wallpaper, Start accent tint, classic or individual tile colors, themed controls/scrollbars, high contrast and optional motion |
+| Live tiles | Nineteen bundled HTML/CSS/JavaScript tiles, four responsive sizes, local click actions, live updates on/off, per-tile data configuration, Tile Studio, optional bottom names, package import and an automatically watched local tile library |
 | Tile APIs | PC-local time, language and size, retained state, CPU/memory/network/battery/storage metrics, selected photo slideshows, cached JSON/Web API/RSS/Atom/local-file inputs and local application integration |
 | Language | English, Japanese, German, French, Spanish, Korean, Simplified Chinese and Traditional Chinese, including bundled tile text |
 | Data and updates | Local settings, layout import/export/reset, backup and version migration, clearable local app activity, version/build/license information and API-key-free update checks with manual installation |
@@ -104,7 +112,7 @@ Switch off settings/file search, document menus, hover effects, automatic overla
 
 ## Give your tiles something to say
 
-See the time, PC activity, your chosen photos, weather and headlines alongside your apps. **Fifteen JavaScript tiles are included**, with layouts for all four tile sizes.
+See the time, PC activity, your chosen photos, weather and headlines alongside your apps. **Nineteen HTML/CSS/JavaScript tiles are included**, with layouts for all four tile sizes.
 
 ![Bundled clock, system metrics, focus and photo tiles](docs/images/live-tiles.png)
 
@@ -136,42 +144,30 @@ For your own application, publish JSON through an existing local endpoint or a f
 
 ### Write your own
 
-A tile is a `manifest.json` and a `tile.js`. ReStart supplies PC time, the selected language, tile size, click events and retained state. Optional capabilities provide read-only system metrics, chosen photos or cached Web API/feed/local-file data through the host.
+A web tile contains `manifest.json`, `index.html`, `tile.css` and `tile.js`, plus optional local assets. Use ordinary HTML/CSS, SVG and Canvas inside the four fixed tile footprints. Transparent backgrounds and circular designs are supported; legacy native JavaScript packages still work.
 
-Start with a named data source in `manifest.json`:
+Open **Tile Studio** from settings or the tile menu. Edit the source, preview all four sizes with offline sample data, test click actions, then save a draft or save and pin. Installed-tile edits keep the package ID, placement and local connection bindings.
 
 ```json
-{
-  "version": 1,
-  "title": "My service",
-  "refreshSeconds": 1,
-  "capabilities": ["data.sources"],
-  "dataSources": {
-    "service": { "format": "json", "refreshSeconds": 60, "jsonPointer": "/status" }
-  },
-  "settings": {}
-}
+{ "version": 2, "renderer": "web", "title": "My tile", "refreshSeconds": 1 }
 ```
 
-Then display its cached value in `tile.js`:
+```html
+<main><strong id="value"></strong><span data-restart-title id="name"></span></main>
+<script src="/tile.js"></script>
+```
 
 ```js
 function render(ctx) {
-  const source = ctx.data?.service;
-  return {
-    text: source?.value?.text ?? "Waiting for data",
-    detail: source?.stale ? "Showing cached data" : "",
-    kicker: "My service",
-    background: "#12344B", backgroundEnd: "#10202F",
-    foreground: "#FFFFFF",
-    layout: "centered"
-  };
+  document.getElementById("value").textContent =
+    new Date(ctx.now).toLocaleTimeString(ctx.locale);
+  document.getElementById("name").textContent = ctx.title;
 }
 ```
 
-Put both files in a subfolder under `%LOCALAPPDATA%\ReStart\TileLibrary`, then add the tile from the gallery or right-click menu. In its connection dialog, choose a source returning `{"status":{"text":"Build passed"}}`. The selector `/status` supplies that object to `ctx.data.service.value`. Keep personal URLs and keys in the connection dialog, outside the package.
+Style the markup in `tile.css`; respond to `data-size`, `ctx.bounds`, language and theme. Add a package folder to `%LOCALAPPDATA%\ReStart\TileLibrary` to make it appear in the gallery. The [tile guide](docs/javascript-tiles.md) covers the complete package, browser API, explicit data connections, networking permission and execution boundaries. HTML tiles use Microsoft's WebView2 Runtime; a missing runtime produces setup guidance. No Node.js or OS/filesystem bridge is exposed.
 
-ReStart draws the tile natively; `render(ctx)` reads a snapshot and returns display data. Start from the [bundled examples](examples/tiles) for system metrics, photos, responsive layouts and local click actions, or follow the [tile guide](docs/javascript-tiles.md) and [API contracts](docs/api-contracts.md).
+The **Weather scene**, **System dashboard**, **News board** and **Canvas garden** samples demonstrate CSS weather artwork, multiple real PC gauges, RSS typography and animated Canvas art. The SVG Orbit clock keeps its hands current from the PC clock between host refreshes. All nineteen packages include localized text and responsive layouts. **Show live tile names** starts on; turn it off in settings for a cleaner tile surface. Animations respect reduced motion.
 
 ## Make it yours—and share it
 
@@ -217,7 +213,7 @@ Optional app activity is stored separately in `activity.json` and can be cleared
 
 Update checks read public GitHub Releases without an API key. Installation is manual: exit ReStart, then replace the complete extracted installation. If its location changed, save sign-in startup and Explorer integration again. See [updates](docs/updates.md).
 
-No advertising or usage analytics are included. App lists, layouts and photo-folder selections are not uploaded. JavaScript tiles return bounded display data and do not receive general file, network or CLR access. Configured data providers receive their requests and explicitly configured parameters/credentials; see [security](SECURITY.md).
+No advertising or usage analytics are included. App lists, layouts and photo-folder selections are not uploaded. Native JavaScript tiles return bounded display data; web tiles use sandboxed browser DOM/CSS/Canvas with explicitly permitted networking. Neither receives a general filesystem, CLR or shell bridge. Configured data providers receive their requests and explicitly configured parameters/credentials; see [security](SECURITY.md).
 
 To uninstall, disable sign-in startup and Explorer integration, exit the tray app and delete the extracted installation. Remove the local data folder only if you also want to delete your settings and custom tiles.
 

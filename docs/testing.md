@@ -29,6 +29,7 @@ dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory 
 ./scripts/test-scrolling.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-file-pinning.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-bundled-tiles.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+./scripts/test-studio.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-tile-data.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/package.ps1 -Runtime win-x64
 ./scripts/test-lifecycle.ps1 -Executable artifacts/publish/win-x64/ReStart.exe
@@ -85,3 +86,5 @@ dotnet test tests/ReStart.Core.Tests/ReStart.Core.Tests.csproj -c Release -p:Deb
 | Accessibility | Narrator, focus visibility, touch/long press |
 
 Do not execute power, uninstall or elevation commands as a routine smoke check. Automated events do not establish physical shortcut behavior. See [compatibility](fidelity.md) for platform coverage.
+
+The headless Studio fixture uses hidden native hosts and a real WebView2 renderer, without showing windows or loading a user catalog/account picture. It checks package resource isolation and state, nineteen samples at four sizes and eight languages, name visibility, source previews and a PC-time SVG hand that advances without another host update. Production composition/reparenting is additionally exercised by native bundled/startup fixtures on CI.

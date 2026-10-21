@@ -18,6 +18,12 @@ Windows 10의 전체 화면 시작 메뉴가 그리우신가요? ReStart는 Wind
 
 **포터블 · JavaScript 라이브 타일 · x64 및 ARM64 · 8개 언어 · 별도 .NET 설치 불필요**
 
+## 더 자유로운 배치와 타일 제작
+
+전체 배치 또는 개별 그룹을 잠글 수 있습니다. Ctrl+Shift+L로 전체 잠금을 전환합니다. Ctrl+E로 선택하고 Ctrl+방향키로 타일, Ctrl+Shift+방향키로 그룹을 이동하며 Alt+1–4로 크기를 바꿉니다. Ctrl+G는 그룹화, Shift+F10은 메뉴 열기입니다. 실행 취소/다시 실행도 지원합니다. 바탕 화면과 별도의 배경 이미지를 저장할 수 있습니다.
+
+HTML/CSS/JavaScript 타일 19개를 제공합니다. Tile Studio에서 코드와 매니페스트를 편집하고 오프라인 샘플로 네 가지 크기를 확인한 뒤 저장하거나 고정할 수 있습니다. 날씨 풍경, 시스템 대시보드, RSS 뉴스 보드와 Canvas 정원을 추가했습니다. SVG 시계 바늘은 PC 시간을 따릅니다. 타일 이름은 기본으로 표시되며 설정에서 숨길 수 있습니다.
+
 ## 시작하기
 
 1. Intel/AMD PC용 **[x64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-x64.zip)** 또는 Windows on ARM용 **[ARM64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip)**을 받습니다.
@@ -45,7 +51,7 @@ Windows 10의 전체 화면 시작 메뉴가 그리우신가요? ReStart는 Wind
 | 실행 옵션 | 타일별 켜기/끄기, 인수, 작업 디렉터리, 지원되는 데스크톱 앱/바로 가기의 관리자 실행; UAC는 Windows가 처리 |
 | 탐색 | 선택적 마우스 올리기 확장, 문서/다운로드/음악/사진/동영상/네트워크/개인 폴더 개별 선택, 계정 및 전원 작업 |
 | 모양 | 밝음/어두움 변형이 있는 5개 색상 계열, 시스템 모드, 사용자 RGB 배경/강조색, 바탕 화면 배경, 시작 화면 색조, 개별 타일 색상, 테마 컨트롤/스크롤바, 고대비, 선택적 애니메이션 |
-| 라이브 타일 | JavaScript 예제 15개, 반응형 크기 4개, 로컬 클릭 동작, 실시간 갱신 켜기/끄기, 데이터 구성, 예제 생성, 패키지 가져오기, 자동 감시 라이브러리 |
+| 라이브 타일 | JavaScript 예제 19개, 반응형 크기 4개, 로컬 클릭 동작, 실시간 갱신 켜기/끄기, 데이터 구성, 예제 생성, 패키지 가져오기, 자동 감시 라이브러리 |
 | 타일 API | PC 시간, 언어/크기, 유지되는 상태, CPU/메모리/네트워크/배터리/저장 공간, 선택한 사진, 캐시된 JSON/Web API/RSS/Atom/파일 입력, 로컬 앱 연동 |
 | 언어 | 영어, 일본어, 독일어, 프랑스어, 스페인어, 한국어, 중국어 간체/번체; 기본 제공 타일 문구 포함 |
 | 데이터 및 업데이트 | 로컬 설정, 배치 가져오기/내보내기/초기화, 백업과 마이그레이션, 지울 수 있는 앱 활동, 버전/빌드/라이선스, API 키 없는 업데이트 확인과 수동 설치 |
@@ -78,7 +84,7 @@ Windows 10의 전체 화면 시작 메뉴가 그리우신가요? ReStart는 Wind
 
 **날씨의 초기 좌표는 예시용 베를린이며 PC 위치가 아닙니다.** ReStart는 지역을 추정하지 않습니다. [날씨 안내](docs/javascript-tiles.md#weather-location)에 따라 좌표와 표시 이름을 바꾸세요. 자격 증명은 현재 Windows 사용자용으로 암호화하며 내보내기에서 제외합니다. 연결 실패 시 캐시를 사용할 수 있고 시작 화면을 숨기면 읽기를 중지합니다.
 
-자체 타일은 `manifest.json`과 `tile.js`로 구성됩니다. `render(ctx)`는 제한된 데이터 스냅샷을 받아 크기별 배치 등 네이티브 표시 데이터를 반환합니다. JavaScript에 일반 파일/네트워크/CLR 접근 권한은 주어지지 않습니다. `%LOCALAPPDATA%\ReStart\TileLibrary` 아래에 패키지 폴더를 놓으면 자동 인식합니다. [예제](examples/tiles) · [JavaScript API(영어)](docs/javascript-tiles.md) · [로컬 데이터 생성 예제](examples/integrations/write-tile-data.ps1)
+웹 타일은 manifest.json, index.html, tile.css, tile.js와 선택적 assets로 구성됩니다. 네 가지 고정 크기 안에서 HTML/CSS, SVG, Canvas와 투명 배경을 사용할 수 있습니다. 기존 네이티브 JS도 지원합니다. WebView2 Runtime이 필요하며 직접 네트워크 접근에는 선언과 타일별 허용이 필요합니다. 일반 파일, CLR, 셸 브리지는 제공하지 않습니다. [HTML/CSS/JavaScript API](docs/javascript-tiles.md) · [Examples](examples/tiles)
 
 ## 조작
 

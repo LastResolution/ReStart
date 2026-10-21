@@ -790,4 +790,56 @@ public enum TextKey
     LayoutUnlockedStatus,
     /// <summary>Arrows: focus · Space: select · Ctrl+arrows: move tiles · Ctrl+Shift+arrows: move group · Alt+1–4: size · Ctrl+G: new group · Shift+F10: tile menu · Ctrl+Z/Y: undo/redo</summary>
     KeyboardLayoutHelp,
+    /// <summary>Tile Studio</summary>
+    StudioTitle,
+    /// <summary>Edit JavaScript and the manifest, then preview all four sizes. Previews use offline sample metrics and data. Save drafts to your tile library or save and pin a working tile.</summary>
+    StudioHelp,
+    /// <summary>Template</summary>
+    StudioTemplate,
+    /// <summary>Load template</summary>
+    StudioLoadTemplate,
+    /// <summary>Preview all sizes</summary>
+    StudioPreview,
+    /// <summary>Preview while typing</summary>
+    StudioAutoPreview,
+    /// <summary>Reset preview state</summary>
+    StudioResetState,
+    /// <summary>Save to tile library</summary>
+    StudioSaveLibrary,
+    /// <summary>Save and pin</summary>
+    StudioSaveAndPin,
+    /// <summary>Sample data (JSON)</summary>
+    StudioSamples,
+    /// <summary>Last preview input</summary>
+    StudioInput,
+    /// <summary>Editor document</summary>
+    StudioEditor,
+    /// <summary>Click a preview to test its click event. Sample data stays in this session. Ctrl+Enter previews; Ctrl+S saves.</summary>
+    StudioClickHint,
+    /// <summary>All four sizes rendered successfully.</summary>
+    StudioPreviewSuccess,
+    /// <summary>Saved. Library drafts and installed tiles are separate copies.</summary>
+    StudioSaved,
+    /// <summary>Discard unsaved changes to this tile?</summary>
+    StudioDiscard,
+    /// <summary>The original source is missing. A clock template is shown for repair. Saving replaces the missing source while keeping this tile’s position.</summary>
+    StudioMissing,
+    /// <summary>Allow this tile to access the network</summary>
+    AllowWebTileNetwork,
+    /// <summary>The web tile process stopped. Reload this tile to try again.</summary>
+    ErrorWebTileProcess,
+    /// <summary>The HTML tile could not load. Check its HTML, CSS and JavaScript in Tile Studio.</summary>
+    ErrorWebTileLoad,
+    /// <summary>HTML tiles require Microsoft Edge WebView2 Runtime. Install it from Microsoft, then restart ReStart.</summary>
+    ErrorWebTileRuntime,
+    /// <summary>Show live tile names</summary>
+    ShowLiveTileNames,
+    /// <summary>A new version is ready</summary>
+    UpdateNoticeTitle,
+    /// <summary>ReStart {0} is available. You’re using {1}.</summary>
+    UpdateNoticeBody,
+    /// <summary>Not now</summary>
+    UpdateNoticeLater,
+    /// <summary>View release notes and downloads on GitHub.</summary>
+    UpdateNoticeHelp,
 }

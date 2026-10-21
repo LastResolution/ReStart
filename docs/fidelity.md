@@ -21,7 +21,7 @@ Portable builds target Windows 10/11 on x64 and ARM64. Development and native au
 | Desktop integration | Reversible Windows-key and Start-button capture, tray, optional sign-in startup and Explorer pin commands; no shell injection |
 | Motion | Separate window fade, bottom-anchored zoom and bottom-to-top tile reveal; animated dismissal, interrupted reopen and reduced-motion support |
 | Appearance | Dark, light, system and high contrast; wallpaper blur/tint approximates the original composition |
-| Live tiles | Local clock/calendar and JavaScript packages, including opt-in cached Web API/feed/file inputs; these are ReStart extensions, without legacy UWP notifications or background delivery |
+| Live tiles | Local clock/calendar, native JS compatibility and HTML/CSS/browser JavaScript packages, including opt-in cached Web API/feed/file inputs; these are ReStart extensions, without legacy UWP notifications or background delivery |
 | App history | Optional Recently added and Most used, based on local discovery dates and opt-in successful ReStart launches. Existing apps are baselined; history can be cleared. Windows usage history is not imported |
 | Data | Schema migration with original-file backups and protection against newer producers; no direct Windows layout import |
 | Updates | Public GitHub Releases without an API key; manual installation |
@@ -51,3 +51,5 @@ See [Start behavior](start-behavior.md) for feature switches, defaults and local
 - [Microsoft: Make Start full screen](https://blogs.windows.com/windowsexperience/2017/09/11/windows-10-tip-make-start-full-screen/)
 - [Microsoft: Full-screen Start layout changes in build 10547](https://blogs.windows.com/windows-insider/2015/09/18/announcing-windows-10-insider-preview-build-10547/)
 - [Microsoft: Windows 10 Start layout](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/configuration/customize-and-export-start-layout)
+
+Placement locks, full keyboard placement editing, Tile Studio, separate owned background images and browser live tiles are ReStart extensions. They are not claims about the Windows 10 shell. Nineteen web examples are checked at four sizes and in eight languages through a real hidden browser fixture; browser sandbox restrictions and runtime requirements are documented in the tile guide.

@@ -89,6 +89,7 @@ internal sealed partial class SettingsWindow : Window
         Note(content, L.T(K.SettingsPrivacy));
         BuildMigrationInfo(content);
         content = Section(L.T(K.SettingsScriptTiles));
+        Check(content, L.T(K.ShowLiveTileNames), _draft.ShowLiveTileNames, v => _draft.ShowLiveTileNames = v);
         Heading(content, L.T(K.BundledTiles));
         var bundled = new WrapPanel { Margin = new(0, 0, 0, 16) };
         foreach (var id in ScriptTilePackages.BundledIds)
@@ -127,7 +128,7 @@ internal sealed partial class SettingsWindow : Window
         Note(content, L.T(K.SystemMetricsHelp));
         Note(content, L.T(K.ScriptAuthoringHelp));
         var scriptButtons = new WrapPanel();
-        DataButton(scriptButtons, L.T(K.CreateScriptSample), () => { _main.CreateScriptTile(); _feedback.Text = L.T(K.StatusScriptAdded); });
+        DataButton(scriptButtons, L.T(K.StudioTitle), () => _main.OpenTileStudio(owner: this));
         DataButton(scriptButtons, L.T(K.ImportScriptTile), () => { _main.ImportScriptTile(); });
         content.Children.Add(scriptButtons);
         Note(content, L.T(K.ScriptCapabilitiesHelp));

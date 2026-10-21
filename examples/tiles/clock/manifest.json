@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "title": "Digital clock",
   "localizedTitles": {
     "en": "Digital clock",
@@ -51,5 +51,6 @@
         "localTime": "電腦本機時間"
       }
     }
-  }
+  },
+  "renderer": "web"
 }

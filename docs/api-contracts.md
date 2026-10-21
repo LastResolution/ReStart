@@ -26,6 +26,9 @@ App, Core and TileHost emit XML documentation. Missing public/protected comments
 | TileDataDefinition / TileDataBinding | Bounded declarations; explicit local connections; null selector inherits, empty selects root; bindings never enter worker context |
 | TileDataTransport / TileDataSource | Four asynchronous reads; bounded bodies/selections; no ambient credentials; same-origin redirects; last-good cache, backoff and hide cancellation |
 | ScriptDataBindings / ScriptDataRuntime | Current-user DPAPI storage outside exports; per-tile provider lifecycle; snapshots contain selected response data, never bindings |
+| HtmlTileView | Version 2 browser sandbox, explicit in-memory resources, JSON-only host messages, no OS object bridge; browser CPU is not Jint-budgeted |
+| TileStudioContext | Offline synthetic data only, declared capabilities, current language/size/theme/name preference |
+| LayoutLocks / KeyboardLayoutEditor | Pure plans preserve protected geometry and membership; no partial edit or history mutation on rejection |
 | JsTileRunner | New realm each render; expose JSON only |
 | ScriptTileSession | One request at a time; bounded asynchronous IPC and an independent parent deadline |
 | WorkerJob | Memory/process/lifetime limits; no claim of reduced OS privileges |

@@ -90,6 +90,16 @@ public partial class MainWindow
                 return (group, nearest ?? panel);
             hit = VisualTreeHelper.GetParent(hit);
         }
+        // A compact open folder must still accept the next child column. This
+        // transient drop zone adds no invisible layout/collision footprint.
+        foreach (var inline in VisualChildren<TilePanel>(GroupsPanel).Where(p => p.FolderOwner != null))
+        {
+            var origin = inline.TranslatePoint(new Point(), GroupsPanel);
+            var right = origin.X + Math.Min(Document.Preferences.Columns * Cell, inline.ActualWidth + Cell);
+            if (point.X < origin.X || point.X > right || point.Y < origin.Y || point.Y > origin.Y + inline.ActualHeight + Cell) continue;
+            var owner = Document.Groups.FirstOrDefault(g => g.Tiles.Contains(inline.FolderOwner!));
+            if (owner != null) return (owner, inline);
+        }
         var adjacent = GroupLayout.DropRecipient(GroupsPanel.Placements, point.X, point.Y, Cell);
         var destination = GroupsPanel.Children.OfType<StackPanel>().FirstOrDefault(s => s.Tag == adjacent)?.Children.OfType<TilePanel>().FirstOrDefault();
         return adjacent != null && destination != null ? (adjacent, destination) : null;
@@ -110,7 +120,9 @@ public partial class MainWindow
             .Where(p => p.Panel != null)
             .Select(p => (p.Group, Panel: p.Panel!, Overlap: FindFolderOverlap(tile, p.Panel!, GroupsPanel.TranslatePoint(pointer, p.Panel!))))
             .Where(p => p.Overlap != null).OrderByDescending(p => p.Overlap!.Ratio).ThenBy(p => p.Overlap!.Distance).FirstOrDefault();
-        return overlapping.Panel != null ? (overlapping.Group, overlapping.Panel) : centered;
+        if (overlapping.Panel != null) return (overlapping.Group, overlapping.Panel);
+        var leading = GroupAt(new(pointer.X - _dragOffset.X + .5, pointer.Y - _dragOffset.Y + .5));
+        return leading?.Panel.FolderOwner != null ? leading : centered ?? leading;
     }
 
     private sealed record SingleTileDrop(TileGroup? Group = null, TilePanel? Panel = null,

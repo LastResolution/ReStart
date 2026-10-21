@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "title": "Month dots",
   "localizedTitles": {
     "en": "Month dots",
@@ -43,5 +43,6 @@
         "caption": "月份點陣"
       }
     }
-  }
+  },
+  "renderer": "web"
 }

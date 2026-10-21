@@ -2,7 +2,7 @@
 
 ![Bundled gallery](images/live-tiles.png)
 
-Right-click the background or a group → Add live tile, or open Settings → JavaScript tiles, to choose fifteen ready-to-use packages. Adding one does not open a code editor. Connected tiles open native connection settings; no requests start until you save an enabled connection. Normal clicks send a local event; right-click to edit JS/settings, reload, configure data or select a photo folder. Create sample is an explicit authoring action that opens Notepad.
+Right-click the background or a group → Add live tile, or open Settings → JavaScript tiles, to choose nineteen ready-to-use packages. Adding one does not open a code editor. Connected tiles open native connection settings; no requests start until you save an enabled connection. Normal clicks send a local event; right-click to edit JS/settings, reload, configure data or select a photo folder. Tile Studio is the built-in authoring workspace for HTML, CSS, JavaScript and the manifest. Its offline sample input and four size previews let you experiment before saving or pinning.
 
 | Package | Display / click |
 | --- | --- |
@@ -22,9 +22,91 @@ Right-click the background or a group → Add live tile, or open Settings → Ja
 | feed | RSS/Atom headlines / next headline |
 | json-monitor | A Web API or selected local JSON file, with optional progress |
 
-## Package
+## HTML, CSS and browser JavaScript
 
-Import manifest.json beside tile.js. Only those two files are copied into a generated installed package. Edit the installed copy afterward. The manifest schema remains version 1; title is at most 80 characters, refreshSeconds 1–3,600, settings an object of at most 8,192 UTF-16 code units. Optional localizedTitles maps supported language tags to default display names. Default names follow language changes; an explicitly renamed tile keeps its custom name.
+Bundled packages use **version 2** with `"renderer": "web"`. Each has `manifest.json`, `tile.js`, `index.html` and `tile.css`; an optional `assets/` directory holds local images, fonts, modules or other resources. Import copies these resources into a generated installed package. Connection files are never imported. Version 1 native JavaScript packages continue to work.
+
+HTML tiles require Microsoft's [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/). If it is missing, ReStart shows an actionable error instead of installing software silently. The browser SDK is included; the browser runtime is maintained separately by Microsoft.
+
+```json
+{
+  "version": 2,
+  "renderer": "web",
+  "title": "My canvas",
+  "refreshSeconds": 1,
+  "settings": {}
+}
+```
+
+```html
+<!doctype html>
+<html><head><link rel="stylesheet" href="/tile.css"></head>
+<body><main><strong id="value"></strong>
+<span data-restart-title id="name"></span></main>
+<script src="/tile.js"></script></body></html>
+```
+
+```css
+html, body { width: 100%; height: 100%; margin: 0; background: transparent; }
+main { box-sizing: border-box; height: 100%; padding: 10px; display: grid; }
+#value { align-self: center; font: 28px 'Segoe UI', sans-serif; }
+[data-size="small"] #value { font-size: 14px; }
+```
+
+```js
+function render(ctx) {
+  document.getElementById('value').textContent =
+    new Date(ctx.now).toLocaleTimeString(ctx.locale);
+  document.getElementById('name').textContent = ctx.title;
+}
+```
+
+The tile keeps its small, medium, wide or large footprint. Inside it, use ordinary DOM, CSS, SVG, Canvas, responsive layout and browser JavaScript. Transparent corners and backgrounds are supported. The host sets `data-size`, `data-show-title`, `lang` and `--tile-scale` on the document root before each update. It supplies actual bounds in DIPs; do not assume a fixed device pixel ratio.
+
+`render(ctx)` may be synchronous or asynchronous and may update the DOM directly. An optional `present(result, ctx)` runs afterward, useful for separating data from presentation. A web tile does not need to return native display fields. `window.ReStart` offers:
+
+| API | Meaning |
+| --- | --- |
+| `ReStart.context` | Latest JSON host context; no filesystem handles or host objects |
+| `ReStart.onUpdate(fn)` | Subscribe to updates; the returned function removes the subscription |
+| `ReStart.setState(value)` | Set JSON session state, up to 8,192 UTF-16 units; it resets on reload or exit |
+| `ReStart.imageUrl` | Opaque same-origin URL for the selected slideshow image, or `null`; no source path is exposed |
+
+`ctx.theme` supplies `mode`, `highContrast`, `reducedMotion`, `accent` and an optional user `customColor`. `ctx.appearance.showTitle` reflects **Settings → JavaScript tiles → Show live tile names**, initially on. Mark a name with `data-restart-title` so the host can hide it; custom layouts can also use the context and root data attribute. Titles remain available to tooltips and accessibility when visually hidden. This setting applies to live tile names, not ordinary app labels.
+
+Normal tile clicks deliver `ctx.event`, dispatch `restart:click`, and forward a synthetic DOM click at the pointer position (or tile center for keyboard activation). These are not trusted browser input events; permission-gated browser actions remain unavailable. Edit mode selects tiles instead of interacting with their content.
+
+The Orbit sample paints its SVG hands from the PC's `Date.now()` at up to 30 fps while visible. It does not wait for a host refresh or contact an internet time service. Reduced motion uses discrete host updates. Synthetic documentation contexts set `ctx.time.preview` to keep captures reproducible. Other examples can use `requestAnimationFrame` for local animation; respect `ctx.theme.reducedMotion`, pause unnecessary work, and use host snapshots for metrics or configured data.
+
+### Distinct web examples
+
+| Package | What it demonstrates |
+| --- | --- |
+| `orbit` | Transparent surface, real circular SVG dial, PC-time hands and theme-aware text |
+| `weather-scene` | CSS sun/cloud/rain artwork driven by an explicitly configured weather response |
+| `system-dashboard` | Multiple CSS conic gauges, CPU/memory values and a network activity strip |
+| `news-board` | Responsive editorial typography and a click-through RSS/Atom card |
+| `canvas-garden` | Canvas line art, session color changes and optional local animation; no audio or network input |
+
+The other fourteen packages also include editable HTML/CSS. All nineteen packages have localized names and labels in eight languages. Weather examples suggest Berlin coordinates until changed; they do not discover your location. Animated weather artwork and the garden honor reduced motion.
+
+### Tile Studio
+
+Open **Tile Studio** from settings, the **Add live tile** menu, or an installed tile's context menu. Choose a template, edit HTML/CSS/JS/manifest, and preview all four sizes. **Ctrl+Enter** previews and **Ctrl+S** saves. Automatic preview is optional. Click a preview to test a local action. Sample JSON is held only in the editing session: Studio does not read saved credentials, chosen files, photo folders or data connections, and direct networking stays disabled.
+
+**Save to tile library** creates or updates one draft. **Save and pin** validates the preview and installs a separate copy without moving existing tiles. Editing an installed tile updates that package in place, retaining its ID, position and host bindings. If source files were deleted, Studio explains the repair before saving a replacement template. Back up a custom package before deleting app data.
+
+### Browser boundary and resource limits
+
+Each installed tile gets its own generated HTTPS origin. The host serves only its four package files, explicit `assets/` resources and an optional slideshow image from memory. It does not map the installation directory into the browser: host bindings and other local files are not web resources. Local assets are limited to 128 files, 4 MiB each and 16 MiB total; reparse entries are skipped. HTML/CSS are limited to 256 KiB each, manifest 16 KiB and JavaScript 64 KiB.
+
+There are no CLR, Node, shell-launch or general filesystem host bridges. Browser dialogs, new windows, downloads, external navigation and permission requests are blocked. Browser execution uses WebView2's sandbox and separate processes; it does **not** use the legacy Jint instruction or memory budgets. The host waits up to three seconds for an update reply and surfaces failures, but this deadline is not a CPU budget for arbitrary browser scripts. Import only code you trust. Hidden views are suspended where supported and disposed on removal or exit.
+
+Direct networking starts off. A package must declare `"web.network"` and the user must separately enable **Allow this tile to access the network** for that installed tile. Enabled browser networking follows CORS, CSP and mixed-content rules; it does not grant access to host connection credentials. For API keys, read-only local JSON and RSS, prefer the explicit `data.sources` host connection described below. Do not embed private endpoints or credentials in shared source files.
+
+## Native package compatibility (version 1)
+
+Import manifest.json beside tile.js. Only those two files are copied into a generated installed package. Edit the installed copy afterward. The native manifest uses version 1; title is at most 80 characters, refreshSeconds 1–3,600, settings an object of at most 8,192 UTF-16 code units. Optional localizedTitles maps supported language tags to default display names. Default names follow language changes; an explicitly renamed tile keeps its custom name.
 
 ```json
 {
@@ -45,7 +127,7 @@ function render(ctx) {
 }
 ```
 
-render(ctx) is synchronous and returns JSON display data. ReStart draws native visuals; no HTML, XAML or drawing code is accepted.
+For legacy native packages, render(ctx) is synchronous and returns JSON display data. ReStart draws their bounded native visuals. The HTML/CSS renderer above uses a separate version 2 contract.
 
 | Context | Meaning |
 | --- | --- |
@@ -94,7 +176,7 @@ function render(ctx) {
 }
 ```
 
-Use `ctx.bounds.width`, `height` and `scale` for additional content thresholds, with `ctx.size` as the initial fallback. Layouts reserve separate text/chart areas, so scripts do not need pixel coordinates. The fifteen sources under `Examples` are complete responsive styling examples.
+Use `ctx.bounds.width`, `height` and `scale` for additional content thresholds, with `ctx.size` as the initial fallback. Layouts reserve separate text/chart areas, so scripts do not need pixel coordinates. The native frame examples remain useful for compatibility; the nineteen bundled web packages use their own responsive CSS.
 
 ## Host capabilities
 
@@ -102,7 +184,7 @@ system.metrics exposes camel-case fields: sampledAt, cpuPercent (0–100), logic
 
 CPU uses a language-neutral Windows PDH total processor-time counter. CPU/network rates need two samples; warming/unavailable values are null. Memory is physical memory. Network sums active non-loopback/non-tunnel interfaces; virtual adapters may double-count traffic. Fixed-drive capacity is cached for about 30 seconds. Missing battery means null. Sampling runs during the requested startup preparation and while visible; it pauses when dismissed and makes no external requests.
 
-images.slideshow supplies an opaque current image only after a native folder selection. Scripts see availability/count/index, never paths, filenames or pixels. Return image: "current". Supported immediate files: JPG/JPEG/PNG/BMP/GIF, up to 1,000 candidates, 20 MiB each, decoded to 768-pixel width; GIF is a still frame. settings.intervalSeconds is clamped to 5–3,600 (default 15). Click advances and automatic progression continues from there. Background loading closes file handles; animation enables crossfade. High contrast and custom tile colors suppress image overlays.
+images.slideshow supplies an opaque current image only after a native folder selection. Native scripts see availability/count/index rather than paths, filenames or pixels. Web packages can display and process the explicitly selected image through `ReStart.imageUrl`, without receiving its original path. Return image: "current". Supported immediate files: JPG/JPEG/PNG/BMP/GIF, up to 1,000 candidates, 20 MiB each, decoded to 768-pixel width; GIF is a still frame. settings.intervalSeconds is clamped to 5–3,600 (default 15). Click advances and automatic progression continues from there. Background loading closes file handles; animation enables crossfade. High contrast and custom tile colors suppress image overlays.
 
 The folder binding is local installed host-bindings.json, never imported from a package or included in layout exports. Choose a folder again on another PC.
 
@@ -110,7 +192,7 @@ The folder binding is local installed host-bindings.json, never imported from a 
 
 ![Connected tiles rendered from fictional local fixture data](images/connected-data.png)
 
-`data.sources` lets the host read explicitly configured inputs asynchronously. JavaScript remains synchronous: use the latest `ctx.data` snapshot, without `fetch`, promises or file APIs. Network access is opt-in for each installed package, independent of update checks.
+`data.sources` lets the host read explicitly configured inputs asynchronously. The host connection supplies the latest cached `ctx.data` snapshot to either renderer. Legacy native JavaScript stays synchronous; web packages may use asynchronous browser code within their separate networking rules. Network access is opt-in for each installed package, independent of update checks.
 
 ```json
 {
@@ -175,9 +257,9 @@ The weather example uses **Berlin (52.52, 13.41)**, not your PC's region. ReStar
 
 Keep medium headlines short, with a dark gradient, white text and brighter accent. Bundled sources demonstrate every native style. Small tiles omit kicker/detail/badge. User-selected tile colors and high contrast take precedence.
 
-## Runtime and storage
+## Legacy native runtime and shared storage
 
-Any number of visible tiles share four isolated workers; there is no eight-tile cutoff. Every render uses a fresh Jint realm, limited to 20,000 statements, recursion 32, 8 MB engine allocation and 100 ms. The parent enforces a one-second response deadline (ten seconds for cold process startup). Each worker has a 192 MB Job Object and cannot create child processes. Errors retain the last good frame and appear in the tooltip.
+Legacy native tiles share four isolated workers; there is no eight-tile cutoff. Every render uses a fresh Jint realm, limited to 20,000 statements, recursion 32, 8 MB engine allocation and 100 ms. The parent enforces a one-second response deadline (ten seconds for cold process startup). Each worker has a 192 MB Job Object and cannot create child processes. Errors retain the last good frame and appear in the tooltip.
 
 CLR, Node, direct filesystem/network, DOM, shell launch, callbacks, eval/string code generation and modules are unavailable. Source/manifest limits are 64/16 KiB; settings/state 8,192 UTF-16 units each, context 32,768, request/response 131,072/16,384. Resource isolation protects responsiveness, not OS privileges. Inspect packages before import. Editing explicitly opens Notepad instead of the .js association.
 
@@ -185,4 +267,4 @@ Normal data: %LOCALAPPDATA%\ReStart\tiles\<id>. Preview data is isolated beside 
 
 ## My tile library
 
-Open library folder in Settings opens %LOCALAPPDATA%\ReStart\TileLibrary. Place one package directory per tile, each containing manifest.json and tile.js. The settings gallery watches for changes and discovers packages automatically; click to add without a file picker. Refresh tiles is also available. At most 128 immediate directories are inspected, symlink directories are skipped and invalid packages are disabled without executing them. Adding installs a separate copy in free independent space, preserving existing group rectangles and child cells.
+Open library folder in Settings opens %LOCALAPPDATA%\ReStart\TileLibrary. Place one package directory per tile, each containing its manifest and required source files (plus HTML/CSS and optional assets for web packages). The settings gallery watches for changes and discovers packages automatically; click to add without a file picker. Refresh tiles is also available. At most 128 immediate directories are inspected, symlink directories are skipped and invalid packages are disabled without executing them. Adding installs a separate copy in free independent space, preserving existing group rectangles and child cells.

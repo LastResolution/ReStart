@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>ReStart live tile</title>
+        <link rel="stylesheet" href="/tile.css" />
+    </head>
+    <body>
+        <article class="tile dashboard">
+            <div id="caption" class="kicker"></div>
+            <div class="meters">
+                <div class="meter cpu">
+                    <div class="dial"><span id="cpu" class="value"></span></div>
+                    <span id="cpu-label"></span>
+                </div>
+                <div class="meter memory">
+                    <div class="dial">
+                        <span id="memory" class="value"></span>
+                    </div>
+                    <span id="memory-label"></span>
+                </div>
+            </div>
+            <div class="network">
+                <span id="network-label"></span><span id="network"></span>
+                <div class="traffic-track"><i></i></div>
+            </div>
+            <div id="tile-name" class="tile-name" data-restart-title></div>
+        </article>
+        <script src="/tile.js"></script>
+    </body>
+</html>

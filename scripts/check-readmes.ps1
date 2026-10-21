@@ -16,7 +16,9 @@ foreach ($entry in $files.GetEnumerator()) {
     if ($entry.Key -ne 'en' -and ($text -notmatch '(?m)^>.*(?:AI|KI|IA)' -or -not $text.Contains('](README.md)'))) {
         throw "Missing visible AI-translation notice or English source in $($entry.Value)."
     }
-    $links = @([regex]::Matches($text, '\]\((?<url>[^)\s]+)\)|(?:href|src)="(?<url>[^"\s]+)"'))
+    # Package examples contain virtual resource URLs, not documentation links.
+    $linkText = [regex]::Replace($text, '(?ms)^```[^\r\n]*\r?\n.*?^```[ \t]*\r?$', '')
+    $links = @([regex]::Matches($linkText, '\]\((?<url>[^)\s]+)\)|(?:href|src)="(?<url>[^"\s]+)"'))
     foreach ($match in $links) {
         $url = $match.Groups['url'].Value
         if ($url -match '^(?:https?://|#)') { continue }

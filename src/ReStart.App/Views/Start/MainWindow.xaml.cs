@@ -62,8 +62,8 @@ public partial class MainWindow : Window
     /// <summary>Gets the number of icons loaded for diagnostics.</summary>
     public int IconCount => _catalog.Icons.Count;
     /// <summary>Creates a localized default layout from the currently loaded app catalog.</summary>
-    /// <returns>A new seed layout based on the current app catalog; does not replace or save the current document.</returns>
-    public LayoutDocument CreateInitialLayout() => SeedLayout.Create(_apps);
+    /// <returns>A new seed layout based on the current app catalog with fresh copies of bundled clock/calendar packages; does not replace or save the current document.</returns>
+    public LayoutDocument CreateInitialLayout() => SeedLayout.Create(_apps, _scriptPackages);
 
     /// <summary>Hosts the full-screen launcher and coordinates local models, native input, and tile rendering.</summary>
     /// <param name="store">Local layout store used for loading, migration and subsequent saves.</param>
@@ -107,11 +107,7 @@ public partial class MainWindow : Window
             if (new Rect(new Point(), ContentScroll.RenderSize).Contains(e.GetPosition(ContentScroll))) return;
             _folderHover.Reset(); StopFolderDwell(); _dragScrollTimer?.Stop(); ClearDropPreview();
         };
-        ContentScroll.PreviewMouseWheel += (_, e) =>
-        {
-            if (Keyboard.Modifiers == ModifierKeys.Shift && ContentScroll.ScrollableWidth > 0)
-            { ContentScroll.ScrollToHorizontalOffset(ContentScroll.HorizontalOffset - e.Delta); e.Handled = true; }
-        };
+        ContentScroll.PreviewMouseWheel += OnContentMouseWheel;
         GroupsPanel.PreviewDragOver += OnBoardDragOver;
         GroupsPanel.PreviewDrop += OnBoardDrop;
         GroupsPanel.RequestBringIntoView += (_, e) => { if (_dragging) e.Handled = true; };
@@ -127,7 +123,7 @@ public partial class MainWindow : Window
         };
         SizeChanged += (_, _) => FitPanels();
         ContentScroll.SizeChanged += (_, _) => FitPanels();
-        _clock = new(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(1) };
+        _clock = new(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(250) };
         _clock.Tick += async (_, _) => { UpdateLiveTiles(); if (IsVisible) RequestCatalogRefresh(); if (!_startupPreparing) await UpdateScriptTilesAsync(); };
         _clock.Start();
     }
@@ -157,7 +153,7 @@ public partial class MainWindow : Window
                 _apps = previews;
                 Document.Preferences.ShowWallpaper = false;
             }
-            if (Document.Groups.Count == 0 && !File.Exists(_store.FilePath)) Document = SeedLayout.Create(_apps);
+            if (Document.Groups.Count == 0 && !File.Exists(_store.FilePath)) Document = CreateInitialLayout();
             if (_preview) Document.Preferences.ShowWallpaper = false;
             ApplyAppearance();
             RenderGroups();
@@ -399,12 +395,16 @@ public partial class MainWindow : Window
         _boardRenderCount++;
         if (_editingGroupHeader?.IsEditing == true) { _groupsRenderPending = true; return; }
         _groupsRenderPending = false;
+        _scriptPresentationGeneration++;
+        foreach (var runtime in _scriptSessions.Values) runtime.NextUpdate = DateTimeOffset.MinValue;
         if (_openFolder != null && (!_openFolder.IsFolder || !Document.Groups.Any(g => g.Tiles.Contains(_openFolder)))) _openFolder = null;
         GroupsPanel.ExpandedFolderId = _openFolder?.Id;
         GroupsPanel.Children.Clear();
         _selectionViews.Clear();
         _liveLabels.Clear();
         _scriptViews.Clear();
+        _usedHtmlTiles.Clear();
+        _folderThumbnailIds.Clear();
         var activeScriptIds = Document.Groups.SelectMany(g => g.Tiles).SelectMany(t => new[] { t }.Concat(t.Children)).Where(t => t.Widget == "script").Select(t => t.Id).ToHashSet();
         foreach (var id in _scriptSessions.Keys.Where(id => !activeScriptIds.Contains(id)).ToArray()) _scriptSessions.Remove(id);
         foreach (var id in _scriptFrames.Keys.Where(id => !activeScriptIds.Contains(id)).ToArray()) _scriptFrames.Remove(id);
@@ -444,6 +444,7 @@ public partial class MainWindow : Window
             button.Click += (_, _) => AddGroup();
             GroupsPanel.Children.Add(button);
         }
+        RetireHtmlTiles();
         UpdateLiveTiles();
         FitPanels();
         RefreshEntranceTargets();
@@ -467,8 +468,9 @@ public partial class MainWindow : Window
         GroupsPanel.InvalidateMeasure();
     }
 
-    private Button CreateTileButton(Tile tile)
+    private Button CreateTileButton(Tile tile, bool studioPreview = false, bool folderThumbnail = false)
     {
+        var webTile = tile.Widget == "script" && tile.Live && _scriptPackages.IsWeb(tile.ScriptId);
         var displayName = TileDisplayName(tile);
         var button = new TileSurfaceButton { MotionAllowed = MotionEnabled, HoverHighlightEnabled = Document.Preferences.TileHoverHighlight, Tag = tile, Padding = new(0), HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch, ToolTip = displayName };
         AutomationProperties.SetName(button, displayName + (tile.IsFolder && tile.Label.Length > 0 ? L.T(K.TileFolderSuffix) : ""));
@@ -482,7 +484,7 @@ public partial class MainWindow : Window
             var luminance = 0.2126 * Linear(plate.Color.R) + 0.7152 * Linear(plate.Color.G) + 0.0722 * Linear(plate.Color.B);
             button.Foreground = luminance > 0.179 ? Brushes.Black : Brushes.White;
         }
-        var grid = new Grid { Margin = new(tile.Widget == "script" ? tile.Size == TileSize.Small ? 3 * Document.Preferences.TileScale : 5 : 7) };
+        var grid = new Grid { Margin = new(webTile ? 0 : tile.Widget == "script" ? tile.Size == TileSize.Small ? 3 * Document.Preferences.TileScale : 5 : 7) };
         if (tile.IsFolder)
         {
             if (_openFolder == tile)
@@ -493,37 +495,49 @@ public partial class MainWindow : Window
             }
             else
             {
-                var mini = new UniformGridProxy { Columns = 2, Rows = 2, Width = tile.Size == TileSize.Small ? 28 : 52, Height = tile.Size == TileSize.Small ? 28 : 52, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
-                foreach (var child in tile.Children.Take(4)) mini.Children.Add(CreateIcon(child, tile.Size == TileSize.Small ? 12 : 21));
-                grid.Children.Add(mini);
+                grid.Children.Add(CreateFolderPreview(tile));
             }
+        }
+        else if (webTile)
+        {
+            _scriptFrames.Remove(tile.Id);
+            button.BorderThickness = new(0);
+            button.Background = tile.UseCustomColor ? button.Background : Brushes.Transparent;
+            grid.Children.Add(HtmlView(tile, folderThumbnail));
+            var body = new StackPanel { Opacity = 0, IsHitTestVisible = false, Width = 0, Height = 0 };
+            grid.Children.Add(body); _scriptViews.Add((tile, body, button));
         }
         else if (tile.Widget == "script" && tile.Live)
         {
             grid.Children.Add(new SlideshowTileView { IsHitTestVisible = false, Margin = new(-5) });
-            var plot = new Grid { Margin = tile.Size == TileSize.Small ? new(0) : new(5, 2, 5, 20), ClipToBounds = true };
+            var plot = new Grid { Margin = tile.Size == TileSize.Small ? new(0) : new(5, 2, 5, Document.Preferences.ShowLiveTileNames ? 20 : 0), ClipToBounds = true };
             plot.Children.Add(new ScriptTileArt { IsHitTestVisible = false });
             var body = new StackPanel { VerticalAlignment = VerticalAlignment.Center, ClipToBounds = true };
-            plot.Children.Add(body); grid.Children.Add(plot); _scriptViews.Add((tile, body, button));
-            if (_scriptFrames.TryGetValue(tile.Id, out var cached)) ApplyScriptFrame(body, button, tile, cached);
+            plot.Children.Add(body); grid.Children.Add(plot);
+            if (!studioPreview || folderThumbnail) _scriptViews.Add((tile, body, button));
+            if ((!studioPreview || folderThumbnail) && _scriptFrames.TryGetValue(tile.Id, out var cached)) ApplyScriptFrame(body, button, tile, cached);
         }
         else if (tile.Widget.Length > 0 && tile.Live && !(tile.Widget == "clock" && tile.Size == TileSize.Small))
         {
-            var live = new TextBlock { FontWeight = FontWeights.Light, FontSize = tile.Size == TileSize.Small ? 17 : tile.Widget == "clock" ? 31 : 21, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Left, Margin = new(5, 0, 0, tile.Size == TileSize.Small ? 0 : 16) };
+            var live = new TextBlock { FontWeight = FontWeights.Light, FontSize = tile.Size == TileSize.Small ? 17 : tile.Widget == "clock" ? 31 : 21, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Left, Margin = new(5, 0, 0, tile.Size == TileSize.Small || !Document.Preferences.ShowLiveTileNames ? 0 : 16) };
             _liveLabels.Add((live, tile));
             grid.Children.Add(live);
         }
         else grid.Children.Add(CreateIcon(tile, tile.Size == TileSize.Small ? 23 : tile.Size == TileSize.Large ? 60 : 40));
-        if (tile.Size != TileSize.Small && !tile.IsFolder)
+        if (tile.Size != TileSize.Small && !tile.IsFolder && !webTile && (tile.Widget.Length == 0 || Document.Preferences.ShowLiveTileNames))
             grid.Children.Add(new TextBlock { Text = displayName, Tag = tile, FontSize = 12, VerticalAlignment = VerticalAlignment.Bottom, TextTrimming = TextTrimming.CharacterEllipsis, Margin = new(2, 0, 1, 0) });
         button.Content = grid;
+        if (studioPreview) return button;
         InstallTileSelection(button, grid, tile);
         button.ContextMenu = TileMenu(tile);
+        Point? clickPosition = null;
+        button.PreviewMouseLeftButtonDown += (_, e) => clickPosition = e.GetPosition(button);
+        button.PreviewKeyDown += (_, _) => clickPosition = null;
         button.Click += async (_, _) =>
         {
             if (_dragging || _dismissing) return;
             if (_layoutEditing) { ToggleTileSelection(tile.Id); return; }
-            if (tile.Widget == "script") InteractWithScriptTile(tile);
+            if (tile.Widget == "script") { InteractWithScriptTile(tile, clickPosition); clickPosition = null; }
             else if (tile.IsFolder) OpenFolder(tile);
             else await LaunchTileAsync(tile);
         };
@@ -987,6 +1001,10 @@ public partial class MainWindow : Window
     public void ReplaceDocument(LayoutDocument document)
     {
         if (!LayoutLocks.AllowsChange(Document.Groups, document.Groups, Document.Preferences, GroupsPanel.Columns)) throw new InvalidOperationException(L.T(K.LayoutLockedStatus));
+        var grants = Document.Groups.SelectMany(group => group.Tiles).SelectMany(tile => new[] { tile }.Concat(tile.Children))
+            .Where(tile => tile.AllowWebNetwork).Select(tile => (tile.Id, tile.ScriptId)).ToHashSet();
+        foreach (var tile in document.Groups.SelectMany(group => group.Tiles).SelectMany(tile => new[] { tile }.Concat(tile.Children)))
+            tile.AllowWebNetwork = grants.Contains((tile.Id, tile.ScriptId));
         _store.Save(document);
         Document = document;
         _selectionPlanCache = null;
@@ -1019,6 +1037,7 @@ public partial class MainWindow : Window
         if (_editingGroupHeader?.IsEditing == true && e.OriginalSource is TextBox) return;
         if (HandleLayoutEditingKey(e)) return;
         if (HandleSearchSelectionKey(e)) return;
+        if (HandleWebTileScrollKey(e)) return;
         if (e.Key == Key.Tab && SearchBox.IsKeyboardFocused && SearchBox.Text.Length == 0 && !_searchRequested)
         { PinnedNav.Focus(); e.Handled = true; return; }
 
@@ -1061,7 +1080,7 @@ public partial class MainWindow : Window
     private static bool IsAnyMenuOpen() => Mouse.Captured is ContextMenu || Mouse.Captured is System.Windows.Controls.Primitives.MenuBase;
     private void OnClosing(object? sender, CancelEventArgs e) { if (!_exit) { e.Cancel = true; Dismiss(); } }
     /// <summary>Stops timers and isolated script workers before permanently closing the launcher.</summary>
-    public void Exit() { _exit = true; CancelStartupPresentation(); StopMotion(); StopFolderDwell(); StopWatchingDesktopAppearance(); _clock.Stop(); _nameRefreshTimer?.Stop(); _railHoverTimer?.Stop(); _dragScrollTimer?.Stop(); _fileSearchCancellation?.Cancel(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); foreach (var data in _tileData.Values) data.Runtime.Dispose(); _tileData.Clear(); _tileDataTransport?.Dispose(); _systemMetrics?.Dispose(); Close(); }
+    public void Exit() { _exit = true; CancelStartupPresentation(); StopMotion(); StopFolderDwell(); StopWatchingDesktopAppearance(); _clock.Stop(); _nameRefreshTimer?.Stop(); _railHoverTimer?.Stop(); _dragScrollTimer?.Stop(); _fileSearchCancellation?.Cancel(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); RetireHtmlTiles(all: true); foreach (var data in _tileData.Values) data.Runtime.Dispose(); _tileData.Clear(); _tileDataTransport?.Dispose(); _systemMetrics?.Dispose(); Close(); }
 
     /// <summary>Renders only the launcher root to a PNG for reproducible UI verification.</summary>
     /// <param name="path">Destination PNG path for the current preview visual; missing parent directories are created.</param>

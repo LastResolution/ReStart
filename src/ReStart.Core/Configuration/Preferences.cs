@@ -5,6 +5,8 @@ public sealed class Preferences
 {
     /// <summary>Gets or sets whether tile/group positions, sizes and membership are protected from editing; launch and appearance remain available.</summary>
     public bool LayoutLocked { get; set; }
+    /// <summary>Gets or sets whether live tiles show their bottom name; defaults to true. Browser packages receive the preference and a title marker contract.</summary>
+    public bool ShowLiveTileNames { get; set; } = true;
     /// <summary>Gets or sets stable IDs of groups whose geometry and membership are protected independently of the global lock. Locks are outside undo history.</summary>
     public List<string> LockedGroupIds { get; set; } = [];
     /// <summary>Gets or sets whether search includes localized Windows settings entry points.</summary>

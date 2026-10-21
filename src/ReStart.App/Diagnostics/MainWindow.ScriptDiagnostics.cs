@@ -26,11 +26,11 @@ public partial class MainWindow
             fixture.Document = new() { Preferences = new() { Language = "en", Columns = 8, ShowWallpaper = false, Animate = false } };
             fixture.ApplyAppearance();
             var tiles = ScriptTilePackages.BundledIds.Select(id => fixture._scriptPackages.Import(ScriptTilePackages.BundledManifestPath(id))).ToArray();
-            for (var group = 0; group < 3; group++)
+            for (var group = 0; group < (tiles.Length + 4) / 5; group++)
             {
                 var contents = tiles.Skip(group * 5).Take(5).ToList();
                 for (var i = 0; i < contents.Count; i++) { contents[i].Column = i % 2 * 4; contents[i].Row = i / 2 * 2; }
-                fixture.Document.Groups.Add(new() { Name = new[] { "Everyday", "Rhythm", "System & photos" }[group], Column = group, Row = 0, Tiles = contents });
+                fixture.Document.Groups.Add(new() { Name = new[] { "Everyday", "Rhythm", "System & photos", "HTML & Canvas" }[group], Column = group, Row = 0, Tiles = contents });
             }
             var images = Path.Combine(directory, "images"); Directory.CreateDirectory(images);
             WriteFixtureImage(Path.Combine(images, "a.png"), Colors.Teal);
@@ -71,6 +71,15 @@ public partial class MainWindow
                 fixture.RenderGroups(); fixture.UpdateLayout(); await RenderUntil(() => fixture.ScriptFrameCount == tiles.Length);
                 foreach (var view in fixture._scriptViews)
                 {
+                    if (fixture._htmlTiles.TryGetValue(view.Tile.Id, out var web))
+                    {
+                        var dimensions = System.Text.Json.JsonSerializer.Deserialize<string>(await web.InspectAsync("JSON.stringify({width:innerWidth,height:innerHeight})"));
+                        using var geometry = System.Text.Json.JsonDocument.Parse(dimensions!);
+                        Require(Math.Abs(geometry.RootElement.GetProperty("width").GetDouble() - view.Button.ActualWidth) <= 1 &&
+                            Math.Abs(geometry.RootElement.GetProperty("height").GetDouble() - view.Button.ActualHeight) <= 1,
+                            "A web tile viewport did not match its actual footprint.");
+                        continue;
+                    }
                     var plot = (Grid)view.Body.Parent;
                     var art = plot.Children.OfType<Controls.ScriptTileArt>().Single();
                     var frame = fixture._scriptFrames[view.Tile.Id];
@@ -179,10 +188,11 @@ public partial class MainWindow
             foreach (var view in fixture._scriptViews)
             {
                 var main = view.Body.Children.OfType<TextBlock>().Single(t => Equals(t.Tag, "ScriptValue"));
-                if (view.Tile.Size == TileSize.Small)
+                if (view.Tile.Size == TileSize.Small && !fixture._htmlTiles.ContainsKey(view.Tile.Id))
                     Require(main.ActualHeight >= 29 && main.ActualHeight <= view.Body.ActualHeight + .1,
                         "The small clock clips its second line instead of displaying both time components.");
             }
+            await Task.WhenAll(fixture._htmlTiles.Values.Select(view => view.FreezeForDocumentationAsync()));
             fixture.SaveTileShowcase(Path.Combine(Path.GetDirectoryName(snapshotPath)!, "responsive-sizes.png"));
             stage = "position-independent tile geometry";
             var placementChecks = fixture.VerifyScriptGeometry(tiles[8], Path.GetDirectoryName(snapshotPath)!);

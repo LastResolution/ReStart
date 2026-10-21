@@ -14,6 +14,7 @@ public partial class MainWindow
     internal async Task RenderDocumentationAsync(string directory)
     {
         if (!_preview) throw new InvalidOperationException("Documentation rendering requires preview mode.");
+        _documentationHtmlRendering = true;
         await InitializeAsync(); _clock.Stop();
         var missing = PreviewApps().Where(a => !_previewAppIcons.Contains(a.Id)).Select(a => a.Name).ToArray();
         if (missing.Length > 0) throw new InvalidOperationException("Install the showcase apps before rendering: " + string.Join(", ", missing));
@@ -98,8 +99,9 @@ public partial class MainWindow
         for (var attempt = 0; attempt < 50; attempt++)
         {
             UpdateLayout();
-            if (ScriptFrameCount == _scriptViews.Count && _scriptViews.Count > 0 && _scriptViews.All(view =>
-                view.Body.Children.OfType<TextBlock>().Any(text => Equals(text.Tag, "ScriptValue") && text.Text.Length > 0 && text.ActualHeight > 0))) return;
+            if (ScriptsReady && _scriptViews.Count > 0 && _scriptViews.All(view =>
+                _htmlTiles.ContainsKey(view.Tile.Id) || (_htmlTiles.ContainsKey(view.Tile.Id) || view.Body.Children.OfType<TextBlock>().Any(text => Equals(text.Tag, "ScriptValue") && text.Text.Length > 0 && text.ActualHeight > 0))))
+            { await Task.WhenAll(_htmlTiles.Values.Select(view => view.FreezeForDocumentationAsync())); return; }
             foreach (var runtime in _scriptSessions.Values) runtime.NextUpdate = DateTimeOffset.MinValue;
             await UpdateScriptTilesAsync(); await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
             await Task.Delay(100);
@@ -142,6 +144,12 @@ public partial class MainWindow
             tile.Column = column; tile.Row = row;
             return tile;
         }
+        Tile Bundled(string id, TileSize size, int column, int row)
+        {
+            var tile = _scriptPackages.Import(ScriptTilePackages.BundledManifestPath(id));
+            tile.Size = size; tile.Column = column; tile.Row = row;
+            return tile;
+        }
         Document.Groups.Add(new()
         {
             Name = "Everyday",
@@ -149,8 +157,8 @@ public partial class MainWindow
             X = 0,
             Row = 0,
             Tiles = [App("edge", 0, 0), App("mail", 2, 0), App("photos", 4, 0),
-                new() { AppId = "restart:calendar", Label = "Calendar", Widget = "calendar", Size = TileSize.Large, Color = "#0078D7", Column = 0, Row = 2 },
-                new() { AppId = "restart:clock", Label = "Clock", Widget = "clock", Color = "#325B8C", Column = 4, Row = 2 }, App("store", 4, 4)]
+                Bundled("calendar", TileSize.Large, 0, 2),
+                Bundled("orbit", TileSize.Medium, 4, 2), App("store", 4, 4)]
         });
         Document.Groups.Add(new()
         {
@@ -196,13 +204,14 @@ public partial class MainWindow
                 await UpdateScriptTilesAsync(); UpdateLayout();
                 await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
                 UpdateLayout();
-                if (!_scriptRendering && ScriptFrameCount == liveTiles.Length && _scriptFrames[liveTiles[^1].Id].Image == "current" &&
-                    _scriptViews.All(view => view.Body.Children.OfType<TextBlock>().Any(text => Equals(text.Tag, "ScriptValue") && text.Text.Length > 0 && text.ActualHeight > 0))) break;
+                if (!_scriptSessions.Values.Any(runtime => runtime.Rendering) && ScriptFrameCount == liveTiles.Length && _scriptFrames[liveTiles[^1].Id].Image == "current" &&
+                    _scriptViews.All(view => (_htmlTiles.ContainsKey(view.Tile.Id) || view.Body.Children.OfType<TextBlock>().Any(text => Equals(text.Tag, "ScriptValue") && text.Text.Length > 0 && text.ActualHeight > 0)))) break;
                 await Task.Delay(100);
             }
             Require(ScriptFrameCount == liveTiles.Length, "The complete launcher showcase is missing live tiles.");
-            Require(_scriptViews.All(view => view.Body.Children.OfType<TextBlock>().Any(text => Equals(text.Tag, "ScriptValue") && text.Text.Length > 0 && text.ActualHeight > 0)),
+            Require(_scriptViews.All(view => (_htmlTiles.ContainsKey(view.Tile.Id) || view.Body.Children.OfType<TextBlock>().Any(text => Equals(text.Tag, "ScriptValue") && text.Text.Length > 0 && text.ActualHeight > 0))),
                 "A complete launcher showcase tile has no rendered value.");
+            await Task.WhenAll(_htmlTiles.Values.Select(view => view.FreezeForDocumentationAsync()));
             SetStatus("");
             SaveScreenshot(Path.Combine(directory, $"launcher-{theme.ToString().ToLowerInvariant()}.png"));
             if (theme == ReStart.Core.ThemeMode.Dark) SaveMotionShowcase(directory);
