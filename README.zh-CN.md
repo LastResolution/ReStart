@@ -10,7 +10,9 @@
 
 > **AI 翻译：** 本指南使用 AI 从英文翻译，可能存在错误。[英文 README](README.md) 为主要参考，包含更多示例。欢迎修正翻译。截图使用英文演示环境和示例数据。
 
-![包含应用、文件夹和动态磁贴的 ReStart](docs/images/start.png)
+<p align="center"><strong>观看 29 秒演示</strong><br><sub>1080p · 英文 · 无音频</sub></p>
+
+https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
 
 怀念 Windows 10 的全屏开始菜单？ReStart 在 Windows 11 和 Windows 10 上为应用提供熟悉的空间。固定常用内容，自由安排布局，再加入可以用 JavaScript 编写的动态磁贴。
 
@@ -125,7 +127,7 @@ ARM64 使用 `win-arm64`。ZIP 和校验文件生成在 `artifacts/packages`。�
 
 [问题与建议](https://github.com/LastResolution/ReStart/issues/new/choose) · [参与贡献（英文）](CONTRIBUTING.md) · [架构（英文）](docs/architecture.md) · [测试（英文）](docs/testing.md) · [发布](https://github.com/LastResolution/ReStart/releases)
 
-ReStart 是受后期 Windows 10 全屏开始菜单启发的独立 MIT 项目，与 Microsoft 无关联。图像展示真实应用的英文演示、合成指标和生成的照片色块。名称和图标归各权利人所有。[MIT 许可证](LICENSE) · [支持（英文）](SUPPORT.md)
+ReStart 是受后期 Windows 10 全屏开始菜单启发的独立 MIT 项目，与 Microsoft 无关联。图像展示真实应用的英文演示、合成指标和生成的照片色块。名称和图标归各权利人所有。[MIT 许可证](LICENSE) · [第三方声明（英文）](docs/third-party.md) · [支持（英文）](SUPPORT.md)
 
 ---
 

@@ -10,7 +10,9 @@
 
 > **KI-Übersetzung:** Dieser Leitfaden wurde mithilfe von KI aus dem Englischen übersetzt und kann Fehler enthalten. Die [englische README](README.md) ist die maßgebliche Referenz mit weiteren Beispielen. Korrekturen sind willkommen. Die Screenshots verwenden eine englische Demo mit Beispieldaten.
 
-![ReStart mit Apps, Ordnern und Live-Kacheln](docs/images/start.png)
+<p align="center"><strong>29-Sekunden-Demo ansehen</strong><br><sub>1080p · Englisch · Ohne Ton</sub></p>
+
+https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
 
 Vermisst du das Vollbild-Startmenü von Windows 10? ReStart gibt deinen Apps unter Windows 11 und Windows 10 ein vertrautes Zuhause. Hefte häufig verwendete Inhalte an, ordne den Bildschirm frei an und ergänze Live-Kacheln, die du in JavaScript schreiben kannst.
 
@@ -125,7 +127,7 @@ Für ARM64 `win-arm64` verwenden. ZIPs und Prüfsummen entstehen in `artifacts/p
 
 [Fehler/Ideen](https://github.com/LastResolution/ReStart/issues/new/choose) · [Mitwirken (Englisch)](CONTRIBUTING.md) · [Architektur (Englisch)](docs/architecture.md) · [Tests (Englisch)](docs/testing.md) · [Releases](https://github.com/LastResolution/ReStart/releases)
 
-ReStart ist ein unabhängiges, von Microsoft nicht unterstütztes MIT-Projekt, inspiriert vom späteren Windows-10-Vollbild-Startmenü. Screenshots und Animation zeigen die echte App mit einer englischen Demo, synthetischen Messwerten und erzeugten Fotofarben. Namen und Icons gehören ihren Rechteinhabern. [MIT-Lizenz](LICENSE) · [Support (Englisch)](SUPPORT.md)
+ReStart ist ein unabhängiges, von Microsoft nicht unterstütztes MIT-Projekt, inspiriert vom späteren Windows-10-Vollbild-Startmenü. Screenshots und Animation zeigen die echte App mit einer englischen Demo, synthetischen Messwerten und erzeugten Fotofarben. Namen und Icons gehören ihren Rechteinhabern. [MIT-Lizenz](LICENSE) · [Drittanbieterhinweise (Englisch)](docs/third-party.md) · [Support (Englisch)](SUPPORT.md)
 
 ---
 

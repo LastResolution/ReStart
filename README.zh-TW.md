@@ -10,7 +10,9 @@
 
 > **AI 翻譯：** 本指南使用 AI 從英文翻譯，可能含有錯誤。[英文 README](README.md) 為主要參考，包含更多範例。歡迎協助修正。螢幕擷取畫面使用英文示範環境與範例資料。
 
-![包含應用程式、資料夾與動態磚的 ReStart](docs/images/start.png)
+<p align="center"><strong>觀看 29 秒示範</strong><br><sub>1080p · 英文 · 無音訊</sub></p>
+
+https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
 
 懷念 Windows 10 的全螢幕開始功能表？ReStart 在 Windows 11 和 Windows 10 上提供熟悉的應用程式空間。釘選常用內容，自由安排配置，再加入能以 JavaScript 撰寫的動態磚。
 
@@ -125,7 +127,7 @@ ARM64 使用 `win-arm64`。ZIP 與校驗檔產生於 `artifacts/packages`。請�
 
 [問題與建議](https://github.com/LastResolution/ReStart/issues/new/choose) · [參與貢獻（英文）](CONTRIBUTING.md) · [架構（英文）](docs/architecture.md) · [測試（英文）](docs/testing.md) · [發行](https://github.com/LastResolution/ReStart/releases)
 
-ReStart 是受後期 Windows 10 全螢幕開始功能表啟發的獨立 MIT 專案，與 Microsoft 無關。圖片顯示真正程式的英文示範、合成指標與產生的照片色塊。名稱和圖示屬於各權利人。[MIT 授權](LICENSE) · [支援（英文）](SUPPORT.md)
+ReStart 是受後期 Windows 10 全螢幕開始功能表啟發的獨立 MIT 專案，與 Microsoft 無關。圖片顯示真正程式的英文示範、合成指標與產生的照片色塊。名稱和圖示屬於各權利人。[MIT 授權](LICENSE) · [第三方聲明（英文）](docs/third-party.md) · [支援（英文）](SUPPORT.md)
 
 ---
 
