@@ -417,5 +417,10 @@
   "UpdateNoticeTitle": "新版本已就绪",
   "UpdateNoticeBody": "ReStart {0} 已可用。当前版本为 {1}。",
   "UpdateNoticeLater": "暂不查看",
-  "UpdateNoticeHelp": "在 GitHub 查看更新说明和下载。"
+  "UpdateNoticeHelp": "在 GitHub 查看更新说明和下载。",
+  "StudioFormat": "格式化文档",
+  "StudioFormatting": "正在格式化…",
+  "StudioFormatted": "文档已格式化。按 Ctrl+Z 撤销。",
+  "StudioFormatChanged": "格式化期间文档发生变化，请重试。",
+  "StudioFormatFailed": "无法格式化文档："
 }

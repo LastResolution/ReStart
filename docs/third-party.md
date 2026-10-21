@@ -6,6 +6,7 @@ ReStart's own source is distributed under the [MIT license](../LICENSE). Depende
 
 | Component | Resolved version | License | Included notice |
 | --- | --- | --- | --- |
+| [Prettier](https://prettier.io/docs/browser) standalone and bundled Babel, ESTree, HTML and PostCSS parsers | 3.9.10 | MIT and the third-party notices in its distributed license | [Prettier-LICENSE.txt](../third-party/Prettier-LICENSE.txt); exact npm integrity and SHA-256 file hashes in [the formatter asset lock](../src/ReStart.App/Assets/Formatter/package-lock.json) |
 | [AvalonEdit](https://github.com/icsharpcode/AvalonEdit/tree/862415d51eddc9eac93f462dbc522ffbf929cd52) | 6.3.1.120 | MIT | [AvalonEdit-LICENSE.txt](../third-party/AvalonEdit-LICENSE.txt) from the resolved package's source commit |
 | [Jint](https://github.com/sebastienros/jint/tree/v4.17.0) | 4.17.0 | BSD-2-Clause | [Jint-LICENSE.txt](../third-party/Jint-LICENSE.txt) |
 | [Acornima](https://github.com/adams85/acornima/tree/v1.7.0), through Jint | 1.7.0 | BSD-3-Clause | [Acornima-LICENSE.txt](../third-party/Acornima-LICENSE.txt) and [Acornima-NOTICE.txt](../third-party/Acornima-NOTICE.txt), including its Esprima.NET notice |

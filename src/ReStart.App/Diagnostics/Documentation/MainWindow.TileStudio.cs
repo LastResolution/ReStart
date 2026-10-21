@@ -46,6 +46,7 @@ public partial class MainWindow
             content.Measure(new(studio.Width, studio.Height)); content.Arrange(new Rect(0, 0, studio.Width, studio.Height)); content.UpdateLayout();
             await studio.PreviewAsync();
             Check(studio.PreviewSucceeded && studio.PreviewCount == 4, "Tile Studio did not render all four sizes: " + studio.PreviewError);
+            checks += await VerifyStudioEditingAsync(studio, directory);
             await studio.FreezeForDocumentationAsync();
             SaveFixtureElement(studio, System.IO.Path.Combine(directory, "tile-studio-dark.png"));
             Check(!studio.IsVisible, "Tile Studio unexpectedly opened a window.");

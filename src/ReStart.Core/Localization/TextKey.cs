@@ -842,4 +842,14 @@ public enum TextKey
     UpdateNoticeLater,
     /// <summary>View release notes and downloads on GitHub.</summary>
     UpdateNoticeHelp,
+    /// <summary>Format document</summary>
+    StudioFormat,
+    /// <summary>Formatting…</summary>
+    StudioFormatting,
+    /// <summary>Document formatted. Ctrl+Z undoes the change.</summary>
+    StudioFormatted,
+    /// <summary>The document changed while formatting. Try again.</summary>
+    StudioFormatChanged,
+    /// <summary>Unable to format this document: </summary>
+    StudioFormatFailed,
 }

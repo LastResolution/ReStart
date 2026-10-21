@@ -22,6 +22,7 @@
     <Resource Include="../../assets/ReStart.png" Link="Assets/ReStart.png" />
     <EmbeddedResource Include="../../LICENSE" LogicalName="ReStart.Licenses.ReStart (MIT)" />
     <EmbeddedResource Include="../../third-party/*.txt" LogicalName="ReStart.Licenses.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Assets/Formatter/*.js" LogicalName="ReStart.Formatter.%(Filename)%(Extension)" />
     <Using Remove="System.Windows.Forms" />
     <Using Remove="System.Drawing" />
     <Using Include="System.IO" />

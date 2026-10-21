@@ -417,5 +417,10 @@
   "UpdateNoticeTitle": "새 버전이 있습니다",
   "UpdateNoticeBody": "ReStart {0}을 사용할 수 있습니다. 현재 버전은 {1}입니다.",
   "UpdateNoticeLater": "나중에",
-  "UpdateNoticeHelp": "GitHub에서 릴리스 노트와 다운로드를 확인하세요."
+  "UpdateNoticeHelp": "GitHub에서 릴리스 노트와 다운로드를 확인하세요.",
+  "StudioFormat": "문서 서식 지정",
+  "StudioFormatting": "서식 지정 중…",
+  "StudioFormatted": "서식을 지정했습니다. Ctrl+Z로 되돌릴 수 있습니다.",
+  "StudioFormatChanged": "서식을 지정하는 동안 문서가 변경되었습니다. 다시 시도하세요.",
+  "StudioFormatFailed": "문서의 서식을 지정할 수 없습니다: "
 }

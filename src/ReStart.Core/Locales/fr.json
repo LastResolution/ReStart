@@ -417,5 +417,10 @@
   "UpdateNoticeTitle": "Une nouvelle version est disponible",
   "UpdateNoticeBody": "ReStart {0} est disponible. Vous utilisez la version {1}.",
   "UpdateNoticeLater": "Plus tard",
-  "UpdateNoticeHelp": "Consultez les nouveautés et téléchargements sur GitHub."
+  "UpdateNoticeHelp": "Consultez les nouveautés et téléchargements sur GitHub.",
+  "StudioFormat": "Formater le document",
+  "StudioFormatting": "Mise en forme…",
+  "StudioFormatted": "Document formaté. Ctrl+Z annule la modification.",
+  "StudioFormatChanged": "Le document a changé pendant la mise en forme. Réessayez.",
+  "StudioFormatFailed": "Impossible de formater le document : "
 }

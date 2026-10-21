@@ -417,5 +417,10 @@
   "UpdateNoticeTitle": "新しいバージョンがあります",
   "UpdateNoticeBody": "ReStart {0} が利用できます。現在のバージョンは {1} です。",
   "UpdateNoticeLater": "後で",
-  "UpdateNoticeHelp": "GitHub で更新内容とダウンロードを確認できます。"
+  "UpdateNoticeHelp": "GitHub で更新内容とダウンロードを確認できます。",
+  "StudioFormat": "ドキュメントを整形",
+  "StudioFormatting": "整形中…",
+  "StudioFormatted": "整形しました。Ctrl+Z で元に戻せます。",
+  "StudioFormatChanged": "整形中に内容が変更されました。もう一度実行してください。",
+  "StudioFormatFailed": "ドキュメントを整形できませんでした: "
 }

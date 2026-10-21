@@ -16,6 +16,9 @@ namespace ReStart.App;
 internal sealed class TileStudioWindow : Window
 {
     private readonly MainWindow _main;
+    private readonly TileSourceFormatter _formatter;
+    private Button _formatButton = null!;
+    private bool _formatting;
     private readonly bool _offscreen;
     private Tile? _tile;
     private string? _libraryId;
@@ -48,6 +51,7 @@ internal sealed class TileStudioWindow : Window
     internal TileStudioWindow(MainWindow main, Tile? tile = null, bool offscreen = false)
     {
         _main = main; _tile = tile; _offscreen = offscreen;
+        _formatter = new(main.ScriptPackages.BrowserDataRoot);
         Style = (Style)FindResource(typeof(Window)); ThemeWindow.Attach(this);
         Title = L.T(K.StudioTitle); Width = 1240; Height = 820; MinWidth = 920; MinHeight = 600;
         WindowStartupLocation = WindowStartupLocation.CenterOwner; ShowInTaskbar = false; UseLayoutRounding = true;
@@ -86,13 +90,18 @@ internal sealed class TileStudioWindow : Window
         var editors = new DockPanel(); columns.Children.Add(editors);
         var selector = new ComboBox { ItemsSource = new[] { "tile.js", "index.html", "tile.css", "manifest.json", L.T(K.StudioSamples), L.T(K.StudioInput) }, SelectedIndex = 0, HorizontalAlignment = HorizontalAlignment.Left, MinWidth = 200, Margin = new(0, 0, 12, 0) };
         _documents = selector;
-        AutomationProperties.SetName(selector, L.T(K.StudioEditor)); DockPanel.SetDock(selector, Dock.Top); editors.Children.Add(selector);
+        AutomationProperties.SetName(selector, L.T(K.StudioEditor));
+        var documentToolbar = new DockPanel { LastChildFill = false }; DockPanel.SetDock(documentToolbar, Dock.Top); editors.Children.Add(documentToolbar);
+        documentToolbar.Children.Add(selector);
+        _formatButton = new() { Content = L.T(K.StudioFormat), ToolTip = "Ctrl+Shift+F", Margin = new(0, 0, 12, 0) };
+        _formatButton.Click += async (_, _) => await FormatDocumentAsync(); documentToolbar.Children.Add(_formatButton);
         foreach (var editor in new[] { _source, _html, _css, _manifest, _samples, _input }) { _editorHost.Children.Add(editor); editor.Visibility = editor == _source ? Visibility.Visible : Visibility.Collapsed; }
         _input.IsReadOnly = true;
         selector.SelectionChanged += (_, _) =>
         {
             var fields = new[] { _source, _html, _css, _manifest, _samples, _input };
             for (var i = 0; i < fields.Length; i++) fields[i].Visibility = i == selector.SelectedIndex ? Visibility.Visible : Visibility.Collapsed;
+            _formatButton.IsEnabled = selector.SelectedIndex != 5 && !_formatting;
             fields[selector.SelectedIndex].Focus();
         };
         editors.Children.Add(_editorHost);
@@ -126,9 +135,34 @@ internal sealed class TileStudioWindow : Window
         {
             if (e.Key == Key.S && Keyboard.Modifiers == ModifierKeys.Control) { Save(false); e.Handled = true; }
             else if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.Control) { _ = PreviewAsync(); e.Handled = true; }
+            else if (e.Key == Key.F && Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift)) { _ = FormatDocumentAsync(); e.Handled = true; }
         };
         Closing += ConfirmClose;
-        Closed += (_, _) => { _closed = true; _revision++; _debounce.Stop(); _workers.Dispose(); foreach (var view in _webPreviews.Values) view.Dispose(); };
+        Closed += (_, _) => { _closed = true; _revision++; _debounce.Stop(); _workers.Dispose(); _formatter.Dispose(); foreach (var view in _webPreviews.Values) view.Dispose(); };
+    }
+
+    internal TileCodeEditor CurrentEditor => new[] { _source, _html, _css, _manifest, _samples, _input }[_documents.SelectedIndex];
+
+    internal async Task FormatDocumentAsync()
+    {
+        if (_closed || _formatting || CurrentEditor.IsReadOnly) return;
+        var editor = CurrentEditor; var revision = _revision; var document = _documents.SelectedIndex;
+        var parser = document switch { 0 => "babel", 1 => "html", 2 => "css", _ => "json" };
+        _formatting = true; _formatButton.IsEnabled = false; _feedback.Text = L.T(K.StudioFormatting);
+        try
+        {
+            var (text, caret) = await _formatter.FormatAsync(editor.Text, parser, editor.CaretOffset);
+            if (_closed) return;
+            if (_revision != revision) { _feedback.Text = L.T(K.StudioFormatChanged); return; }
+            var maximum = document switch { 0 => ScriptTileProtocol.MaxSource, 1 or 2 => 262144, _ => 16384 };
+            if (System.Text.Encoding.UTF8.GetByteCount(text) > maximum) throw new InvalidDataException(L.T(K.ErrorScriptRequestSize));
+            using (editor.Document.RunUpdate()) editor.Document.Replace(0, editor.Document.TextLength, text);
+            editor.CaretOffset = Math.Clamp(caret, 0, text.Length);
+            _feedback.Text = L.T(K.StudioFormatted);
+        }
+        catch (Exception ex) when (ex is InvalidDataException or InvalidOperationException or System.Text.Json.JsonException)
+        { if (!_closed) _feedback.Text = L.T(K.StudioFormatFailed) + ex.Message; }
+        finally { _formatting = false; if (!_closed) _formatButton.IsEnabled = _documents.SelectedIndex != 5; }
     }
 
     private static Button ActionButton(Panel panel, K key, Action action, bool accent = false)
