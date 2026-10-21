@@ -264,3 +264,16 @@ ReStart is an independent, MIT-licensed project inspired by late Windows 10 full
 Screenshots and the animation show the real launcher with an isolated English demonstration layout, curated app names, synthetic metrics and generated photo colors. They do not show a user's app inventory, personal documents or location. Application icons are obtained from installed apps without changing their names in the real catalog. Windows/application names and icons belong to their owners. Dependency and .NET notices ship with the app.
 
 [MIT license](LICENSE) · [Security policy](SECURITY.md) · [Support](SUPPORT.md)
+
+---
+
+<!-- support:start -->
+<h2 align="center">Support independent development</h2>
+<p align="center">
+  Enjoy ReStart? Help LastResolution build and improve useful tools, including ReStart and future projects.<br>
+  <sub>ReStart is free and open source. Support is always optional.</sub>
+</p>
+<p align="center">
+  <a href="https://buymeacoffee.com/LastResolution"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" height="48" alt="Buy Me a Coffee · LastResolution" /></a>
+</p>
+<!-- support:end -->

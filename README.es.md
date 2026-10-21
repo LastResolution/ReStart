@@ -126,3 +126,16 @@ Para ARM64 usa `win-arm64`. ZIP y sumas se generan en `artifacts/packages`. Dist
 [Errores e ideas](https://github.com/LastResolution/ReStart/issues/new/choose) · [Contribuir (inglés)](CONTRIBUTING.md) · [Arquitectura (inglés)](docs/architecture.md) · [Pruebas (inglés)](docs/testing.md) · [Versiones](https://github.com/LastResolution/ReStart/releases)
 
 ReStart es un proyecto MIT independiente inspirado en Inicio a pantalla completa de las últimas versiones de Windows 10, sin afiliación con Microsoft. Las imágenes muestran la aplicación real con una demostración inglesa, métricas sintéticas y colores de fotos generados. Los nombres e iconos pertenecen a sus propietarios. [Licencia MIT](LICENSE) · [Soporte (inglés)](SUPPORT.md)
+
+---
+
+<!-- support:start -->
+<h2 align="center">Apoya el desarrollo independiente</h2>
+<p align="center">
+  ¿Te gusta ReStart? Ayuda a LastResolution a crear y mejorar herramientas útiles, tanto ReStart como futuros proyectos.<br>
+  <sub>ReStart es gratuito y de código abierto. El apoyo es siempre opcional.</sub>
+</p>
+<p align="center">
+  <a href="https://buymeacoffee.com/LastResolution"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" height="48" alt="Buy Me a Coffee · LastResolution" /></a>
+</p>
+<!-- support:end -->
