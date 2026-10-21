@@ -37,7 +37,7 @@ internal static class TileStudioContext
     }
 
     internal static JsonElement Build(ScriptTileManifest manifest, TileSize size, double scale, string samples, JsonElement state, bool clicked, DateTimeOffset now,
-        string theme = "dark", bool highContrast = false, bool reducedMotion = true, string accent = "#0078D7", bool preview = false, bool showTitle = true)
+        string theme = "dark", bool highContrast = false, bool reducedMotion = true, string accent = "#0078D7", bool preview = false, bool showTitle = true, string? customColor = null)
     {
         if (Encoding.UTF8.GetByteCount(samples) > 16384) throw new InvalidDataException(TextCatalog.T(K.ErrorScriptRequestSize));
         var sample = JsonSerializer.Deserialize<JsonElement>(samples, ScriptTileProtocol.Json);
@@ -61,7 +61,7 @@ internal static class TileStudioContext
             state,
             title = manifest.LocalizedTitles.GetValueOrDefault(TextCatalog.Language, manifest.Title),
             appearance = new { showTitle },
-            theme = new { mode = theme, highContrast, reducedMotion, accent, customColor = (string?)null }
+            theme = new { mode = theme, highContrast, reducedMotion, accent, customColor }
         }, ScriptTileProtocol.Json);
     }
 }

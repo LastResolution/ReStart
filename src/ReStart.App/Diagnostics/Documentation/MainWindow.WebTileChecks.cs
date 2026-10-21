@@ -47,6 +47,25 @@ public partial class MainWindow
                     Check(await browser.InspectAsync("[...document.querySelectorAll('[data-restart-title]')].every(x=>getComputedStyle(x).display==='none')") == "true",
                         "A bundled sample ignored the live tile name preference.");
                 }
+                if (web.Css.Contains(".card", StringComparison.Ordinal))
+                    foreach (var color in new[] { "#FFFFFF", "#000000" })
+                        foreach (var size in Enum.GetValues<TileSize>())
+                        {
+                            var context = TileStudioContext.Build(manifest, size, 1, TileStudioContext.Sample(manifest), JsonSerializer.SerializeToElement(new { }), false,
+                                DateTimeOffset.Now, preview: true, customColor: color);
+                            var (frame, error) = await browser.RenderAsync(web.Html, web.Css, source, false, context);
+                            Check(frame != null, "A custom-color sample did not render: " + error);
+                            Check(await browser.InspectAsync("getComputedStyle(document.querySelector('.card')).color") ==
+                                JsonSerializer.Serialize(color == "#FFFFFF" ? "rgb(0, 0, 0)" : "rgb(255, 255, 255)"), "A custom tile color did not propagate readable text: " + id);
+                        }
+                if (id == "orbit")
+                {
+                    var context = TileStudioContext.Build(manifest, TileSize.Large, 1, TileStudioContext.Sample(manifest), JsonSerializer.SerializeToElement(new { }), false,
+                        DateTimeOffset.Now, theme: "light", preview: true);
+                    await browser.RenderAsync(web.Html, web.Css, source, false, context);
+                    Check(await browser.InspectAsync("getComputedStyle(document.querySelector('.card')).color") == "\"rgb(21, 43, 59)\"", "The transparent clock kept white text on a light launcher.");
+                    using var image = File.Create(Path.Combine(directory, "orbit-light.png")); await browser.CaptureAsync(image);
+                }
             }
             finally { host.RootVisual = null; }
         }
