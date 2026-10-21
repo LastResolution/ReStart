@@ -16,6 +16,24 @@ ReStart is a WPF desktop launcher. It owns its layout, search and live-tile prot
 
 Most Core logic is independent of WPF. Windows-only synchronization and test-linked services declare their platform requirements.
 
+## Source organization
+
+The project roots keep entry points, project configuration and global imports. Feature code lives with its responsibility:
+
+| Location | Contents |
+| --- | --- |
+| `ReStart.Core/Apps`, `Search` | Catalog identities, pinning/activity models, app matching and indexed-query construction |
+| `ReStart.Core/Layout` | Tile/group models, geometry, folder expansion, editing, history, persistence and migration |
+| `ReStart.Core/Configuration`, `Appearance`, `Localization` | Preferences, palettes and translated text; locale JSON remains in `Locales` |
+| `ReStart.Core/LiveTiles`, `Updates`, `Windows` | Bounded tile/data contracts, public release parsing, input state and current-user instance/IPC coordination |
+| `ReStart.App/Views` | `Start`, `Settings`, `Startup` and `Dialogs`; each XAML/code-behind pair stays together |
+| `ReStart.App/Controls`, `Resources`, `Localization` | Reusable WPF controls, themed dictionaries and the localization markup extension |
+| `ReStart.App/Services` | `Catalog`, `Search`, `Shell`, `LiveTiles` and `Configuration`; native calls and process effects live here |
+| `ReStart.App/Diagnostics` | Native verification partials and isolated `Documentation` rendering; these are not UI feature services |
+| `tests/ReStart.Core.Tests` | Matching feature folders, including explicit Windows process/integration coverage |
+
+Shared model declarations have individual files, including `AppEntry`, `Tile`, `Preferences` and `LayoutDocument`. Existing namespaces and serialized types are preserved. Folder placement helps navigation; shared-state partials still belong to one class, and the ownership boundaries below remain the guide for extracting services. The architecture guard prevents feature files from accumulating in the project roots again.
+
 ```mermaid
 flowchart LR
     UI[ReStart.App: WPF orchestration] --> Core[ReStart.Core: models, plans, contracts]

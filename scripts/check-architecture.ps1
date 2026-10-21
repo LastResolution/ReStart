@@ -24,4 +24,14 @@ foreach ($name in $rules.Keys) {
         throw 'Review the architecture before adding external assembly dependencies to Core.'
     }
 }
-Write-Output 'Verified Core, App and worker project dependency boundaries.'
+$entryFiles = @{
+    'src/ReStart.Core' = @('GlobalUsings.cs')
+    'src/ReStart.App' = @('App.xaml.cs', 'GlobalUsings.cs')
+    'tests/ReStart.Core.Tests' = @('GlobalUsings.cs')
+}
+foreach ($directory in $entryFiles.Keys) {
+    foreach ($source in Get-ChildItem -LiteralPath (Join-Path $repoRoot $directory) -Filter '*.cs' -File) {
+        if ($source.Name -notin $entryFiles[$directory]) { throw "Place feature code in its owning folder instead of the project root: $directory/$($source.Name)" }
+    }
+}
+Write-Output 'Verified project dependency boundaries and feature-folder placement.'

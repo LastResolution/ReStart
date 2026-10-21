@@ -12,6 +12,22 @@
 
 ## 責務と依存関係
 
+ソースのルートには起動点・プロジェクト設定・共通usingを残し、実装とテストを責務別のフォルダへ整理しています。
+
+| 場所 | 内容 |
+| --- | --- |
+| Coreの `Apps` / `Search` | アプリの識別・ピン留め・利用記録、検索とインデックス用クエリ |
+| Coreの `Layout` | タイル・グループ、配置計算、編集、履歴、保存と移行 |
+| Coreの `Configuration` / `Appearance` / `Localization` | 設定・配色・翻訳処理。言語JSONは `Locales` を維持 |
+| Coreの `LiveTiles` / `Updates` / `Windows` | JS・データ契約、公開リリース、入力状態と多重起動・IPC |
+| Appの `Views` | `Start` / `Settings` / `Startup` / `Dialogs`。XAMLとcode-behindは同じ場所 |
+| Appの `Controls` / `Resources` / `Localization` | 再利用コントロール、テーマ辞書、翻訳マークアップ |
+| Appの `Services` | `Catalog` / `Search` / `Shell` / `LiveTiles` / `Configuration`。ネイティブ操作とプロセス管理 |
+| Appの `Diagnostics` | 回帰確認用partialと、`Documentation`内の隔離した画像生成 |
+| テスト | 対応する機能別フォルダ。Windows統合試験も区別 |
+
+AppEntry・Tile・Preferences・LayoutDocumentなどの共有モデルも型ごとのファイルへ分割しました。既存の名前空間と保存形式を維持しています。partialは状態を共有する同じクラスなので、フォルダ整理だけで独立モジュールになったとは扱いません。プロジェクト直下へ機能ファイルが再び増えないこともCIで検査します。
+
 WPFのReStart.AppがReStart.Coreのモデル・配置計画を参照し、Windowsの列挙・検索インデックス・フック・Shell操作はApp内のサービスが担当します。ReStart.TileHostはCoreを参照する別プロセスで、UIとは上限付きJSONパイプだけで通信します。AppからTileHostへのプロジェクト参照はビルド専用で、JintをUIプロセス内で実行しません。CoreからAppやTileHostへの参照は認めません。
 
 | 状態・副作用 | 所有者と境界 |
