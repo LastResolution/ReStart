@@ -24,6 +24,8 @@ Verrouillez tout le placement ou certains groupes. Ctrl+Maj+L bascule le verroui
 
 Dix-neuf tuiles HTML/CSS/JavaScript sont incluses. Tile Studio permet de modifier le code et le manifeste, de tester quatre tailles avec des données fictives hors ligne, puis de sauvegarder ou épingler. Nouveaux exemples : scène météo, tableau système, actualités RSS et jardin Canvas. Les aiguilles SVG suivent l’heure du PC. Les noms sont visibles par défaut et peuvent être masqués dans les paramètres.
 
+**Commandes de l’éditeur :** coloration de JavaScript, HTML, CSS et JSON ; **Tab / Maj+Tab** pour l’indentation ; **Format document / Ctrl+Maj+F** pour formater hors ligne avec une seule annulation. Feed headlines et News board défilent dans leur propre tuile. Les dossiers fermés affichent des aperçus animés uniformes. Les dispositions nouvelles ou réinitialisées utilisent Month dots et Orbit clock. La vérification facultative au démarrage signale une nouvelle version par un avis que vous pouvez fermer.
+
 ## Démarrage rapide
 
 1. Téléchargez le **[ZIP x64](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-x64.zip)** pour un PC Intel/AMD ou le **[ZIP ARM64](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip)** pour Windows sur ARM.

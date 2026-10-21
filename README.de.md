@@ -24,6 +24,8 @@ Sperre das gesamte Layout oder einzelne Gruppen. Strg+Umschalt+L schaltet die gl
 
 19 HTML/CSS/JavaScript-Kacheln sind enthalten. Tile Studio bearbeitet Quellen und Manifest, zeigt vier Größen mit Offline-Beispieldaten und speichert Entwürfe oder angeheftete Kacheln. Neu sind Wettergrafik, Systemübersicht, Nachrichtenwand und Canvas-Garten; die SVG-Uhr folgt der PC-Zeit. Live-Kachelnamen sind standardmäßig sichtbar und in den Einstellungen abschaltbar.
 
+**Editor-Steuerung:** Syntaxhervorhebung für JavaScript, HTML, CSS und JSON; **Tab / Umschalt+Tab** zum Einrücken; **Format document / Strg+Umschalt+F** zur Offline-Formatierung mit einem Rückgängig-Schritt. Feed headlines und News board scrollen innerhalb ihrer Kachel. Geschlossene Ordner zeigen gleich große Live-Vorschauen. Neue und zurückgesetzte Layouts nutzen Month dots und Orbit clock. Optionale Startprüfungen melden neue Versionen mit einem ausblendbaren Hinweis.
+
 ## Schnellstart
 
 1. Lade das **[x64-ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-x64.zip)** für Intel-/AMD-PCs oder das **[ARM64-ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip)** für Windows auf ARM herunter.

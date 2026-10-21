@@ -24,6 +24,8 @@ Bloquea todo el diseño o grupos individuales. Ctrl+Mayús+L cambia el bloqueo g
 
 Incluye 19 mosaicos HTML/CSS/JavaScript. Tile Studio permite editar código y manifiesto, probar cuatro tamaños con datos de ejemplo sin conexión y guardar borradores o anclarlos. Los nuevos ejemplos muestran tiempo atmosférico, panel del sistema, noticias RSS y arte Canvas. Las agujas del reloj SVG siguen la hora del PC. Los nombres se muestran por defecto y pueden ocultarse en los ajustes.
 
+**Controles del editor:** resaltado de JavaScript, HTML, CSS y JSON; **Tab / Mayús+Tab** para la sangría; **Format document / Ctrl+Mayús+F** para formatear sin conexión y deshacer en un solo paso. Feed headlines y News board se desplazan dentro de su mosaico. Las carpetas cerradas muestran vistas previas dinámicas del mismo tamaño. Los diseños nuevos y restablecidos usan Month dots y Orbit clock. La comprobación opcional al iniciar muestra un aviso descartable cuando hay una versión nueva.
+
 ## Primeros pasos
 
 1. Descarga el **[ZIP x64](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-x64.zip)** para un PC Intel/AMD o el **[ZIP ARM64](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip)** para Windows en ARM.

@@ -24,6 +24,8 @@ https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
 
 内置 19 个 HTML/CSS/JavaScript 磁贴。Tile Studio 可编辑源码和清单，使用离线示例数据预览四种大小，再保存草稿或固定磁贴。新增天气风景、系统仪表板、RSS 新闻看板和 Canvas 花园；SVG 时钟指针按电脑时间运行。磁贴名称默认显示，可在设置中隐藏。
 
+**编辑器操作：** 支持 JavaScript、HTML、CSS 和 JSON 语法高亮，**Tab / Shift+Tab** 缩进，以及 **Format document / Ctrl+Shift+F** 离线格式化；一次撤销即可恢复。Feed headlines 和 News board 在磁贴内部滚动。关闭的文件夹显示大小一致的动态预览。初始和重置布局使用随附的 Month dots 和 Orbit clock。可选的启动更新检查会通过可关闭的通知提示新版本。
+
 ## 快速开始
 
 1. Intel/AMD 电脑下载 **[x64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-x64.zip)**；Windows on ARM 下载 **[ARM64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip)**。

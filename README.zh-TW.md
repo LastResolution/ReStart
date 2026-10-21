@@ -24,6 +24,8 @@ https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
 
 內建 19 個 HTML/CSS/JavaScript 動態磚。Tile Studio 可編輯原始碼與資訊清單，以離線範例資料預覽四種大小，再儲存草稿或釘選。新增天氣風景、系統儀表板、RSS 新聞看板及 Canvas 花園；SVG 時鐘指針依電腦時間運作。動態磚名稱預設顯示，可在設定中隱藏。
 
+**編輯器操作：** 支援 JavaScript、HTML、CSS 和 JSON 語法醒目提示，**Tab / Shift+Tab** 縮排，以及 **Format document / Ctrl+Shift+F** 離線格式化；一次復原即可還原。Feed headlines 和 News board 在動態磚內部捲動。關閉的資料夾顯示大小一致的即時預覽。初始與重設配置使用隨附的 Month dots 和 Orbit clock。選用的啟動更新檢查會透過可關閉的通知提示新版本。
+
 ## 快速開始
 
 1. Intel/AMD 電腦下載 **[x64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-x64.zip)**；Windows on ARM 下載 **[ARM64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip)**。

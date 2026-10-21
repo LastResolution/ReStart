@@ -38,6 +38,8 @@ https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
 
 HTML/CSS/JavaScript製のライブタイルを19種類同梱。Tile Studioでソースとmanifestを編集し、オフラインのサンプル値で4サイズを確認して保存・ピン留めできます。天気のCSSアート、システムダッシュボード、RSSニュース、Canvasガーデンを追加し、オービット時計の秒針はPC時刻で動きます。設定の「ライブタイル名を表示」は初期値ONで、左下の名前を非表示にもできます。
 
+**エディター操作：** JavaScript・HTML・CSS・JSON のシンタックスハイライト、**Tab / Shift+Tab** によるインデント、**ドキュメントを整形 / Ctrl+Shift+F** によるオフライン整形に対応。整形は1回の Undo で戻せます。Feed headlines と News board はタイル内でスクロールし、閉じたフォルダには同じ大きさのライブプレビューを表示します。初期配置とリセットには同梱の Month dots と Orbit clock を使用。任意の起動時更新チェックで新バージョンを閉じられる通知として案内します。
+
 ## 使い始める
 
 1. Intel / AMD の PC は **[x64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-x64.zip)**、Windows on ARM は **[ARM64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip)** を保存します。
@@ -48,7 +50,7 @@ HTML/CSS/JavaScript製のライブタイルを19種類同梱。Tile Studioでソ
 
 | すぐにアプリへ | 配置を自分のものに | 必要な情報をひと目で |
 | --- | --- | --- |
-| Windows キー、タスクバーの Start、`Ctrl+Alt+Space`、トレイから開いてそのまま検索。 | 4サイズのタイル、独立ピン、自由なグループ移動、インラインフォルダ、個別の色。 | 同梱15種類。グラフ、PC時刻、システム情報、写真、天気・RSS/Atom・Web API・ローカルファイル連携。 |
+| Windows キー、タスクバーの Start、`Ctrl+Alt+Space`、トレイから開いてそのまま検索。 | 4サイズのタイル、独立ピン、自由なグループ移動、インラインフォルダ、個別の色。 | 同梱19種類。グラフ、PC時刻、システム情報、写真、天気・RSS/Atom・Web API・ローカルファイル連携。 |
 
 ## 自分のスタートに
 
@@ -124,7 +126,7 @@ Microsoft とは独立したプロジェクトです。Explorer のパッチは�
 
 ## ライブタイルで必要な情報を
 
-時刻、PC の状態、選んだ写真、天気や見出しをアプリと同じ画面に表示できます。**15種類を同梱**し、4サイズに合わせたレイアウトを用意しています。
+時刻、PC の状態、選んだ写真、天気や見出しをアプリと同じ画面に表示できます。**19種類を同梱**し、4サイズに合わせたレイアウトを用意しています。
 
 ![時計・システム情報・集中タイマー・写真の同梱タイル](docs/images/live-tiles.png)
 

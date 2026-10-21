@@ -24,6 +24,8 @@ Windows 10의 전체 화면 시작 메뉴가 그리우신가요? ReStart는 Wind
 
 HTML/CSS/JavaScript 타일 19개를 제공합니다. Tile Studio에서 코드와 매니페스트를 편집하고 오프라인 샘플로 네 가지 크기를 확인한 뒤 저장하거나 고정할 수 있습니다. 날씨 풍경, 시스템 대시보드, RSS 뉴스 보드와 Canvas 정원을 추가했습니다. SVG 시계 바늘은 PC 시간을 따릅니다. 타일 이름은 기본으로 표시되며 설정에서 숨길 수 있습니다.
 
+**편집기 조작:** JavaScript, HTML, CSS, JSON 구문 강조; **Tab / Shift+Tab** 들여쓰기; **Format document / Ctrl+Shift+F** 오프라인 서식 정리를 지원하며 한 번에 실행 취소할 수 있습니다. Feed headlines와 News board는 타일 안에서 스크롤됩니다. 닫힌 폴더는 같은 크기의 라이브 미리보기를 표시합니다. 초기 및 초기화 배치는 Month dots와 Orbit clock을 사용합니다. 선택적인 시작 시 업데이트 확인은 새 버전을 닫을 수 있는 알림으로 안내합니다.
+
 ## 시작하기
 
 1. Intel/AMD PC용 **[x64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-x64.zip)** 또는 Windows on ARM용 **[ARM64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip)**을 받습니다.
