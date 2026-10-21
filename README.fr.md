@@ -8,6 +8,8 @@
 </p>
 <!-- languages:end -->
 
+<p align="center"><a href="https://lastresolution.github.io/ReStart/">Site web (en anglais)</a> · <a href="https://lastresolution.github.io/ReStart/developers/">Guide de développement (en anglais)</a></p>
+
 > **Traduction par IA :** ce guide a été traduit de l’anglais à l’aide de l’IA et peut contenir des erreurs. Le [README anglais](README.md) reste la référence principale et contient des exemples supplémentaires. Les corrections sont bienvenues. Les captures utilisent une démonstration en anglais et des données d’exemple.
 
 <p align="center"><strong>Voir la démo de 60 secondes</strong><br><sub>1080p · Anglais · Sans son</sub></p>

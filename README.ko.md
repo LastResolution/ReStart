@@ -8,6 +8,8 @@
 </p>
 <!-- languages:end -->
 
+<p align="center"><a href="https://lastresolution.github.io/ReStart/">웹사이트(영어)</a> · <a href="https://lastresolution.github.io/ReStart/developers/">개발자 가이드(영어)</a></p>
+
 > **AI 번역:** 이 안내서는 영어를 바탕으로 AI로 번역했으며 오류가 있을 수 있습니다. [영어 README](README.md)가 기준 문서이며 추가 예제를 제공합니다. 번역 수정 제안을 환영합니다. 스크린샷은 영어 데모와 예시 데이터를 사용합니다.
 
 <p align="center"><strong>60초 데모 보기</strong><br><sub>1080p · 영어 · 소리 없음</sub></p>

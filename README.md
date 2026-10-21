@@ -18,6 +18,8 @@
 </p>
 <!-- languages:end -->
 
+<p align="center"><a href="https://lastresolution.github.io/ReStart/">Website</a> · <a href="https://lastresolution.github.io/ReStart/developers/">Developer guide</a></p>
+
 English is the primary documentation. The translated guides are AI-assisted and may contain errors; corrections are welcome. All screenshots use an English demonstration environment.
 
 <p align="center"><strong>Watch the 60-second demo</strong><br><sub>1080p · English · No audio</sub></p>
