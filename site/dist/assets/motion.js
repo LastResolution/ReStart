@@ -3,10 +3,6 @@
   const root = document.documentElement;
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
-  const toggle = document.querySelector('[data-motion-toggle]');
-  let enabled = true;
-  try { enabled = localStorage.getItem('restart-site-motion') !== 'off'; } catch { /* Optional preference. */ }
-
   // Reveal real content once. Without this script, everything remains visible.
   const revealGroups = [
     ['.hero-copy > *, .developer-hero > *', 65],
@@ -33,24 +29,12 @@
   }, { threshold: 0.08, rootMargin: '0px 0px -24px 0px' }) : null;
 
   const applyMotion = () => {
-    const active = enabled && !reducedMotion.matches;
+    const active = !reducedMotion.matches;
     root.dataset.motion = active ? 'on' : 'off';
     root.classList.toggle('motion-ready', Boolean(active && observer));
     if (active) reveals.forEach(element => { if (!element.classList.contains('is-visible')) observer?.observe(element); });
     else { observer?.disconnect(); resetTilt(); }
-    if (toggle) {
-      toggle.hidden = false;
-      toggle.setAttribute('aria-pressed', String(active));
-      toggle.querySelector('span').textContent = reducedMotion.matches ? 'Reduced motion' : `Motion ${active ? 'on' : 'off'}`;
-      toggle.disabled = reducedMotion.matches;
-      toggle.title = reducedMotion.matches ? 'Following your system’s reduced-motion setting' : 'Turn decorative page motion on or off';
-    }
   };
-  toggle?.addEventListener('click', () => {
-    enabled = !enabled;
-    try { localStorage.setItem('restart-site-motion', enabled ? 'on' : 'off'); } catch { /* Optional preference. */ }
-    applyMotion();
-  });
   reducedMotion.addEventListener('change', applyMotion);
   document.addEventListener('focusin', event => {
     // Keyboard users never have to wait for a scroll entrance.
