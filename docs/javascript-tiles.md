@@ -200,7 +200,7 @@ The folder binding is local installed host-bindings.json, never imported from a 
 
 ## Weather, feeds, Web APIs and application data
 
-![Connected tiles rendered from fictional local fixture data](images/connected-data.png)
+<p><img src="images/connected-weather.png" width="204" alt="Weather web tile with sample data" /> <img src="images/connected-feed.png" width="204" alt="Feed headlines web tile with sample data" /> <img src="images/connected-json-monitor.png" width="204" alt="JSON monitor web tile with sample data" /></p>
 
 `data.sources` lets the host read explicitly configured inputs asynchronously. The host connection supplies the latest cached `ctx.data` snapshot to either renderer. Legacy native JavaScript stays synchronous; web packages may use asynchronous browser code within their separate networking rules. Network access is opt-in for each installed package, independent of update checks.
 

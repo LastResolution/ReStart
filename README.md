@@ -128,7 +128,7 @@ Right-click the background → **Add live tile** to try one. Click a tile to use
 
 ### Connect weather, headlines and app data
 
-<p align="center"><img src="docs/images/connected-data.png" width="464" alt="Weather, Feed headlines and JSON monitor rendered in ReStart" /></p>
+<p align="center"><img src="docs/images/connected-weather.png" width="204" alt="Weather web tile" /> <img src="docs/images/connected-feed.png" width="204" alt="Feed headlines web tile" /> <img src="docs/images/connected-json-monitor.png" width="204" alt="JSON monitor web tile" /></p>
 
 | Tile | What it shows | Choose your source |
 | --- | --- | --- |

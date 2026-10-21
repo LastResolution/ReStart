@@ -144,7 +144,7 @@ Microsoft とは独立したプロジェクトです。Explorer のパッチは�
 
 ### 天気や見出しをアプリと一緒に
 
-<p align="center"><img src="docs/images/connected-data.png" width="464" alt="ReStart で表示する天気・フィードの見出し・JSON モニター" /></p>
+<p align="center"><img src="docs/images/connected-weather.png" width="204" alt="Weather web tile" /> <img src="docs/images/connected-feed.png" width="204" alt="Feed headlines web tile" /> <img src="docs/images/connected-json-monitor.png" width="204" alt="JSON monitor web tile" /></p>
 
 | タイル | 表示するもの | 接続先の指定 |
 | --- | --- | --- |
