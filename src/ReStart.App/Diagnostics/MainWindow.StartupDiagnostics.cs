@@ -121,7 +121,7 @@ public partial class MainWindow
                 deferred.SetResult([]); await other.InitializeAsync(); await Until(() => other._startupPresentation == null);
                 Check(!other.IsPresenting && !other.IsVisible, "A foreign activation during startup caused a late popup.");
                 other.PresentSettings();
-                if (other._startupPresentation is { } pending) await pending;
+                if (other._startupPresentation is { } settingsPreparation) await settingsPreparation;
                 await Until(() => other.IsVisible && settingsClosed == 1 && !other._startupSettings);
                 Check(other.IsVisible && other._startupWindow == null && settingsClosed == 1 && !other._startupSettings,
                     "Background initialization did not prepare the default live tiles and open requested settings exactly once.");
