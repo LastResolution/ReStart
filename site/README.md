@@ -30,6 +30,14 @@ node site/scripts/verify-site.mjs
 
 Check both pages at desktop, tablet and narrow mobile widths, with light/dark/system themes and reduced motion. Exercise the mobile menu, keyboard tabs, screenshot dialog, FAQ disclosures, video and all download/support links. Keep the nineteen web packages, Tile Studio controls and release availability synchronized with the app documentation.
 
+## Search discovery
+
+The public sitemap is `https://lastresolution.github.io/ReStart/sitemap.xml`. It lists the landing page and developer guide using their canonical URLs. Both footers link to it. Update the sitemap when adding or removing a public page; do not add guessed modification dates or unpublished URLs.
+
+The landing page contains the maintainer-provided Google Search Console and Bing Webmaster Tools verification meta tags. These are public ownership markers, not login credentials or API keys. Keep them in the deployed HTML after verification. In Search Console, use the URL-prefix property `https://lastresolution.github.io/ReStart/`, complete verification after deployment, then submit `sitemap.xml`. Submit the same sitemap in Bing Webmaster Tools.
+
+A crawler's `robots.txt` must be at the hostname root, `https://lastresolution.github.io/robots.txt`. A file inside this project's `/ReStart/` directory does not control crawling. This project does not deploy a misleading project-level robots file; sitemap submission works independently of one. No analytics or third-party tracking script is needed for either ownership check.
+
 ## Deployment
 
 Configure the repository's Pages source as GitHub Actions. `.github/workflows/pages.yml` verifies relative links and static assets, then deploys on a change to `site/**` on `main`, or through a manual dispatch. The repository root and development files are excluded. Review the `lastresolution.github.io/ReStart/` social metadata if a custom domain is selected.
