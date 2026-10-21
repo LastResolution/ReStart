@@ -95,7 +95,7 @@ public partial class MainWindow
         Add(menu, L.T(K.EditScriptSettings), () => EditScript(tile, "manifest.json"));
         Add(menu, L.T(K.OpenScriptFolder), () =>
         {
-            try { ShellLauncher.Launch(_scriptPackages.Folder(tile.ScriptId)); }
+            try { LaunchPath(_scriptPackages.Folder(tile.ScriptId)); }
             catch (Exception ex) when (ex is IOException or InvalidDataException or InvalidOperationException or System.ComponentModel.Win32Exception) { SetStatus(ex.Message); }
         });
         Add(menu, L.T(K.ReloadScript), () =>

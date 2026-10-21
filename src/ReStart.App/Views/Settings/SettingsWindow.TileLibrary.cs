@@ -19,7 +19,7 @@ internal sealed partial class SettingsWindow
         var buttons = new WrapPanel();
         DataButton(buttons, L.T(K.OpenTileLibrary), () =>
         {
-            try { Directory.CreateDirectory(_main.ScriptPackages.LibraryRoot); ShellLauncher.Launch(_main.ScriptPackages.LibraryRoot); }
+            try { Directory.CreateDirectory(_main.ScriptPackages.LibraryRoot); OpenExternal(_main.ScriptPackages.LibraryRoot); }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception or InvalidOperationException) { _feedback.Text = ex.Message; }
         });
         var closed = false; var refreshing = false; var pending = false; string? signature = null;

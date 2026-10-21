@@ -177,6 +177,19 @@ internal sealed partial class SettingsWindow : Window
         var button = new Button { Content = label, Margin = new(0, 0, 8, 6), Background = Resource("TileBrush") };
         button.Click += (_, _) => action(); panel.Children.Add(button); return button;
     }
+    private void OpenExternal(string target)
+    {
+        try
+        {
+            ShellLauncher.Launch(target);
+            // A modal owner remains topmost while its dialog is open. Close the
+            // dialog first, then dismiss Start after ShowDialog has unwound.
+            Closed += (_, _) => _main.Dispatcher.BeginInvoke(() => _main.Dismiss(immediately: true));
+            Close();
+        }
+        catch (Exception ex) when (ex is IOException or InvalidOperationException or System.ComponentModel.Win32Exception)
+        { _feedback.Text = ex.Message; }
+    }
     internal void SelectSection(string name)
     {
         var button = _sectionButtons[name];
