@@ -6,14 +6,19 @@
   <a href="https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip">ARM64</a> ·
   <a href="https://github.com/LastResolution/ReStart/releases/latest">Release notes</a> ·
   <a href="docs/ja/javascript-tiles.md">タイルを作る</a> ·
-  <a href="CONTRIBUTING.ja.md">開発に参加</a> ·
-  <a href="README.md">English</a>
+  <a href="CONTRIBUTING.ja.md">開発に参加</a>
 </p>
 <p align="center">
   <a href="https://github.com/LastResolution/ReStart/actions/workflows/ci.yml"><img src="https://github.com/LastResolution/ReStart/actions/workflows/ci.yml/badge.svg" alt="Windows CI" /></a>
   <a href="https://github.com/LastResolution/ReStart/releases/latest"><img src="https://img.shields.io/github/v/release/LastResolution/ReStart?color=0078d4" alt="Latest release" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-0078d4" alt="MIT license" /></a>
 </p>
+
+<!-- languages:start -->
+[English](README.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md)
+<!-- languages:end -->
+
+> **AI翻訳:** この案内は英語を基にAIを用いて翻訳・編集しており、誤りが含まれる場合があります。[英語README](README.md)を原本とし、翻訳の修正を歓迎します。スクリーンショットは全言語版で英語のデモ環境を使用しています。
 
 ![アプリ・グループ・フォルダ・ライブタイルを含む全画面の ReStart](docs/images/start.png)
 
@@ -64,6 +69,48 @@
 </details>
 
 Microsoft とは独立したプロジェクトです。Explorer のパッチは行わず、解除可能な連携を使います。従来の UWP タイル通知、Windows Search 全体、Cortana、ジャンプリスト、使用頻度による推薦は対象外です。[互換性](docs/ja/fidelity.md)と[検証手順](docs/ja/testing.md)を参照してください。
+
+## 全機能一覧
+
+| 分野 | 対応機能 |
+| --- | --- |
+| 開閉とWindows連携 | Windowsキー・スタートボタンの任意の置き換え、Ctrl+Alt+Space、トレイ、フォーカス取得、別アプリ・タスクバー操作で閉じる、画面に合わせた表示、多重起動防止 |
+| 起動 | サインイン時の自動起動、バックグラウンド起動、テーマ対応の準備画面と先行入力、アイコンキャッシュ、アプリ登録情報の自動更新 |
+| タイルとグループ | 小・中・横長・大の4サイズ、単独ピン、内容幅に合わせた長方形グループ、自由な配置、半セル単位の横位置、縦横スクロール |
+| フォルダー | グループ内で重ねて作成、行内展開、子タイルの追加・取り出し・並べ替え、その場での名前変更と解除。中身が1つでも維持 |
+| 配置の編集 | 編集モード、複数選択と一括移動、選択・ピン留め解除、起動中のUndo/Redo、ドラッグ取消時の復元 |
+| D&Dの表示 | グループ・フォルダー・配置先の区別、待ち時間の進捗、ヒント、ホバー時の範囲、自動端スクロール。重ねて作るグループ・フォルダーは個別に無効化可能 |
+| ピン留め | アプリ、ファイル、ディレクトリ、ショートカット、Webサイト。Explorerやアプリ一覧・検索の右クリック、ドラッグ、追加先の明示指定 |
+| 検索 | 全半角・かなを正規化したアプリ検索、翻訳名・英語名で探せるWindows設定15項目、任意のインデックス済みファイル名検索、矢印・Enter操作、古い問い合わせの取消 |
+| すべてのアプリ | 画面幅に合わせたアルファベット順の列、スタートメニュー内フォルダーの展開、文字ジャンプ、キーボード操作、インストール・削除の反映、任意の最近追加・よく使うアプリ |
+| アプリの操作 | Windowsが提供する管理者実行、ファイルの場所、プロパティ、アンインストール。Windowsの設定と公開APIの範囲で最近・よく使う文書を表示 |
+| 起動オプション | タイルごとの有効・無効、追加引数、作業フォルダー、対応するデスクトップアプリ・ショートカットの管理者実行。UACの確認はWindowsが担当 |
+| サイドバー | 任意のホバー展開、ドキュメント・ダウンロード・音楽・画像・動画・ネットワーク・個人用フォルダーの個別選択、アカウントと電源操作 |
+| 外観 | 5種類のカラーテーマとライト・ダーク・システム設定、背景・アクセントのRGB指定、壁紙、スタートのアクセント色、旧式・個別タイル色、コントロール・両スクロールバー、ハイコントラスト、任意のアニメーション |
+| ライブタイル | JS製15種類を同梱、4サイズ対応、クリック時のローカル操作、更新の有効・無効、データ接続設定、サンプル作成、パッケージ取込、ローカルライブラリの自動検出 |
+| JS API | PC時刻、言語・サイズ・保持状態、CPU・メモリ・通信・バッテリー・ストレージ、選択フォルダーの写真、JSON・Web API・RSS・Atom・ローカルファイルのキャッシュとアプリ連携 |
+| 多言語 | 英語、日本語、ドイツ語、フランス語、スペイン語、韓国語、簡体字・繁体字中国語。UIと同梱タイルに対応 |
+| データと更新 | ローカル設定、配置の取込・書出し・初期化、バックアップとバージョン移行、消去可能なアプリ履歴、バージョン・ビルド・ライセンス、APIキー不要の更新確認と手動更新 |
+| 配布 | Windows 10/11のx64・ARM64向けポータブルZIP、ランタイム・ライセンス同梱、通常利用は管理者権限不要、Explorerを書き換えない解除可能な連携 |
+
+[ON/OFF設定と既定値](docs/ja/start-behavior.md) · [対応範囲](docs/ja/fidelity.md) · [JS API](docs/ja/javascript-tiles.md)
+
+### 検索と起動の設定
+
+![アプリ・Windows設定・ファイルを分類した検索画面全体](docs/images/unified-search.png)
+
+<details>
+<summary><strong>動作の切り替えとタイルごとの起動オプション</strong></summary>
+
+| スタートの動作 | 起動オプション |
+| --- | --- |
+| ![動作のスイッチとサイドバーのフォルダー選択](docs/images/start-behavior.png) | ![追加引数・作業フォルダー・管理者実行](docs/images/launch-options.png) |
+
+![配置操作・履歴・検索の切り替え](docs/images/start-behavior-layout.png)
+
+設定・ファイル検索、文書メニュー、ホバー表示、重ねて作るグループ・フォルダー、端スクロール、ヒントを個別に無効化できます。「よく使うアプリ」の記録は既定で無効です。起動オプションも入力値を残して無効にできます。スクリーンショットは英語UIと架空のアプリ・文書を使っています。
+
+</details>
 
 ## ライブタイルで必要な情報を
 
@@ -162,7 +209,7 @@ ZIP 配布は未署名です。組織の実行ポリシーに従ってくださ�
 | Windows キー単押し | 開く / 閉じる。設定で無効化可能 |
 | `Ctrl+Alt+Space` | 開く / 閉じる |
 | `Esc` | 検索やフォルダーを閉じる。もう一度で ReStart を閉じる |
-| 文字入力 / `Ctrl+F` | アプリを検索 |
+| 文字入力 / `Ctrl+F` | アプリと、有効にしたWindows設定・ファイル名を検索 |
 | 検索欄で `Enter` | 強調表示した結果を起動。`↓` / `↑`で選択を変更 |
 | `Tab` / 矢印 / `Enter` | フォーカス移動 / 選択項目の起動 |
 | タイルを右クリック | サイズ、名前、移動先、フォルダー、解除 |
@@ -170,7 +217,7 @@ ZIP 配布は未署名です。組織の実行ポリシーに従ってくださ�
 | タイルを空き領域へドロップ | その位置に単独タイルとして配置 |
 | アプリ一覧・検索結果からドラッグ | タイル画面へ切り替えて配置。キャンセルで元の表示へ復帰 |
 | 単独タイルに半分ほど重ねて約0.3秒待ち、「グループを作成」でドロップ | 通常のグループにまとめる |
-| グループ内のタイルに重ねて約1秒待ち、フォルダーのプレビューでドロップ | フォルダーを作成。既存フォルダーなら中に追加 |
+| グループ内のタイルに重ねて約0.6秒待ち、フォルダーのプレビューでドロップ | フォルダーを作成。既存フォルダーなら中に追加 |
 | 「配置を編集」 / `Ctrl+E` | クリックでタイルを選択。アプリを起動せず、選択したタイルをまとめてドラッグ |
 | 編集中の `Ctrl+A` / `Delete` | ルートタイルをすべて選択 / 選択したタイルをピン留め解除 |
 | `Ctrl+Z` / `Ctrl+Y` または `Ctrl+Shift+Z` | 配置を元に戻す / やり直す。文字入力欄では通常の文字編集の取り消し |
@@ -276,4 +323,4 @@ dotnet build ReStart.slnx -c Release
 
 ReStart のコードは [MIT License](LICENSE) です。
 
-[セキュリティ](SECURITY.ja.md) · [サポート](SUPPORT.ja.md) · [英語表記でのブランチ保護](docs/ja/github-protection.md)
+[セキュリティ](SECURITY.ja.md) · [Code signing policy](docs/ja/code-signing.md) · [サポート](SUPPORT.ja.md) · [英語表記でのブランチ保護](docs/ja/github-protection.md)

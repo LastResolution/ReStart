@@ -4,14 +4,19 @@
 <p align="center">
   <a href="https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-x64.zip"><strong>Download for Windows · x64</strong></a> ·
   <a href="https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip">ARM64</a> ·
-  <a href="https://github.com/LastResolution/ReStart/releases/latest">Release notes</a> ·
-  <a href="README.ja.md">日本語</a>
+  <a href="https://github.com/LastResolution/ReStart/releases/latest">Release notes</a>
 </p>
 <p align="center">
   <a href="https://github.com/LastResolution/ReStart/actions/workflows/ci.yml"><img src="https://github.com/LastResolution/ReStart/actions/workflows/ci.yml/badge.svg" alt="Windows CI" /></a>
   <a href="https://github.com/LastResolution/ReStart/releases/latest"><img src="https://img.shields.io/github/v/release/LastResolution/ReStart?color=0078d4" alt="Latest release" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-0078d4" alt="MIT license" /></a>
 </p>
+
+<!-- languages:start -->
+[English](README.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md)
+<!-- languages:end -->
+
+English is the primary documentation. The translated guides are AI-assisted and may contain errors; corrections are welcome. All screenshots use an English demonstration environment.
 
 ![The complete ReStart desktop launcher with apps, folders and live tiles](docs/images/start.png)
 
@@ -44,6 +49,48 @@ Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button
 <summary><strong>See the light theme</strong></summary>
 
 ![The complete ReStart launcher in light mode](docs/images/start-light.png)
+
+</details>
+
+## Everything at a glance
+
+| Area | Included features |
+| --- | --- |
+| Open and close | Optional Windows-key and taskbar Start-button capture, Ctrl+Alt+Space, tray controls, foreground activation, close on app/taskbar switching, monitor-aware working area and a single running instance |
+| Startup | Optional sign-in startup, silent background mode, a themed preparation screen with typeahead, icon caching and background catalog refresh |
+| Tiles and groups | Small, medium, wide and large tiles; independent pins; movable rectangular groups with content-sized bounds; half-cell horizontal anchors; automatic placement and scrolling in both directions |
+| Folders | Create by overlap inside a group, open inline, add/remove/reorder children, rename inline and unpack; one remaining child keeps its folder |
+| Layout editing | Edit mode, multi-selection, group moves, select/unpin actions and session Undo/Redo; cancelled drags preserve the original layout |
+| Drag feedback | Distinct group/folder/drop destinations, dwell progress, optional hints, hover boundaries and stationary edge scrolling; automatic group/folder creation can be switched off |
+| Pin anything | Apps, files, directories, shortcuts and websites; Explorer's Pin to ReStart, app/search context menus, drag from app lists, and explicit destinations |
+| Search | Unicode-width/kana-normalized app names, fifteen localized Windows settings pages with English aliases, optional local indexed filenames, selected-result Enter/arrow navigation and cancellation of stale file queries |
+| All apps | Responsive alphabetical columns, Start-menu directory expansion, letter picker, keyboard navigation, live installation/removal refresh, optional Recently added and opt-in Most used |
+| App commands | Available Windows administrator, file-location, properties and uninstall actions; optional Recent/Frequent document menus, subject to Windows history settings and API support |
+| Launch options | Per-tile enable/disable, additional arguments, working directory and administrator execution for supported desktop apps/shortcuts; Windows handles UAC |
+| Navigation | Optional hover expansion; individually selectable Documents, Downloads, Music, Pictures, Videos, Network and Personal folder; account and power actions |
+| Appearance | Five color families in light/dark/system modes, custom background/accent RGB, wallpaper, Start accent tint, classic or individual tile colors, themed controls/scrollbars, high contrast and optional motion |
+| Live tiles | Fifteen bundled JavaScript tiles, four responsive sizes, local click actions, live updates on/off, per-tile data configuration, sample creation, package import and an automatically watched local tile library |
+| Tile APIs | PC-local time, language and size, retained state, CPU/memory/network/battery/storage metrics, selected photo slideshows, cached JSON/Web API/RSS/Atom/local-file inputs and local application integration |
+| Language | English, Japanese, German, French, Spanish, Korean, Simplified Chinese and Traditional Chinese, including bundled tile text |
+| Data and updates | Local settings, layout import/export/reset, backup and version migration, clearable local app activity, version/build/license information and API-key-free update checks with manual installation |
+| Distribution | Portable Windows 10/11 x64 and ARM64 packages, included runtime/notices, no administrator requirement for normal use and reversible integration without Explorer patching |
+
+[Feature switches and defaults](docs/start-behavior.md) · [Detailed controls](#everyday-details) · [Compatibility and platform coverage](docs/fidelity.md) · [JavaScript API](docs/javascript-tiles.md)
+
+### Search, configure, launch
+
+![App, Windows setting and local file results in the complete search screen](docs/images/unified-search.png)
+
+<details>
+<summary><strong>Choose your behavior and app launch options</strong></summary>
+
+| Start behavior | Per-tile launch options |
+| --- | --- |
+| ![Start behavior switches and navigation folders](docs/images/start-behavior.png) | ![Arguments, working directory and optional administrator execution](docs/images/launch-options.png) |
+
+![Layout interaction, history and search switches](docs/images/start-behavior-layout.png)
+
+Switch off settings/file search, document menus, hover effects, automatic overlap grouping/folders, edge scrolling or drop hints individually. Most used recording starts off. **Use custom launch options** can be disabled while retaining its fields. The screenshots use fictional apps and documents.
 
 </details>
 
@@ -132,14 +179,14 @@ Have a layout to show, an idea for a tile, or a bug to report? [Open an issue](h
 | Action | Result |
 | --- | --- |
 | Bare Windows key / `Ctrl+Alt+Space` | Open or close |
-| Type / `Ctrl+F` | Search apps |
+| Type / `Ctrl+F` | Search apps, enabled settings and indexed filenames |
 | `Enter` in search | Launch the highlighted result; use `↓` / `↑` to change it |
 | `Esc` | Close the current search, folder or overlay, then Start |
 | `Tab` / arrows / `Enter` | Navigate and activate |
 | Drag a tile / group header | Move it |
 | Drop a tile in empty space | Create an independent pin |
 | Partly overlap an independent tile for about 0.3 seconds, then drop when **Create group** appears | Collect the tiles into an ordinary group |
-| Overlap a tile inside a group for about one second, then drop when the folder preview is ready | Create a tile folder; dropping onto an existing folder adds to it |
+| Overlap a tile inside a group for about 0.6 seconds, then drop when the folder preview is ready | Create a tile folder; dropping onto an existing folder adds to it |
 | **Edit layout** / `Ctrl+E` | Select tiles without launching apps; drag selected tiles together |
 | `Ctrl+A` / `Delete` in edit mode | Select root tiles / unpin the selection |
 | `Ctrl+Z` / `Ctrl+Y` or `Ctrl+Shift+Z` | Undo / redo a layout edit; text fields keep their own text undo |
@@ -157,6 +204,8 @@ Edit mode provides **Move to group…**, **Unpin selected** and **Done**. Draggi
 <summary><strong>Settings, privacy and updating</strong></summary>
 
 Settings live in `%LOCALAPPDATA%\ReStart\layout.json`. Saves and upgrades retain backups; see [migration and rollback](docs/migration.md). About displays the running version/build and licenses.
+
+Optional app activity is stored separately in `activity.json` and can be cleared in Start behavior. Document-history menus respect the Windows setting. File search uses the Windows index and can be disabled independently. [Settings and data details](docs/start-behavior.md).
 
 Update checks read public GitHub Releases without an API key. Installation is manual: exit ReStart, then replace the complete extracted installation. If its location changed, save sign-in startup and Explorer integration again. See [updates](docs/updates.md).
 
@@ -206,6 +255,6 @@ Output: `artifacts/packages/ReStart-win-x64.zip` or `ReStart-win-arm64.zip`. Alw
 
 ReStart is an independent, MIT-licensed project inspired by late Windows 10 full-screen Start. It uses reversible desktop integration and does not patch Explorer. It is not affiliated with Microsoft. Read [compatibility](docs/fidelity.md) for implemented behavior, differences and platform testing.
 
-Screenshots and the animation show the real launcher with a demonstration layout, synthetic metrics and generated photo colors. Windows/application names and icons belong to their owners. Dependency and .NET notices ship with the app.
+Screenshots and the animation show the real launcher with an isolated English demonstration layout, curated app names, synthetic metrics and generated photo colors. They do not show a user's app inventory, personal documents or location. Application icons are obtained from installed apps without changing their names in the real catalog. Windows/application names and icons belong to their owners. Dependency and .NET notices ship with the app.
 
-[MIT license](LICENSE) · [Security policy](SECURITY.md) · [Support](SUPPORT.md)
+[MIT license](LICENSE) · [Security policy](SECURITY.md) · [Code signing policy](docs/code-signing.md) · [Support](SUPPORT.md)
