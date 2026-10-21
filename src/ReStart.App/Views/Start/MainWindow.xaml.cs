@@ -743,6 +743,7 @@ public partial class MainWindow : Window
     }
     private void ClearDropPreview()
     {
+        RestoreDropProjection(); _dropPlanKey = null; _dropPlan = null;
         if (GroupsPanel.DragPlacements != null) { GroupsPanel.DragPlacements = null; GroupsPanel.InvalidateMeasure(); }
         if (_dropAdorner == null) return;
         AdornerLayer.GetAdornerLayer(_dropAdorner.AdornedElement)?.Remove(_dropAdorner);

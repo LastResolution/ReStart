@@ -291,7 +291,7 @@ public partial class MainWindow
                 bounds.Add(new(g.Left + (compact ? 0 : t.Column * Cell), g.Top + header + (expansion?.TileY(t, Cell) ?? t.Row * Cell), t.Width * Cell - 4, t.Height * Cell - 4));
             if (expansion != null)
                 foreach (var t in expansion.Children.Where(t => _selectedTileIds.Contains(t.Tile.Id)))
-                    bounds.Add(new(g.Left + t.Column * Cell, g.Top + header + expansion.Row * Cell + GroupLayout.HeaderHeight + t.Row * Cell, t.Width * Cell - 4, t.Height * Cell - 4));
+                    bounds.Add(new(g.Left + t.Column * Cell, g.Top + header + expansion.Row * Cell + GroupLayout.HeaderHeight + Controls.InlineFolderView.ContentTopInset + t.Row * Cell, t.Width * Cell - 4, t.Height * Cell - 4));
         }
         return bounds;
     }

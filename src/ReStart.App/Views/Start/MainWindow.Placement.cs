@@ -156,6 +156,7 @@ public partial class MainWindow
 
     private bool PreviewSingleTileDrop(Tile tile, Point point, string sourceId, long? timestamp = null)
     {
+        RestoreDropProjection();
         var drop = ResolveSingleTileDrop(tile, point, sourceId, timestamp);
         if (drop == null) { ClearDropPreview(); return false; }
         if (drop.GroupPlan is { } plan) ShowGroupCreationPreview(plan, drop.Group!.Id);
@@ -171,11 +172,13 @@ public partial class MainWindow
             ShowDropPreview(drop.Panel!, tile, drop.Column, drop.Row);
         else PreviewStandalone(tile, point);
         ShowPendingFolderPreview();
+        ProjectSingleTileDrop(tile, drop, point);
         return true;
     }
 
     private bool CommitSingleTileDrop(Tile tile, Point point, string sourceId)
     {
+        RestoreDropProjection();
         // Resolve before clearing the preview: the same dwell state and OLE
         // coordinates must decide both the visible destination and ownership.
         var drop = ResolveSingleTileDrop(tile, point, sourceId);
