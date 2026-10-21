@@ -78,6 +78,18 @@ public partial class MainWindow
             CloseFolder(this, new()); UpdateLayout(); await WaitForDocumentationFramesAsync();
             Check(_scriptViews.Count == 4 && ScriptsReady, "Closing a live folder stopped its previews.");
             foreach (var view in _htmlTiles.Values) Check(await view.InspectAsync("document.documentElement.dataset.size") == "\"medium\"", "A reopened miniature kept its former large viewport.");
+            var counter = _scriptPackages.Import(ScriptTilePackages.BundledManifestPath("clock"));
+            File.WriteAllText(Path.Combine(_scriptPackages.Folder(counter.ScriptId), "tile.js"),
+                "function render(ctx){const count=(ctx.state.count||0)+1;document.getElementById('value').textContent=String(count);return {text:String(count),state:{count}}}");
+            liveFolder.Children[0] = counter;
+            RenderGroups(); UpdateLayout(); await WaitForDocumentationFramesAsync();
+            Check(_scriptViews.All(view => view.Body.IsVisible), "A closed folder's live previews were excluded from normal visible-tile updates.");
+            var beforeCount = _scriptFrames[counter.Id].State.GetProperty("count").GetInt32();
+            var beforeImage = _htmlTiles[counter.Id].Children.OfType<Image>().Single().Source;
+            await Task.Delay(1100);
+            await UpdateScriptTilesAsync();
+            Check(_scriptFrames[counter.Id].State.GetProperty("count").GetInt32() > beforeCount, "A closed folder stopped scheduled live updates after its first frame.");
+            Check(!ReferenceEquals(beforeImage, _htmlTiles[counter.Id].Children.OfType<Image>().Single().Source), "A closed folder updated its data but left a frozen miniature image.");
             var seed = CreateInitialLayout();
             Check(seed.Groups.SelectMany(g => g.Tiles).All(t => t.Widget is not ("clock" or "calendar")), "The initial layout retained legacy widgets.");
             Check(seed.Groups.SelectMany(g => g.Tiles).Count(t => t.Widget == "script") == 2, "The initial layout did not install its bundled clock/calendar.");
