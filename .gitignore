@@ -20,5 +20,3 @@ artifacts/
 .env
 .env.*
 !.env.example
-AGENTS.md
-AGETNS.md
