@@ -10,7 +10,9 @@
 
 > **Traduction par IA :** ce guide a été traduit de l’anglais à l’aide de l’IA et peut contenir des erreurs. Le [README anglais](README.md) reste la référence principale et contient des exemples supplémentaires. Les corrections sont bienvenues. Les captures utilisent une démonstration en anglais et des données d’exemple.
 
-![ReStart avec applications, dossiers et vignettes dynamiques](docs/images/start.png)
+<p align="center"><strong>Voir la démo de 29 secondes</strong><br><sub>1080p · Anglais · Sans son</sub></p>
+
+https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
 
 Le menu Démarrer plein écran de Windows 10 vous manque ? ReStart offre un espace familier à vos applications sous Windows 11 et Windows 10. Épinglez vos contenus, organisez l’écran à votre façon et ajoutez des vignettes que vous pouvez écrire en JavaScript.
 
@@ -125,7 +127,7 @@ Pour ARM64, utilisez `win-arm64`. ZIP et sommes de contrôle sont dans `artifact
 
 [Bugs et idées](https://github.com/LastResolution/ReStart/issues/new/choose) · [Contribuer (anglais)](CONTRIBUTING.md) · [Architecture (anglais)](docs/architecture.md) · [Tests (anglais)](docs/testing.md) · [Versions](https://github.com/LastResolution/ReStart/releases)
 
-ReStart est un projet MIT indépendant, inspiré du menu Démarrer plein écran des dernières versions de Windows 10 et non affilié à Microsoft. Captures et animation montrent la vraie application avec une démonstration anglaise, des mesures synthétiques et des couleurs de photos générées. Noms et icônes appartiennent à leurs propriétaires. [Licence MIT](LICENSE) · [Assistance (anglais)](SUPPORT.md)
+ReStart est un projet MIT indépendant, inspiré du menu Démarrer plein écran des dernières versions de Windows 10 et non affilié à Microsoft. Captures et animation montrent la vraie application avec une démonstration anglaise, des mesures synthétiques et des couleurs de photos générées. Noms et icônes appartiennent à leurs propriétaires. [Licence MIT](LICENSE) · [Mentions tierces (anglais)](docs/third-party.md) · [Assistance (anglais)](SUPPORT.md)
 
 ---
 

@@ -10,7 +10,9 @@
 
 > **Traducción con IA:** esta guía se ha traducido del inglés mediante IA y puede contener errores. El [README en inglés](README.md) es la referencia principal e incluye más ejemplos. Se agradecen las correcciones. Las capturas usan una demostración en inglés con datos de ejemplo.
 
-![ReStart con aplicaciones, carpetas y mosaicos dinámicos](docs/images/start.png)
+<p align="center"><strong>Ver la demostración de 29 segundos</strong><br><sub>1080p · Inglés · Sin audio</sub></p>
+
+https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
 
 ¿Echas de menos Inicio a pantalla completa de Windows 10? ReStart ofrece un espacio familiar para tus aplicaciones en Windows 11 y Windows 10. Ancla lo que utilizas, organiza la pantalla y añade mosaicos que puedes escribir en JavaScript.
 
@@ -125,7 +127,7 @@ Para ARM64 usa `win-arm64`. ZIP y sumas se generan en `artifacts/packages`. Dist
 
 [Errores e ideas](https://github.com/LastResolution/ReStart/issues/new/choose) · [Contribuir (inglés)](CONTRIBUTING.md) · [Arquitectura (inglés)](docs/architecture.md) · [Pruebas (inglés)](docs/testing.md) · [Versiones](https://github.com/LastResolution/ReStart/releases)
 
-ReStart es un proyecto MIT independiente inspirado en Inicio a pantalla completa de las últimas versiones de Windows 10, sin afiliación con Microsoft. Las imágenes muestran la aplicación real con una demostración inglesa, métricas sintéticas y colores de fotos generados. Los nombres e iconos pertenecen a sus propietarios. [Licencia MIT](LICENSE) · [Soporte (inglés)](SUPPORT.md)
+ReStart es un proyecto MIT independiente inspirado en Inicio a pantalla completa de las últimas versiones de Windows 10, sin afiliación con Microsoft. Las imágenes muestran la aplicación real con una demostración inglesa, métricas sintéticas y colores de fotos generados. Los nombres e iconos pertenecen a sus propietarios. [Licencia MIT](LICENSE) · [Avisos de terceros (inglés)](docs/third-party.md) · [Soporte (inglés)](SUPPORT.md)
 
 ---
 

@@ -12,14 +12,20 @@ public partial class App
         MainWindow? renderer = null;
         try
         {
-            var index = Array.IndexOf(arguments, "--render-docs");
+            var promo = arguments.Contains("--render-promo");
+            var index = Array.IndexOf(arguments, promo ? "--render-promo" : "--render-docs");
             if (index + 1 >= arguments.Length) throw new ArgumentException("Supply a documentation output directory.");
             var directory = Path.GetFullPath(arguments[index + 1]);
             Directory.CreateDirectory(directory);
             var store = new LayoutStore(Path.Combine(directory, "fixture-data", "layout.json"));
             store.Save(new() { Preferences = new() { Language = "en", Animate = false, ShowWallpaper = false } });
             renderer = new(store, true);
-            await renderer.RenderDocumentationAsync(directory);
+            if (promo)
+            {
+                if (index + 2 >= arguments.Length) throw new ArgumentException("Supply the FFmpeg executable after the output directory.");
+                await renderer.RenderPromoAsync(directory, Path.GetFullPath(arguments[index + 2]));
+            }
+            else await renderer.RenderDocumentationAsync(directory);
             Shutdown(0);
         }
         catch (Exception ex)

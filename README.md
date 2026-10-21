@@ -20,7 +20,9 @@
 
 English is the primary documentation. The translated guides are AI-assisted and may contain errors; corrections are welcome. All screenshots use an English demonstration environment.
 
-![The complete ReStart desktop launcher with apps, folders and live tiles](docs/images/start.png)
+<p align="center"><strong>Watch the 29-second demo</strong><br><sub>1080p · English · No audio</sub></p>
+
+https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
 
 **Miss the Windows 10 full-screen Start menu?** ReStart gives your apps a familiar home on Windows 11 and Windows 10. Pin what you use, arrange the screen your way, and add live tiles that you can write in JavaScript.
 
@@ -261,9 +263,9 @@ Output: `artifacts/packages/ReStart-win-x64.zip` or `ReStart-win-arm64.zip`. Alw
 
 ReStart is an independent, MIT-licensed project inspired by late Windows 10 full-screen Start. It uses reversible desktop integration and does not patch Explorer. It is not affiliated with Microsoft. Read [compatibility](docs/fidelity.md) for implemented behavior, differences and platform testing.
 
-Screenshots and the animation show the real launcher with an isolated English demonstration layout, curated app names, synthetic metrics and generated photo colors. They do not show a user's app inventory, personal documents or location. Application icons are obtained from installed apps without changing their names in the real catalog. Windows/application names and icons belong to their owners. Dependency and .NET notices ship with the app.
+Screenshots, animation and the video show the real launcher with an isolated English demonstration layout, curated app names, synthetic metrics and generated photo colors. They do not show a user's app inventory, personal documents or location. Application icons are obtained from installed apps without changing their names in the real catalog. Windows/application names and icons belong to their owners. Dependency and .NET notices ship with the app.
 
-[MIT license](LICENSE) · [Security policy](SECURITY.md) · [Support](SUPPORT.md)
+[MIT license](LICENSE) · [Third-party notices](docs/third-party.md) · [Security policy](SECURITY.md) · [Support](SUPPORT.md)
 
 ---
 

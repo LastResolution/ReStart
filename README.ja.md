@@ -22,7 +22,9 @@
 
 > **AI翻訳:** この案内は英語を基にAIを用いて翻訳・編集しており、誤りが含まれる場合があります。[英語README](README.md)を原本とし、翻訳の修正を歓迎します。スクリーンショットは全言語版で英語のデモ環境を使用しています。
 
-![アプリ・グループ・フォルダ・ライブタイルを含む全画面の ReStart](docs/images/start.png)
+<p align="center"><strong>29秒のデモを見る</strong><br><sub>1080p · 英語 · 音声なし</sub></p>
+
+https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
 
 **Windows 10 のフルスクリーンスタートが恋しい人へ。** ReStart は Windows 11 と Windows 10 で使えるデスクトップランチャーです。いつものアプリをピン留めし、画面を自由に並べ、JavaScript で自分のライブタイルを作れます。
 
@@ -323,7 +325,7 @@ dotnet build ReStart.slnx -c Release
 
 参考にした Microsoft の一次資料は [互換性](docs/fidelity.md#reference-material) に記載しています。Microsoft のバイナリ、旧 Start のコードや画像は同梱していません。Windows および各アプリの名称・アイコンは各権利者に帰属します。ReStart は Microsoft とは独立したプロジェクトです。
 
-ReStart のコードは [MIT License](LICENSE) です。
+ReStart のコードは [MIT License](LICENSE) です。[サードパーティーのライセンスと同梱表記（英語）](docs/third-party.md)も参照してください。
 
 [セキュリティ](SECURITY.md) · [サポート](SUPPORT.md) · [英語表記でのブランチ保護](docs/github-protection.md)
 
