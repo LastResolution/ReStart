@@ -23,7 +23,7 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        if (e.Args.Contains("--render-docs")) { await RenderDocumentationAsync(e.Args); return; }
+        if (e.Args.Contains("--render-docs") || e.Args.Contains("--render-promo")) { await RenderDocumentationAsync(e.Args); return; }
         var preview = e.Args.Contains("--preview") || e.Args.Contains("--smoke-test");
         var smoke = e.Args.Contains("--smoke-test");
         var sid = WindowsIdentity.GetCurrent().User?.Value ?? Environment.UserName;

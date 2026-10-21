@@ -168,7 +168,7 @@ public partial class MainWindow
                     SystemMetricsSnapshot? metrics = null;
                     if (manifest.Capabilities.Contains("system.metrics"))
                     {
-                        if (_preview && !_verifyHostMetrics) metrics = new(now, 37.2, 16, 32UL * 1024 * 1024 * 1024, 12UL * 1024 * 1024 * 1024, 62.5, 91800,
+                        if (_preview && !_verifyHostMetrics) metrics = _documentationMetrics ?? new(now, 37.2, 16, 32UL * 1024 * 1024 * 1024, 12UL * 1024 * 1024 * 1024, 62.5, 91800,
                             [new("C:\\", 512L * 1024 * 1024 * 1024, 214L * 1024 * 1024 * 1024, 58.2)], 425984, 65536, 74, false);
                         else { _systemMetrics ??= new(); _systemMetrics.SetEnabled(true); metrics = _systemMetrics.Latest; }
                     }
@@ -203,7 +203,7 @@ public partial class MainWindow
                         now = now.ToString("O"),
                         locale = L.Culture.Name,
                         language = L.Language,
-                        time = new { unixMs = now.ToUnixTimeMilliseconds(), monotonicMs = Environment.TickCount64, utc = now.UtcDateTime.ToString("O"), local = now.ToString("O"), offsetMinutes = now.Offset.TotalMinutes, timeZoneId = TimeZoneInfo.Local.Id },
+                        time = new { unixMs = now.ToUnixTimeMilliseconds(), monotonicMs = _preview && _documentationMonotonicMilliseconds is long tick ? tick : Environment.TickCount64, utc = now.UtcDateTime.ToString("O"), local = now.ToString("O"), offsetMinutes = now.Offset.TotalMinutes, timeZoneId = TimeZoneInfo.Local.Id },
                         calendar = new { shortDate = now.ToString("d", L.Culture), weekday = now.ToString("dddd", L.Culture), month = now.ToString("MMMM", L.Culture), day = now.Day },
                         @event = input,
                         system = metrics,

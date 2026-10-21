@@ -22,6 +22,18 @@ The renderer also checks collapsed/expanded glyph geometry across eight language
 
 `scripts/test-fidelity.ps1` produces English `start-behavior.png`, `start-behavior-layout.png` and `launch-options.png` in its fixture output. These native dialog tests also verify all eight languages and both base themes. Run native interactive fixtures on a dedicated desktop/CI runner; use their artifact images rather than photographing a working user's screen. The launch example uses `%USERPROFILE%\Documents` literally and a fictional command line, not an expanded user path.
 
+## Product video
+
+With FFmpeg and ffprobe on `PATH`, run:
+
+```powershell
+./scripts/render-promo.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+```
+
+The separate `--render-promo` entry point uses the same hidden, isolated renderer. It produces a silent 29-second, 1920 × 1080, 30 fps H.264 MP4, a poster, a short GIF preview and review frames under `artifacts/promo/<run>/`. Scenes show the full launcher, its native entrance transition, an actual tile move and undo, inline folder expansion, app search, JavaScript live tiles and the light theme. Time and aggregate metrics are synthetic. The renderer checks the move/undo results and rejects any visible window.
+
+The wrapper verifies playback format, duration and attachment size with ffprobe, then fully decodes the MP4 with FFmpeg. Inspect decoded frames across every scene as well as the poster and GIF; technical validation alone does not verify composition or privacy. Publish the reviewed MP4 as a GitHub attachment and link it from the READMEs. Keep movie binaries and all fixture output out of Git history. See [third-party components](third-party.md) for the distinction between documentation tools and shipped application dependencies.
+
 ## Review before committing
 
 Inspect every selected PNG and representative opening/closing GIF frames. Confirm readable real icons; English labels inside tiles; no username, path, personal filenames, real weather location, taskbar, notification or desktop imagery. Check that file metadata does not include personal source data. Copy **only reviewed PNG/GIF files** into `docs/images`; never copy fixture directories, caches, JSON, logs, bindings or source icon catalogs. Existing live/data/size images also use isolated English synthetic fixtures.
