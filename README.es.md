@@ -10,9 +10,9 @@
 
 > **Traducción con IA:** esta guía se ha traducido del inglés mediante IA y puede contener errores. El [README en inglés](README.md) es la referencia principal e incluye más ejemplos. Se agradecen las correcciones. Las capturas usan una demostración en inglés con datos de ejemplo.
 
-<p align="center"><strong>Ver la demostración de 29 segundos</strong><br><sub>1080p · Inglés · Sin audio</sub></p>
+<p align="center"><strong>Ver la demostración de 60 segundos</strong><br><sub>1080p · Inglés · Sin audio</sub></p>
 
-https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
+[![ReStart product demonstration](docs/images/demo-poster.png)](https://github.com/LastResolution/ReStart/releases/download/v1.5.0/ReStart-demo.mp4)
 
 ¿Echas de menos Inicio a pantalla completa de Windows 10? ReStart ofrece un espacio familiar para tus aplicaciones en Windows 11 y Windows 10. Ancla lo que utilizas, organiza la pantalla y añade mosaicos que puedes escribir en JavaScript.
 
@@ -23,6 +23,10 @@ https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
 Bloquea todo el diseño o grupos individuales. Ctrl+Mayús+L cambia el bloqueo global. Ctrl+E selecciona; Ctrl+flecha mueve mosaicos, Ctrl+Mayús+flecha mueve el grupo y Alt+1–4 cambia el tamaño. Ctrl+G agrupa la selección; Mayús+F10 abre su menú. Se mantiene Deshacer/Rehacer. Puedes guardar un fondo propio, independiente del escritorio.
 
 Incluye 19 mosaicos HTML/CSS/JavaScript. Tile Studio permite editar código y manifiesto, probar cuatro tamaños con datos de ejemplo sin conexión y guardar borradores o anclarlos. Los nuevos ejemplos muestran tiempo atmosférico, panel del sistema, noticias RSS y arte Canvas. Las agujas del reloj SVG siguen la hora del PC. Los nombres se muestran por defecto y pueden ocultarse en los ajustes.
+
+![Tile Studio: HTML, CSS and JavaScript with four live previews](docs/images/tile-studio.png)
+
+![Weather scene, System dashboard, News board and Canvas garden](docs/images/web-examples.png)
 
 **Controles del editor:** resaltado de JavaScript, HTML, CSS y JSON; **Tab / Mayús+Tab** para la sangría; **Format document / Ctrl+Mayús+F** para formatear sin conexión y deshacer en un solo paso. Feed headlines y News board se desplazan dentro de su mosaico. Las carpetas cerradas muestran vistas previas dinámicas del mismo tamaño. Los diseños nuevos y restablecidos usan Month dots y Orbit clock. La comprobación opcional al iniciar muestra un aviso descartable cuando hay una versión nueva.
 

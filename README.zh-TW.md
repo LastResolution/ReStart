@@ -10,9 +10,9 @@
 
 > **AI 翻譯：** 本指南使用 AI 從英文翻譯，可能含有錯誤。[英文 README](README.md) 為主要參考，包含更多範例。歡迎協助修正。螢幕擷取畫面使用英文示範環境與範例資料。
 
-<p align="center"><strong>觀看 29 秒示範</strong><br><sub>1080p · 英文 · 無音訊</sub></p>
+<p align="center"><strong>觀看 60 秒示範</strong><br><sub>1080p · 英文 · 無音訊</sub></p>
 
-https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
+[![ReStart product demonstration](docs/images/demo-poster.png)](https://github.com/LastResolution/ReStart/releases/download/v1.5.0/ReStart-demo.mp4)
 
 懷念 Windows 10 的全螢幕開始功能表？ReStart 在 Windows 11 和 Windows 10 上提供熟悉的應用程式空間。釘選常用內容，自由安排配置，再加入能以 JavaScript 撰寫的動態磚。
 
@@ -23,6 +23,10 @@ https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
 可鎖定全部配置或個別群組。Ctrl+Shift+L 切換全域鎖定；Ctrl+E 選取動態磚，Ctrl+方向鍵移動動態磚，Ctrl+Shift+方向鍵移動群組，Alt+1–4 更改大小，Ctrl+G 將所選動態磚分組，Shift+F10 開啟選單。仍支援復原/重做。亦可儲存獨立於桌面的背景圖片。
 
 內建 19 個 HTML/CSS/JavaScript 動態磚。Tile Studio 可編輯原始碼與資訊清單，以離線範例資料預覽四種大小，再儲存草稿或釘選。新增天氣風景、系統儀表板、RSS 新聞看板及 Canvas 花園；SVG 時鐘指針依電腦時間運作。動態磚名稱預設顯示，可在設定中隱藏。
+
+![Tile Studio: HTML, CSS and JavaScript with four live previews](docs/images/tile-studio.png)
+
+![Weather scene, System dashboard, News board and Canvas garden](docs/images/web-examples.png)
 
 **編輯器操作：** 支援 JavaScript、HTML、CSS 和 JSON 語法醒目提示，**Tab / Shift+Tab** 縮排，以及 **Format document / Ctrl+Shift+F** 離線格式化；一次復原即可還原。Feed headlines 和 News board 在動態磚內部捲動。關閉的資料夾顯示大小一致的即時預覽。初始與重設配置使用隨附的 Month dots 和 Orbit clock。選用的啟動更新檢查會透過可關閉的通知提示新版本。
 

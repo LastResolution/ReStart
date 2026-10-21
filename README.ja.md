@@ -22,9 +22,9 @@
 
 > **AI翻訳:** この案内は英語を基にAIを用いて翻訳・編集しており、誤りが含まれる場合があります。[英語README](README.md)を原本とし、翻訳の修正を歓迎します。スクリーンショットは全言語版で英語のデモ環境を使用しています。
 
-<p align="center"><strong>29秒のデモを見る</strong><br><sub>1080p · 英語 · 音声なし</sub></p>
+<p align="center"><strong>60秒のデモを見る</strong><br><sub>1080p · 英語 · 音声なし</sub></p>
 
-https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
+[![ReStart product demonstration](docs/images/demo-poster.png)](https://github.com/LastResolution/ReStart/releases/download/v1.5.0/ReStart-demo.mp4)
 
 **Windows 10 のフルスクリーンスタートが恋しい人へ。** ReStart は Windows 11 と Windows 10 で使えるデスクトップランチャーです。いつものアプリをピン留めし、画面を自由に並べ、JavaScript で自分のライブタイルを作れます。
 
@@ -37,6 +37,10 @@ https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
 全体またはグループ単位で配置をロックできます。Ctrl+Shift+Lで全体を切り替えます。Ctrl+Eで選択し、Ctrl+矢印でタイル、Ctrl+Shift+矢印でグループを移動、Alt+1〜4でサイズ変更、Ctrl+Gでグループ化。Shift+F10でメニューを開け、Undo/Redoも使えます。デスクトップとは別の背景画像も指定できます。
 
 HTML/CSS/JavaScript製のライブタイルを19種類同梱。Tile Studioでソースとmanifestを編集し、オフラインのサンプル値で4サイズを確認して保存・ピン留めできます。天気のCSSアート、システムダッシュボード、RSSニュース、Canvasガーデンを追加し、オービット時計の秒針はPC時刻で動きます。設定の「ライブタイル名を表示」は初期値ONで、左下の名前を非表示にもできます。
+
+![Tile Studio: HTML, CSS and JavaScript with four live previews](docs/images/tile-studio.png)
+
+![Weather scene, System dashboard, News board and Canvas garden](docs/images/web-examples.png)
 
 **エディター操作：** JavaScript・HTML・CSS・JSON のシンタックスハイライト、**Tab / Shift+Tab** によるインデント、**ドキュメントを整形 / Ctrl+Shift+F** によるオフライン整形に対応。整形は1回の Undo で戻せます。Feed headlines と News board はタイル内でスクロールし、閉じたフォルダには同じ大きさのライブプレビューを表示します。初期配置とリセットには同梱の Month dots と Orbit clock を使用。任意の起動時更新チェックで新バージョンを閉じられる通知として案内します。
 

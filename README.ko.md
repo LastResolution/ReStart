@@ -10,9 +10,9 @@
 
 > **AI 번역:** 이 안내서는 영어를 바탕으로 AI로 번역했으며 오류가 있을 수 있습니다. [영어 README](README.md)가 기준 문서이며 추가 예제를 제공합니다. 번역 수정 제안을 환영합니다. 스크린샷은 영어 데모와 예시 데이터를 사용합니다.
 
-<p align="center"><strong>29초 데모 보기</strong><br><sub>1080p · 영어 · 소리 없음</sub></p>
+<p align="center"><strong>60초 데모 보기</strong><br><sub>1080p · 영어 · 소리 없음</sub></p>
 
-https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
+[![ReStart product demonstration](docs/images/demo-poster.png)](https://github.com/LastResolution/ReStart/releases/download/v1.5.0/ReStart-demo.mp4)
 
 Windows 10의 전체 화면 시작 메뉴가 그리우신가요? ReStart는 Windows 11과 Windows 10에서 익숙한 앱 공간을 제공합니다. 자주 쓰는 항목을 고정하고 원하는 대로 배치하며 JavaScript로 작성할 수 있는 라이브 타일을 추가하세요.
 
@@ -23,6 +23,10 @@ Windows 10의 전체 화면 시작 메뉴가 그리우신가요? ReStart는 Wind
 전체 배치 또는 개별 그룹을 잠글 수 있습니다. Ctrl+Shift+L로 전체 잠금을 전환합니다. Ctrl+E로 선택하고 Ctrl+방향키로 타일, Ctrl+Shift+방향키로 그룹을 이동하며 Alt+1–4로 크기를 바꿉니다. Ctrl+G는 그룹화, Shift+F10은 메뉴 열기입니다. 실행 취소/다시 실행도 지원합니다. 바탕 화면과 별도의 배경 이미지를 저장할 수 있습니다.
 
 HTML/CSS/JavaScript 타일 19개를 제공합니다. Tile Studio에서 코드와 매니페스트를 편집하고 오프라인 샘플로 네 가지 크기를 확인한 뒤 저장하거나 고정할 수 있습니다. 날씨 풍경, 시스템 대시보드, RSS 뉴스 보드와 Canvas 정원을 추가했습니다. SVG 시계 바늘은 PC 시간을 따릅니다. 타일 이름은 기본으로 표시되며 설정에서 숨길 수 있습니다.
+
+![Tile Studio: HTML, CSS and JavaScript with four live previews](docs/images/tile-studio.png)
+
+![Weather scene, System dashboard, News board and Canvas garden](docs/images/web-examples.png)
 
 **편집기 조작:** JavaScript, HTML, CSS, JSON 구문 강조; **Tab / Shift+Tab** 들여쓰기; **Format document / Ctrl+Shift+F** 오프라인 서식 정리를 지원하며 한 번에 실행 취소할 수 있습니다. Feed headlines와 News board는 타일 안에서 스크롤됩니다. 닫힌 폴더는 같은 크기의 라이브 미리보기를 표시합니다. 초기 및 초기화 배치는 Month dots와 Orbit clock을 사용합니다. 선택적인 시작 시 업데이트 확인은 새 버전을 닫을 수 있는 알림으로 안내합니다.
 

@@ -20,9 +20,9 @@
 
 English is the primary documentation. The translated guides are AI-assisted and may contain errors; corrections are welcome. All screenshots use an English demonstration environment.
 
-<p align="center"><strong>Watch the 29-second demo</strong><br><sub>1080p · English · No audio</sub></p>
+<p align="center"><strong>Watch the 60-second demo</strong><br><sub>1080p · English · No audio</sub></p>
 
-https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
+[![ReStart product demonstration](docs/images/demo-poster.png)](https://github.com/LastResolution/ReStart/releases/download/v1.5.0/ReStart-demo.mp4)
 
 **Miss the Windows 10 full-screen Start menu?** ReStart gives your apps a familiar home on Windows 11 and Windows 10. Pin what you use, arrange the screen your way, and add live tiles that you can build with HTML, CSS and JavaScript.
 
@@ -63,6 +63,10 @@ Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button
 - **Choose a separate background:** keep the desktop wallpaper or import an image just for ReStart. The app stores its own decoded copy, without keeping the original source path.
 - **Create in Tile Studio:** HTML, CSS, browser JavaScript, all four size previews and offline sample input. Nineteen bundled examples provide a starting point.
 - **Keep the names you want:** live tile names are shown by default and can be hidden in settings. Tooltips and accessibility names remain available.
+
+![Tile Studio: HTML, CSS and JavaScript with four live previews](docs/images/tile-studio.png)
+
+![Weather scene, System dashboard, News board and Canvas garden](docs/images/web-examples.png)
 
 ## Everything at a glance
 

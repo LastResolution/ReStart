@@ -10,9 +10,9 @@
 
 > **Traduction par IA :** ce guide a été traduit de l’anglais à l’aide de l’IA et peut contenir des erreurs. Le [README anglais](README.md) reste la référence principale et contient des exemples supplémentaires. Les corrections sont bienvenues. Les captures utilisent une démonstration en anglais et des données d’exemple.
 
-<p align="center"><strong>Voir la démo de 29 secondes</strong><br><sub>1080p · Anglais · Sans son</sub></p>
+<p align="center"><strong>Voir la démo de 60 secondes</strong><br><sub>1080p · Anglais · Sans son</sub></p>
 
-https://github.com/user-attachments/assets/30eb52ab-2bd1-4235-ab81-fa58532c08a6
+[![ReStart product demonstration](docs/images/demo-poster.png)](https://github.com/LastResolution/ReStart/releases/download/v1.5.0/ReStart-demo.mp4)
 
 Le menu Démarrer plein écran de Windows 10 vous manque ? ReStart offre un espace familier à vos applications sous Windows 11 et Windows 10. Épinglez vos contenus, organisez l’écran à votre façon et ajoutez des vignettes que vous pouvez écrire en JavaScript.
 
@@ -23,6 +23,10 @@ Le menu Démarrer plein écran de Windows 10 vous manque ? ReStart offre un espa
 Verrouillez tout le placement ou certains groupes. Ctrl+Maj+L bascule le verrouillage global. Ctrl+E sélectionne, Ctrl+flèche déplace les tuiles, Ctrl+Maj+flèche leur groupe et Alt+1–4 change la taille. Ctrl+G regroupe la sélection ; Maj+F10 ouvre son menu. Annuler/Rétablir reste disponible. Un fond propre à ReStart peut être enregistré indépendamment du bureau.
 
 Dix-neuf tuiles HTML/CSS/JavaScript sont incluses. Tile Studio permet de modifier le code et le manifeste, de tester quatre tailles avec des données fictives hors ligne, puis de sauvegarder ou épingler. Nouveaux exemples : scène météo, tableau système, actualités RSS et jardin Canvas. Les aiguilles SVG suivent l’heure du PC. Les noms sont visibles par défaut et peuvent être masqués dans les paramètres.
+
+![Tile Studio: HTML, CSS and JavaScript with four live previews](docs/images/tile-studio.png)
+
+![Weather scene, System dashboard, News board and Canvas garden](docs/images/web-examples.png)
 
 **Commandes de l’éditeur :** coloration de JavaScript, HTML, CSS et JSON ; **Tab / Maj+Tab** pour l’indentation ; **Format document / Ctrl+Maj+F** pour formater hors ligne avec une seule annulation. Feed headlines et News board défilent dans leur propre tuile. Les dossiers fermés affichent des aperçus animés uniformes. Les dispositions nouvelles ou réinitialisées utilisent Month dots et Orbit clock. La vérification facultative au démarrage signale une nouvelle version par un avis que vous pouvez fermer.
 
