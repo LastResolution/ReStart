@@ -30,7 +30,7 @@ internal sealed class HtmlTileView : Grid, IDisposable
     private HwndSource? _offscreenHost;
     private readonly bool _offscreenOnly;
     private CoreWebView2Controller? _headlessController;
-    private CoreWebView2? Core => _headlessController?.CoreWebView2 ?? _browser.CoreWebView2;
+    private CoreWebView2? Core => _disposed ? null : _headlessController?.CoreWebView2 ?? _browser.CoreWebView2;
     internal bool BrowserReady => Core != null;
     internal bool OffscreenOnly => _offscreenOnly;
 
@@ -41,11 +41,12 @@ internal sealed class HtmlTileView : Grid, IDisposable
         ClipToBounds = true; if (!offscreen) Children.Add(_browser);
         Loaded += (_, _) =>
         {
+            if (_disposed) return;
             if (_offscreenHost?.RootVisual == _browser)
             { _offscreenHost.RootVisual = null; _browser.Width = _browser.Height = double.NaN; Children.Insert(0, _browser); }
             _browser.Visibility = Visibility.Visible; Core?.Resume();
         };
-        IsVisibleChanged += (_, _) => { if (IsVisible) { _browser.Visibility = Visibility.Visible; Core?.Resume(); } else _ = SuspendAsync(); };
+        IsVisibleChanged += (_, _) => { if (_disposed) return; if (IsVisible) { _browser.Visibility = Visibility.Visible; Core?.Resume(); } else _ = SuspendAsync(); };
     }
 
     private async Task InitializeAsync()
@@ -57,7 +58,9 @@ internal sealed class HtmlTileView : Grid, IDisposable
         var options = env.CreateCoreWebView2ControllerOptions(); options.IsInPrivateModeEnabled = true;
         if (_offscreenOnly)
         {
-            _headlessController = await env.CreateCoreWebView2ControllerAsync(_offscreenHost!.Handle, options);
+            var controller = await env.CreateCoreWebView2ControllerAsync(_offscreenHost!.Handle, options);
+            if (_disposed) { controller.Close(); return; }
+            _headlessController = controller;
             _headlessController.Bounds = new(0, 0, (int)Math.Ceiling(Width), (int)Math.Ceiling(Height));
             _headlessController.DefaultBackgroundColor = System.Drawing.Color.Transparent;
             _headlessController.IsVisible = true;

@@ -204,11 +204,11 @@ public partial class MainWindow
                 await UpdateScriptTilesAsync(); UpdateLayout();
                 await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
                 UpdateLayout();
-                if (!_scriptSessions.Values.Any(runtime => runtime.Rendering) && ScriptFrameCount == liveTiles.Length && _scriptFrames[liveTiles[^1].Id].Image == "current" &&
+                if (!_scriptSessions.Values.Any(runtime => runtime.Rendering) && ScriptsReady && _scriptFrames[liveTiles[^1].Id].Image == "current" &&
                     _scriptViews.All(view => (_htmlTiles.ContainsKey(view.Tile.Id) || view.Body.Children.OfType<TextBlock>().Any(text => Equals(text.Tag, "ScriptValue") && text.Text.Length > 0 && text.ActualHeight > 0)))) break;
                 await Task.Delay(100);
             }
-            Require(ScriptFrameCount == liveTiles.Length, "The complete launcher showcase is missing live tiles.");
+            Require(ScriptsReady && ScriptFrameCount == _scriptViews.Count, "The complete launcher showcase is missing live tiles.");
             Require(_scriptViews.All(view => (_htmlTiles.ContainsKey(view.Tile.Id) || view.Body.Children.OfType<TextBlock>().Any(text => Equals(text.Tag, "ScriptValue") && text.Text.Length > 0 && text.ActualHeight > 0))),
                 "A complete launcher showcase tile has no rendered value.");
             await Task.WhenAll(_htmlTiles.Values.Select(view => view.FreezeForDocumentationAsync()));

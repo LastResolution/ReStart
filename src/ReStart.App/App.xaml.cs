@@ -28,7 +28,14 @@ public partial class App : Application
         var preview = e.Args.Contains("--preview") || e.Args.Contains("--smoke-test");
         var smoke = e.Args.Contains("--smoke-test");
         if (preview) DispatcherUnhandledException += (_, error) =>
-        { Console.Error.WriteLine(error.Exception); error.Handled = true; Shutdown(1); };
+        {
+            Console.Error.WriteLine(error.Exception);
+            var index = Array.IndexOf(e.Args, "--snapshot");
+            if (index >= 0 && index + 1 < e.Args.Length)
+                try { File.WriteAllText(Path.ChangeExtension(e.Args[index + 1], ".json"), JsonSerializer.Serialize(new { success = false, error = error.Exception.ToString() })); }
+                catch (IOException) { }
+            error.Handled = true; Shutdown(1);
+        };
         var sid = WindowsIdentity.GetCurrent().User?.Value ?? Environment.UserName;
         var pinIndex = Array.IndexOf(e.Args, "--pin");
         var pinPath = pinIndex >= 0 && pinIndex + 1 < e.Args.Length ? e.Args[pinIndex + 1] : null;
