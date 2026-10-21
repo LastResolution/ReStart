@@ -383,5 +383,7 @@
   "BackgroundChoose": "選擇圖片…",
   "BackgroundHelp": "所選圖片會複製到 ReStart 本機儲存空間，不受桌面桌布變更影響。高對比模式下不顯示背景圖片。",
   "BackgroundSelected": "圖片已複製，儲存後套用。",
-  "BackgroundInvalid": "請選擇不超過 32 MiB 且可讀取的圖片。"
+  "BackgroundInvalid": "請選擇不超過 32 MiB 且可讀取的圖片。",
+  "ErrorDataDeleted": "ReStart 執行期間本機資料遭刪除。請重新啟動以重新開始；不會從記憶體重建已刪除的配置。",
+  "ErrorScriptSourceMissing": "找不到動態磚原始檔。請重新安裝套件，或在動態磚工作室中更換原始碼。"
 }

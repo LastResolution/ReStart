@@ -383,5 +383,7 @@
   "BackgroundChoose": "Choose image…",
   "BackgroundHelp": "Your chosen image is copied into local ReStart storage. Desktop changes do not affect it. High contrast hides background images.",
   "BackgroundSelected": "Image copied. Save to apply.",
-  "BackgroundInvalid": "Choose a readable image file of at most 32 MiB."
+  "BackgroundInvalid": "Choose a readable image file of at most 32 MiB.",
+  "ErrorDataDeleted": "Local app data was deleted while ReStart was running. Restart ReStart to start fresh; the deleted layout will not be recreated from memory.",
+  "ErrorScriptSourceMissing": "Tile source files are missing. Reinstall the package or replace its source in Tile Studio."
 }

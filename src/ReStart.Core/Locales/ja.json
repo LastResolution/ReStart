@@ -383,5 +383,7 @@
   "BackgroundChoose": "画像を選択…",
   "BackgroundHelp": "選択した画像は ReStart のローカル保存先にコピーされます。デスクトップの変更には影響されません。ハイコントラストでは画像を表示しません。",
   "BackgroundSelected": "画像をコピーしました。保存すると反映されます。",
-  "BackgroundInvalid": "読み取り可能な 32 MiB 以下の画像を選択してください。"
+  "BackgroundInvalid": "読み取り可能な 32 MiB 以下の画像を選択してください。",
+  "ErrorDataDeleted": "起動中にローカルデータが削除されました。ReStart を再起動すると初期状態になります。削除済みの配置はメモリから再作成しません。",
+  "ErrorScriptSourceMissing": "タイルのソースが見つかりません。パッケージを再追加するか、タイル制作画面でソースを置き換えてください。"
 }

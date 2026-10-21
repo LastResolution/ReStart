@@ -774,4 +774,8 @@ public enum TextKey
     BackgroundSelected,
     /// <summary>Choose a readable image file of at most 32 MiB.</summary>
     BackgroundInvalid,
+    /// <summary>Local app data was deleted while ReStart was running. Restart ReStart to start fresh; the deleted layout will not be recreated from memory.</summary>
+    ErrorDataDeleted,
+    /// <summary>Tile source files are missing. Reinstall the package or replace its source in Tile Studio.</summary>
+    ErrorScriptSourceMissing,
 }

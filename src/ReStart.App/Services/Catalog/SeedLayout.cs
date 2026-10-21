@@ -14,7 +14,7 @@ internal static class SeedLayout
         var chosen = new HashSet<string>();
         var terms = new[] { "Edge", "Chrome", "Firefox", "Outlook", "Store", "Spotify", "Terminal", "Visual Studio Code" }
             .Concat(new[] { K.AppMail, K.AppPhotos, K.AppNotepad, K.AppCalculator, K.AppPaint }
-                .SelectMany(key => new[] { L.Translate(key, "ja"), L.Translate(key, "en") }));
+                .SelectMany(key => TextCatalog.SupportedLanguages.Select(language => L.Translate(key, language))));
         foreach (var term in terms)
         {
             var app = apps.FirstOrDefault(a => a.Name.Contains(term, StringComparison.OrdinalIgnoreCase) && !chosen.Contains(a.Id));

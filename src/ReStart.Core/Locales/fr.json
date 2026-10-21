@@ -383,5 +383,7 @@
   "BackgroundChoose": "Choisir une image…",
   "BackgroundHelp": "L’image est copiée dans le stockage local de ReStart. Les changements du Bureau ne l’affectent pas. Le contraste élevé masque les images.",
   "BackgroundSelected": "Image copiée. Enregistrez pour l’appliquer.",
-  "BackgroundInvalid": "Choisissez une image lisible de 32 Mio maximum."
+  "BackgroundInvalid": "Choisissez une image lisible de 32 Mio maximum.",
+  "ErrorDataDeleted": "Les données locales ont été supprimées pendant l’exécution. Redémarrez ReStart pour repartir de zéro ; la disposition supprimée ne sera pas recréée depuis la mémoire.",
+  "ErrorScriptSourceMissing": "Les fichiers sources de la tuile sont introuvables. Réinstallez le paquet ou remplacez le code dans le studio de tuiles."
 }

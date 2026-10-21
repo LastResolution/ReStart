@@ -383,5 +383,7 @@
   "BackgroundChoose": "Elegir imagen…",
   "BackgroundHelp": "La imagen se copia al almacenamiento local de ReStart. Los cambios del escritorio no la afectan. El contraste alto oculta las imágenes.",
   "BackgroundSelected": "Imagen copiada. Guarda para aplicar.",
-  "BackgroundInvalid": "Elige una imagen legible de hasta 32 MiB."
+  "BackgroundInvalid": "Elige una imagen legible de hasta 32 MiB.",
+  "ErrorDataDeleted": "Los datos locales se eliminaron mientras ReStart estaba abierto. Reinícialo para empezar de nuevo; no se reconstruirá el diseño eliminado desde la memoria.",
+  "ErrorScriptSourceMissing": "Faltan los archivos del mosaico. Reinstala el paquete o sustituye el código en el estudio de mosaicos."
 }

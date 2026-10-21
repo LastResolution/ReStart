@@ -55,6 +55,7 @@ internal sealed class ScriptTilePackages(string dataDirectory)
     private static (ScriptTileManifest Manifest, string Source) ReadFolder(string folder)
     {
         var manifestPath = Path.Combine(folder, "manifest.json"); var sourcePath = Path.Combine(folder, "tile.js");
+        if (!File.Exists(manifestPath) || !File.Exists(sourcePath)) throw new InvalidDataException(TextCatalog.T(K.ErrorScriptSourceMissing));
         if (new FileInfo(manifestPath).Length > 16384 || new FileInfo(sourcePath).Length > ScriptTileProtocol.MaxSource) throw new InvalidDataException(TextCatalog.T(K.ErrorScriptPackageSize));
         var manifest = JsonSerializer.Deserialize<ScriptTileManifest>(File.ReadAllText(manifestPath), ScriptTileProtocol.Json) ?? throw new InvalidDataException(TextCatalog.T(K.ErrorScriptManifestMissing));
         manifest.Validate();
