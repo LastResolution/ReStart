@@ -14,14 +14,16 @@ public partial class App
         {
             var promo = arguments.Contains("--render-promo");
             var studio = arguments.Contains("--render-studio");
-            var index = Array.IndexOf(arguments, promo ? "--render-promo" : studio ? "--render-studio" : "--render-docs");
+            var platform = arguments.Contains("--verify-platform");
+            var index = Array.IndexOf(arguments, platform ? "--verify-platform" : promo ? "--render-promo" : studio ? "--render-studio" : "--render-docs");
             if (index + 1 >= arguments.Length) throw new ArgumentException("Supply a documentation output directory.");
             var directory = Path.GetFullPath(arguments[index + 1]);
             Directory.CreateDirectory(directory);
             var store = new LayoutStore(Path.Combine(directory, "fixture-data", "layout.json"));
             store.Save(new() { Preferences = new() { Language = "en", Animate = false, ShowWallpaper = false } });
             renderer = new(store, true);
-            if (studio) await renderer.RenderStudioDocumentationAsync(directory);
+            if (platform) await renderer.VerifyPlatformAsync(directory);
+            else if (studio) await renderer.RenderStudioDocumentationAsync(directory);
             else if (promo)
             {
                 if (index + 2 >= arguments.Length) throw new ArgumentException("Supply the FFmpeg executable after the output directory.");

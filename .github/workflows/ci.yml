@@ -39,6 +39,8 @@ jobs:
       - run: dotnet format whitespace ReStart.slnx --verify-no-changes --no-restore
       - run: dotnet build ReStart.slnx -c Release --no-restore
       - run: dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory artifacts/test-results
+      - name: Verify connected monitor placement and accessibility providers without visible windows
+        run: ./scripts/test-platform.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
       - name: Verify responsive app list and return to home
         run: ./scripts/test-navigation.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
       - name: Verify all-apps directory expansion and search
@@ -83,6 +85,8 @@ jobs:
           name: windows-test-results
           path: |
             artifacts/test-results/*.trx
+            artifacts/platform/*/verification.json
+            artifacts/platform/*/verify.log
             artifacts/navigation/*
             artifacts/motion/*/start.json
             artifacts/motion/*/fixture-*/*.png

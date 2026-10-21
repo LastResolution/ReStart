@@ -115,6 +115,10 @@ Microsoft とは独立したプロジェクトです。Explorer のパッチは�
 
 [ON/OFF設定と既定値](docs/start-behavior.md) · [対応範囲](docs/fidelity.md) · [JS API](docs/javascript-tiles.md)
 
+**初期配置を使いやすく。** 初回起動と配置リセットでは、アプリIDと各言語の正確な名前を使って、用途別にインストール済みアプリを選びます。少ない場合は重複しないオフラインの同梱タイルで補い、各グループを最低6枚にします。保存済みの配置は維持します。[選定とリセットの詳細（英語）](docs/start-behavior.md#initial-layout-and-reset)。
+
+**実測した検証範囲。** 100%表示の2画面と、8言語・ライト／ダークでのナビゲーション、タイル、検索選択のアクセシビリティ情報をネイティブ検証しています。異なるDPIでの操作、物理タッチ、Narratorの読み上げは別途確認が必要です。[検証結果と対象環境（英語）](docs/fidelity.md#observed-platform-coverage)。
+
 ### 検索と起動の設定
 
 ![アプリ・Windows設定・ファイルを分類した検索画面全体](docs/images/unified-search.png)

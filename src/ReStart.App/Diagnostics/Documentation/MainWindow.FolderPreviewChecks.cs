@@ -92,7 +92,13 @@ public partial class MainWindow
             Check(!ReferenceEquals(beforeImage, _htmlTiles[counter.Id].Children.OfType<Image>().Single().Source), "A closed folder updated its data but left a frozen miniature image.");
             var seed = CreateInitialLayout();
             Check(seed.Groups.SelectMany(g => g.Tiles).All(t => t.Widget is not ("clock" or "calendar")), "The initial layout retained legacy widgets.");
-            Check(seed.Groups.SelectMany(g => g.Tiles).Count(t => t.Widget == "script") == 2, "The initial layout did not install its bundled clock/calendar.");
+            var seedScripts = seed.Groups.SelectMany(g => g.Tiles).Where(t => t.Widget == "script").ToArray();
+            foreach (var id in new[] { "calendar", "orbit" })
+                Check(seedScripts.Count(t => _scriptPackages.Read(t.ScriptId).Manifest.Title == ScriptTilePackages.BundledManifest(id).Title) == 1,
+                    "The initial layout did not install exactly one bundled " + id + " package.");
+            Check(seed.Groups.Count == 2 && seed.Groups.All(g => g.Tiles.Count >= 6), "A sparse initial group was not filled with offline examples.");
+            Check(seedScripts.Select(t => _scriptPackages.Read(t.ScriptId).Manifest.Title).Distinct().Count() == seedScripts.Length,
+                "The initial layout repeated a bundled package instead of filling with distinct examples.");
         }
         finally
         {

@@ -95,6 +95,10 @@ Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button
 
 [Feature switches and defaults](docs/start-behavior.md) · [Detailed controls](#everyday-details) · [Compatibility and platform coverage](docs/fidelity.md) · [JavaScript API](docs/javascript-tiles.md)
 
+**A useful first layout.** Initial and reset layouts choose installed apps by role, using app identities and exact translated names. Distinct offline bundled tiles fill sparse groups to at least six tiles each. Existing saved layouts are preserved. [Selection and reset behavior](docs/start-behavior.md#initial-layout-and-reset).
+
+**Measured platform coverage.** Native checks cover two displays at 100% scaling and navigation, tile and search-selection accessibility providers in eight languages and both themes. Mixed-DPI interaction, physical touch and Narrator speech still require separate checks. [Results and device coverage](docs/fidelity.md#observed-platform-coverage).
+
 ### Search, configure, launch
 
 ![App, Windows setting and local file results in the complete search screen](docs/images/unified-search.png)

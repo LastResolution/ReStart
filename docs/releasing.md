@@ -24,7 +24,7 @@ The manually dispatched workflow checks the project/tag version and main ancestr
 
 ## Check the payload
 
-The strict payload contains 40 files: the launcher, worker, fifteen manifest/JS pairs, six dependency/runtime notices, LICENSE and the English portable README. Runtime notices come from the exact resolved packs. Release builds omit debug metadata and map source paths to a neutral prefix. Packaging scans every ZIP entry, including binary UTF-8/UTF-16 strings, for generic credential and personal-path patterns without printing matched values.
+The package is assembled from an explicit allowlist: the launcher, isolated worker, nineteen bundled tile packages with their HTML/CSS/JavaScript and local assets, dependency/runtime notices, LICENSE and the English portable README. Runtime notices come from the exact resolved packs. The privacy guard validates the allowed package entries rather than relying on a historical file count. Release builds omit debug metadata and map source paths to a neutral prefix. Packaging scans every ZIP entry, including binary UTF-8/UTF-16 strings, for generic credential and personal-path patterns without printing matched values.
 
 Download the actual assets and verify SHA-256, PE architecture, product version/source ID and contents. Run the packaged x64 smoke, lifecycle and JS fixtures. ARM64 cross-builds do not establish hardware compatibility. See [testing](testing.md).
 

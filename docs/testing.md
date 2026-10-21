@@ -30,6 +30,7 @@ dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory 
 ./scripts/test-file-pinning.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-bundled-tiles.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-studio.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+./scripts/test-platform.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/test-tile-data.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
 ./scripts/package.ps1 -Runtime win-x64
 ./scripts/test-lifecycle.ps1 -Executable artifacts/publish/win-x64/ReStart.exe
@@ -59,6 +60,7 @@ dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory 
 | file-pinning | Cold directory pin, single-instance transfers, exact shortcut target, deduplication and rejected missing targets |
 | icons | Nine Shell file/folder/shortcut patterns, four sizes × three scales, folder previews and status expiry/replacement |
 | lifecycle | Ten preview launches across two copied paths leave one primary process; duplicate smoke returns code 2 |
+| platform | Hidden native host moved to each connected monitor's working area and back; native/WPF DPI and physical/logical bounds, point-to-monitor mapping, and sixteen language/theme UI Automation provider cases; no catalog/account-picture reads or foreground changes |
 
 Fixtures use isolated preview state, disable production hooks/startup/update requests and use temporary local connection files, and output PNG/JSON under artifacts. Placement copies binaries into a fresh directory. The WPF root can exceed the CI desktop's size, and tests verify the requested render width. Inspect images as well as success fields. Native routed/composition events are not physical OS input.
 
@@ -70,11 +72,19 @@ For local coverage, build portable symbols and allow the neutral mapped source p
 dotnet test tests/ReStart.Core.Tests/ReStart.Core.Tests.csproj -c Release -p:DebugType=portable -p:DebugSymbols=true --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeAssembliesWithoutSources=None
 ```
 
+## Platform and accessibility checks
+
+`test-platform.ps1` launches the development-only `--verify-platform` entry point. It uses fictional apps, isolated settings and a hidden native WPF host, without a tray icon, input hooks, update requests, account picture or installed-app enumeration. The JSON report in `artifacts/platform/<run>/verification.json` contains only check counts, monitor working-area geometry/DPI and touch/Narrator availability. It excludes display names, hardware serial numbers, account identifiers and personal paths. CI retains this report.
+
+The host moves to every connected monitor and then returns through them in reverse order, exercising actual native monitor transitions without changing display settings. UI Automation checks cover named Button/Invoke, Edit/Value and search Selection providers in eight languages and two themes. They do not activate the fixture, invoke real app commands or listen to Narrator speech. The [coverage table](fidelity.md#observed-platform-coverage) distinguishes the measured local setup from remaining device work.
+
+For mixed-DPI testing, configure different per-display scales in Windows, run the fixture, and restore the original configuration afterward. A report with only 96-DPI passes is not mixed-DPI evidence. Complete a separate visible interaction check for opening on each monitor, moving between them, taskbar dismissal and reconnects. For Narrator, check announced names/roles/selection, Tab and arrow order, dialogs, folders and web-tile content with the actual screen reader. Touch requires a physical digitizer; mouse promotion and injected events alone do not establish it.
+
 ## Manual coverage still required
 
 | Area | Check |
 | --- | --- |
-| Monitors | Working area, 100/125/150/200% DPI, portrait and mixed-DPI monitors |
+| Monitors | Beyond measured two-monitor 100% placement: 125/150/200% DPI, portrait, mixed-DPI transitions, reconnects and visible launcher/taskbar behavior |
 | Dragging | Header/tile drags, overlap/cancel/edge scroll, standalone neighbors, folder extraction, save/reopen |
 | Editing | Ctrl+E, click/keyboard selection, batch drag from different grab points, group/folder/open-space destinations, hold-to-folder preview, Ctrl+Z/Y, text-field undo, save/reopen |
 | Input | Bare Win then E, Enter, Win+E/D/L/Tab, IME composition, Ctrl+F, Esc, navigation |
@@ -83,7 +93,7 @@ dotnet test tests/ReStart.Core.Tests/ReStart.Core.Tests.csproj -c Release -p:Deb
 | Settings | All languages/themes, contrast, scale, About/licenses, rollback information |
 | Updates | Public checks without an API key, rate limits, connectivity failure, newer compatible release; no implicit installation |
 | Startup | Enable/disable, moved installation, actual sign-in, Windows policy override |
-| Accessibility | Narrator, focus visibility, touch/long press |
+| Accessibility | Beyond the checked UI Automation providers: Narrator speech/reading order, visible keyboard focus, web content and physical touch/long press |
 
 Do not execute power, uninstall or elevation commands as a routine smoke check. Automated events do not establish physical shortcut behavior. See [compatibility](fidelity.md) for platform coverage.
 

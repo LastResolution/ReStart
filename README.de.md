@@ -69,6 +69,10 @@ Beim Ziehen folgt eine halbtransparente Kopie der Kachel, Gruppe oder Auswahl de
 
 [Schalter und Standardwerte (Englisch)](docs/start-behavior.md) · [Kompatibilität (Englisch)](docs/fidelity.md)
 
+**Ein nützliches Startlayout.** Beim ersten Start und Zurücksetzen werden installierte Apps nach Aufgabe anhand ihrer IDs und exakten übersetzten Namen ausgewählt. Unterschiedliche mitgelieferte Offline-Kacheln ergänzen dünn besetzte Gruppen auf mindestens sechs Kacheln. Gespeicherte Layouts bleiben erhalten. [Auswahl und Zurücksetzen (Englisch)](docs/start-behavior.md#initial-layout-and-reset).
+
+**Gemessene Plattformabdeckung.** Native Tests prüfen zwei Bildschirme bei 100 % Skalierung sowie die Barrierefreiheits-Schnittstellen für Navigation, Kacheln und Suchauswahl in acht Sprachen und beiden Designs. Unterschiedliche DPI-Werte, physische Touch-Eingabe und die Sprachausgabe von Narrator benötigen eigene Tests. [Ergebnisse und Geräteabdeckung (Englisch)](docs/fidelity.md#observed-platform-coverage).
+
 ## Suchen und konfigurieren
 
 ![Apps, Windows-Einstellungen und lokale Dateien suchen](docs/images/unified-search.png)
