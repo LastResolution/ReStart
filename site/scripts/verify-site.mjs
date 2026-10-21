@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../dist');
 const pages = ['index.html', 'developers/index.html'];
+const canonicalUrls = pages.map(page => new URL(page === 'index.html' ? './' : 'developers/', 'https://lastresolution.github.io/ReStart/').href);
 let checks = 0;
 const require = (condition, message) => { if (!condition) throw new Error(message); checks++; };
 for (const page of pages) {
@@ -12,6 +13,11 @@ for (const page of pages) {
   require(/<html\b[^>]*lang="en"/.test(html), `Missing English language: ${page}`);
   require(/<title>[^<]+<\/title>/.test(html), `Missing title: ${page}`);
   require(/<h1\b/.test(html) && (html.match(/<h1\b/g) || []).length === 1, `Expected one main heading: ${page}`);
+  require(html.match(/<link\s+rel="canonical"\s+href="([^"]+)"/)?.[1] === canonicalUrls[pages.indexOf(page)], `Canonical URL mismatch: ${page}`);
+  if (page === 'index.html') {
+    for (const name of ['google-site-verification', 'msvalidate.01'])
+      require(new RegExp(`<meta name="${name.replace('.', '\\.')}" content="[A-Za-z0-9_-]+"`).test(html), `Missing public ownership marker: ${name}`);
+  }
   const absoluteLinks = [...html.matchAll(/\bhref="(https:[^"]+)"/g)].map(match => new URL(match[1]));
   require(absoluteLinks.some(url => url.protocol === 'https:' && url.hostname === 'buymeacoffee.com' &&
     url.pathname === '/LastResolution' && !url.port && !url.username && !url.password), `Missing support link: ${page}`);
@@ -38,6 +44,11 @@ for (const page of pages) {
     checks++;
   }
 }
+const sitemap = await readFile(path.join(root, 'sitemap.xml'), 'utf8');
+require(sitemap.includes('xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"'), 'Missing sitemap namespace.');
+const locations = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]);
+require(locations.length === canonicalUrls.length && new Set(locations).size === locations.length &&
+  canonicalUrls.every(url => locations.includes(url)), 'Sitemap entries must match the public canonical pages.');
 async function inspect(directory) {
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     const filename = path.join(directory, entry.name);
