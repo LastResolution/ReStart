@@ -12,6 +12,7 @@ public partial class MainWindow
     private readonly Dictionary<string, HtmlTileView> _htmlTiles = [];
     private readonly HashSet<string> _usedHtmlTiles = [];
     private readonly HashSet<string> _folderThumbnailIds = [];
+    private readonly Dictionary<string, (TileSize Size, double Scale)> _htmlFootprints = [];
     private bool _documentationHtmlRendering;
 
     private async void OnContentMouseWheel(object sender, MouseWheelEventArgs e)
@@ -61,9 +62,16 @@ public partial class MainWindow
         _usedHtmlTiles.Add(tile.Id);
         var offscreen = thumbnail || _preview && _documentationHtmlRendering;
         if (_htmlTiles.TryGetValue(tile.Id, out var previous) && previous.OffscreenOnly != offscreen)
-        { _htmlTiles.Remove(tile.Id); previous.Dispose(); _scriptSessions.Remove(tile.Id); }
+        {
+            _htmlTiles.Remove(tile.Id); previous.Dispose(); _scriptFrames.Remove(tile.Id);
+            // Replacing the browser invalidates in-flight replies, but opening a
+            // folder must retain its timer state and queued local interactions.
+            if (_scriptSessions.TryGetValue(tile.Id, out var pending))
+                _scriptSessions[tile.Id] = new() { State = pending.State, Inputs = new(pending.Inputs), Attempts = pending.Attempts };
+        }
         if (!_htmlTiles.TryGetValue(tile.Id, out var view))
         {
+            _scriptFrames.Remove(tile.Id);
             _htmlTiles[tile.Id] = view = new(_scriptPackages.BrowserDataRoot, tile.Id, offscreen);
             if (_scriptSessions.TryGetValue(tile.Id, out var session)) session.NextUpdate = DateTimeOffset.MinValue;
         }
@@ -74,7 +82,7 @@ public partial class MainWindow
     private void RetireHtmlTiles(bool all = false)
     {
         foreach (var id in _htmlTiles.Keys.Where(id => all || !_usedHtmlTiles.Contains(id)).ToArray())
-        { _htmlTiles.Remove(id, out var view); view!.Dispose(); }
+        { _htmlTiles.Remove(id, out var view); _htmlFootprints.Remove(id); view!.Dispose(); }
     }
 
     private async Task<(ScriptTileFrame? Frame, string? Error)> RenderHtmlTileAsync(Tile tile, object context, string source, ScriptTileManifest manifest)

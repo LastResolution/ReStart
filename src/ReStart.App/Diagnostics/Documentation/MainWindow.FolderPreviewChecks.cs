@@ -58,6 +58,19 @@ public partial class MainWindow
             Check(_scriptViews.Count == 4 && _scriptViews.All(v => v.Tile.Size == TileSize.Medium), "Mixed child sizes leaked into miniature geometry.");
             Check(children.Select(t => t.Size).SequenceEqual(sizes), "Rendering miniatures mutated saved child sizes.");
             Check(_htmlTiles.Values.All(view => view.BrowserReady && view.Children.OfType<Image>().Any(i => i.Source != null)), "A closed folder used generic icons instead of rendered web previews.");
+            RenderGroups(); UpdateLayout();
+            Check(ScriptsReady && ScriptFrameCount == 4, "An unchanged board discarded successful browser frames.");
+            var clock = children[0];
+            var retained = _scriptSessions[clock.Id];
+            retained.State = System.Text.Json.JsonSerializer.SerializeToElement(new { seconds = true });
+            retained.Inputs.Enqueue(new("click", 123));
+            _documentationHtmlRendering = false;
+            HtmlView(clock);
+            _documentationHtmlRendering = true;
+            HtmlView(clock, thumbnail: true);
+            Check(_scriptSessions[clock.Id].State.GetProperty("seconds").GetBoolean() && _scriptSessions[clock.Id].Inputs.Count == 1,
+                "Switching between a miniature and an interactive browser discarded state or input.");
+            RenderGroups(); UpdateLayout(); await WaitForDocumentationFramesAsync();
             SaveScreenshot(Path.Combine(directory, "live-folder-closed.png"));
             OpenFolder(liveFolder); UpdateLayout(); await WaitForDocumentationFramesAsync();
             Check(_scriptViews.Count == 4 && _scriptViews.Select(v => v.Tile.Size).Order().SequenceEqual(sizes.Order()), "Opening the folder did not restore actual tile sizes.");

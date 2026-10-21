@@ -500,7 +500,9 @@ public partial class MainWindow : Window
         }
         else if (webTile)
         {
-            _scriptFrames.Remove(tile.Id);
+            var footprint = (tile.Size, Document.Preferences.TileScale);
+            if (!_htmlFootprints.TryGetValue(tile.Id, out var previous) || previous != footprint) _scriptFrames.Remove(tile.Id);
+            _htmlFootprints[tile.Id] = footprint;
             button.BorderThickness = new(0);
             button.Background = tile.UseCustomColor ? button.Background : Brushes.Transparent;
             grid.Children.Add(HtmlView(tile, folderThumbnail));
