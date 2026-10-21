@@ -130,6 +130,8 @@ public partial class MainWindow
                 // is not selected. It must recover without a manual refresh.
                 settings.SelectSection(L.T(K.SettingsStartup));
                 File.Copy(ScriptTilePackages.BundledManifestPath("clock"), Path.Combine(library, "manifest.json"));
+                foreach (var file in new[] { "index.html", "tile.css" })
+                    File.Copy(Path.Combine(Path.GetDirectoryName(ScriptTilePackages.BundledManifestPath("clock"))!, file), Path.Combine(library, file));
                 await WaitForLibrary(() => settings.LibraryTiles.Children.OfType<Button>().Any(b => !b.IsEnabled), "An incomplete library package was not reported.");
                 File.Copy(Path.Combine(Path.GetDirectoryName(ScriptTilePackages.BundledManifestPath("clock"))!, "tile.js"), Path.Combine(library, "tile.js"));
                 await WaitForLibrary(() => settings.LibraryTiles.Children.OfType<Button>().Count(b => b.IsEnabled) == 1, "The watched library did not discover the complete package.");
