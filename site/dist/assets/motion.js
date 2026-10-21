@@ -9,7 +9,7 @@
     ['.hero-product', 0],
     ['.facts > span', 55],
     ['.section-heading > *, .live-copy > *, .demo-heading > *', 55],
-    ['.feature-tabs, .live-art, .video-frame, .download-grid > div, .faq-grid > div:first-child', 0],
+    ['.feature-tabs, .live-art, .star-callout, .video-frame, .download-grid > div, .faq-grid > div:first-child', 0],
     ['.install-steps > li, .faq-list > details, .support-section > *, .developer-support > *', 65],
     ['.developer-section > h2, .developer-section > p, .developer-pair, .developer-section > .code-panel, .table-scroll, .callout, .resource-list', 0]
   ];
