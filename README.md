@@ -35,7 +35,7 @@ https://github.com/user-attachments/assets/243a5c5a-46bc-4180-8a0c-cee71ab63f06
 ## Start in a minute
 
 1. Download the **[x64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-x64.zip)** for an Intel/AMD PC, or the **[ARM64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip)** for Windows on ARM.
-2. Extract the **entire ZIP** into a folder you want to keep. Leave `TileHost`, `Examples` and `third-party` beside `ReStart.exe`.
+2. Extract the **entire ZIP** into a folder you want to keep. Leave `TileHost`, `Examples`, `third-party` and `ReStart-package.json` beside `ReStart.exe`.
 3. Run **ReStart.exe**. Press the **Windows key**, then type an app name to search. **Ctrl+Alt+Space** and the tray menu also open Start.
 
 Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button integration and updates. Normal use needs no administrator rights. Checksums are included on the [release page](https://github.com/LastResolution/ReStart/releases/latest).
@@ -90,7 +90,7 @@ Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button
 | Live tiles | Nineteen bundled HTML/CSS/JavaScript tiles, four responsive sizes, local click actions, live updates on/off, per-tile data configuration, Tile Studio, optional bottom names, package import and an automatically watched local tile library |
 | Tile APIs | PC-local time, language and size, retained state, CPU/memory/network/battery/storage metrics, selected photo slideshows, cached JSON/Web API/RSS/Atom/local-file inputs and local application integration |
 | Language | English, Japanese, German, French, Spanish, Korean, Simplified Chinese and Traditional Chinese, including bundled tile text |
-| Data and updates | Local settings, layout import/export/reset, backup and version migration, clearable local app activity, version/build/license information and API-key-free update checks with manual installation |
+| Data and updates | Local settings, layout import/export/reset, backup and version migration, clearable local app activity, version/build/license information and API-key-free checks, explicit verified portable updates with rollback, and previewable diagnostic reports |
 | Distribution | Portable Windows 10/11 x64 and ARM64 packages, included runtime/notices, no administrator requirement for normal use and reversible integration without Explorer patching |
 
 [Feature switches and defaults](docs/start-behavior.md) · [Detailed controls](#everyday-details) · [Compatibility and platform coverage](docs/fidelity.md) · [JavaScript API](docs/javascript-tiles.md)
@@ -223,7 +223,7 @@ Settings live in `%LOCALAPPDATA%\ReStart\layout.json`. Saves and upgrades retain
 
 Optional app activity is stored separately in `activity.json` and can be cleared in Start behavior. Document-history menus respect the Windows setting. File search uses the Windows index and can be disabled independently. [Settings and data details](docs/start-behavior.md).
 
-Update checks read public GitHub Releases without an API key. Installation is manual: exit ReStart, then replace the complete extracted installation. If its location changed, save sign-in startup and Explorer integration again. See [updates](docs/updates.md).
+Update checks read public GitHub Releases without an API key. In Settings → Updates, choose **Download update**, then **Restart and update** after verification. Guided updates require a complete, unmodified portable package in a writable folder and restore the previous files if installation or startup fails. Developer builds and older packages can still be replaced manually. Settings → About → **Diagnostic information** previews a report you can copy without paths, app lists, tile data, credentials or raw logs. Nothing is uploaded automatically. See [updates and diagnostics](docs/updates.md).
 
 No advertising or usage analytics are included. App lists, layouts and photo-folder selections are not uploaded. Native JavaScript tiles return bounded display data; web tiles use sandboxed browser DOM/CSS/Canvas with explicitly permitted networking. Neither receives a general filesystem, CLR or shell bridge. Configured data providers receive their requests and explicitly configured parameters/credentials; see [security](SECURITY.md).
 

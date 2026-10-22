@@ -1,7 +1,7 @@
 ReStart v@VERSION@
 Full-screen Start, again.
 
-Run ReStart.exe. Keep TileHost, Examples, third-party and license notices.
+Run ReStart.exe. Keep TileHost, Examples, third-party, ReStart-package.json and license notices.
 The portable package includes .NET; normal use needs no administrator rights.
 Open with Windows key, taskbar Start button, Ctrl+Alt+Space or tray icon.
 Settings: left gear. Exit: tray menu. Sign-in startup is optional.
@@ -26,7 +26,11 @@ Weather defaults to Berlin coordinates, not the PC location; see the online tile
 
 Eight UI languages; dark/light/system/high-contrast themes.
 Settings -> About: version and licenses. Layout/data: migration and rollback.
-Updates: public GitHub checks without API keys; download/install manually.
+Updates: public GitHub checks without API keys. Choose Download update, then
+Restart and update after verification; failed installation/startup restores old files.
+Guided updates require a complete, unmodified package in a writable folder.
+Manual replacement remains available. About -> Diagnostic information previews
+a report you can copy; no paths, app lists, tile data, credentials or raw logs.
 Data: %LOCALAPPDATA%\ReStart\layout.json; schema 1-3 upgrade to 4 with backups.
 Layout export excludes JS sources and photo/data bindings; keep tiles separately.
 

@@ -13,7 +13,7 @@ body:
     attributes:
       label: ReStart version
       description: Copy version/build from Settings → About. For source builds, include the commit ID.
-      placeholder: 0.6.0 / portable win-x64
+      placeholder: 1.6.0 / portable win-x64
     validations:
       required: true
   - type: textarea
@@ -41,6 +41,12 @@ body:
       description: Windows version/build (winver), x64 or ARM64, display scaling, monitor count and primary monitor.
     validations:
       required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostic report
+      description: Optional. In Settings → About → Diagnostic information, review the preview and choose Copy report. It excludes paths, app lists, tile data, credentials and raw logs. Paste only the reviewed report here.
+      render: json
   - type: textarea
     id: evidence
     attributes:

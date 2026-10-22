@@ -64,7 +64,7 @@ Beim Ziehen folgt eine halbtransparente Kopie der Kachel, Gruppe oder Auswahl de
 | Live-Kacheln | 19 JavaScript-Beispiele, vier responsive Größen, lokale Klickaktionen, Live-Updates ein/aus, Datenkonfiguration, Vorlagenerstellung, Paketimport und automatisch beobachtete Bibliothek |
 | Kachel-APIs | PC-Zeit, Sprache und Größe, gespeicherter Laufzeitzustand, CPU/RAM/Netzwerk/Akku/Speicher, ausgewählte Fotos, zwischengespeicherte Web-API-/JSON-/RSS-/Atom-/Dateidaten und lokale App-Integration |
 | Sprachen | Englisch, Japanisch, Deutsch, Französisch, Spanisch, Koreanisch, vereinfachtes und traditionelles Chinesisch; auch Texte der mitgelieferten Kacheln |
-| Daten und Updates | Lokale Einstellungen, Layoutimport/-export/-reset, Sicherungen/Migration, löschbare App-Nutzungsdaten, Version/Build/Lizenzen, Updateprüfung ohne API-Schlüssel und manuelle Installation |
+| Daten und Updates | Lokale Einstellungen, Layoutimport/-export/-reset, Sicherungen/Migration, löschbare App-Nutzungsdaten, Version/Build/Lizenzen, Updateprüfung ohne API-Schlüssel, geprüfte portable Updates mit Wiederherstellung und Diagnosevorschau |
 | Verteilung | Portable Windows-10/11-Pakete für x64 und ARM64, Laufzeit und Lizenzhinweise enthalten; reversible Integration ohne Explorer-Patches |
 
 [Schalter und Standardwerte (Englisch)](docs/start-behavior.md) · [Kompatibilität (Englisch)](docs/fidelity.md)
@@ -122,7 +122,7 @@ Windows-Tastenkombinationen werden an Windows weitergegeben. Rückgängig/Wieder
 
 Einstellungen: `%LOCALAPPDATA%\ReStart\layout.json`. Die optionale App-Aktivität liegt getrennt in `activity.json` und lässt sich löschen. Sicherungen schützen Migrationen; [Details (Englisch)](docs/migration.md). Unter About stehen Version, Build und Lizenzen.
 
-Updates lesen öffentliche GitHub Releases ohne API-Schlüssel. Beende ReStart und ersetze die vollständige entpackte Installation manuell. Bei einem neuen Speicherort speicherst du Autostart und Explorer-Integration erneut. Es gibt keine Werbung oder Nutzungsanalyse; App-Listen, Layouts und Fotoauswahl werden nicht hochgeladen. Konfigurierte Datenanbieter erhalten ihre jeweiligen Anfragen. [Sicherheit (Englisch)](SECURITY.md)
+Updates lesen öffentliche GitHub Releases ohne API-Schlüssel. Wähle unter Einstellungen → Updates zuerst **Update herunterladen**, dann **Neu starten und aktualisieren**. Vollständige, unveränderte portable Pakete in beschreibbaren Ordnern unterstützen geprüfte Updates mit Wiederherstellung bei Installations- oder Startfehlern. Entwicklerbuilds und ältere Pakete lassen sich weiterhin manuell ersetzen. Unter Info → Diagnoseinformationen kannst du einen Bericht ohne Pfade, App-Listen, Kacheldaten, Zugangsdaten oder Rohprotokolle prüfen und kopieren. Es wird nichts automatisch hochgeladen. [Updates und Diagnose (Englisch)](docs/updates.md). Bei einem neuen Speicherort speicherst du Autostart und Explorer-Integration erneut. Es gibt keine Werbung oder Nutzungsanalyse; App-Listen, Layouts und Fotoauswahl werden nicht hochgeladen. Konfigurierte Datenanbieter erhalten ihre jeweiligen Anfragen. [Sicherheit (Englisch)](SECURITY.md)
 
 Zum Entfernen Autostart und Explorer-Integration deaktivieren, über den Infobereich beenden und den Installationsordner löschen. Lokale Daten nur löschen, wenn auch Einstellungen und eigene Kacheln entfernt werden sollen.
 

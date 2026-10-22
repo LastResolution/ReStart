@@ -24,6 +24,7 @@ The project roots keep entry points, project configuration and global imports. F
 | `ReStart.Core/Layout` | Tile/group models, geometry, folder expansion, editing, history, persistence and migration |
 | `ReStart.Core/Configuration`, `Appearance`, `Localization` | Preferences, palettes and translated text; locale JSON remains in `Locales` |
 | `ReStart.Core/LiveTiles`, `Updates`, `Windows` | Bounded tile/data contracts, public release parsing, input state and current-user instance/IPC coordination |
+| `ReStart.Core/Diagnostics`, `ReStart.App/Lifecycle` | Whitelist-only shareable reports; update-specific startup, handoff and acknowledgment before normal shell integration |
 | `ReStart.App/Views` | `Start`, `Settings`, `Startup` and `Dialogs`; each XAML/code-behind pair stays together |
 | `ReStart.App/Controls`, `Resources`, `Localization` | Reusable WPF controls, themed dictionaries and the localization markup extension |
 | `ReStart.App/Services` | `Catalog`, `Search`, `Shell`, `LiveTiles` and `Configuration`; native calls and process effects live here |
@@ -47,6 +48,7 @@ The App-to-TileHost project reference is a **build dependency only** (`Reference
 | State / effect | Owner | Boundary |
 | --- | --- | --- |
 | Persistent layout and preferences | `LayoutDocument` / `LayoutStore` | Atomic writes and schema migration; WPF geometry is never persisted |
+| Portable updates | Core package/download/transaction code and App `PortableUpdates` | Fixed download source, inventory-owned replacements, separate helper lifetime, durable rollback and startup acknowledgment; no user-file enumeration |
 | Placement, folder and batch plans | Core planning types | Calculate from snapshots; preview and commit share results; cancellation does not mutate ownership |
 | Selection, popup/focus and drag lifetime | MainWindow interaction partials | Dispatcher-owned; callbacks revalidate visibility and current generation |
 | Search request lifetime | MainWindow search orchestration | Immediate apps/settings, debounced indexed files, cancellation and stale-query rejection; Windows COM remains in a service |

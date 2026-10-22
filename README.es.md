@@ -64,7 +64,7 @@ El engranaje permite elegir temas, inicio con Windows, integración de la tecla 
 | Mosaicos dinámicos | 19 ejemplos JavaScript, cuatro tamaños adaptables, acciones locales al pulsar, actualizaciones activables, fuentes de datos configurables, creación de ejemplos, importación y biblioteca observada automáticamente |
 | API de mosaicos | Hora del PC, idioma/tamaño, estado conservado, CPU/memoria/red/batería/almacenamiento, fotos elegidas, datos JSON/Web API/RSS/Atom/archivos en caché e integración local |
 | Idiomas | Inglés, japonés, alemán, francés, español, coreano, chino simplificado y tradicional, incluidos los textos de mosaicos suministrados |
-| Datos y actualizaciones | Ajustes locales, importar/exportar/restablecer, copias y migración, actividad de aplicaciones borrable, versión/build/licencias, comprobación sin clave API e instalación manual |
+| Datos y actualizaciones | Ajustes locales, importar/exportar/restablecer, copias y migración, actividad de aplicaciones borrable, versión/build/licencias, comprobación sin clave API, actualizaciones portátiles verificadas con restauración e informes de diagnóstico |
 | Distribución | Paquetes portátiles Windows 10/11 x64 y ARM64 con runtime y avisos; integración reversible sin modificar Explorer |
 
 [Interruptores y valores predeterminados (inglés)](docs/start-behavior.md) · [Compatibilidad (inglés)](docs/fidelity.md)
@@ -122,7 +122,7 @@ Los atajos de Windows se reenvían al sistema. El historial conserva hasta 100 c
 
 Ajustes: `%LOCALAPPDATA%\ReStart\layout.json`. La actividad opcional está separada en `activity.json` y se puede borrar. Las migraciones guardan copias; [detalles (inglés)](docs/migration.md). About muestra versión, build y licencias.
 
-Las actualizaciones leen GitHub Releases públicas sin clave API. Cierra ReStart y sustituye manualmente toda la instalación extraída. Si cambia su ubicación, guarda de nuevo el inicio y la integración Explorer. No hay publicidad ni analítica de uso; no se suben listas de aplicaciones, diseños ni selecciones de fotos. Los proveedores de datos configurados reciben sus solicitudes. [Seguridad (inglés)](SECURITY.md)
+Las actualizaciones leen GitHub Releases públicas sin clave API. En Ajustes → Actualizaciones, elige **Descargar actualización** y después **Reiniciar y actualizar**. Los paquetes portátiles completos y sin modificar, en carpetas con permisos de escritura, admiten actualizaciones verificadas y restauración si falla la instalación o el inicio. Los paquetes antiguos y las versiones de desarrollo se pueden sustituir manualmente. Acerca de → Información de diagnóstico permite revisar y copiar un informe sin rutas, listas de aplicaciones, datos de mosaicos, credenciales ni registros completos. No se sube nada automáticamente. [Actualizaciones y diagnóstico (inglés)](docs/updates.md). Si cambia su ubicación, guarda de nuevo el inicio y la integración Explorer. No hay publicidad ni analítica de uso; no se suben listas de aplicaciones, diseños ni selecciones de fotos. Los proveedores de datos configurados reciben sus solicitudes. [Seguridad (inglés)](SECURITY.md)
 
 Para eliminarlo, desactiva inicio e integración Explorer, sal desde el área de notificación y borra la instalación. Borra los datos locales solo si también quieres quitar ajustes y mosaicos propios.
 
