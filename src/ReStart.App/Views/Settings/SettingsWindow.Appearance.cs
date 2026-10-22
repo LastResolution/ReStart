@@ -110,6 +110,7 @@ internal sealed partial class SettingsWindow
         {
             var color = text.Text.Trim();
             preview.Background = ThemePresets.IsColor(color) ? ColorBrush(color) : Brushes.Transparent;
+            if (notify) DraftChanged();
             if (notify && (color.Length == 0 || ThemePresets.IsColor(color))) changed(color.ToUpperInvariant());
             if (_backgroundColor != null && _accentColor != null && (_backgroundColor.Text.Trim().Length == 0 || ThemePresets.IsColor(_backgroundColor.Text.Trim()))
                 && ThemePresets.IsColor(_accentColor.Text.Trim()) && _feedback.Text == L.T(K.ErrorInvalidColor)) _feedback.Text = "";

@@ -69,12 +69,12 @@ internal sealed partial class SettingsWindow
         Button? install = null;
         install = DataButton(buttons, L.T(K.UpdateRestart), async () =>
         {
-            if (!ConfirmationWindow.Ask(this, L.T(K.UpdateConfirmRestart))) return;
+            if (!ResolvePendingChanges() || !ConfirmationWindow.Ask(this, L.T(K.UpdateConfirmRestart))) return;
             installButton(false);
             if (await _main.BeginPreparedUpdateAsync())
             {
                 Closed += (_, _) => _main.Dispatcher.BeginInvoke(() => ((App)Application.Current).ExitApplication());
-                Close();
+                DiscardAndClose();
             }
             else { status.Text = L.T(K.UpdatePrepareFailed); installButton(true); }
         });
@@ -86,6 +86,13 @@ internal sealed partial class SettingsWindow
         void Refresh()
         {
             status.Text = _main.IsPreview ? L.T(K.UpdatesDisabledInPreview) : _main.LastUpdateCheck is { } result ? MainWindow.UpdateStatusText(result) : "";
+            if (_sectionButtons.TryGetValue(L.T(K.SettingsUpdates), out var navigation) && navigation.Content is TextBlock caption)
+            {
+                var ready = _main.UpdatePreparation == MainWindow.PreparationState.Ready;
+                caption.Text = L.T(K.SettingsUpdates) + (ready ? " •" : "");
+                navigation.ToolTip = ready ? L.F(K.UpdateReadyBody, _main.PreparedUpdate!.Version) : null;
+                System.Windows.Automation.AutomationProperties.SetName(navigation, L.T(K.SettingsUpdates) + (ready ? " — " + L.T(K.UpdateReadyTitle) : ""));
+            }
             var busy = _main.UpdatePreparation == MainWindow.PreparationState.Downloading;
             check!.IsEnabled = !_main.IsPreview && !busy;
             download.IsEnabled = canInstall && !busy && _main.UpdatePreparation != MainWindow.PreparationState.Ready && _main.LastUpdateCheck?.Status == UpdateCheckStatus.Available;
@@ -106,7 +113,7 @@ internal sealed partial class SettingsWindow
         }
         Refresh();
         _main.UpdateCheckChanged += Refresh;
-        Closed += (_, _) => _main.UpdateCheckChanged -= Refresh;
+        _contentCleanup.Add(() => _main.UpdateCheckChanged -= Refresh);
 
     }
 }

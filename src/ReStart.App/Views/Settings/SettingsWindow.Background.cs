@@ -33,8 +33,9 @@ internal sealed partial class SettingsWindow
             try
             {
                 _draft.CustomBackgroundId = store.Import(dialog.FileName);
+                _importedBackgrounds.Add(_draft.CustomBackgroundId);
                 _draft.ShowWallpaper = _draft.UseCustomBackground = true;
-                _backgroundSource.SelectedIndex = 2; Refresh(); _feedback.Text = L.T(K.BackgroundSelected);
+                _backgroundSource.SelectedIndex = 2; Refresh(); _feedback.Text = L.T(K.BackgroundSelected); DraftChanged();
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or ArgumentException or System.IO.FileFormatException)
             { _feedback.Text = L.T(K.BackgroundInvalid); }

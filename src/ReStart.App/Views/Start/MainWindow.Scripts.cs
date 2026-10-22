@@ -215,7 +215,7 @@ public partial class MainWindow
                         data,
                         slideshow = slideshow == null ? null : new { available = slideshow.Image != null, count = slideshow.Count, index = slideshow.Index },
                         size = view.Tile.Size.ToString().ToLowerInvariant(),
-                        bounds = new { width = view.Button.ActualWidth, height = view.Button.ActualHeight, scale = Document.Preferences.TileScale },
+                        bounds = new { width = view.Button.ActualWidth, height = view.Button.ActualHeight, scale = DisplayPreferences.TileScale },
                         settings = manifest.Settings,
                         state = session.State,
                         theme = new
@@ -223,10 +223,10 @@ public partial class MainWindow
                             mode = ThemeWindow.IsLight ? "light" : "dark",
                             highContrast = SystemParameters.HighContrast,
                             reducedMotion = !MotionEnabled,
-                            accent = Document.Preferences.Accent,
+                            accent = DisplayPreferences.Accent,
                             customColor = view.Tile.UseCustomColor ? view.Tile.Color : null
                         },
-                        appearance = new { showTitle = Document.Preferences.ShowLiveTileNames },
+                        appearance = new { showTitle = DisplayPreferences.ShowLiveTileNames },
                         title = TileDisplayName(view.Tile)
                     };
                     var (frame, error) = manifest.Renderer == "web" ? await RenderHtmlTileAsync(view.Tile, context, source, manifest) : await pool.RenderAsync(source, context);
@@ -282,7 +282,7 @@ public partial class MainWindow
             foreach (var label in tileGrid.Children.OfType<TextBlock>().Where(text => text.Tag == tile)) label.Text = title;
         if (!SystemParameters.HighContrast && !tile.UseCustomColor)
         {
-            button.Background = frame.Background.Length == 0 ? (System.Windows.Media.Brush)FindResource("AccentBrush") : Brush(frame.Background, Document.Preferences.Accent);
+            button.Background = frame.Background.Length == 0 ? (System.Windows.Media.Brush)FindResource("AccentBrush") : Brush(frame.Background, DisplayPreferences.Accent);
             if (frame.BackgroundEnd.Length > 0 && button.Background is SolidColorBrush start)
                 button.Background = new LinearGradientBrush(start.Color, ((SolidColorBrush)Brush(frame.BackgroundEnd, "#101820")).Color, 35);
             button.Foreground = frame.Foreground.Length == 0 ? Brushes.White : Brush(frame.Foreground, "#FFFFFF");
@@ -295,20 +295,20 @@ public partial class MainWindow
         }
         if (button.Content is Grid imageParent && imageParent.Children.OfType<SlideshowTileView>().FirstOrDefault() is { } photos)
             photos.SetSource(frame.Image == "current" && !tile.UseCustomColor && !SystemParameters.HighContrast && _slideshowImages.TryGetValue(tile.Id, out var image) ? image : null,
-                Document.Preferences.Animate);
+                DisplayPreferences.Animate);
         if (tile.Size != TileSize.Small && frame.Kicker.Length > 0)
             body.Children.Add(new TextBlock { Text = frame.Kicker, FontSize = 10, Opacity = 0.8, MaxHeight = 12, TextTrimming = TextTrimming.CharacterEllipsis });
         body.Children.Add(new TextBlock
         {
             Text = frame.Text,
             Tag = "ScriptValue",
-            FontSize = tile.Size == TileSize.Small ? 13 * Document.Preferences.TileScale : frame.Layout == "caption" ? 23
+            FontSize = tile.Size == TileSize.Small ? 13 * DisplayPreferences.TileScale : frame.Layout == "caption" ? 23
             : tile.Size == TileSize.Medium && frame.Text.Contains('\n') ? 18 : tile.Size == TileSize.Large ? 34 : tile.Size == TileSize.Wide ? 23 : 25,
-            LineHeight = tile.Size == TileSize.Small ? 15 * Document.Preferences.TileScale : double.NaN,
+            LineHeight = tile.Size == TileSize.Small ? 15 * DisplayPreferences.TileScale : double.NaN,
             LineStackingStrategy = tile.Size == TileSize.Small ? LineStackingStrategy.BlockLineHeight : LineStackingStrategy.MaxHeight,
             FontWeight = FontWeights.Light,
             TextWrapping = TextWrapping.Wrap,
-            MaxHeight = tile.Size == TileSize.Large ? 80 : tile.Size == TileSize.Small ? 32 * Document.Preferences.TileScale : frame.Text.Contains('\n') ? 48 : 36,
+            MaxHeight = tile.Size == TileSize.Large ? 80 : tile.Size == TileSize.Small ? 32 * DisplayPreferences.TileScale : frame.Text.Contains('\n') ? 48 : 36,
             TextTrimming = TextTrimming.CharacterEllipsis
         });
         if (tile.Size != TileSize.Small)

@@ -68,6 +68,8 @@ Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button
 
 In **Settings → Appearance**, adjust background tint from **10–100%** and wallpaper blur from **0–50**. Blur defaults to **12**; choose **0** for a sharp image. High contrast overrides these effects. **Finish selecting**, or clicking **Pinned tiles**, returns directly to the pinned home screen.
 
+Preview appearance, tile scale, group width and language before saving. Closing with changes offers **Save and close**, **Discard and close**, or **Keep editing**; discarding restores the committed presentation. After an explicit update download, a persistent ready indicator offers restart. The verified preparation is recovered on the next launch; ordinary launches never install it automatically.
+
 ![Tile Studio: HTML, CSS and JavaScript with four live previews](docs/images/tile-studio.png)
 
 ![Weather scene, System dashboard, News board and Canvas garden](docs/images/web-examples.png)

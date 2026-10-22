@@ -32,10 +32,9 @@ public partial class App
             if (fixtureRoot != null && Value(args, "--verify-update-parent") is { } parentId)
             {
                 var request = PortableUpdates.ReadRequest(parentId);
-                using var process = System.Diagnostics.Process.GetCurrentProcess();
-                request = request with { ParentId = process.Id, ParentStart = process.StartTime.ToUniversalTime().Ticks };
-                File.WriteAllText(Path.Combine(PortableUpdates.Workspace(parentId), "request.json"), System.Text.Json.JsonSerializer.Serialize(request));
-                var ready = await PortableUpdates.StartAsync(new(parentId, PortableUpdates.Workspace(parentId), request.Version));
+                // Leave the stored creator PID untouched: StartAsync must bind
+                // the actual handoff parent, including preparation restored later.
+                var ready = await PortableUpdates.StartAsync(new(parentId, PortableUpdates.Workspace(parentId), request.Version, request.Installation));
                 Shutdown(ready ? 0 : 1); return true;
             }
             if (fixtureRoot != null && Value(args, "--complete-update") is { } completeFixture)
@@ -65,7 +64,7 @@ public partial class App
             }
             else if (args.Length == 0 || args.SequenceEqual(new[] { "--background" })) PortableUpdates.CleanupFinished();
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.Text.Json.JsonException or System.ComponentModel.Win32Exception)
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or InvalidOperationException or System.Text.Json.JsonException or System.ComponentModel.Win32Exception)
         {
             if (Value(args, "--verify-update-installations") is { } output)
                 File.WriteAllText(Path.Combine(output, "verification.json"), System.Text.Json.JsonSerializer.Serialize(new { success = false, error = ex.Message }));
@@ -90,7 +89,7 @@ public partial class App
             window.SetStatus(L.T(K.UpdateInstalled));
             return true;
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or InvalidOperationException)
         { window.Exit(); Shutdown(1); return false; }
     }
 

@@ -1,4 +1,6 @@
 using System.Net.Http;
+using System.Windows;
+using ReStart.App.Controls;
 using ReStart.App.Services;
 using ReStart.Core;
 
@@ -10,6 +12,8 @@ public partial class MainWindow
     internal PreparationState UpdatePreparation { get; private set; }
     internal long UpdateBytes { get; private set; }
     internal PortableUpdates.Prepared? PreparedUpdate { get; private set; }
+    internal event Action? PreparedUpdateAvailable;
+    private bool _readyNoticeExpanded = true, _updateRestarting;
     private CancellationTokenSource? _updateDownloadCancellation;
     internal bool CanInstallUpdates => !_preview && !_store.IsReadOnly && PortableUpdates.SupportsInstallation(AppContext.BaseDirectory);
     internal void CancelUpdateDownload() => _updateDownloadCancellation?.Cancel();
@@ -18,7 +22,7 @@ public partial class MainWindow
     /// <returns>A task completing after the UI reaches Ready, Cancelled or Failed; preview/ineligible calls do nothing.</returns>
     internal async Task PrepareUpdateAsync()
     {
-        if (!CanInstallUpdates || UpdatePreparation == PreparationState.Downloading || LastUpdateCheck is not { Status: UpdateCheckStatus.Available, Release: { } release }) return;
+        if (!CanInstallUpdates || UpdatePreparation is PreparationState.Downloading or PreparationState.Ready || LastUpdateCheck is not { Status: UpdateCheckStatus.Available, Release: { } release }) return;
         using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(_updateCancellation.Token);
         _updateDownloadCancellation = cancellation;
         using var http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false, UseDefaultCredentials = false }) { Timeout = TimeSpan.FromMinutes(10) };
@@ -37,9 +41,10 @@ public partial class MainWindow
             PreparedUpdate = await Task.Run(() => PortableUpdates.FinalizePreparation(directory, manifest, AppContext.BaseDirectory), cancellation.Token);
             cancellation.Token.ThrowIfCancellationRequested();
             UpdatePreparation = PreparationState.Ready;
+            PresentPreparedUpdate();
         }
         catch (OperationCanceledException) { UpdatePreparation = cancellation.IsCancellationRequested ? PreparationState.Cancelled : PreparationState.Failed; }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or HttpRequestException or InvalidOperationException or System.ComponentModel.Win32Exception or BadImageFormatException)
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or HttpRequestException or InvalidOperationException or System.ComponentModel.Win32Exception or BadImageFormatException)
         { UpdatePreparation = PreparationState.Failed; }
         finally
         {
@@ -51,13 +56,62 @@ public partial class MainWindow
         }
     }
 
+    private async Task InitializeUpdateStateAsync()
+    {
+        await RestorePreparedUpdateAsync();
+        if (!_exit && UpdatePreparation != PreparationState.Ready && Document.Preferences.CheckUpdatesOnStartup) await CheckStartupUpdatesAsync();
+    }
+
+    /// <summary>Revalidates a prior explicit preparation after ordinary startup, without applying it.</summary>
+    /// <returns>A task completing after the ready indicator is restored or the cache is rejected.</returns>
+    private async Task RestorePreparedUpdateAsync()
+    {
+        if (!CanInstallUpdates) return;
+        var prepared = await Task.Run(() => PortableUpdates.RestorePrepared(AppContext.BaseDirectory));
+        if (_exit || prepared == null || UpdatePreparation != PreparationState.Idle) return;
+        PreparedUpdate = prepared; UpdatePreparation = PreparationState.Ready;
+        PresentPreparedUpdate(); UpdateCheckChanged?.Invoke();
+    }
+
+    private void PresentPreparedUpdate()
+    {
+        _readyNoticeExpanded = true; RefreshPreparedUpdateNotice(); PreparedUpdateAvailable?.Invoke();
+    }
+
+    private void RefreshPreparedUpdateNotice()
+    {
+        if (PreparedUpdate == null || UpdatePreparation != PreparationState.Ready) return;
+        if (_updateNotice != null) Root.Children.Remove(_updateNotice);
+        _updateNotice = new(PreparedUpdate.Version, AppBuildInfo.Version, RequestPreparedUpdate,
+            () => { _readyNoticeExpanded = false; RefreshPreparedUpdateNotice(); }, prepared: true, compact: !_readyNoticeExpanded)
+        { HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new(24), MaxWidth = Math.Max(240, (Root.ActualWidth > 0 ? Root.ActualWidth : 488) - 48) };
+        Root.Children.Add(_updateNotice);
+    }
+
+    /// <summary>Shows explicit restart consent or brings an open settings editor to its Updates section.</summary>
+    internal async void RequestPreparedUpdate()
+    {
+        if (_updateRestarting || PreparedUpdate == null || UpdatePreparation != PreparationState.Ready) return;
+        if (_activeSettings?.IsVisible == true) { _activeSettings.Activate(); _activeSettings.SelectSection(L.T(K.SettingsUpdates)); return; }
+        if (!IsPresenting) Present();
+        var accepted = false; WithDialog(() => accepted = ConfirmationWindow.Ask(this, L.T(K.UpdateConfirmRestart)));
+        if (!accepted) return;
+        _updateRestarting = true;
+        try
+        {
+            if (await BeginPreparedUpdateAsync()) ((App)Application.Current).ExitApplication();
+            else SetStatus(L.T(K.UpdatePrepareFailed));
+        }
+        finally { _updateRestarting = false; }
+    }
+
     /// <summary>Saves the layout and hands off a prepared update without exiting the process itself.</summary>
     /// <returns>True only after helper readiness/acceptance; the caller then closes its dialog and exits normally.</returns>
     internal async Task<bool> BeginPreparedUpdateAsync()
     {
         if (!CanInstallUpdates || PreparedUpdate == null || UpdatePreparation != PreparationState.Ready || !TrySaveLayout()) return false;
         try { return await PortableUpdates.StartAsync(PreparedUpdate); }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception)
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception)
         { PortableUpdates.Record(DiagnosticCode.UpdatePreparationFailed); return false; }
     }
 }

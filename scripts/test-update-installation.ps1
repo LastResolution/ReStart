@@ -13,10 +13,16 @@ if ($PreviousExecutable) {
     $previous = (Resolve-Path -LiteralPath $PreviousExecutable).Path
     $arguments += @('--previous-update-executable', ('"' + $previous + '"'))
 }
-$process = Start-Process -FilePath $source -ArgumentList $arguments -WindowStyle Hidden -PassThru
+$process = Start-Process -FilePath $source -ArgumentList $arguments -WindowStyle Hidden -RedirectStandardError (Join-Path $directory 'process-error.log') -PassThru
 try {
     if (-not $process.WaitForExit(240000)) { $process.Kill($true); throw 'Update installation verification timed out.' }
-    if ($process.ExitCode -ne 0) { throw "Update installation verification failed: $($process.ExitCode)" }
+    if ($process.ExitCode -ne 0) {
+        foreach ($name in @('verification.json', 'process-error.log')) {
+            $details = Join-Path $directory $name
+            if (Test-Path -LiteralPath $details) { Get-Content -LiteralPath $details -TotalCount 40 | Write-Output }
+        }
+        throw "Update installation verification failed: $($process.ExitCode)"
+    }
     $report = Get-Content -LiteralPath (Join-Path $directory 'verification.json') -Raw | ConvertFrom-Json
     if (-not $report.success -or $report.scenarios -ne 4) { throw 'Update installation verification reported failure.' }
     $report

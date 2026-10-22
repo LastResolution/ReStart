@@ -141,7 +141,7 @@ public partial class MainWindow
                         {
                             Check(Field(settings, K.SettingsBackgroundColor).Text == palette.Background && Field(settings, K.SettingsAccent).Text == palette.Accent
                                 && Mode(settings).SelectedIndex == (int)ReStart.Core.ThemeMode.Light, "Reopening custom RGB matching a dark preset silently selected its light variant.");
-                            settings.Close();
+                            settings.DiscardAndClose();
                         });
                     }
                     editorCases++;
@@ -201,7 +201,7 @@ public partial class MainWindow
             settings.Loaded += (_, _) => settings.Dispatcher.BeginInvoke(() =>
             {
                 try { settings.SelectSection(L.T(K.SettingsAppearance)); settings.UpdateLayout(); edit(settings); }
-                catch (Exception ex) { error = ex; settings.Close(); }
+                catch (Exception ex) { error = ex; settings.DiscardAndClose(); }
             });
             settings.ShowDialog();
             if (error != null) throw new InvalidOperationException("Appearance editor fixture failed: " + error.Message, error);

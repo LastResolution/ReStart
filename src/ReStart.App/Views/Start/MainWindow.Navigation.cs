@@ -75,7 +75,7 @@ public partial class MainWindow
         if (!Document.Preferences.ExpandNavigationOnHover) _railHoverTimer?.Stop();
         if (CollapsedFolderShortcuts == null) return;
         CollapsedFolderShortcuts.Children.Clear(); ExpandedFolderShortcuts.Children.Clear();
-        var enabled = Document.Preferences.NavigationFolders ?? ["documents", "pictures"];
+        var enabled = DisplayPreferences.NavigationFolders ?? ["documents", "pictures"];
         foreach (var shortcut in FolderShortcuts.Where(s => enabled.Contains(s.Id, StringComparer.OrdinalIgnoreCase)))
             foreach (var expanded in new[] { false, true })
             {

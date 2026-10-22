@@ -199,7 +199,7 @@ public partial class MainWindow
                         }
                         VisualChildren<Button>(editor).Single(b => b.IsDefault).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                     }
-                    catch (Exception ex) { editorError = ex; editor.Close(); }
+                    catch (Exception ex) { editorError = ex; editor.DiscardAndClose(); }
                 });
                 editor.ShowDialog();
                 if (editorError != null) throw new InvalidOperationException("Start preference editor failed: " + editorError.Message, editorError);
