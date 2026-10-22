@@ -134,6 +134,7 @@ public partial class MainWindow
                 finally { failed.DiscardAndClose(); }
             });
             failed.ShowDialog(); if (failure != null) throw failure;
+            checks += VerifyAvailableUpdateNavigation(fixture, store, directory);
             var readyEvents = 0; fixture.PreparedUpdateAvailable += () => readyEvents++;
             fixture.PreparedUpdate = new(Guid.NewGuid().ToString("N"), directory, "9.0.0"); fixture.UpdatePreparation = PreparationState.Ready; fixture.PresentPreparedUpdate();
             Check(readyEvents == 1 && fixture._updateNotice != null, "Finishing preparation did not announce a persistent ready notice.");
@@ -157,7 +158,7 @@ public partial class MainWindow
             foreach (var tag in L.SupportedLanguages)
             {
                 fixture.Document.Preferences.Language = tag; fixture.ApplyAppearance();
-                Check(Equals(fixture._updateNotice!.ViewReleaseButton.Content, L.T(K.UpdateRestart)) && fixture._updateNotice.LaterButton.Visibility == Visibility.Collapsed,
+                Check(Equals(fixture._updateNotice!.ActionButton.Content, L.T(K.UpdateRestart)) && fixture._updateNotice.LaterButton.Visibility == Visibility.Collapsed,
                     "Changing language lost the ready action or expanded its compact state.");
             }
             fixture.Document.Preferences.Language = "en"; fixture.ApplyAppearance();

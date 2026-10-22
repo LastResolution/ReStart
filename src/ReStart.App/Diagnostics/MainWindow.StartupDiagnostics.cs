@@ -45,6 +45,8 @@ public partial class MainWindow
             Check(!fixture.IsVisible && fixture._startupWindow?.IsVisible == true && fixture._startupWindow.Query.IsKeyboardFocused,
                 "Cold startup exposed an unprepared main window or failed to focus splash input.");
             var splash = fixture._startupWindow!;
+            splash.UpdateLayout();
+            CheckSplashCenter(splash);
             fixture.ComposeFixtureText("E"); fixture.Present();
             Check(fixture._startupWindow == splash && splash.Query.Text == "E", "Repeated activation reset the startup query or opened another splash.");
             foreach (var tag in L.SupportedLanguages)
@@ -54,6 +56,7 @@ public partial class MainWindow
                     fixture.Document.Preferences.Accent = theme switch { ReStart.Core.ThemeMode.Light => "#D83B01", ReStart.Core.ThemeMode.System => "#008272", _ => "#0078D7" };
                     fixture.ApplyAppearance();
                     splash.UpdateProgress(K.StartupApps, .25); splash.UpdateLayout();
+                    CheckSplashCenter(splash);
                     Check(splash.Stage.Text == L.T(K.StartupApps) && splash.Query.Text == "E" && splash.ActualHeight > 200 && splash.ActualHeight < 500,
                         "The localized splash lost its input, progress or bounded layout.");
                     Check(splash.StartupTitle.Text == L.T(K.StartupTitle) && (string)splash.CancelButton.Content == L.T(K.CommonCancel)
@@ -69,6 +72,15 @@ public partial class MainWindow
                     if (tag is "en" or "ja") SaveStartupScreenshot(splash, Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"startup-{tag}-{theme}.png"));
                     languageCases++;
                 }
+            var initialHeight = splash.ActualHeight;
+            splash.Width = 320;
+            splash.Stage.Text = string.Join(" ", Enumerable.Repeat("Fictional startup progress with wrapped text.", 8)); splash.UpdateLayout();
+            await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
+            Check(splash.ActualHeight > initialHeight, "The splash size-change case did not exercise SizeToContent.");
+            CheckSplashCenter(splash);
+            splash.Width = 440; splash.UpdateProgress(K.StartupReady, 1); splash.UpdateLayout();
+            await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
+            CheckSplashCenter(splash);
             fixture.Toggle(); Check(fixture._startupWindow == null && !fixture.IsVisible, "Toggling during startup did not cancel presentation.");
             fixture.Present();
             var cancel = fixture._startupWindow!.CancelButton; cancel.Focus();
@@ -105,11 +117,16 @@ public partial class MainWindow
             { Owner = this, Width = 1280, Height = 800, _startupComplete = false, Topmost = false };
             var foreign = new Window { Title = "Sample application", Width = 220, Height = 120, ShowInTaskbar = false };
             var settingsClosed = 0;
+            var expectUpdates = false; var updateChoiceShown = false;
             var closeSettings = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(10) };
             closeSettings.Tick += (_, _) =>
             {
                 foreach (var settings in Application.Current.Windows.OfType<SettingsWindow>().Where(w => w.IsVisible).ToArray())
-                { settings.DiscardAndClose(); settingsClosed++; }
+                {
+                    settings.UpdateLayout();
+                    if (expectUpdates) updateChoiceShown = VisualChildren<TextBox>(settings).Any(box => box.IsVisible && box.IsReadOnly && box.Text == "Fictional cold-start update notes.");
+                    settings.DiscardAndClose(); settingsClosed++;
+                }
             };
             closeSettings.Start();
             try
@@ -131,16 +148,28 @@ public partial class MainWindow
             { Owner = this, Width = 1280, Height = 800, _startupComplete = false, Topmost = false };
             try
             {
-                cold.PresentSettings();
+                expectUpdates = true;
+                cold.LastUpdateCheck = new(UpdateCheckStatus.Available, new("v9.0.0", ReleaseVersion.Parse("9.0.0")!, "Fictional cold-start update notes."));
+                cold.ReviewAvailableUpdate();
                 Check(cold._scriptWorkerPool != null && cold._startupWorkerWarmup != Task.CompletedTask && !cold.IsVisible,
                     "Foreground initialization did not warm isolated workers before revealing the main window.");
                 await cold._startupPresentation!;
                 Check(cold.IsVisible && cold.ScriptFrameCount == ScriptTilePackages.BundledIds.Count && cold._startupWindow == null && settingsClosed == 2 && !cold._startupSettings,
                     $"Parallel worker warmup did not produce all frames or open pending settings: visible={cold.IsVisible}, frames={cold.ScriptFrameCount}, settings={settingsClosed}, pending={cold._startupSettings}.");
+                Check(updateChoiceShown && cold.UpdatePreparation == PreparationState.Idle, "Cold preparation lost the update destination or started an unrequested download.");
             }
             finally { closeSettings.Stop(); cold.Exit(); fixture.Activate(); }
             var cacheChecks = VerifyIconCache(directory);
             return new(checks, languageCases, cacheChecks, fixture.StartupMetrics);
+
+            void CheckSplashCenter(StartupWindow window)
+            {
+                var area = System.Windows.Forms.Screen.FromPoint(fixture._startupPoint).WorkingArea;
+                Check(PlatformWindowRect(new System.Windows.Interop.WindowInteropHelper(window).Handle, out var bounds)
+                    && Math.Abs((bounds.Left + bounds.Right) / 2d - (area.Left + area.Width / 2d)) <= 1
+                    && Math.Abs((bounds.Top + bounds.Bottom) / 2d - (area.Top + area.Height / 2d)) <= 1,
+                    $"The splash is not centered in its monitor working area: bounds={bounds.Left},{bounds.Top},{bounds.Right},{bounds.Bottom}; area={area}.");
+            }
         }
         finally { fixture.Exit(); L.SetLanguage(language); ApplyAppearance(); Activate(); }
     }

@@ -998,12 +998,20 @@ public partial class MainWindow : Window
     private SettingsWindow? _activeSettings;
     private void OpenSettings(object sender, RoutedEventArgs e) => ShowSettings();
     /// <summary>Shows the settings dialog with close-on-deactivate suspended, then reapplies saved preferences.</summary>
-    public void ShowSettings()
+    public void ShowSettings() => ShowSettings(null);
+
+    private void ShowSettings(TextKey? section)
     {
+        if (_activeSettings != null)
+        {
+            _activeSettings.Activate();
+            if (section is { } selected) _activeSettings.SelectSection(L.T(selected));
+            return;
+        }
         WithDialog(() =>
         {
-            if (_activeSettings != null) { _activeSettings.Activate(); return; }
             _activeSettings = new SettingsWindow(this, _store) { Owner = _preview ? null : this };
+            if (section is { } selected) _activeSettings.SelectSection(L.T(selected));
             try { _activeSettings.ShowDialog(); } finally { _activeSettings = null; }
         });
         if (_exit) return;

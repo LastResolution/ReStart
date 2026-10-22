@@ -147,7 +147,7 @@ public partial class App : Application
             Visible = true
         };
         _tray.DoubleClick += (_, _) => Dispatcher.Invoke(() => _window!.Toggle());
-        _tray.BalloonTipClicked += (_, _) => Dispatcher.Invoke(() => { if (_window?.UpdatePreparation == ReStart.App.MainWindow.PreparationState.Ready) _window.RequestPreparedUpdate(); else if (_updateNotificationRelease is { } release) _window?.OpenUpdateRelease(release); });
+        _tray.BalloonTipClicked += (_, _) => Dispatcher.Invoke(() => { if (_window?.UpdatePreparation == ReStart.App.MainWindow.PreparationState.Ready) _window.RequestPreparedUpdate(); else if (_updateNotificationRelease != null) _window?.ReviewAvailableUpdate(); });
     }
 
     private void RefreshTrayLanguage()
