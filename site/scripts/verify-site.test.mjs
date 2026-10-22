@@ -32,6 +32,16 @@ test('public-site validation accepts the deployment and rejects broken discovery
     await t.test('incorrect breadcrumb parent', () => mutate(guide, html => html.replace('"item": "https://lastresolution.github.io/ReStart/guides/"', '"item": "https://lastresolution.github.io/ReStart/missing/"'), /Invalid breadcrumb trail/));
     await t.test('malformed JSON-LD', () => mutate(guide, html => html.replace('"@context": "https://schema.org",', '"@context": invalid,'), /JSON|Unexpected/));
     await t.test('incomplete sitemap', () => mutate('sitemap.xml', xml => xml.replace('  <url><loc>https://lastresolution.github.io/ReStart/guides/windows-11-live-tiles/</loc></url>\n', ''), /Sitemap entries/));
+    await t.test('undersized gallery image', async () => {
+      const filename = path.join(fixture, 'assets/tile-orbit.png');
+      const original = await readFile(filename);
+      try {
+        const undersized = Buffer.from(original);
+        undersized.writeUInt32BE(200, 16);
+        await writeFile(filename, undersized);
+        await assert.rejects(verifySite(fixture), /Low-resolution tile gallery image/);
+      } finally { await writeFile(filename, original); }
+    });
   } finally {
     // This exact directory was created by mkdtemp above and contains only this test's deployment copy.
     await rm(fixture, { recursive: true, force: true });

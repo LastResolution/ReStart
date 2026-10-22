@@ -12,6 +12,8 @@ python -m http.server 4173 --bind 127.0.0.1 --directory site/dist
 
 Open `http://127.0.0.1:4173/` for the landing page, `/developers/` for the developer guide or `/guides/` for the article index. All local links use relative paths, so the same files work under a project Pages prefix such as `/ReStart/`.
 
+To exercise the project prefix directly, run `python site/scripts/preview.py` instead, then open `http://127.0.0.1:4173/ReStart/`. This optional standard-library preview server also exposes isolated `/capture/orbit/`, `/capture/cpu/`, `/capture/memory/`, `/capture/calendar/`, `/capture/weather-scene/` and `/capture/canvas-garden/` pages for refreshing the gallery. Each renders the actual bundled HTML/CSS/JavaScript at 720×720 using its scale variable and fixed English sample context. Capture the top-left 720×720 region without resizing an old image; review it and replace only the matching PNG. These authoring fixtures are outside `dist`, make no provider requests and never read personal app settings or files.
+
 The site has no build step, third-party JavaScript, external fonts, analytics, contact forms or backend. Theme selection is kept in browser local storage; if storage is unavailable, switching still works for the current page. System mode follows the OS preference. Images and the silent product video are local assets.
 
 ## Motion and presentation
@@ -31,7 +33,7 @@ node --test site/scripts/verify-site.test.mjs
 
 Check all five pages at desktop, tablet and narrow mobile widths, with light/dark/system themes and reduced motion. Exercise the mobile menu, keyboard tabs, screenshot dialog, FAQ disclosures, video, article contents/related links and download/support links. Keep the nineteen web packages, Tile Studio controls and release availability synchronized with the app documentation.
 
-The verifier discovers deployed HTML recursively. It checks every page against the sitemap, canonical and social URLs, unique titles/descriptions, image alternatives/dimensions, project-relative links and fragment targets. Guides also require matching Article/CollectionPage and BreadcrumbList structured data, visible dates and author attribution. Rejection fixtures cover broken metadata, JSON-LD, sitemap entries, images and links; they use a disposable temporary deployment copy. Both checks run on Pages pull requests and before deployment.
+The verifier discovers deployed HTML recursively. It checks every page against the sitemap, canonical and social URLs, unique titles/descriptions, image alternatives/dimensions, project-relative links and fragment targets. Guides also require matching Article/CollectionPage and BreadcrumbList structured data, visible dates and author attribution. Gallery images must be at least 720×720, with a combined budget below 1 MB. Rejection fixtures cover broken metadata, JSON-LD, sitemap entries, images and links; they use a disposable temporary deployment copy. Both checks run on Pages pull requests and before deployment.
 
 ## Writing Guides
 

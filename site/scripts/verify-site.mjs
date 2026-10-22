@@ -146,6 +146,14 @@ export async function verifySite(directory = defaultRoot) {
       require(!/(?:ghp_|github_pat_)[a-z0-9_]{15,}/i.test(text), `Credential-like content in ${name}`);
     }
   }
+  let galleryBytes = 0;
+  for (const name of ['orbit', 'cpu', 'memory', 'calendar', 'weather-scene', 'canvas-garden']) {
+    const png = await readFile(path.join(root, `assets/tile-${name}.png`));
+    require(png.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])) &&
+      png.readUInt32BE(16) >= 720 && png.readUInt32BE(20) >= 720, `Low-resolution tile gallery image: ${name}`);
+    galleryBytes += png.length;
+  }
+  require(galleryBytes < 1_000_000, 'Tile gallery exceeds the combined 1 MB image budget.');
   require((await stat(path.join(root, 'assets/social-preview.jpg'))).size < 1_000_000, 'Social preview exceeds 1 MB.');
   return { pages: pages.length, checks };
 }
