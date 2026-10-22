@@ -106,6 +106,10 @@ Use `overflow: auto` or `overflow: scroll` on a bounded element for readable lon
 
 Closed tile folders render up to four live miniatures with uniform small-size preview geometry. Opening the folder restores each child's saved size and interactive surface. Changing between the two presentations retains successful JSON state and pending local clicks; it does not change the stored layout.
 
+### Display changes
+
+When Windows changes the display configuration or the launcher moves to a different DPI, ReStart rebuilds browser presentation surfaces after a short coalescing interval. This prevents a stale capture surface from requiring a manual Reload. Host-managed JSON state, queued clicks, data connections, network permission and layout are retained. Store meaningful state through the tile state API; browser-only globals are recreated with the document. Ordinary theme/color changes keep the browser instance, and display recovery waits for active placement or inline-name editing to finish.
+
 ### Browser boundary and resource limits
 
 Each installed tile gets its own generated HTTPS origin. The host serves only its four package files, explicit `assets/` resources and an optional slideshow image from memory. It does not map the installation directory into the browser: host bindings and other local files are not web resources. Local assets are limited to 128 files, 4 MiB each and 16 MiB total; reparse entries are skipped. HTML/CSS are limited to 256 KiB each, manifest 16 KiB and JavaScript 64 KiB.

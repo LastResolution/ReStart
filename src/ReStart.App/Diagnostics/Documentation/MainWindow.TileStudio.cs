@@ -59,6 +59,7 @@ public partial class MainWindow
         checks += await VerifyWebSamplesAsync(directory);
         checks += await VerifyWebScrollingAsync();
         checks += await VerifyFolderPreviewsAsync(directory);
+        checks += await VerifyWebTileRecoveryAsync(directory);
         checks += await VerifyWebLayoutMatrixAsync(directory);
         _documentationHtmlRendering = true; _startupPreparing = true; Root.Width = 1920; Root.Height = 900;
         _documentationNow = new DateTimeOffset(2026, 10, 18, 9, 41, 0, TimeSpan.Zero);

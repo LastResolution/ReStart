@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Automation.Peers;
 using System.Windows.Automation.Provider;
 using System.Windows.Controls;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 using ReStart.App.Services;
@@ -13,13 +14,16 @@ namespace ReStart.App;
 
 public partial class MainWindow
 {
-    /// <summary>Checks native monitor placement and accessibility providers with a hidden host and fictional catalog.</summary>
+    /// <summary>Checks native monitor placement and accessibility providers with an isolated fictional catalog.</summary>
     /// <param name="directory">Local output directory for a sanitized JSON report; no monitor names, account data or app catalog are recorded.</param>
+    /// <param name="visible">Whether to show the isolated fixture to exercise a real WPF window; false preserves foreground focus.</param>
+    /// <param name="interactive">Whether to leave the fictional window open for up to three minutes for manual keyboard/screen-reader checks; requires <paramref name="visible"/>.</param>
     /// <returns>A task completing after every connected monitor and eight language/two theme provider combinations have been checked.</returns>
     /// <remarks>Does not change display settings, synthesize physical touch or verify Narrator's spoken output.</remarks>
-    internal async Task VerifyPlatformAsync(string directory)
+    internal async Task VerifyPlatformAsync(string directory, bool visible = false, bool interactive = false)
     {
         if (!_preview) throw new InvalidOperationException("Platform verification requires preview mode.");
+        if (interactive && !visible) throw new ArgumentException("Interactive verification requires a visible window.", nameof(interactive));
         var foreground = Native.GetForegroundWindow();
         var checks = 0;
         void Check(bool value, string message) { Require(value, message); checks++; }
@@ -33,21 +37,37 @@ public partial class MainWindow
         ApplyAppearance(); RenderGroups(); RenderApps();
         var screens = System.Windows.Forms.Screen.AllScreens;
         var monitors = new List<object>();
-        Content = null;
-        using var host = HiddenRenderHost(Root, 800, 600);
+        System.Windows.Interop.HwndSource? host = null;
+        nint handle;
+        if (visible)
+        {
+            _initialization = Task.CompletedTask;
+            Topmost = false;
+            ShowInTaskbar = true;
+            Document.Preferences.CloseOnDeactivate = false;
+            Show();
+            handle = new WindowInteropHelper(this).Handle;
+        }
+        else
+        {
+            Content = null;
+            host = HiddenRenderHost(Root, 800, 600);
+            handle = host.Handle;
+        }
         try
         {
             // Reuse one HWND across monitors so Windows sends real DPI changes.
             foreach (var screen in screens.Concat(screens.Reverse()))
             {
                 var area = screen.WorkingArea;
-                Check(Native.SetWindowPos(host.Handle, 0, area.X, area.Y, area.Width, area.Height, 0x0014), "Native monitor placement failed.");
+                Check(MonitorPlacement.FitWorkingArea(handle, 0, area, 0x0014), "Native monitor placement failed.");
                 await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ContextIdle);
-                var dpi = PlatformWindowDpi(host.Handle);
+                var dpi = PlatformWindowDpi(handle);
                 var scale = VisualTreeHelper.GetDpi(Root);
                 Check(dpi >= 96 && Math.Abs(scale.PixelsPerInchX - dpi) < .1 && Math.Abs(scale.PixelsPerInchY - dpi) < .1, "WPF and native window DPI disagree.");
-                Check(PlatformWindowRect(host.Handle, out var actual) && actual.Left == area.Left && actual.Top == area.Top
-                    && actual.Right == area.Right && actual.Bottom == area.Bottom, "The native host does not match the monitor working area.");
+                Check(PlatformWindowRect(handle, out var actual) && actual.Left == area.Left && actual.Top == area.Top
+                    && actual.Right == area.Right && actual.Bottom == area.Bottom,
+                    $"Native host bounds ({actual.Left},{actual.Top})-({actual.Right},{actual.Bottom}) do not match working area ({area.Left},{area.Top})-({area.Right},{area.Bottom}) at {dpi} DPI.");
                 Root.Width = area.Width / scale.DpiScaleX; Root.Height = area.Height / scale.DpiScaleY;
                 Root.Measure(new(Root.Width, Root.Height)); Root.Arrange(new Rect(0, 0, Root.Width, Root.Height)); Root.UpdateLayout(); FitPanels(); Root.UpdateLayout();
                 Check(Math.Abs(Root.ActualWidth * scale.DpiScaleX - area.Width) < 1 && Math.Abs(Root.ActualHeight * scale.DpiScaleY - area.Height) < 1,
@@ -86,13 +106,14 @@ public partial class MainWindow
                         && UIElementAutomationPeer.CreatePeerForElement(selectedRow)?.GetName() == "Alpha Editor", "The selected search result is not named in UI Automation.");
                     cases++;
                 }
-            Check(!IsVisible && Native.GetForegroundWindow() == foreground, "Platform verification showed a window or changed foreground focus.");
+            Check(visible || !IsVisible && Native.GetForegroundWindow() == foreground, "Platform verification showed a window or changed foreground focus.");
             File.WriteAllText(Path.Combine(directory, "verification.json"), JsonSerializer.Serialize(new
             {
                 success = true,
                 checks,
                 automationCases = cases,
                 monitorCount = screens.Length,
+                visibleWindow = visible,
                 monitorPasses = monitors,
                 maximumTouchContacts = PlatformMetric(95),
                 digitizerFlags = PlatformMetric(94),
@@ -100,8 +121,29 @@ public partial class MainWindow
                 narratorSpeechVerified = false,
                 physicalTouchVerified = false
             }, new JsonSerializerOptions { WriteIndented = true }));
+            if (interactive)
+            {
+                MonitorPlacement.Release(handle);
+                Document.Preferences.Language = "en"; Document.Preferences.Theme = ReStart.Core.ThemeMode.Dark;
+                ApplyAppearance(); RenderGroups(); RenderApps(); ResetToPinnedView();
+                SetStatus("");
+                Root.ClearValue(WidthProperty); Root.ClearValue(HeightProperty);
+                Title = "ReStart platform verification";
+                WindowStyle = WindowStyle.SingleBorderWindow; ResizeMode = ResizeMode.CanResize;
+                Left = 100; Top = 100; Width = 1000; Height = 760;
+                var hidden = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                void OnVisibilityChanged(object sender, DependencyPropertyChangedEventArgs args) { if (!IsVisible) hidden.TrySetResult(); }
+                IsVisibleChanged += OnVisibilityChanged;
+                try { await Task.WhenAny(hidden.Task, Task.Delay(TimeSpan.FromMinutes(3))); }
+                finally { IsVisibleChanged -= OnVisibilityChanged; }
+            }
         }
-        finally { host.RootVisual = null; Content = Root; }
+        finally
+        {
+            if (host != null) { host.RootVisual = null; host.Dispose(); Content = Root; }
+            Root.ClearValue(WidthProperty); Root.ClearValue(HeightProperty);
+            if (visible) Hide();
+        }
     }
 
     [DllImport("user32.dll", EntryPoint = "GetDpiForWindow")] private static extern uint PlatformWindowDpi(nint window);

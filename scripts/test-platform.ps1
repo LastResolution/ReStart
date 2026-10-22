@@ -1,12 +1,14 @@
 [CmdletBinding()]
-param([Parameter(Mandatory)][string]$Executable)
+param([Parameter(Mandatory)][string]$Executable, [switch]$Visible)
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $source = (Resolve-Path -LiteralPath $Executable).Path
 $directory = Join-Path $repoRoot ('artifacts/platform/' + [Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $directory -Force | Out-Null
 $errors = Join-Path $directory 'verify.log'
-$process = Start-Process -FilePath $source -ArgumentList @('--verify-platform', ('"' + $directory + '"')) -WindowStyle Hidden -PassThru -RedirectStandardError $errors
+$arguments = @('--verify-platform', ('"' + $directory + '"'))
+if ($Visible) { $arguments += '--visible' }
+$process = Start-Process -FilePath $source -ArgumentList $arguments -WindowStyle Hidden -PassThru -RedirectStandardError $errors
 try {
     if (-not $process.WaitForExit(60000)) { $process.Kill(); throw 'Platform verification timed out.' }
     if ($process.ExitCode -ne 0) { Get-Content -LiteralPath $errors | Write-Output; throw 'Platform verification failed.' }
