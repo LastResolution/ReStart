@@ -50,6 +50,17 @@ function Find-RuntimeNotice([string]$packageId, [string]$name) {
 Copy-Item -LiteralPath (Find-RuntimeNotice "Microsoft.NETCore.App.Runtime.$Runtime" 'LICENSE.TXT') -Destination (Join-Path $stage 'third-party/DotNet-Runtime-LICENSE.txt')
 Copy-Item -LiteralPath (Find-RuntimeNotice "Microsoft.NETCore.App.Runtime.$Runtime" 'THIRD-PARTY-NOTICES.TXT') -Destination (Join-Path $stage 'third-party/DotNet-Runtime-NOTICES.txt')
 Copy-Item -LiteralPath (Find-RuntimeNotice "Microsoft.WindowsDesktop.App.Runtime.$Runtime" 'LICENSE') -Destination (Join-Path $stage 'third-party/DotNet-Desktop-LICENSE.txt')
+# Only the explicit distribution stage is inventoried; no installation or local data is scanned.
+$inventory = @(Get-ChildItem -LiteralPath $stage -Recurse -File | Sort-Object FullName | ForEach-Object {
+    if ($_.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Linked distribution files are not allowed.' }
+    [ordered]@{
+        path = [IO.Path]::GetRelativePath($stage, $_.FullName).Replace('\', '/')
+        size = $_.Length
+        sha256 = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+    }
+})
+$manifest = [ordered]@{ schema = 1; version = $version; runtime = $Runtime; files = $inventory } | ConvertTo-Json -Depth 5
+[IO.File]::WriteAllText((Join-Path $stage 'ReStart-package.json'), $manifest, [Text.UTF8Encoding]::new($false))
 Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $zipPath -Force
 $hash = (Get-FileHash -LiteralPath $zipPath -Algorithm SHA256).Hash.ToLowerInvariant()
 [IO.File]::WriteAllText("$zipPath.sha256", "$hash  $([IO.Path]::GetFileName($zipPath))`n", [Text.UTF8Encoding]::new($false))

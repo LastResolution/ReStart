@@ -8,7 +8,7 @@ namespace ReStart.App;
 
 public partial class MainWindow
 {
-    private readonly HttpClient _releaseHttp = new(new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(15) };
+    private readonly HttpClient _releaseHttp = new(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false, UseDefaultCredentials = false }) { Timeout = TimeSpan.FromSeconds(15) };
     private readonly CancellationTokenSource _updateCancellation = new();
     private Task<UpdateCheckResult>? _updateTask;
     internal UpdateCheckResult? LastUpdateCheck { get; private set; }
@@ -65,6 +65,8 @@ public partial class MainWindow
         catch (OperationCanceledException) { return new(UpdateCheckStatus.NetworkError); }
         LastUpdateCheck = result;
         LastUpdateCheckAt = DateTimeOffset.Now;
+        if (result.Status is UpdateCheckStatus.NetworkError or UpdateCheckStatus.InvalidResponse or UpdateCheckStatus.ServiceUnavailable or UpdateCheckStatus.RateLimited)
+            PortableUpdates.Record(DiagnosticCode.UpdateCheckFailed);
         if (result.Status == UpdateCheckStatus.Available && result.Release != null && _store.RecoveryMessage == null)
             SetStatus(L.F(K.UpdateAvailable, result.Release.Version));
         UpdateCheckChanged?.Invoke();

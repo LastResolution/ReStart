@@ -24,6 +24,7 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        if (await HandleUpdateEntryAsync(e.Args)) return;
         if (e.Args.Contains("--render-docs") || e.Args.Contains("--render-promo") || e.Args.Contains("--render-studio") || e.Args.Contains("--verify-platform")) { await RenderDocumentationAsync(e.Args); return; }
         var preview = e.Args.Contains("--preview") || e.Args.Contains("--smoke-test");
         var smoke = e.Args.Contains("--smoke-test");
@@ -64,6 +65,7 @@ public partial class App : Application
         var data = preview ? Path.Combine(AppContext.BaseDirectory, "preview-data") : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ReStart");
         var store = new LayoutStore(Path.Combine(data, "layout.json"), AppBuildInfo.Version);
         _window = new MainWindow(store, preview);
+        _window.DeferLayoutSaves = e.Args.Contains("--complete-update");
         MainWindow = _window;
         _pinRequests = new(channelIdentity, path => Dispatcher.InvokeAsync(() => _window.PinPathAsync(path)).Task.Unwrap());
         _wait = ThreadPool.RegisterWaitForSingleObject(_instance.Activation, (_, _) => Dispatcher.BeginInvoke(() => _window?.Present()), null, Timeout.Infinite, false);
@@ -100,12 +102,23 @@ public partial class App : Application
             _updateNotificationRelease = release;
             _tray.ShowBalloonTip(10000, "ReStart", L.F(K.UpdateAvailable, release.Version), System.Windows.Forms.ToolTipIcon.Info);
         };
+        if (e.Args.Contains("--complete-update"))
+        {
+            if (!await FinishUpdatedStartupAsync(e.Args, _window)) return;
+        }
+        if (e.Args.Contains("--update-result"))
+        {
+            var id = e.Args[Array.IndexOf(e.Args, "--update-result") + 1];
+            PortableUpdates.Record(PortableUpdates.Outcome(id) == "rolled-back" ? DiagnosticCode.UpdateRolledBack : DiagnosticCode.UpdatePreparationFailed);
+            _ = ShowRestoredUpdateAsync(_window);
+        }
         if (pinPath != null) await _window.PinPathAsync(pinPath);
         else if (e.Args.Contains("--background")) _ = _window.InitializeAsync();
         else _window.Present();
         DispatcherUnhandledException += (_, args) =>
         {
             args.Handled = true;
+            PortableUpdates.Record(DiagnosticCode.UnhandledError);
             var directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ReStart");
             try { Directory.CreateDirectory(directory); File.AppendAllText(Path.Combine(directory, "error.log"), $"{DateTimeOffset.Now:O} {args.Exception}\n"); } catch (IOException) { }
             MessageBox.Show(L.T(K.ErrorUnhandled), "ReStart", MessageBoxButton.OK, MessageBoxImage.Error);

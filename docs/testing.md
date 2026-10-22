@@ -88,6 +88,12 @@ The Studio fixture includes 55 display-recovery assertions against two isolated 
 
 Run just this regression with `./scripts/test-studio.ps1 -Executable <built-executable> -RecoveryOnly`. The full Studio run includes it automatically. Removing browser regeneration makes the focused regression fail at the stale-presentation assertion.
 
+## Portable updater and diagnostic reports
+
+Core tests use generated archives and temporary distributions for checksums, malformed manifests, escaping/ambiguous paths, links, duplicate names, bounded reads/redirects, version/architecture selection, file collisions, rollback, corrupt backups and repeated recovery. Diagnostic tests inject private sentinel strings and invalid enum values, assert the exact field whitelist and bound recent error categories.
+
+`./scripts/test-update-installation.ps1 -Executable <extracted-portable-executable>` runs four isolated process scenarios: successful handoff/acknowledgment, failed candidate startup, a locked original file, and recovery of an interrupted transaction. It uses copied binaries, fictional distribution files and sentinels under `artifacts/update-installation`, without hooks, tray, ordinary settings, real app lists or external downloads. Both CI and release packaging run it for x64; ARM64 packages are built but cannot be executed by the x64 runner. `test-release-info.ps1` also checks the diagnostic preview/copy action in all eight languages and both themes using an injected clipboard sink, preserving the user's real clipboard.
+
 ## Manual coverage still required
 
 | Area | Check |

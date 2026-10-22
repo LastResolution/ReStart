@@ -64,7 +64,7 @@ La roue dentée permet de régler les thèmes, le lancement à l’ouverture de 
 | Vignettes dynamiques | 19 exemples JavaScript, quatre tailles adaptatives, actions locales au clic, mises à jour activables, configuration des données, création d’exemples, import et bibliothèque surveillée automatiquement |
 | API de vignette | Heure du PC, langue/taille, état conservé, CPU/mémoire/réseau/batterie/stockage, photos sélectionnées, données JSON/Web API/RSS/Atom/fichiers mises en cache et intégration locale |
 | Langues | Anglais, japonais, allemand, français, espagnol, coréen, chinois simplifié et traditionnel, y compris les vignettes fournies |
-| Données et mises à jour | Paramètres locaux, import/export/réinitialisation, sauvegardes et migration, historique d’applications effaçable, version/build/licences, vérification sans clé API et installation manuelle |
+| Données et mises à jour | Paramètres locaux, import/export/réinitialisation, sauvegardes et migration, historique d’applications effaçable, version/build/licences, vérification sans clé API, mises à jour portables vérifiées avec restauration et rapports de diagnostic |
 | Distribution | Paquets portables Windows 10/11 x64 et ARM64 avec runtime et notices ; intégration réversible sans modifier Explorer |
 
 [Options et valeurs par défaut (anglais)](docs/start-behavior.md) · [Compatibilité (anglais)](docs/fidelity.md)
@@ -122,7 +122,7 @@ Les raccourcis Windows sont transmis au système. L’historique conserve jusqu�
 
 Paramètres : `%LOCALAPPDATA%\ReStart\layout.json`. L’activité facultative est séparée dans `activity.json` et peut être effacée. Les migrations gardent des sauvegardes ; [détails (anglais)](docs/migration.md). About affiche version, build et licences.
 
-Les mises à jour consultent les GitHub Releases publiques sans clé API. Quittez ReStart et remplacez manuellement toute l’installation extraite. Si son emplacement change, réenregistrez le démarrage et l’intégration Explorer. Aucune publicité ni analyse d’usage ; listes d’applications, dispositions et choix de photos ne sont pas téléversés. Les fournisseurs de données configurés reçoivent leurs requêtes. [Sécurité (anglais)](SECURITY.md)
+Les mises à jour consultent les GitHub Releases publiques sans clé API. Dans Paramètres → Mises à jour, choisissez **Télécharger la mise à jour**, puis **Redémarrer et mettre à jour**. Les paquets portables complets et non modifiés, dans un dossier accessible en écriture, permettent une mise à jour vérifiée avec restauration en cas d’échec de l’installation ou du démarrage. Les anciens paquets et versions de développement restent remplaçables manuellement. À propos → Informations de diagnostic permet de vérifier et copier un rapport sans chemins, listes d’applications, données de tuiles, identifiants ni journaux bruts. Rien n’est envoyé automatiquement. [Mises à jour et diagnostic (anglais)](docs/updates.md). Si son emplacement change, réenregistrez le démarrage et l’intégration Explorer. Aucune publicité ni analyse d’usage ; listes d’applications, dispositions et choix de photos ne sont pas téléversés. Les fournisseurs de données configurés reçoivent leurs requêtes. [Sécurité (anglais)](SECURITY.md)
 
 Pour désinstaller : désactivez le lancement à la connexion et l’intégration Explorer, quittez via la zone de notification et supprimez le dossier d’installation. Supprimez les données locales uniquement pour effacer aussi paramètres et vignettes personnelles.
 

@@ -30,6 +30,8 @@ Download the actual assets and verify SHA-256, PE architecture, product version/
 
 The clean portable CI job and Release workflow extract the x64 ZIP into a fresh directory, then run the smoke, duplicate-launch and bundled-tile checks against that extracted executable before publication. They do not rely on loose build/publish files that could conceal a missing package dependency. Native checks run on the dedicated Windows runner.
 
-Packages are unsigned. Keep published tags immutable. Exit before replacing the complete portable installation. Settings live separately and retain upgrade backups; refresh startup/Explorer registration if the executable moved. In-app update checks use public releases without an API key; installation is manual.
+Packages are unsigned. Keep published tags immutable. The explicit staging inventory produces `ReStart-package.json` with the package version, architecture and every distribution file's SHA-256/size. The manifest excludes itself. Never inventory a developer installation or a user data folder. Portable verification must include `test-update-installation.ps1` before publication.
+
+Exit before manually replacing the complete portable installation. Settings live separately and retain upgrade backups; refresh startup/Explorer registration if the executable moved. In-app public checks need no API key; complete unmodified packages in writable folders also support explicit verified download/restart with rollback. See [updates](updates.md).
 
 After publication, run `./scripts/configure-public-security.ps1` and inspect the resulting CodeQL run and alerts. Confirm private vulnerability reporting, Dependabot alerts/security updates, secret scanning and push protection are enabled. Configuration alone does not establish a successful scan.

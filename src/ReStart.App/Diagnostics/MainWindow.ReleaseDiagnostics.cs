@@ -81,11 +81,47 @@ public partial class MainWindow
                     {
                         settings.Show(); settings.SelectSection(L.T(K.SettingsAbout)); settings.UpdateLayout();
                         Require(VisualChildren<TextBlock>(settings).Any(t => t.Text.Contains(AppBuildInfo.Version, StringComparison.Ordinal)), "About does not display the current app version.");
+                        string? copied = null;
+                        var clipboardBusy = false;
+                        var diagnostics = new DiagnosticsWindow(settings, fixture, text =>
+                        {
+                            if (clipboardBusy) throw new System.Runtime.InteropServices.ExternalException();
+                            copied = text;
+                        });
+                        try
+                        {
+                            diagnostics.Show(); diagnostics.UpdateLayout();
+                            Require(diagnostics.Report.IsReadOnly && diagnostics.Report.Text.Contains("reportVersion", StringComparison.Ordinal), "The diagnostic preview is missing or editable.");
+                            diagnostics.Copy.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                            Require(copied == diagnostics.Report.Text && !copied.Contains("Fixture", StringComparison.Ordinal)
+                                && !copied.Contains(directory, StringComparison.OrdinalIgnoreCase), "Copy did not match the preview or included fixture names/paths.");
+                            clipboardBusy = true; diagnostics.Width = 440;
+                            diagnostics.Copy.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); diagnostics.UpdateLayout();
+                            var feedback = VisualChildren<TextBlock>(diagnostics).Single(t => t.Text == L.T(K.DiagnosticsClipboardBusy));
+                            Require(feedback.ActualHeight > 0 && diagnostics.Copy.TranslatePoint(new(), diagnostics).X + diagnostics.Copy.ActualWidth <= diagnostics.ActualWidth,
+                                "Clipboard-busy feedback pushed the copy action outside a narrow dialog.");
+                            diagnostics.Width = 650; diagnostics.UpdateLayout();
+                            if (language is "en" or "ja") SaveFixtureElement(diagnostics, Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"diagnostics-{language}-{theme}.png"));
+                        }
+                        finally { diagnostics.Close(); }
                         SaveFixtureElement(settings, Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"about-{language}-{theme}.png"));
                         settings.SelectSection(L.T(K.SettingsUpdates)); settings.UpdateLayout();
                         var updateButton = VisualChildren<Button>(settings).Single(b => b.Content is string label && label == L.T(K.UpdateCheckNow));
                         Require(!updateButton.IsEnabled && !VisualChildren<PasswordBox>(settings).Any(),
                             "Preview can make network requests or the retired credential input is still present.");
+                        Require(!VisualChildren<Button>(settings).Single(b => b.Content is string label && label == L.T(K.UpdateDownload)).IsEnabled,
+                            "Preview enabled update package downloads.");
+                        foreach (var state in Enum.GetValues<PreparationState>())
+                        {
+                            fixture.PreparedUpdate = new("fictional", directory, "2.0.0"); fixture.UpdatePreparation = state; fixture.UpdateBytes = 5 * 1024 * 1024;
+                            fixture.UpdateCheckChanged?.Invoke(); settings.UpdateLayout();
+                            var restart = VisualChildren<Button>(settings).Single(b => b.Content is string label && label == L.T(K.UpdateRestart));
+                            Require((restart.Visibility == Visibility.Visible) == (state == PreparationState.Ready) && !restart.IsEnabled,
+                                "A preparation state exposed the wrong restart action or allowed preview installation.");
+                            if (state == PreparationState.Ready && language is "en" or "ja")
+                                SaveFixtureElement(settings, Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"update-ready-{language}-{theme}.png"));
+                        }
+                        fixture.UpdatePreparation = PreparationState.Idle; fixture.PreparedUpdate = null; fixture.UpdateCheckChanged?.Invoke();
                         SaveFixtureElement(settings, Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"updates-{language}-{theme}.png"));
                         settings.SelectSection(L.T(K.SettingsLayout)); settings.UpdateLayout();
                         SaveFixtureElement(settings, Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"migration-{language}-{theme}.png"));
@@ -99,6 +135,10 @@ public partial class MainWindow
                     finally { settings.Close(); }
                 }
             var wallpaperChecks = VerifyWallpaperRefresh(fixture, directory);
+            var beforeDeferredSave = File.ReadAllText(path); var savedName = fixture.Document.Groups[0].Name;
+            fixture.DeferLayoutSaves = true; fixture.Document.Groups[0].Name = "Deferred update sentinel"; fixture.SaveLayout();
+            Require(File.ReadAllText(path) == beforeDeferredSave, "An unacknowledged replacement wrote newer settings.");
+            fixture.Document.Groups[0].Name = savedName; fixture.DeferLayoutSaves = false;
             var licenses = AppBuildInfo.Licenses();
             Require(licenses.TryGetValue("ReStart (MIT)", out var own) && own.Contains("MIT License", StringComparison.Ordinal) && licenses.Count >= 4,
                 "The embedded app and dependency license texts are missing.");

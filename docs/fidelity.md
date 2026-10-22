@@ -37,7 +37,7 @@ The mixed-DPI runs exposed WPF's suggested DPI-scaled window size overriding phy
 | Live tiles | Local clock/calendar, native JS compatibility and HTML/CSS/browser JavaScript packages, including opt-in cached Web API/feed/file inputs; these are ReStart extensions, without legacy UWP notifications or background delivery |
 | App history | Optional Recently added and Most used, based on local discovery dates and opt-in successful ReStart launches. Existing apps are baselined; history can be cleared. Windows usage history is not imported |
 | Data | Schema migration with original-file backups and protection against newer producers; no direct Windows layout import |
-| Updates | Public GitHub Releases without an API key; manual installation |
+| Updates | Public GitHub Releases without an API key; explicit verified portable updates with startup acknowledgment and rollback; manual replacement remains available |
 
 The [test guide](testing.md) describes isolated native fixtures and manual checks. Power, elevation and uninstall actions are not executed by routine automated checks.
 
