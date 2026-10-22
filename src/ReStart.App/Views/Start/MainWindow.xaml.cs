@@ -131,6 +131,8 @@ public partial class MainWindow : Window
     /// <summary>Initializes layout and catalog once; background startup may call this before showing a window.</summary>
     /// <returns>The shared initialization task, completing after catalog, initial views and icon loading finish; foreground presentation performs additional tile preparation.</returns>
     public Task InitializeAsync() => _initialization ??= InitializeCoreAsync();
+    internal bool DeferLayoutSaves { get; set; }
+    internal bool InitializedSuccessfully { get; private set; }
 
     private async Task InitializeCoreAsync()
     {
@@ -192,6 +194,7 @@ public partial class MainWindow : Window
             if (!_preview && !_store.IsReadOnly) SaveLayout();
             if (!_preview && Document.Preferences.CheckUpdatesOnStartup) _ = CheckStartupUpdatesAsync();
             MarkStartup("complete");
+            InitializedSuccessfully = true;
         }
         catch (Exception ex)
         {
@@ -364,6 +367,7 @@ public partial class MainWindow : Window
 
     private bool TrySaveLayout(bool recordHistory = true)
     {
+        if (DeferLayoutSaves) return false;
         try
         {
             if (_historyReady && recordHistory)

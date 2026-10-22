@@ -81,11 +81,25 @@ public partial class MainWindow
                     {
                         settings.Show(); settings.SelectSection(L.T(K.SettingsAbout)); settings.UpdateLayout();
                         Require(VisualChildren<TextBlock>(settings).Any(t => t.Text.Contains(AppBuildInfo.Version, StringComparison.Ordinal)), "About does not display the current app version.");
+                        string? copied = null;
+                        var diagnostics = new DiagnosticsWindow(settings, fixture, text => copied = text);
+                        try
+                        {
+                            diagnostics.Show(); diagnostics.UpdateLayout();
+                            Require(diagnostics.Report.IsReadOnly && diagnostics.Report.Text.Contains("reportVersion", StringComparison.Ordinal), "The diagnostic preview is missing or editable.");
+                            diagnostics.Copy.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                            Require(copied == diagnostics.Report.Text && !copied.Contains("Fixture", StringComparison.Ordinal)
+                                && !copied.Contains(directory, StringComparison.OrdinalIgnoreCase), "Copy did not match the preview or included fixture names/paths.");
+                            if (language is "en" or "ja") SaveFixtureElement(diagnostics, Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"diagnostics-{language}-{theme}.png"));
+                        }
+                        finally { diagnostics.Close(); }
                         SaveFixtureElement(settings, Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"about-{language}-{theme}.png"));
                         settings.SelectSection(L.T(K.SettingsUpdates)); settings.UpdateLayout();
                         var updateButton = VisualChildren<Button>(settings).Single(b => b.Content is string label && label == L.T(K.UpdateCheckNow));
                         Require(!updateButton.IsEnabled && !VisualChildren<PasswordBox>(settings).Any(),
                             "Preview can make network requests or the retired credential input is still present.");
+                        Require(!VisualChildren<Button>(settings).Single(b => b.Content is string label && label == L.T(K.UpdateDownload)).IsEnabled,
+                            "Preview enabled update package downloads.");
                         SaveFixtureElement(settings, Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"updates-{language}-{theme}.png"));
                         settings.SelectSection(L.T(K.SettingsLayout)); settings.UpdateLayout();
                         SaveFixtureElement(settings, Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"migration-{language}-{theme}.png"));

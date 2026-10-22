@@ -65,6 +65,8 @@ public partial class MainWindow
         catch (OperationCanceledException) { return new(UpdateCheckStatus.NetworkError); }
         LastUpdateCheck = result;
         LastUpdateCheckAt = DateTimeOffset.Now;
+        if (result.Status is UpdateCheckStatus.NetworkError or UpdateCheckStatus.InvalidResponse or UpdateCheckStatus.ServiceUnavailable or UpdateCheckStatus.RateLimited)
+            PortableUpdates.Record(DiagnosticCode.UpdateCheckFailed);
         if (result.Status == UpdateCheckStatus.Available && result.Release != null && _store.RecoveryMessage == null)
             SetStatus(L.F(K.UpdateAvailable, result.Release.Version));
         UpdateCheckChanged?.Invoke();

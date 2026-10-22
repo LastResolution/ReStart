@@ -39,7 +39,7 @@ public static class UpdatePackage
         PackageManifest manifest;
         try { manifest = JsonSerializer.Deserialize<PackageManifest>(File.ReadAllBytes(path), Json) ?? throw new InvalidDataException("Missing manifest."); }
         catch (JsonException) { throw new InvalidDataException("Invalid manifest."); }
-        if (manifest.Schema != 1 || ReleaseVersion.Parse(manifest.Version)?.ToString() != manifest.Version
+        if (manifest.Schema != 1 || manifest.Version == null || ReleaseVersion.Parse(manifest.Version)?.ToString() != manifest.Version
             || manifest.Runtime is not ("win-x64" or "win-arm64") || manifest.Files is not { Length: > 0 and <= 500 })
             throw new InvalidDataException("Unsupported manifest.");
         var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -85,7 +85,18 @@ public static class UpdatePackage
             {
                 var path = SafePath(destination, entry.FullName.TrimEnd('/'));
                 if (entry.FullName.EndsWith('/')) Directory.CreateDirectory(path);
-                else { Directory.CreateDirectory(Path.GetDirectoryName(path)!); entry.ExtractToFile(path, overwrite: false); }
+                else
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                    using var input = entry.Open(); using var output = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+                    var buffer = new byte[81920]; long written = 0; int count;
+                    while ((count = input.Read(buffer)) > 0)
+                    {
+                        if ((written += count) > entry.Length) throw new InvalidDataException("Archive entry exceeds its declared size.");
+                        output.Write(buffer, 0, count);
+                    }
+                    if (written != entry.Length) throw new InvalidDataException("Truncated archive entry.");
+                }
             }
             var manifest = ReadManifest(destination);
             if (manifest.Version != version || manifest.Runtime != runtime) throw new InvalidDataException("Package identity mismatch.");
@@ -115,7 +126,7 @@ public static class UpdatePackage
     }
 
     internal static bool ValidHash(string? hash) => hash is { Length: 64 } && hash.All(char.IsAsciiHexDigit);
-    internal static bool ValidRelativePath(string? path) => path is { Length: > 0 and <= 200 } && path != ManifestName
+    internal static bool ValidRelativePath(string? path) => path is { Length: > 0 and <= 200 } && !path.Equals(ManifestName, StringComparison.OrdinalIgnoreCase)
         && path.Split('/').All(p => p.Length > 0 && p is not ("." or "..") && !p.EndsWith('.') && !p.EndsWith(' ')
             && Regex.IsMatch(p, @"\A[A-Za-z0-9_][A-Za-z0-9_. ()-]*\z", RegexOptions.CultureInvariant)
             && !Regex.IsMatch(p, @"\A(CON|PRN|AUX|NUL|COM[0-9]|LPT[0-9])(?:\.|\z)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))

@@ -88,7 +88,16 @@ public sealed class UpdateTransaction(string installation, string workspace)
         var previous = journal.Previous.Files.Select(f => f.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
         foreach (var file in journal.Next.Files.Where(f => !previous.Contains(f.Path))) File.Delete(UpdatePackage.SafePath(installation, file.Path));
         foreach (var name in journal.Previous.Files.Select(f => f.Path).Append(UpdatePackage.ManifestName))
-            Replace(UpdatePackage.SafePath(Backup, name), UpdatePackage.SafePath(installation, name));
+        {
+            var source = UpdatePackage.SafePath(Backup, name); var target = UpdatePackage.SafePath(installation, name);
+            // Do not rewrite an unchanged, locked original when another file caused failure.
+            if (File.Exists(target) && new FileInfo(target).Length == new FileInfo(source).Length)
+            {
+                using var old = File.OpenRead(source); using var current = File.OpenRead(target);
+                if (System.Security.Cryptography.SHA256.HashData(old).SequenceEqual(System.Security.Cryptography.SHA256.HashData(current))) continue;
+            }
+            Replace(source, target);
+        }
         UpdatePackage.VerifyFiles(installation, journal.Previous);
         WriteJournal(journal with { State = "rolled-back" });
         File.Delete(Path.Combine(installation, PendingName));

@@ -145,6 +145,28 @@ public sealed class UpdatePipelineTests : IDisposable
         Assert.Equal("application 1.1.0", File.ReadAllText(Path.Combine(install, "ReStart.exe")));
     }
     [Fact]
+    public void DowngradesWrongArchitectureAndOverlappingDirectoriesAreRejected()
+    {
+        var (install, work, _) = Transaction();
+        Assert.Throws<InvalidOperationException>(() => new UpdateTransaction(install, Path.Combine(install, "staging")).Apply());
+        var payload = Path.Combine(work, "payload");
+        var manifest = UpdatePackage.ReadManifest(payload);
+        File.WriteAllText(Path.Combine(payload, UpdatePackage.ManifestName), JsonSerializer.Serialize(manifest with { Version = "0.9.0" }, Json));
+        Assert.Throws<InvalidDataException>(() => new UpdateTransaction(install, work).Apply());
+        File.WriteAllText(Path.Combine(payload, UpdatePackage.ManifestName), JsonSerializer.Serialize(manifest with { Runtime = "win-arm64" }, Json));
+        Assert.Throws<InvalidDataException>(() => new UpdateTransaction(install, work).Apply());
+        Assert.Equal("1.0.0", UpdatePackage.ReadManifest(install).Version);
+    }
+    [Theory]
+    [InlineData("null")]
+    [InlineData("{\"schema\":1,\"version\":null,\"runtime\":\"win-x64\",\"files\":[]}")]
+    [InlineData("{\"schema\":1,\"version\":\"1.0.0\",\"runtime\":\"win-x64\",\"files\":[null]}")]
+    public void InvalidManifestStructuresFailSafely(string content)
+    {
+        File.WriteAllText(Path.Combine(_root, UpdatePackage.ManifestName), content);
+        Assert.Throws<InvalidDataException>(() => UpdatePackage.ReadManifest(_root));
+    }
+    [Fact]
     public void RemovesStaleOwnedFilesButRestoresThemOnRollback()
     {
         var (install, work, _) = Transaction();
@@ -197,6 +219,28 @@ public sealed class UpdatePipelineTests : IDisposable
         using var cancellation = new CancellationTokenSource(); cancellation.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => download.PrepareAsync(release, "win-x64", output, cancellationToken: cancellation.Token));
         Assert.False(Directory.Exists(output));
+    }
+    [Theory]
+    [InlineData("not-a-checksum")]
+    [InlineData("0000000000000000000000000000000000000000000000000000000000000000 wrong.zip")]
+    public async Task MalformedSidecarsAreRejectedBeforeDownloadingZip(string sidecar)
+    {
+        var requests = 0;
+        using var http = new HttpClient(new Handler(_ => { requests++; return new(HttpStatusCode.OK) { Content = new StringContent(sidecar) }; }));
+        var directory = Path.Combine(_root, "download");
+        await Assert.ThrowsAsync<InvalidDataException>(() => new UpdateDownload(http).PrepareAsync(new("v1.1.0", ReleaseVersion.Parse("1.1.0")!, ""), "win-x64", directory));
+        Assert.Equal(1, requests); Assert.False(Directory.Exists(directory));
+    }
+    [Fact]
+    public async Task SidecarSizeAndRedirectLoopsAreBounded()
+    {
+        using var large = new HttpClient(new Handler(_ => new(HttpStatusCode.OK) { Content = new StringContent(new string('x', 1025)) }));
+        var release = new UpdateRelease("v1.1.0", ReleaseVersion.Parse("1.1.0")!, "");
+        await Assert.ThrowsAsync<InvalidDataException>(() => new UpdateDownload(large).PrepareAsync(release, "win-x64", Path.Combine(_root, "download")));
+        var requests = 0;
+        using var loop = new HttpClient(new Handler(_ => { requests++; var response = new HttpResponseMessage(HttpStatusCode.Found); response.Headers.Location = new("https://release-assets.githubusercontent.com/loop"); return response; }));
+        await Assert.ThrowsAsync<InvalidDataException>(() => new UpdateDownload(loop).PrepareAsync(release, "win-x64", Path.Combine(_root, "download")));
+        Assert.Equal(4, requests); Assert.False(Directory.Exists(Path.Combine(_root, "download")));
     }
     private sealed class Handler(Func<HttpRequestMessage, HttpResponseMessage> response) : HttpMessageHandler
     {

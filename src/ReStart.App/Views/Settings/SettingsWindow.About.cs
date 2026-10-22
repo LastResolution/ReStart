@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using ReStart.App.Services;
 using ReStart.Core;
 
@@ -17,7 +18,12 @@ internal sealed partial class SettingsWindow
         var actions = new WrapPanel { Margin = new(0, 10, 0, 12) };
         DataButton(actions, L.T(K.AboutLicenses), () => new LicenseWindow(this).ShowDialog());
         DataButton(actions, L.T(K.UpdateOpenRelease), () => ShellLauncher.Launch(ReleaseClient.ReleasesPage.AbsoluteUri));
+        DataButton(actions, L.T(K.DiagnosticsTitle), () => new DiagnosticsWindow(this, _main).ShowDialog());
         panel.Children.Add(actions);
+        var support = new Hyperlink(new Run(L.T(K.AboutSupport))) { NavigateUri = new("https://buymeacoffee.com/LastResolution") };
+        support.SetResourceReference(TextElement.ForegroundProperty, "TextBrush");
+        support.RequestNavigate += (_, e) => { e.Handled = true; OpenExternal(e.Uri.AbsoluteUri); };
+        panel.Children.Add(new TextBlock(support) { Margin = new(0, 14, 0, 0) });
     }
 
     private void BuildMigrationInfo(Panel panel)
@@ -58,11 +64,42 @@ internal sealed partial class SettingsWindow
         });
         void checkButton(bool enabled) { if (check != null) check.IsEnabled = enabled && !_main.IsPreview; if (!enabled) status.Text = L.T(K.UpdateChecking); }
         check.IsEnabled = !_main.IsPreview;
+        var download = DataButton(buttons, L.T(K.UpdateDownload), async () => await _main.PrepareUpdateAsync());
+        var cancel = DataButton(buttons, L.T(K.CommonCancel), _main.CancelUpdateDownload);
+        Button? install = null;
+        install = DataButton(buttons, L.T(K.UpdateRestart), async () =>
+        {
+            if (!ConfirmationWindow.Ask(this, L.T(K.UpdateConfirmRestart))) return;
+            installButton(false);
+            if (await _main.BeginPreparedUpdateAsync())
+            {
+                Closed += (_, _) => _main.Dispatcher.BeginInvoke(() => ((App)Application.Current).ExitApplication());
+                Close();
+            }
+            else { status.Text = L.T(K.UpdatePrepareFailed); installButton(true); }
+        });
+        void installButton(bool enabled) { if (install != null) install.IsEnabled = enabled; }
+        var canInstall = _main.CanInstallUpdates;
+        if (!canInstall && !_main.IsPreview) Note(panel, L.T(K.UpdatePortableRequired));
         DataButton(buttons, L.T(K.UpdateOpenRelease), () => ShellLauncher.Launch((_main.LastUpdateCheck?.Release?.Page ?? ReleaseClient.ReleasesPage).AbsoluteUri));
         panel.Children.Add(buttons); panel.Children.Add(status); panel.Children.Add(checkedAt); panel.Children.Add(notes);
         void Refresh()
         {
             status.Text = _main.IsPreview ? L.T(K.UpdatesDisabledInPreview) : _main.LastUpdateCheck is { } result ? MainWindow.UpdateStatusText(result) : "";
+            var busy = _main.UpdatePreparation == MainWindow.PreparationState.Downloading;
+            check!.IsEnabled = !_main.IsPreview && !busy;
+            download.IsEnabled = canInstall && !busy && _main.UpdatePreparation != MainWindow.PreparationState.Ready && _main.LastUpdateCheck?.Status == UpdateCheckStatus.Available;
+            cancel.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
+            install!.Visibility = _main.UpdatePreparation == MainWindow.PreparationState.Ready ? Visibility.Visible : Visibility.Collapsed;
+            install.IsEnabled = canInstall && _main.UpdatePreparation == MainWindow.PreparationState.Ready;
+            status.Text = _main.UpdatePreparation switch
+            {
+                MainWindow.PreparationState.Downloading => L.F(K.UpdateDownloading, _main.UpdateBytes / (1024d * 1024)),
+                MainWindow.PreparationState.Ready => L.F(K.UpdatePrepared, _main.PreparedUpdate!.Version),
+                MainWindow.PreparationState.Failed => L.T(K.UpdatePrepareFailed),
+                MainWindow.PreparationState.Cancelled => L.T(K.UpdateCancelled),
+                _ => status.Text
+            };
             checkedAt.Text = _main.LastUpdateCheckAt is { } time ? L.F(K.UpdateLastChecked, time.ToString("g", L.Culture)) : "";
             notes.Text = _main.LastUpdateCheck?.Release?.Notes ?? "";
             notes.Visibility = notes.Text.Length == 0 ? Visibility.Collapsed : Visibility.Visible;

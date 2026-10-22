@@ -852,4 +852,36 @@ public enum TextKey
     StudioFormatChanged,
     /// <summary>Unable to format this document: </summary>
     StudioFormatFailed,
+    /// <summary>Support development</summary>
+    AboutSupport,
+    /// <summary>Diagnostic information</summary>
+    DiagnosticsTitle,
+    /// <summary>Copy report</summary>
+    DiagnosticsCopy,
+    /// <summary>Review the complete report below before sharing it. It contains versions, display mode and error categories only. No logs, names, paths, app lists, tile data or credentials are included. Nothing is uploaded.</summary>
+    DiagnosticsHelp,
+    /// <summary>Copied.</summary>
+    DiagnosticsCopied,
+    /// <summary>The clipboard is busy. Try again or select and copy the text.</summary>
+    DiagnosticsClipboardBusy,
+    /// <summary>Download update</summary>
+    UpdateDownload,
+    /// <summary>Restart and update</summary>
+    UpdateRestart,
+    /// <summary>Restart ReStart to install the verified update? Your layout and saved settings are kept. Unsaved changes in this settings window will not be applied.</summary>
+    UpdateConfirmRestart,
+    /// <summary>Guided updates require a complete portable package with its distribution manifest in a writable folder. Developer builds and older packages can be updated manually from GitHub.</summary>
+    UpdatePortableRequired,
+    /// <summary>Downloading and verifying… {0:N1} MiB</summary>
+    UpdateDownloading,
+    /// <summary>ReStart {0} is verified and ready. Restart when convenient.</summary>
+    UpdatePrepared,
+    /// <summary>The update could not be prepared. Your installation was not changed. Check the connection, free space and folder permissions, or use the GitHub download.</summary>
+    UpdatePrepareFailed,
+    /// <summary>Download cancelled. Your installation was not changed.</summary>
+    UpdateCancelled,
+    /// <summary>ReStart was updated successfully.</summary>
+    UpdateInstalled,
+    /// <summary>The update could not be recovered automatically. Exit ReStart and extract the complete portable ZIP into the installation folder. Keep your local ReStart settings. Update backups remain in ReStart.UpdateCache under local app data.</summary>
+    UpdateRepairHelp,
 }

@@ -8,7 +8,7 @@ internal static class AppBuildInfo
 {
     internal static string Build => typeof(App).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "0.0.0";
     internal static string Version => ReleaseVersion.Parse(Build)?.ToString() ?? "0.0.0";
-    internal static string Runtime => RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "win-arm64" : "win-x64";
+    internal static string Runtime => RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "win-arm64" : "win-x64";
     internal static IReadOnlyDictionary<string, string> Licenses()
     {
         var assembly = typeof(App).Assembly;
