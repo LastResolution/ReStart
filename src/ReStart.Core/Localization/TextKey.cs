@@ -884,4 +884,6 @@ public enum TextKey
     UpdateInstalled,
     /// <summary>The update could not be recovered automatically. Exit ReStart and extract the complete portable ZIP into the installation folder. Keep your local ReStart settings. Update backups remain in ReStart.UpdateCache under local app data.</summary>
     UpdateRepairHelp,
+    /// <summary>The update did not finish. ReStart is running the previous installation.</summary>
+    UpdateRestored,
 }

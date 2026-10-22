@@ -8,13 +8,29 @@ namespace ReStart.App.Services;
 /// <summary>Coordinates the separately running portable updater; no shell, elevation or settings files are used.</summary>
 internal static class PortableUpdates
 {
+    /// <summary>Stores local handoff metadata; never included in a copied diagnostic report.</summary>
+    /// <param name="Installation">Absolute portable installation directory whose manifest owns the replaced files.</param>
+    /// <param name="ParentId">Process to wait for before mutation; paired with ParentStart to reject PID reuse.</param>
+    /// <param name="ParentStart">Parent creation time as UTC DateTime ticks.</param>
+    /// <param name="Version">Verified candidate semantic version.</param>
+    /// <param name="Runtime">Installed win-x64 or win-arm64 architecture.</param>
+    /// <param name="Fixture">Whether restart uses isolated verification entry points instead of normal user settings.</param>
     internal sealed record Request(string Installation, int ParentId, long ParentStart, string Version, string Runtime, bool Fixture = false);
+    /// <summary>Identifies one prepared workspace for explicit restart.</summary>
+    /// <param name="Id">N-format GUID used beneath the update cache, never an arbitrary command line.</param>
+    /// <param name="Directory">Absolute owned workspace containing the validated payload and helper copy.</param>
+    /// <param name="Version">Candidate semantic version displayed in the restart action.</param>
     internal sealed record Prepared(string Id, string Directory, string Version);
     private static readonly JsonSerializerOptions Json = new() { WriteIndented = true };
     internal static string CacheRoot { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ReStart.UpdateCache");
     internal static readonly Queue<DiagnosticCode> RecentCodes = new();
+    /// <summary>Retains only the eight most recent classified failures in memory.</summary>
+    /// <param name="code">Fixed error category; never an exception message or user-supplied string.</param>
     internal static void Record(DiagnosticCode code) { lock (RecentCodes) { RecentCodes.Enqueue(code); while (RecentCodes.Count > 8) RecentCodes.Dequeue(); } }
 
+    /// <summary>Checks inexpensive distribution prerequisites without downloading or probing writes.</summary>
+    /// <param name="installation">Current executable directory; it is read but not modified.</param>
+    /// <returns>True for a matching portable inventory without the developer DLL; false for missing/unreadable inventories.</returns>
     internal static bool SupportsInstallation(string installation)
     {
         try
@@ -25,6 +41,13 @@ internal static class PortableUpdates
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { return false; }
     }
 
+    /// <summary>Checks the executable identity and creates the local helper handoff after archive validation.</summary>
+    /// <param name="directory">Fresh N-GUID workspace immediately beneath CacheRoot, containing payload.</param>
+    /// <param name="manifest">Inventory already validated by UpdateDownload; version must be newer than the installation.</param>
+    /// <param name="installation">Current portable installation; all distribution hashes are checked before copying its helper.</param>
+    /// <param name="fixture">True only for isolated process verification with fictional installation files.</param>
+    /// <returns>A prepared workspace; the installation itself remains unchanged.</returns>
+    /// <exception cref="IOException">Inventory, version, architecture or filesystem validation fails.</exception>
     internal static Prepared FinalizePreparation(string directory, PackageManifest manifest, string installation, bool fixture = false)
     {
         var id = Path.GetFileName(directory);
@@ -48,20 +71,31 @@ internal static class PortableUpdates
         return new(id, directory, manifest.Version);
     }
 
+    /// <summary>Starts the cached helper and explicitly accepts its readiness handshake.</summary>
+    /// <param name="prepared">Validated workspace created in the current process by FinalizePreparation.</param>
+    /// <returns>True when the helper is ready and accepted; only then may the caller exit for installation.</returns>
+    /// <exception cref="IOException">Handoff files cannot be read or written.</exception>
     internal static async Task<bool> StartAsync(Prepared prepared)
     {
         var request = ReadRequest(prepared.Id);
+        File.Delete(Path.Combine(prepared.Directory, "ready"));
+        File.Delete(Path.Combine(prepared.Directory, "accepted"));
         var start = StartInfo(Path.Combine(prepared.Directory, "ReStart.exe"));
         AddWorkerArguments(start, prepared.Id, request.Fixture);
         using var helper = Process.Start(start) ?? throw new IOException("Updater could not start.");
         for (var i = 0; i < 100 && !helper.HasExited; i++)
         {
-            if (File.Exists(Path.Combine(prepared.Directory, "ready"))) return true;
+            if (File.Exists(Path.Combine(prepared.Directory, "ready")))
+            { File.WriteAllText(Path.Combine(prepared.Directory, "accepted"), "accepted"); return true; }
             await Task.Delay(100);
         }
         return false;
     }
 
+    /// <summary>Waits for the old process, applies/restores its transaction, and verifies replacement startup.</summary>
+    /// <param name="id">N-GUID of the accepted job beneath CacheRoot; concurrent helpers are rejected by leases.</param>
+    /// <returns>0 for committed, 1 for restored, 2 for an unaccepted/timed-out handoff, or 3 for repair required.</returns>
+    /// <exception cref="IOException">The initial lease or request cannot be acquired/read before transaction handling begins.</exception>
     internal static async Task<int> RunAsync(string id)
     {
         var directory = Workspace(id);
@@ -77,6 +111,7 @@ internal static class PortableUpdates
             {
                 File.WriteAllText(Path.Combine(directory, "ready"), "ready");
                 if (!await WaitForParentAsync(request)) return 2;
+                if (!File.Exists(Path.Combine(directory, "accepted")) && !File.Exists(Path.Combine(request.Installation, UpdateTransaction.PendingName))) return 2;
                 if (File.Exists(Path.Combine(request.Installation, UpdateTransaction.PendingName)))
                 { transaction.Rollback(); result = "rolled-back"; }
                 else
@@ -118,6 +153,10 @@ internal static class PortableUpdates
         return result == "complete" ? 0 : result == "rolled-back" ? 1 : 3;
     }
 
+    /// <summary>Defers ordinary startup while an update is active, or starts recovery of an interrupted journal.</summary>
+    /// <param name="installation">Actual executable directory; it must match any stored recovery request.</param>
+    /// <returns>True when this launcher must exit without reading settings or installing hooks.</returns>
+    /// <exception cref="IOException">The pending marker/request is invalid or recovery cannot be launched.</exception>
     internal static bool RedirectInterruptedStartup(string installation)
     {
         var marker = Path.Combine(installation, UpdateTransaction.PendingName);
@@ -140,6 +179,10 @@ internal static class PortableUpdates
         return true;
     }
 
+    /// <summary>Signals successful candidate initialization before settings writes are enabled.</summary>
+    /// <param name="id">Active update's N-GUID.</param>
+    /// <param name="installation">Initialized executable directory, which must match the request and version.</param>
+    /// <exception cref="IOException">Identity checks fail or the acknowledgment cannot be written.</exception>
     internal static void Acknowledge(string id, string installation)
     {
         var request = ReadRequest(id);
@@ -148,11 +191,67 @@ internal static class PortableUpdates
         File.WriteAllText(Path.Combine(Workspace(id), "acknowledged"), "ready");
     }
 
+    /// <summary>Reads a bounded local outcome without reading a log or exception text.</summary>
+    /// <param name="id">N-GUID of an existing local update workspace.</param>
+    /// <returns>A short outcome category, or failed when no bounded result is present.</returns>
     internal static string Outcome(string id)
     {
         var path = Path.Combine(Workspace(id), "outcome");
         return File.Exists(path) && new FileInfo(path).Length < 32 ? File.ReadAllText(path) : "failed";
     }
+    /// <summary>Best-effort deletion of completed inventory-owned cache files; active/failed jobs and unrelated files remain.</summary>
+    internal static void CleanupFinished()
+    {
+        if (!Directory.Exists(CacheRoot)) return;
+        try
+        {
+            foreach (var directory in Directory.EnumerateDirectories(CacheRoot).Take(32))
+            {
+                var id = Path.GetFileName(directory);
+                if (!Guid.TryParseExact(id, "N", out _)) continue;
+                try
+                {
+                    Workspace(id);
+                    if (Outcome(id) is not ("complete" or "rolled-back")) continue;
+                    var leasePath = Path.Combine(directory, "lease");
+                    using (var lease = new FileStream(leasePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
+                    {
+                        foreach (var name in new[] { "payload", "backup" })
+                        {
+                            var root = Path.Combine(directory, name);
+                            if (!Directory.Exists(root)) continue;
+                            var manifest = UpdatePackage.ReadManifest(root);
+                            var parents = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { root };
+                            foreach (var file in manifest.Files.Select(f => f.Path).Append(UpdatePackage.ManifestName))
+                            {
+                                var path = Path.Combine(root, file.Replace('/', Path.DirectorySeparatorChar));
+                                // Only inventory-owned files are deleted, and never through a junction.
+                                for (var parent = path; parent != directory; parent = Path.GetDirectoryName(parent)!)
+                                {
+                                    if ((File.Exists(parent) || Directory.Exists(parent)) && (File.GetAttributes(parent) & FileAttributes.ReparsePoint) != 0)
+                                        throw new IOException("Linked update cleanup path.");
+                                }
+                                File.Delete(path);
+                                for (var parent = Path.GetDirectoryName(path); parent != directory; parent = Path.GetDirectoryName(parent)) parents.Add(parent!);
+                            }
+                            foreach (var parent in parents.OrderByDescending(p => p.Length))
+                                if (Directory.Exists(parent) && !Directory.EnumerateFileSystemEntries(parent).Any()) Directory.Delete(parent);
+                        }
+                        foreach (var name in new[] { "ReStart.exe", "package.zip", "request.json", "ready", "accepted", "acknowledged", "outcome", "transaction.json" })
+                            File.Delete(Path.Combine(directory, name));
+                    }
+                    File.Delete(leasePath);
+                    if (!Directory.EnumerateFileSystemEntries(directory).Any()) Directory.Delete(directory);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException) { }
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+    }
+    /// <summary>Reads a bounded local request after validating its workspace and basic installation identity.</summary>
+    /// <param name="id">N-GUID immediately beneath CacheRoot.</param>
+    /// <returns>Validated local handoff metadata; its private installation path is never added to diagnostic reports.</returns>
+    /// <exception cref="IOException">The request is absent, oversized or invalid.</exception>
     internal static Request ReadRequest(string id)
     {
         var path = Path.Combine(Workspace(id), "request.json");
@@ -162,6 +261,10 @@ internal static class PortableUpdates
             || ReleaseVersion.Parse(request.Version) == null || request.Runtime is not ("win-x64" or "win-arm64")) throw new InvalidDataException("Invalid installation request.");
         return request;
     }
+    /// <summary>Resolves only canonical job identifiers and rejects links in their cache ancestry.</summary>
+    /// <param name="id">Exactly an N-format GUID; paths and other strings are rejected.</param>
+    /// <returns>Absolute owned workspace path, whether or not the directory exists yet.</returns>
+    /// <exception cref="IOException">The identifier is invalid or a path component is a link.</exception>
     internal static string Workspace(string id)
     {
         if (!Guid.TryParseExact(id, "N", out _)) throw new InvalidDataException("Invalid update identifier.");

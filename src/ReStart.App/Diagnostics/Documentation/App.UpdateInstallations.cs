@@ -17,6 +17,7 @@ public partial class App
         var checks = 0;
         void Check(bool condition, string message) { if (!condition) throw new InvalidOperationException(message); checks++; }
         var source = Environment.ProcessPath!;
+        string? successfulWorkspace = null;
         var current = ReleaseVersion.Parse(AppBuildInfo.Version)!;
         var previous = current.Patch > 0 ? new ReleaseVersion(current.Major, current.Minor, current.Patch - 1)
             : current.Minor > 0 ? new ReleaseVersion(current.Major, current.Minor - 1, 0) : new ReleaseVersion(Math.Max(0, current.Major - 1), 0, 0);
@@ -68,7 +69,13 @@ public partial class App
             var startupMarker = Path.Combine(workspace, scenario == "success" ? "fixture-started" : "fixture-restored");
             for (var i = 0; i < 100 && !File.Exists(startupMarker); i++) await Task.Delay(100);
             Check(File.Exists(startupMarker), "Updated/restored app did not start through the isolated entry point.");
+            if (scenario == "success") successfulWorkspace = workspace;
         }
+        var unrelated = Path.Combine(successfulWorkspace!, "keep-local-file.txt"); File.WriteAllText(unrelated, "retained");
+        PortableUpdates.CleanupFinished();
+        Check(File.ReadAllText(unrelated) == "retained", "Cache cleanup removed an unrelated file.");
+        Check(!File.Exists(Path.Combine(successfulWorkspace!, "ReStart.exe")), "Completed update binaries were not cleaned up.");
+        Check(File.ReadAllText(Path.Combine(directory, "success", "local-sentinel.txt")) == "private fixture sentinel", "Cache cleanup changed the installed user's file.");
         File.WriteAllText(Path.Combine(directory, "verification.json"), JsonSerializer.Serialize(new { success = true, scenarios = 4, checks }, new JsonSerializerOptions { WriteIndented = true }));
     }
 

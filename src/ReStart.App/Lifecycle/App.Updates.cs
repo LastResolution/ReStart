@@ -12,9 +12,11 @@ public partial class App
         static string? Value(string[] values, string key)
         { var index = Array.IndexOf(values, key); return index >= 0 && index + 1 < values.Length ? values[index + 1] : null; }
         var fixtureRoot = Value(args, "--verify-update-root");
-        if (fixtureRoot != null) PortableUpdates.CacheRoot = Path.GetFullPath(fixtureRoot);
         try
         {
+            foreach (var option in new[] { "--apply-update", "--complete-update", "--update-result", "--verify-update-root", "--verify-update-installations", "--verify-update-parent" })
+                if (args.Contains(option) && Value(args, option) == null) throw new InvalidDataException("Missing update argument.");
+            if (fixtureRoot != null) PortableUpdates.CacheRoot = Path.GetFullPath(fixtureRoot);
             if (Value(args, "--apply-update") is { } id)
             {
                 var result = await PortableUpdates.RunAsync(id);
@@ -50,6 +52,14 @@ public partial class App
                 if (File.ReadAllText(Path.Combine(AppContext.BaseDirectory, UpdateTransaction.PendingName)) != complete)
                     throw new InvalidDataException("Update startup marker mismatch.");
             }
+            else if (args.Contains("--update-result"))
+            {
+                var restored = Value(args, "--update-result") ?? throw new InvalidDataException("Missing update result identifier.");
+                var request = PortableUpdates.ReadRequest(restored);
+                if (!Path.GetFullPath(request.Installation).TrimEnd(Path.DirectorySeparatorChar).Equals(AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidDataException("Update result installation mismatch.");
+            }
+            else if (args.Length == 0 || args.SequenceEqual(new[] { "--background" })) PortableUpdates.CleanupFinished();
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.Text.Json.JsonException or System.ComponentModel.Win32Exception)
         {
@@ -79,6 +89,9 @@ public partial class App
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
         { window.Exit(); Shutdown(1); return false; }
     }
+
+    private static async Task ShowRestoredUpdateAsync(MainWindow window)
+    { await window.InitializeAsync(); window.SetStatus(L.T(K.UpdateRestored)); }
 
     private static void ShowUpdateRepair()
     {

@@ -438,5 +438,6 @@
   "UpdatePrepareFailed": "无法准备更新。安装内容未更改。请检查连接、可用空间和文件夹权限，或从 GitHub 下载。",
   "UpdateCancelled": "已取消下载。安装内容未更改。",
   "UpdateInstalled": "ReStart 更新成功。",
-  "UpdateRepairHelp": "无法自动恢复更新。请退出 ReStart，并将完整便携 ZIP 解压到安装文件夹。请保留本地设置。更新备份位于本地应用数据的 ReStart.UpdateCache 中。"
+  "UpdateRepairHelp": "无法自动恢复更新。请退出 ReStart，并将完整便携 ZIP 解压到安装文件夹。请保留本地设置。更新备份位于本地应用数据的 ReStart.UpdateCache 中。",
+  "UpdateRestored": "更新未完成。ReStart 正在使用以前的安装文件。"
 }

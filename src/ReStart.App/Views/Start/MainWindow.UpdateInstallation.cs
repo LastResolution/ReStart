@@ -14,6 +14,8 @@ public partial class MainWindow
     internal bool CanInstallUpdates => !_preview && !_store.IsReadOnly && PortableUpdates.SupportsInstallation(AppContext.BaseDirectory);
     internal void CancelUpdateDownload() => _updateDownloadCancellation?.Cancel();
 
+    /// <summary>Stages the explicitly selected release asynchronously; cancellation/failure never mutates the installation.</summary>
+    /// <returns>A task completing after the UI reaches Ready, Cancelled or Failed; preview/ineligible calls do nothing.</returns>
     internal async Task PrepareUpdateAsync()
     {
         if (!CanInstallUpdates || UpdatePreparation == PreparationState.Downloading || LastUpdateCheck is not { Status: UpdateCheckStatus.Available, Release: { } release }) return;
@@ -37,7 +39,7 @@ public partial class MainWindow
             UpdatePreparation = PreparationState.Ready;
         }
         catch (OperationCanceledException) { UpdatePreparation = cancellation.IsCancellationRequested ? PreparationState.Cancelled : PreparationState.Failed; }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or HttpRequestException or InvalidOperationException or System.ComponentModel.Win32Exception)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or HttpRequestException or InvalidOperationException or System.ComponentModel.Win32Exception or BadImageFormatException)
         { UpdatePreparation = PreparationState.Failed; }
         finally
         {
@@ -49,6 +51,8 @@ public partial class MainWindow
         }
     }
 
+    /// <summary>Saves the layout and hands off a prepared update without exiting the process itself.</summary>
+    /// <returns>True only after helper readiness/acceptance; the caller then closes its dialog and exits normally.</returns>
     internal async Task<bool> BeginPreparedUpdateAsync()
     {
         if (!CanInstallUpdates || PreparedUpdate == null || UpdatePreparation != PreparationState.Ready || !TrySaveLayout()) return false;

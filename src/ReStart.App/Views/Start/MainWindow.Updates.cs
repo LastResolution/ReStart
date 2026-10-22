@@ -8,7 +8,7 @@ namespace ReStart.App;
 
 public partial class MainWindow
 {
-    private readonly HttpClient _releaseHttp = new(new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(15) };
+    private readonly HttpClient _releaseHttp = new(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false, UseDefaultCredentials = false }) { Timeout = TimeSpan.FromSeconds(15) };
     private readonly CancellationTokenSource _updateCancellation = new();
     private Task<UpdateCheckResult>? _updateTask;
     internal UpdateCheckResult? LastUpdateCheck { get; private set; }

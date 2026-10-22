@@ -136,6 +136,15 @@ public sealed class UpdatePipelineTests : IDisposable
         Assert.False(File.Exists(Path.Combine(install, UpdateTransaction.PendingName)));
     }
     [Fact]
+    public void LocalFileAppearingAfterPreflightIsPreservedDuringRollback()
+    {
+        var (install, _, transaction) = Transaction();
+        Assert.Throws<InvalidDataException>(() => transaction.Apply(count =>
+        { if (count == 1) File.WriteAllText(Path.Combine(install, "new.txt"), "new local sentinel"); }));
+        Assert.Equal("new local sentinel", File.ReadAllText(Path.Combine(install, "new.txt")));
+        Assert.Equal("1.0.0", UpdatePackage.ReadManifest(install).Version);
+    }
+    [Fact]
     public void CorruptBackupIsNeverUsedForRollback()
     {
         var (install, work, transaction) = Transaction(); transaction.Apply();

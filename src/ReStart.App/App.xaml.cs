@@ -107,7 +107,11 @@ public partial class App : Application
             if (!await FinishUpdatedStartupAsync(e.Args, _window)) return;
         }
         if (e.Args.Contains("--update-result"))
-            PortableUpdates.Record(DiagnosticCode.UpdateRolledBack);
+        {
+            var id = e.Args[Array.IndexOf(e.Args, "--update-result") + 1];
+            PortableUpdates.Record(PortableUpdates.Outcome(id) == "rolled-back" ? DiagnosticCode.UpdateRolledBack : DiagnosticCode.UpdatePreparationFailed);
+            _ = ShowRestoredUpdateAsync(_window);
+        }
         if (pinPath != null) await _window.PinPathAsync(pinPath);
         else if (e.Args.Contains("--background")) _ = _window.InitializeAsync();
         else _window.Present();

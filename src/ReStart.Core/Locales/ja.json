@@ -438,5 +438,6 @@
   "UpdatePrepareFailed": "更新を準備できませんでした。インストール内容は変更していません。接続、空き容量、フォルダの権限を確認するか、GitHubからダウンロードしてください。",
   "UpdateCancelled": "ダウンロードを中止しました。インストール内容は変更していません。",
   "UpdateInstalled": "ReStartの更新が完了しました。",
-  "UpdateRepairHelp": "更新を自動で復旧できませんでした。ReStartを終了し、完全なポータブルZIPをインストール先に展開してください。ローカルのReStart設定は保持してください。更新前のバックアップはローカルアプリデータのReStart.UpdateCacheに残っています。"
+  "UpdateRepairHelp": "更新を自動で復旧できませんでした。ReStartを終了し、完全なポータブルZIPをインストール先に展開してください。ローカルのReStart設定は保持してください。更新前のバックアップはローカルアプリデータのReStart.UpdateCacheに残っています。",
+  "UpdateRestored": "更新を完了できませんでした。以前のインストール内容でReStartを起動しました。"
 }

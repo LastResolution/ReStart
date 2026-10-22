@@ -438,5 +438,6 @@
   "UpdatePrepareFailed": "Das Update konnte nicht vorbereitet werden. Die Installation wurde nicht geändert. Prüfen Sie Verbindung, Speicherplatz und Ordnerrechte oder laden Sie es von GitHub herunter.",
   "UpdateCancelled": "Download abgebrochen. Die Installation wurde nicht geändert.",
   "UpdateInstalled": "ReStart wurde erfolgreich aktualisiert.",
-  "UpdateRepairHelp": "Die automatische Wiederherstellung ist fehlgeschlagen. Beenden Sie ReStart und entpacken Sie die vollständige portable ZIP im Installationsordner. Behalten Sie Ihre lokalen Einstellungen. Updatesicherungen liegen unter ReStart.UpdateCache in den lokalen App-Daten."
+  "UpdateRepairHelp": "Die automatische Wiederherstellung ist fehlgeschlagen. Beenden Sie ReStart und entpacken Sie die vollständige portable ZIP im Installationsordner. Behalten Sie Ihre lokalen Einstellungen. Updatesicherungen liegen unter ReStart.UpdateCache in den lokalen App-Daten.",
+  "UpdateRestored": "Das Update wurde nicht abgeschlossen. ReStart läuft mit der vorherigen Installation."
 }

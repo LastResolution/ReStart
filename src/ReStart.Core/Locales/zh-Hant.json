@@ -438,5 +438,6 @@
   "UpdatePrepareFailed": "無法準備更新。安裝內容未變更。請檢查連線、可用空間及資料夾權限，或從 GitHub 下載。",
   "UpdateCancelled": "已取消下載。安裝內容未變更。",
   "UpdateInstalled": "ReStart 更新成功。",
-  "UpdateRepairHelp": "無法自動復原更新。請結束 ReStart，並將完整可攜 ZIP 解壓縮至安裝資料夾。請保留本機設定。更新備份位於本機應用程式資料的 ReStart.UpdateCache 中。"
+  "UpdateRepairHelp": "無法自動復原更新。請結束 ReStart，並將完整可攜 ZIP 解壓縮至安裝資料夾。請保留本機設定。更新備份位於本機應用程式資料的 ReStart.UpdateCache 中。",
+  "UpdateRestored": "更新未完成。ReStart 正在使用先前的安裝檔案。"
 }

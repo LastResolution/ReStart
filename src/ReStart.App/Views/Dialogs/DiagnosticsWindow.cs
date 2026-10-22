@@ -13,6 +13,10 @@ internal sealed class DiagnosticsWindow : Window
 {
     internal TextBox Report { get; }
     internal Button Copy { get; }
+    /// <summary>Creates a themed preview; creating/showing it never changes the clipboard.</summary>
+    /// <param name="owner">Settings window used for ownership, placement and theme.</param>
+    /// <param name="main">Launcher supplying versions, theme and classified check status, without its layout contents.</param>
+    /// <param name="copy">Optional test sink invoked only by the copy button; null uses the system clipboard.</param>
     internal DiagnosticsWindow(Window owner, MainWindow main, Action<string>? copy = null)
     {
         Owner = owner; Style = (Style)FindResource(typeof(Window)); ThemeWindow.Attach(this);

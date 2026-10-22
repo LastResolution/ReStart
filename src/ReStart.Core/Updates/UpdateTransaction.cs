@@ -52,7 +52,9 @@ public sealed class UpdateTransaction(string installation, string workspace)
             var count = 0;
             foreach (var file in next.Files)
             {
-                Replace(UpdatePackage.SafePath(Path.Combine(workspace, "payload"), file.Path), UpdatePackage.SafePath(installation, file.Path));
+                var target = UpdatePackage.SafePath(installation, file.Path);
+                if (!previousNames.Contains(file.Path) && File.Exists(target)) throw new InvalidDataException("A local file appeared during update.");
+                Replace(UpdatePackage.SafePath(Path.Combine(workspace, "payload"), file.Path), target);
                 progress?.Invoke(++count);
             }
             var nextNames = next.Files.Select(f => f.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -86,7 +88,16 @@ public sealed class UpdateTransaction(string installation, string workspace)
         if (journal.State == "complete") { File.Delete(Path.Combine(installation, PendingName)); return; }
         UpdatePackage.VerifyFiles(Backup, journal.Previous);
         var previous = journal.Previous.Files.Select(f => f.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        foreach (var file in journal.Next.Files.Where(f => !previous.Contains(f.Path))) File.Delete(UpdatePackage.SafePath(installation, file.Path));
+        foreach (var file in journal.Next.Files.Where(f => !previous.Contains(f.Path)))
+        {
+            var path = UpdatePackage.SafePath(installation, file.Path);
+            // Atomic replacement creates either the exact new file or nothing.
+            // Preserve an unrelated file that appeared after preflight.
+            if (!File.Exists(path) || new FileInfo(path).Length != file.Size) continue;
+            using (var stream = File.OpenRead(path))
+                if (!Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(stream)).Equals(file.Sha256, StringComparison.OrdinalIgnoreCase)) continue;
+            File.Delete(path);
+        }
         foreach (var name in journal.Previous.Files.Select(f => f.Path).Append(UpdatePackage.ManifestName))
         {
             var source = UpdatePackage.SafePath(Backup, name); var target = UpdatePackage.SafePath(installation, name);
