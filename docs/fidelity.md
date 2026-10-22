@@ -8,15 +8,16 @@ Portable builds target Windows 10/11 on x64 and ARM64. Development and native au
 
 ### Observed platform coverage
 
-On October 22, 2026, `test-platform.ps1` passed 341 checks on Windows 11 x64 using fictional apps and isolated settings. No user catalog or account picture was loaded, no window was shown, and foreground focus was unchanged.
+On October 22, 2026, `test-platform.ps1` passed 341 checks per run on Windows 11 x64 using fictional apps and isolated settings. Both hidden native hosts and explicitly shown WPF launcher windows were exercised. The default hidden run leaves foreground focus unchanged. Neither mode loads a user catalog or account picture.
 
 | Area | Checked | Still to exercise |
 | --- | --- | --- |
-| Connected monitors | One native WPF host moved across two 1920×1080 displays at 100% / 96 DPI, then back; working-area bounds, native/WPF DPI agreement, DIP-to-pixel fit and point-to-monitor mapping, including negative desktop coordinates | Different DPI values on the two displays, portrait layouts, display reconnects and visible launcher/Start-button interactions |
-| Accessibility providers | Sixteen language/theme cases: all eight languages in light and dark; named invokable navigation/app-tile buttons, editable search and the named selected search result | Narrator's spoken output, announcement timing, full reading/navigation order and browser tile content |
+| Connected monitors | Native host and visible WPF launcher placement across two displays and back: 100%/100%, 100%/125%, 100%/150%, plus 100% landscape with 150% portrait (1080×1920). Checks cover working-area bounds, native/WPF DPI agreement, DIP-to-pixel fit and point-to-monitor mapping, including negative desktop coordinates | 200% scaling, display reconnects, changing configuration while the launcher remains open, production Start-button/foreground/taskbar interactions and other device/driver combinations |
+| Accessibility providers | Sixteen language/theme cases: all eight languages in light and dark; named invokable navigation/app-tile buttons, editable search and the named selected search result | Full reading/navigation order, announcement timing, dialogs, folders and browser tile content with an actual screen reader |
+| Narrator | Actual Windows Narrator speech recap reported Search as an edit control, then Pinned tiles and All apps as buttons during Tab navigation in an English fictional fixture | Listening to audio, pronunciation/clarity, the rest of the navigation order, other languages and complex interaction flows |
 | Touch | Windows reports no digitizer and zero touch contacts on the test machine | Physical tap, long press, dragging, panning and edge scrolling on a touch device |
 
-Narrator is installed on the test machine. Its availability is not a completed Narrator test. UI Automation checks inspect the accessibility interface used by assistive technologies; they do not listen to speech. Likewise, setting a tile scale or rendering at a synthetic size does not count as a mixed-DPI monitor test. Rerun the [platform fixture](testing.md#platform-and-accessibility-checks) on the actual configuration being evaluated.
+The mixed-DPI runs exposed WPF's suggested DPI-scaled window size overriding physical monitor bounds. Placement now lets WPF update its visual DPI and then coalesces a working-area correction on the dispatcher; both host types passed the configurations above. Windows display settings were restored after testing. Narrator was stopped afterward. Speech recap verifies actual announced text rather than sound quality; UI Automation provider checks alone establish neither. Physical touch and cable removal cannot be substituted with mouse input or synthetic geometry. Rerun the [platform fixture](testing.md#platform-and-accessibility-checks) on the actual configuration being evaluated.
 
 ## Behavior
 

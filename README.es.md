@@ -71,7 +71,7 @@ El engranaje permite elegir temas, inicio con Windows, integración de la tecla 
 
 **Una distribución inicial útil.** Al iniciar por primera vez o restablecer, se eligen aplicaciones instaladas según su función, mediante sus identificadores y nombres traducidos exactos. Los mosaicos incluidos sin conexión completan los grupos hasta un mínimo de seis, sin repetir ejemplos. Las distribuciones guardadas se conservan. [Selección y restablecimiento (inglés)](docs/start-behavior.md#initial-layout-and-reset).
 
-**Cobertura de plataforma medida.** Las pruebas nativas cubren dos pantallas al 100 % y los proveedores de accesibilidad de navegación, mosaicos y selección de búsqueda en ocho idiomas y ambos temas. La interacción con distintos DPI, la entrada táctil física y la voz de Narrator requieren pruebas separadas. [Resultados y dispositivos (inglés)](docs/fidelity.md#observed-platform-coverage).
+**Cobertura de plataforma medida.** Las pruebas nativas verifican la posición y el tamaño de las ventanas en dos pantallas al 100 %/125 %/150 %, incluidas orientaciones vertical y horizontal combinadas. Los proveedores de accesibilidad se comprueban en ocho idiomas y ambos temas; los anuncios básicos de Narrator se revisaron mediante el resumen de voz. La reconexión de pantallas, la entrada táctil física y los flujos completos con lector de pantalla requieren más pruebas en dispositivos. [Resultados y dispositivos (inglés)](docs/fidelity.md#observed-platform-coverage).
 
 ## Buscar y configurar
 

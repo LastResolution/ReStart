@@ -97,7 +97,7 @@ Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button
 
 **A useful first layout.** Initial and reset layouts choose installed apps by role, using app identities and exact translated names. Distinct offline bundled tiles fill sparse groups to at least six tiles each. Existing saved layouts are preserved. [Selection and reset behavior](docs/start-behavior.md#initial-layout-and-reset).
 
-**Measured platform coverage.** Native checks cover two displays at 100% scaling and navigation, tile and search-selection accessibility providers in eight languages and both themes. Mixed-DPI interaction, physical touch and Narrator speech still require separate checks. [Results and device coverage](docs/fidelity.md#observed-platform-coverage).
+**Measured platform coverage.** Native window-placement checks cover two displays at 100%/125%/150% scaling, including mixed portrait/landscape. Accessibility providers are checked in eight languages and both themes; basic Narrator announcements were inspected through Speech recap. Display reconnects, physical touch and full screen-reader interaction still need device checks. [Results and device coverage](docs/fidelity.md#observed-platform-coverage).
 
 ### Search, configure, launch
 

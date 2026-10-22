@@ -125,7 +125,7 @@ Schema 4 stores tiles, preferences, independent entries, producer version and th
 
 The native window uses the pointer monitor's working area and PerMonitorV2. WPF content uses DIPs and logical cells. The wallpaper blur is an approximation of the original composition.
 
-The hidden platform fixture checks actual connected-monitor working areas and native/WPF DPI agreement without registering production integration or reading a user catalog. Its two-monitor 100% local result establishes that configuration, rather than all mixed-DPI behavior. UI Automation provider checks cover navigation, app tiles and selected search results separately from Narrator speech; see [observed coverage](fidelity.md#observed-platform-coverage).
+The platform fixture checks actual connected-monitor working areas and native/WPF DPI agreement without registering production integration or reading a user catalog. Its default host remains hidden; an explicit visible mode exercises the launcher HWND. Both use the production `MonitorPlacement` helper, which lets WPF process DPI changes before coalescing a physical working-area correction. Recorded two-display runs cover 100%/125%/150% scaling and a mixed portrait/landscape configuration. UI Automation provider checks cover navigation, app tiles and selected search results separately from actual Narrator recap checks; see [observed coverage](fidelity.md#observed-platform-coverage).
 
 Theme resources cover controls, scrollbars, dialogs and calendar. High contrast overrides effects. Modern app tiles use uniform translucent plates; Classic tiles share a global accent. Explicit per-tile color overrides are a ReStart extension and can be reset; high contrast still wins. Optional Start-surface accent applies to dark mode.
 
