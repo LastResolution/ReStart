@@ -77,12 +77,12 @@ public partial class MainWindow
 
     private void RefreshWallpaper(string? fixturePath = null)
     {
-        if (!Document.Preferences.ShowWallpaper || SystemParameters.HighContrast || _preview && fixturePath == null && !Document.Preferences.UseCustomBackground)
+        if (!DisplayPreferences.ShowWallpaper || SystemParameters.HighContrast || _preview && fixturePath == null && !DisplayPreferences.UseCustomBackground)
         { Wallpaper.Source = null; _wallpaperPath = null; return; }
         try
         {
-            var path = fixturePath ?? (Document.Preferences.UseCustomBackground
-                ? new BackgroundImageStore(Path.GetDirectoryName(_store.FilePath)!).Resolve(Document.Preferences.CustomBackgroundId)
+            var path = fixturePath ?? (DisplayPreferences.UseCustomBackground
+                ? new BackgroundImageStore(Path.GetDirectoryName(_store.FilePath)!).Resolve(DisplayPreferences.CustomBackgroundId)
                 : DesktopWallpaperSource.CurrentPath(_wallpaperMonitor ?? System.Windows.Forms.Screen.PrimaryScreen!.Bounds));
             var file = path == null ? null : new FileInfo(path);
             if (file?.Exists != true) { Wallpaper.Source = null; _wallpaperPath = null; return; }

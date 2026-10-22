@@ -6,7 +6,7 @@ using ReStart.Core;
 namespace ReStart.App.Services;
 
 /// <summary>Coordinates the separately running portable updater; no shell, elevation or settings files are used.</summary>
-internal static class PortableUpdates
+internal static partial class PortableUpdates
 {
     /// <summary>Stores local handoff metadata; never included in a copied diagnostic report.</summary>
     /// <param name="Installation">Absolute portable installation directory whose manifest owns the replaced files.</param>
@@ -25,7 +25,8 @@ internal static class PortableUpdates
     /// <param name="Id">N-format GUID used beneath the update cache, never an arbitrary command line.</param>
     /// <param name="Directory">Absolute owned workspace containing the validated payload and helper copy.</param>
     /// <param name="Version">Candidate semantic version displayed in the restart action.</param>
-    internal sealed record Prepared(string Id, string Directory, string Version);
+    /// <param name="Installation">Bound installation directory; null is reserved for nonexecuting UI fixtures.</param>
+    internal sealed record Prepared(string Id, string Directory, string Version, string? Installation = null);
     private static readonly JsonSerializerOptions Json = new() { WriteIndented = true };
     internal static string CacheRoot { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ReStart.UpdateCache");
     internal static readonly Queue<DiagnosticCode> RecentCodes = new();
@@ -73,7 +74,8 @@ internal static class PortableUpdates
         File.WriteAllText(Path.Combine(directory, "request.json"), JsonSerializer.Serialize(request, Json));
         File.Copy(Path.Combine(installation, "ReStart.exe"), Path.Combine(directory, "ReStart.exe"), overwrite: false);
         var zip = Path.Combine(directory, "package.zip"); if (File.Exists(zip)) File.Delete(zip);
-        return new(id, directory, manifest.Version);
+        RememberPrepared(id, installation);
+        return new(id, directory, manifest.Version, Path.GetFullPath(installation));
     }
 
     /// <summary>Starts the cached helper and explicitly accepts its readiness handshake.</summary>
@@ -82,9 +84,13 @@ internal static class PortableUpdates
     /// <exception cref="IOException">Handoff files cannot be read or written.</exception>
     internal static async Task<bool> StartAsync(Prepared prepared)
     {
-        var request = ReadRequest(prepared.Id);
+        var request = ReadRequest(prepared.Id, prepared.Installation ?? AppContext.BaseDirectory);
+        await Task.Run(() => ValidatePrepared(prepared, request));
+        using var parent = Process.GetCurrentProcess();
         request = request with
         {
+            ParentId = parent.Id,
+            ParentStart = parent.StartTime.ToUniversalTime().Ticks,
             Language = L.Language,
             Light = ThemeWindow.IsLight,
             Colors = PaletteKeys.Where(k => System.Windows.Application.Current.Resources[k] is System.Windows.Media.SolidColorBrush)
@@ -99,7 +105,7 @@ internal static class PortableUpdates
         for (var i = 0; i < 100 && !helper.HasExited; i++)
         {
             if (File.Exists(Path.Combine(prepared.Directory, "ready")))
-            { File.WriteAllText(Path.Combine(prepared.Directory, "accepted"), "accepted"); return true; }
+            { File.WriteAllText(Path.Combine(prepared.Directory, "accepted"), "accepted"); ForgetPrepared(prepared.Id, request.Installation); return true; }
             await Task.Delay(100);
         }
         return false;
@@ -229,6 +235,7 @@ internal static class PortableUpdates
                     var leasePath = Path.Combine(directory, "lease");
                     using (var lease = new FileStream(leasePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
                     {
+                        ForgetPrepared(id, ReadRequest(id).Installation);
                         foreach (var name in new[] { "payload", "backup" })
                         {
                             var root = Path.Combine(directory, name);
@@ -265,12 +272,13 @@ internal static class PortableUpdates
     /// <param name="id">N-GUID immediately beneath CacheRoot.</param>
     /// <returns>Validated local handoff metadata; its private installation path is never added to diagnostic reports.</returns>
     /// <exception cref="IOException">The request is absent, oversized or invalid.</exception>
-    internal static Request ReadRequest(string id)
+    /// <param name="expectedInstallation">Optional current installation boundary checked before probing any request-supplied path.</param>
+    internal static Request ReadRequest(string id, string? expectedInstallation = null)
     {
         var path = Path.Combine(Workspace(id), "request.json");
         if (new FileInfo(path).Length > 8192) throw new InvalidDataException("Update request too large.");
         var request = JsonSerializer.Deserialize<Request>(File.ReadAllBytes(path), Json) ?? throw new InvalidDataException("Invalid update request.");
-        if (!Path.IsPathFullyQualified(request.Installation) || !File.Exists(Path.Combine(request.Installation, UpdatePackage.ManifestName))
+        if (!Path.IsPathFullyQualified(request.Installation) || expectedInstallation != null && !Same(request.Installation, expectedInstallation) || !File.Exists(Path.Combine(request.Installation, UpdatePackage.ManifestName))
             || ReleaseVersion.Parse(request.Version) == null || request.Runtime is not ("win-x64" or "win-arm64")
             || !TextCatalog.SupportedLanguages.Contains(request.Language)
             || request.Colors != null && request.Colors.Any(pair => !PaletteKeys.Contains(pair.Key) || pair.Value is not { Length: 9 }

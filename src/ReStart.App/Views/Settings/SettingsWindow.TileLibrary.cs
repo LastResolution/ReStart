@@ -7,7 +7,7 @@ namespace ReStart.App;
 
 internal sealed partial class SettingsWindow
 {
-    internal WrapPanel LibraryTiles { get; } = new();
+    internal WrapPanel LibraryTiles { get; private set; } = new();
     internal int LibraryRefreshCount { get; private set; }
     internal string? LibraryRefreshError { get; private set; }
 
@@ -57,8 +57,9 @@ internal sealed partial class SettingsWindow
                             Tag = entry.ManifestPath,
                             IsEnabled = entry.Manifest != null,
                             ToolTip = entry.Error ?? L.F(K.AddBundledTile, title),
-                            Background = Resource("TileBrush")
+
                         };
+                        button.SetResourceReference(BackgroundProperty, "TileBrush");
                         button.Click += (_, _) =>
                         {
                             var tile = _main.AddScriptPackage(entry.ManifestPath);
@@ -101,7 +102,7 @@ internal sealed partial class SettingsWindow
             watcher.EnableRaisingEvents = true;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException) { _feedback.Text = ex.Message; }
-        Closed += (_, _) => { closed = true; debounce.Stop(); reconcile.Stop(); watcher?.Dispose(); };
+        _contentCleanup.Add(() => { closed = true; debounce.Stop(); reconcile.Stop(); watcher?.Dispose(); });
         Refresh();
     }
 }

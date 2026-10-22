@@ -109,7 +109,7 @@ public partial class MainWindow
             closeSettings.Tick += (_, _) =>
             {
                 foreach (var settings in Application.Current.Windows.OfType<SettingsWindow>().Where(w => w.IsVisible).ToArray())
-                { settings.Close(); settingsClosed++; }
+                { settings.DiscardAndClose(); settingsClosed++; }
             };
             closeSettings.Start();
             try

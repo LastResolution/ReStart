@@ -12,7 +12,7 @@ public partial class MainWindow
     {
         var (width, height) = TileLayout.Dimensions(folder.Size);
         var available = Math.Min(width * Cell - 4, height * Cell - 4) - 14;
-        var extent = Math.Min(available, (folder.Size == TileSize.Small ? 30 : folder.Size == TileSize.Large ? 132 : 70) * Document.Preferences.TileScale);
+        var extent = Math.Min(available, (folder.Size == TileSize.Small ? 30 : folder.Size == TileSize.Large ? 132 : 70) * DisplayPreferences.TileScale);
         var mini = new UniformGridProxy
         {
             Columns = 2,

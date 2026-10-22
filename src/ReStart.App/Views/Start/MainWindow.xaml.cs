@@ -192,9 +192,9 @@ public partial class MainWindow : Window
             RefreshSearchResults();
             if (_store.RecoveryMessage == null) SetStatus("");
             if (!_preview && !_store.IsReadOnly) SaveLayout();
-            if (!_preview && Document.Preferences.CheckUpdatesOnStartup) _ = CheckStartupUpdatesAsync();
             MarkStartup("complete");
             InitializedSuccessfully = true;
+            if (!_preview) _ = InitializeUpdateStateAsync();
         }
         catch (Exception ex)
         {
@@ -288,7 +288,7 @@ public partial class MainWindow : Window
     /// <summary>Applies language, theme, contrast, wallpaper, and shared control resources from local preferences.</summary>
     public void ApplyAppearance()
     {
-        var p = Document.Preferences;
+        var p = DisplayPreferences;
         RespectMotionPreference();
         LocalizationResources.Apply(p.Language);
         if (_scriptLanguage != L.Language)
@@ -344,6 +344,7 @@ public partial class MainWindow : Window
         UpdateSearchChrome(SearchBox.Text.Trim().Length > 0 || _searchRequested);
         RefreshWallpaper();
         RefreshNavigationShortcuts();
+        RefreshPreparedUpdateNotice();
     }
 
     /// <summary>Reapplies preferences and rebuilds visible groups and app views without changing saved labels.</summary>
@@ -419,8 +420,8 @@ public partial class MainWindow : Window
         foreach (var id in _slideshowSources.Keys.Where(id => !activeScriptIds.Contains(id)).ToArray()) { _slideshowSources.Remove(id); _slideshowImages.Remove(id); }
         foreach (var group in Document.Groups)
         {
-            var placements = TileLayout.Pack(group.Tiles, Document.Preferences.Columns);
-            var expansion = FolderExpansion.Create(placements, Document.Preferences.Columns, _openFolder?.Id);
+            var placements = TileLayout.Pack(group.Tiles, DisplayPreferences.Columns);
+            var expansion = FolderExpansion.Create(placements, DisplayPreferences.Columns, _openFolder?.Id);
             var compact = group.IsStandalone && placements.Count == 1 && expansion == null;
             var columns = compact ? placements[0].Width : expansion?.WidthInCells(placements) ?? Math.Max(1, placements.Count == 0 ? 0 : placements.Max(p => p.Column + p.Width));
             var stack = new StackPanel { Background = Brushes.Transparent, Width = columns * Cell, Tag = group };
@@ -473,7 +474,7 @@ public partial class MainWindow : Window
         ShowGroupBoundaries(_layoutEditing || _dragging);
     }
 
-    private double Cell => 52 * Document.Preferences.TileScale;
+    private double Cell => 52 * DisplayPreferences.TileScale;
 
     private void FitPanels()
     {
@@ -484,7 +485,7 @@ public partial class MainWindow : Window
             CollapsedFolderScroll.MaxHeight = available; ExpandedFolderScroll.MaxHeight = available;
         }
         if (ContentScroll.ActualWidth < 1) return;
-        GroupsPanel.TileColumns = Document.Preferences.Columns;
+        GroupsPanel.TileColumns = DisplayPreferences.Columns;
         GroupsPanel.Cell = Cell;
         GroupsPanel.InvalidateMeasure();
     }
@@ -493,9 +494,9 @@ public partial class MainWindow : Window
     {
         var webTile = tile.Widget == "script" && tile.Live && _scriptPackages.IsWeb(tile.ScriptId);
         var displayName = TileDisplayName(tile);
-        var button = new TileSurfaceButton { MotionAllowed = MotionEnabled, HoverHighlightEnabled = Document.Preferences.TileHoverHighlight, Tag = tile, Padding = new(0), HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch, ToolTip = displayName };
+        var button = new TileSurfaceButton { MotionAllowed = MotionEnabled, HoverHighlightEnabled = DisplayPreferences.TileHoverHighlight, Tag = tile, Padding = new(0), HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch, ToolTip = displayName };
         AutomationProperties.SetName(button, displayName + (tile.IsFolder && tile.Label.Length > 0 ? L.T(K.TileFolderSuffix) : ""));
-        var colorful = tile.UseCustomColor || Document.Preferences.ColoredTiles || tile.Widget.Length > 0;
+        var colorful = tile.UseCustomColor || DisplayPreferences.ColoredTiles || tile.Widget.Length > 0;
         button.Background = colorful && !SystemParameters.HighContrast
             ? (tile.UseCustomColor || tile.Widget.Length > 0) && tile.Color.Length > 0 ? Brush(tile.Color, "#0078D7") : (System.Windows.Media.Brush)FindResource("AccentBrush")
             : (System.Windows.Media.Brush)FindResource("StartTileBrush");
@@ -505,7 +506,7 @@ public partial class MainWindow : Window
             var luminance = 0.2126 * Linear(plate.Color.R) + 0.7152 * Linear(plate.Color.G) + 0.0722 * Linear(plate.Color.B);
             button.Foreground = luminance > 0.179 ? Brushes.Black : Brushes.White;
         }
-        var grid = new Grid { Margin = new(webTile ? 0 : tile.Widget == "script" ? tile.Size == TileSize.Small ? 3 * Document.Preferences.TileScale : 5 : 7) };
+        var grid = new Grid { Margin = new(webTile ? 0 : tile.Widget == "script" ? tile.Size == TileSize.Small ? 3 * DisplayPreferences.TileScale : 5 : 7) };
         if (tile.IsFolder)
         {
             if (_openFolder == tile)
@@ -521,7 +522,7 @@ public partial class MainWindow : Window
         }
         else if (webTile)
         {
-            var footprint = (tile.Size, Document.Preferences.TileScale);
+            var footprint = (tile.Size, DisplayPreferences.TileScale);
             if (!_htmlFootprints.TryGetValue(tile.Id, out var previous) || previous != footprint) _scriptFrames.Remove(tile.Id);
             _htmlFootprints[tile.Id] = footprint;
             button.BorderThickness = new(0);
@@ -533,7 +534,7 @@ public partial class MainWindow : Window
         else if (tile.Widget == "script" && tile.Live)
         {
             grid.Children.Add(new SlideshowTileView { IsHitTestVisible = false, Margin = new(-5) });
-            var plot = new Grid { Margin = tile.Size == TileSize.Small ? new(0) : new(5, 2, 5, Document.Preferences.ShowLiveTileNames ? 20 : 0), ClipToBounds = true };
+            var plot = new Grid { Margin = tile.Size == TileSize.Small ? new(0) : new(5, 2, 5, DisplayPreferences.ShowLiveTileNames ? 20 : 0), ClipToBounds = true };
             plot.Children.Add(new ScriptTileArt { IsHitTestVisible = false });
             var body = new StackPanel { VerticalAlignment = VerticalAlignment.Center, ClipToBounds = true };
             plot.Children.Add(body); grid.Children.Add(plot);
@@ -542,7 +543,7 @@ public partial class MainWindow : Window
         }
         else if (tile.Widget.Length > 0 && tile.Live && !(tile.Widget == "clock" && tile.Size == TileSize.Small))
         {
-            var live = new TextBlock { FontWeight = FontWeights.Light, FontSize = tile.Size == TileSize.Small ? 17 : tile.Widget == "clock" ? 31 : 21, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Left, Margin = new(5, 0, 0, tile.Size == TileSize.Small || !Document.Preferences.ShowLiveTileNames ? 0 : 16) };
+            var live = new TextBlock { FontWeight = FontWeights.Light, FontSize = tile.Size == TileSize.Small ? 17 : tile.Widget == "clock" ? 31 : 21, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Left, Margin = new(5, 0, 0, tile.Size == TileSize.Small || !DisplayPreferences.ShowLiveTileNames ? 0 : 16) };
             _liveLabels.Add((live, tile));
             grid.Children.Add(live);
         }
@@ -552,7 +553,7 @@ public partial class MainWindow : Window
             var available = Math.Min(width * Cell - 4, height * Cell - 4) - 14 - (tile.Size == TileSize.Small ? 0 : 8);
             grid.Children.Add(CreateIcon(tile, Math.Max(1, Math.Min(available, tile.Size == TileSize.Small ? 23 : tile.Size == TileSize.Large ? 60 : 40))));
         }
-        if (tile.Size != TileSize.Small && !tile.IsFolder && !webTile && (tile.Widget.Length == 0 || Document.Preferences.ShowLiveTileNames))
+        if (tile.Size != TileSize.Small && !tile.IsFolder && !webTile && (tile.Widget.Length == 0 || DisplayPreferences.ShowLiveTileNames))
             grid.Children.Add(new TextBlock { Text = displayName, Tag = tile, FontSize = 12, VerticalAlignment = VerticalAlignment.Bottom, TextTrimming = TextTrimming.CharacterEllipsis, Margin = new(2, 0, 1, 0) });
         button.Content = grid;
         if (studioPreview) return button;
@@ -810,7 +811,7 @@ public partial class MainWindow : Window
         var button = new Button { Tag = app, HorizontalContentAlignment = HorizontalAlignment.Stretch, Padding = new(4, 3, 4, 3), Height = 44, ToolTip = app.Name };
         AutomationProperties.SetName(button, app.Name);
         var panel = new DockPanel();
-        var iconBox = new Border { Width = 32, Height = 32, Margin = new(0, 0, 12, 0), Background = Document.Preferences.ColoredTiles ? (System.Windows.Media.Brush)FindResource("AccentBrush") : Brushes.Transparent };
+        var iconBox = new Border { Width = 32, Height = 32, Margin = new(0, 0, 12, 0), Background = DisplayPreferences.ColoredTiles ? (System.Windows.Media.Brush)FindResource("AccentBrush") : Brushes.Transparent };
         var icon = CreateIcon(Tile.FromApp(app), 25);
         icon.Margin = new(0);
         iconBox.Child = icon;
@@ -994,11 +995,17 @@ public partial class MainWindow : Window
     }
 
     private static void OpenMenu(ContextMenu menu, Button target) { menu.PlacementTarget = target; menu.IsOpen = true; }
+    private SettingsWindow? _activeSettings;
     private void OpenSettings(object sender, RoutedEventArgs e) => ShowSettings();
     /// <summary>Shows the settings dialog with close-on-deactivate suspended, then reapplies saved preferences.</summary>
     public void ShowSettings()
     {
-        WithDialog(() => { var settings = new SettingsWindow(this, _store) { Owner = _preview ? null : this }; settings.ShowDialog(); });
+        WithDialog(() =>
+        {
+            if (_activeSettings != null) { _activeSettings.Activate(); return; }
+            _activeSettings = new SettingsWindow(this, _store) { Owner = _preview ? null : this };
+            try { _activeSettings.ShowDialog(); } finally { _activeSettings = null; }
+        });
         if (_exit) return;
         RefreshLayout();
         PreferencesChanged?.Invoke();

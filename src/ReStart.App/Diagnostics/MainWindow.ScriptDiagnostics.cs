@@ -147,7 +147,7 @@ public partial class MainWindow
                 var after = GroupLayout.Pack(fixture.Document.Groups, fixture.GroupsPanel.Columns, 8, fixture.Cell, preserveColumns: true);
                 Require(before.All(p => after.Single(a => a.Group == p.Group) == p), "Adding a library tile changed an existing group rectangle.");
             }
-            finally { settings.Close(); }
+            finally { settings.DiscardAndClose(); }
             var context = new ContextMenu(); var liveMenu = fixture.AddLiveTileMenu(context);
             stage = "context menu library";
             Require(liveMenu.Items.OfType<MenuItem>().Count(item => item.Tag is string id && ScriptTilePackages.BundledIds.Contains(id)) == tiles.Length,

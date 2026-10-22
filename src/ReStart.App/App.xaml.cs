@@ -102,6 +102,12 @@ public partial class App : Application
             _updateNotificationRelease = release;
             _tray.ShowBalloonTip(10000, "ReStart", L.F(K.UpdateAvailable, release.Version), System.Windows.Forms.ToolTipIcon.Info);
         };
+        _window.PreparedUpdateAvailable += () =>
+        {
+            if (_tray == null || _window.IsPresenting) return;
+            _updateNotificationRelease = null;
+            _tray.ShowBalloonTip(10000, "ReStart", L.F(K.UpdateReadyBody, _window.PreparedUpdate!.Version), System.Windows.Forms.ToolTipIcon.Info);
+        };
         if (e.Args.Contains("--complete-update"))
         {
             if (!await FinishUpdatedStartupAsync(e.Args, _window)) return;
@@ -141,7 +147,7 @@ public partial class App : Application
             Visible = true
         };
         _tray.DoubleClick += (_, _) => Dispatcher.Invoke(() => _window!.Toggle());
-        _tray.BalloonTipClicked += (_, _) => Dispatcher.Invoke(() => { if (_updateNotificationRelease is { } release) _window?.OpenUpdateRelease(release); });
+        _tray.BalloonTipClicked += (_, _) => Dispatcher.Invoke(() => { if (_window?.UpdatePreparation == ReStart.App.MainWindow.PreparationState.Ready) _window.RequestPreparedUpdate(); else if (_updateNotificationRelease is { } release) _window?.OpenUpdateRelease(release); });
     }
 
     private void RefreshTrayLanguage()
@@ -185,6 +191,7 @@ public partial class App : Application
             SearchSelectionSmokeResult? searchSelection = null;
             StartupSmokeResult? startupPreparation = null;
             AppearanceSmokeResult? appearance = null;
+            SettingsPreviewSmokeResult? settingsPreview = null;
             FidelitySmokeResult? fidelity = null;
             string? error = null;
             try
@@ -204,6 +211,7 @@ public partial class App : Application
                 if (args.Contains("--tile-data-test")) tileData = await _window.VerifyTileDataAsync(path);
                 if (args.Contains("--search-selection-test")) searchSelection = await _window.VerifySearchSelectionAsync(path);
                 if (args.Contains("--startup-test")) startupPreparation = await _window.VerifyStartupAsync(path);
+                if (args.Contains("--settings-preview-test")) settingsPreview = await _window.VerifySettingsPreviewAsync(path);
                 if (args.Contains("--appearance-test")) appearance = await _window.VerifyAppearanceAsync(path);
                 if (args.Contains("--fidelity-test")) fidelity = await _window.VerifyFidelityAsync(path);
                 _window.SaveScreenshot(path);
@@ -211,7 +219,7 @@ public partial class App : Application
             catch (Exception ex) { success = false; error = ex.ToString(); Console.Error.WriteLine(ex); }
             try
             {
-                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, catalogFolders = _window.CatalogFolderCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, navigation, placement, appFolders, firstInput, appMenus, releaseInfo, scrolling, bundledTiles, pinIcons, motion, editing, folderDrops, tileData, searchSelection, startupPreparation, appearance, fidelity, startup = _window.StartupMetrics, error, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
+                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, catalogFolders = _window.CatalogFolderCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, navigation, placement, appFolders, firstInput, appMenus, releaseInfo, scrolling, bundledTiles, pinIcons, motion, editing, folderDrops, tileData, searchSelection, startupPreparation, appearance, settingsPreview, fidelity, startup = _window.StartupMetrics, error, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
             }
             catch (IOException) { success = false; }
             _window.Exit(); Shutdown(success ? 0 : 1);

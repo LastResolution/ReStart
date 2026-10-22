@@ -14,7 +14,7 @@ internal sealed partial class SettingsWindow : Window
 {
     private readonly MainWindow _main;
     private readonly LayoutStore _store;
-    private readonly Preferences _draft;
+    private Preferences _draft;
     private readonly TextBlock _feedback = new() { TextWrapping = TextWrapping.Wrap, Margin = new(0, 12, 0, 0) };
     private bool _dataChanged;
     private readonly Dictionary<string, Button> _sectionButtons = [];
@@ -31,8 +31,30 @@ internal sealed partial class SettingsWindow : Window
         if (!main.IsPreview) _draft.StartWithWindows = StartupRegistration.Current.IsEnabled;
         Title = L.T(K.SettingsTitle); Width = 940; Height = 740; MinWidth = 760; MinHeight = 500;
         WindowStartupLocation = main.IsPreview ? WindowStartupLocation.CenterScreen : WindowStartupLocation.CenterOwner; ShowInTaskbar = main.IsPreview;
+        BuildContent();
+        _baselineDraft = JsonSerializer.Serialize(_draft);
+        _previewTimer = new(System.Windows.Threading.DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(120) };
+        _previewTimer.Tick += (_, _) => { _previewTimer.Stop(); ApplyDraftPreview(); };
+        Closing += OnClosingSettings;
+        Closed += (_, _) =>
+        {
+            _previewTimer.Stop(); DisposeContent(); _main.EndPreferencesPreview(this);
+            CleanupBackgroundImports();
+            if (_dataChanged) _main.RefreshLayout();
+        };
+    }
+
+    private void BuildContent()
+    {
+        _buildingContent = true;
+        DisposeContent(); _sectionButtons.Clear(); _presetButtons.Clear();
+        _backgroundColor = null!; _accentColor = null!; _baseTheme = null!; _startAccent = null!;
+        LibraryTiles = new(); _feedback.Text = "";
+        if (_feedback.Parent is Panel previousFooter) previousFooter.Children.Remove(_feedback);
+        Title = L.T(K.SettingsTitle); Language = System.Windows.Markup.XmlLanguage.GetLanguage(L.Culture.IetfLanguageTag);
         var root = new DockPanel { Margin = new(28, 24, 28, 20) };
         var footer = new StackPanel { Margin = new(0, 12, 0, 0) };
+        Note(footer, L.T(K.SettingsPreviewHelp));
         footer.Children.Add(_feedback);
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
         var close = new Button { Content = L.T(K.CommonClose), MinWidth = 90, IsCancel = true };
@@ -48,37 +70,38 @@ internal sealed partial class SettingsWindow : Window
         var view = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Padding = new(0, 0, 16, 0) };
         Grid.SetColumn(view, 1); body.Children.Add(view);
         var navigationButtons = new List<Button>();
-        StackPanel Section(string name)
+        StackPanel Section(TextKey key)
         {
+            var name = L.T(key);
             var section = new StackPanel(); Heading(section, name);
             var button = new Button { Content = new TextBlock { Text = name, TextWrapping = TextWrapping.Wrap }, HorizontalContentAlignment = HorizontalAlignment.Stretch, Margin = new(0, 0, 0, 4), Padding = new(12, 12, 8, 12) };
-            button.Click += (_, _) => { view.Content = section; view.ScrollToTop(); foreach (var b in navigationButtons) b.Background = Brushes.Transparent; button.Background = Resource("TileBrush"); };
+            button.Click += (_, _) => { _selectedSection = key; view.Content = section; view.ScrollToTop(); foreach (var b in navigationButtons) b.Background = Brushes.Transparent; button.SetResourceReference(BackgroundProperty, "TileBrush"); };
             navigation.Children.Add(button); navigationButtons.Add(button);
             _sectionButtons[name] = button;
-            if (navigationButtons.Count == 1) { view.Content = section; button.Background = Resource("TileBrush"); }
+            if (key == _selectedSection) { view.Content = section; button.SetResourceReference(BackgroundProperty, "TileBrush"); }
             return section;
         }
-        var content = Section(L.T(K.SettingsStartup));
+        var content = Section(K.SettingsStartup);
         Check(content, L.T(K.SettingsWindowsKey), _draft.CaptureWindowsKey, v => _draft.CaptureWindowsKey = v);
         Note(content, L.T(K.SettingsShortcutHelp));
         Check(content, L.T(K.SettingsStartButton), _draft.CaptureStartButton, value => _draft.CaptureStartButton = value);
         var autostart = Check(content, L.T(K.SettingsAutostart), _draft.StartWithWindows, v => _draft.StartWithWindows = v);
-        autostart.IsEnabled = !main.IsPreview;
-        Note(content, L.T(main.IsPreview ? K.PreviewAutostartHelp : K.StartupBackgroundHelp));
-        if (!main.IsPreview && StartupRegistration.Current.Command is string command) Note(content, L.T(K.StartupCommandPrefix) + command);
+        autostart.IsEnabled = !_main.IsPreview;
+        Note(content, L.T(_main.IsPreview ? K.PreviewAutostartHelp : K.StartupBackgroundHelp));
+        if (!_main.IsPreview && StartupRegistration.Current.Command is string command) Note(content, L.T(K.StartupCommandPrefix) + command);
         Check(content, L.T(K.SettingsCloseOnDeactivate), _draft.CloseOnDeactivate, v => _draft.CloseOnDeactivate = v);
         var explorer = Check(content, L.T(K.ExplorerPinSetting), _draft.ExplorerContextMenu, v => _draft.ExplorerContextMenu = v);
-        explorer.IsEnabled = !main.IsPreview;
+        explorer.IsEnabled = !_main.IsPreview;
         Note(content, L.T(K.ExplorerPinHelp));
-        content = Section(L.T(K.SettingsAppearance));
+        content = Section(K.SettingsAppearance);
         BuildAppearance(content);
-        BuildNavigationSettings(Section(L.T(K.SettingsStartExperience)));
-        content = Section(L.T(K.SettingsLanguage));
+        BuildNavigationSettings(Section(K.SettingsStartExperience));
+        content = Section(K.SettingsLanguage);
         var languages = new[] { "system" }.Concat(TextCatalog.SupportedLanguages).ToArray();
-        Select(content, L.T(K.SettingsDisplayLanguage), new[] { L.T(K.ThemeSystem) }.Concat(TextCatalog.SupportedLanguages.Select(tag => CultureInfo.GetCultureInfo(tag).NativeName)).ToArray(),
+        _languageSelect = Select(content, L.T(K.SettingsDisplayLanguage), new[] { L.T(K.ThemeSystem) }.Concat(TextCatalog.SupportedLanguages.Select(tag => CultureInfo.GetCultureInfo(tag).NativeName)).ToArray(),
             Math.Max(0, Array.IndexOf(languages, _draft.Language)), i => _draft.Language = languages[i]);
         Note(content, L.T(K.SettingsLanguageHelp));
-        content = Section(L.T(K.SettingsLayout));
+        content = Section(K.SettingsLayout);
         Note(content, L.T(K.SettingsLayoutHelp));
         var dataButtons = new WrapPanel { Margin = new(0, 10, 0, 4) };
         DataButton(dataButtons, L.T(K.CommonExport), Export);
@@ -88,7 +111,7 @@ internal sealed partial class SettingsWindow : Window
         Note(content, L.T(K.StoragePrefix) + _store.FilePath);
         Note(content, L.T(K.SettingsPrivacy));
         BuildMigrationInfo(content);
-        content = Section(L.T(K.SettingsScriptTiles));
+        content = Section(K.SettingsScriptTiles);
         Check(content, L.T(K.ShowLiveTileNames), _draft.ShowLiveTileNames, v => _draft.ShowLiveTileNames = v);
         Heading(content, L.T(K.BundledTiles));
         var bundled = new WrapPanel { Margin = new(0, 0, 0, 16) };
@@ -132,36 +155,40 @@ internal sealed partial class SettingsWindow : Window
         DataButton(scriptButtons, L.T(K.ImportScriptTile), () => { _main.ImportScriptTile(); });
         content.Children.Add(scriptButtons);
         Note(content, L.T(K.ScriptCapabilitiesHelp));
-        content = Section(L.T(K.SettingsUpdates));
+        content = Section(K.SettingsUpdates);
         BuildUpdates(content);
-        content = Section(L.T(K.SettingsAbout));
+        content = Section(K.SettingsAbout);
         BuildAbout(content);
         var links = new WrapPanel { Margin = new(0, 10, 0, 0) };
         DataButton(links, "GitHub / README", () => ShellLauncher.Launch("https://github.com/LastResolution/ReStart"));
         DataButton(links, L.T(K.OpenWindowsSettings), () => ShellLauncher.Launch("ms-settings:"));
-        DataButton(links, L.T(K.AppExit), () => { DialogResult = false; ((App)Application.Current).ExitApplication(); });
+        DataButton(links, L.T(K.AppExit), RequestExit);
         content.Children.Add(links);
         root.Children.Add(body);
         Content = root;
-        Closed += (_, _) => { if (_dataChanged) _main.RefreshLayout(); };
+        _buildingContent = false;
     }
 
     private static System.Windows.Media.Brush Resource(string key) => (System.Windows.Media.Brush)Application.Current.FindResource(key);
     private static void Heading(Panel panel, string text) => panel.Children.Add(new TextBlock { Text = text, FontSize = 20, Margin = new(0, 0, 0, 16) });
-    private static void Note(Panel panel, string text) => panel.Children.Add(new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, FontSize = 12, Foreground = Resource("MutedBrush"), Margin = new(0, 3, 0, 8), LineHeight = 20 });
-    private static CheckBox Check(Panel panel, string label, bool initial, Action<bool> changed)
+    private static void Note(Panel panel, string text)
+    {
+        var note = new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, FontSize = 12, Margin = new(0, 3, 0, 8), LineHeight = 20 };
+        note.SetResourceReference(TextBlock.ForegroundProperty, "MutedBrush"); panel.Children.Add(note);
+    }
+    private CheckBox Check(Panel panel, string label, bool initial, Action<bool> changed)
     {
         var checkbox = new CheckBox { Content = new TextBlock { Text = label, TextWrapping = TextWrapping.Wrap }, IsChecked = initial };
         System.Windows.Automation.AutomationProperties.SetName(checkbox, label);
-        checkbox.Checked += (_, _) => changed(true); checkbox.Unchecked += (_, _) => changed(false); panel.Children.Add(checkbox); return checkbox;
+        checkbox.Checked += (_, _) => { changed(true); DraftChanged(); }; checkbox.Unchecked += (_, _) => { changed(false); DraftChanged(); }; panel.Children.Add(checkbox); return checkbox;
     }
-    private static ComboBox Select(Panel panel, string label, string[] options, int index, Action<int> changed)
+    private ComboBox Select(Panel panel, string label, string[] options, int index, Action<int> changed)
     {
         var row = new DockPanel { Margin = new(0, 10, 0, 7) };
         row.Children.Add(new TextBlock { Text = label, Width = 170, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center });
         var select = new ComboBox { ItemsSource = options, SelectedIndex = index, MinWidth = 180, HorizontalAlignment = HorizontalAlignment.Left, Padding = new(6) };
         System.Windows.Automation.AutomationProperties.SetName(select, label);
-        select.SelectionChanged += (_, _) => changed(select.SelectedIndex); row.Children.Add(select); panel.Children.Add(row); return select;
+        select.SelectionChanged += (_, _) => { changed(select.SelectedIndex); DraftChanged(); }; row.Children.Add(select); panel.Children.Add(row); return select;
     }
     /// <summary>Adds a named slider and localized value, keeping numeric blur radii distinct from percentages.</summary>
     /// <param name="panel">Settings section receiving the row.</param>
@@ -172,7 +199,7 @@ internal sealed partial class SettingsWindow : Window
     /// <param name="changed">Updates the settings draft after a value change; no save is performed here.</param>
     /// <param name="snap">Whether input snaps to the configured tick interval.</param>
     /// <param name="percentage">True formats fractions as percentages with 0.05 ticks; false displays integers with unit ticks.</param>
-    private static void Slide(Panel panel, string label, double min, double max, double value, Action<double> changed, bool snap, bool percentage = true)
+    private void Slide(Panel panel, string label, double min, double max, double value, Action<double> changed, bool snap, bool percentage = true)
     {
         string Display(double number) => number.ToString(percentage ? "P0" : "N0", L.Culture);
         var row = new DockPanel { Margin = new(0, 12, 0, 7) };
@@ -181,22 +208,24 @@ internal sealed partial class SettingsWindow : Window
         DockPanel.SetDock(percent, Dock.Right); row.Children.Add(percent);
         var slider = new Slider { Minimum = min, Maximum = max, Value = value, TickFrequency = percentage ? 0.05 : 1, IsSnapToTickEnabled = snap, SmallChange = percentage ? 0.05 : 1, LargeChange = percentage ? 0.1 : 5, VerticalAlignment = VerticalAlignment.Center, Margin = new(0, 0, 10, 0) };
         System.Windows.Automation.AutomationProperties.SetName(slider, label);
-        slider.ValueChanged += (_, _) => { changed(slider.Value); percent.Text = Display(slider.Value); }; row.Children.Add(slider); panel.Children.Add(row);
+        slider.ValueChanged += (_, _) => { changed(slider.Value); percent.Text = Display(slider.Value); DraftChanged(); }; row.Children.Add(slider); panel.Children.Add(row);
     }
     private static Button DataButton(Panel panel, string label, Action action)
     {
-        var button = new Button { Content = label, Margin = new(0, 0, 8, 6), Background = Resource("TileBrush") };
+        var button = new Button { Content = label, Margin = new(0, 0, 8, 6) };
+        button.SetResourceReference(BackgroundProperty, "TileBrush");
         button.Click += (_, _) => action(); panel.Children.Add(button); return button;
     }
     private void OpenExternal(string target)
     {
         try
         {
+            if (!ResolvePendingChanges()) return;
             ShellLauncher.Launch(target);
             // A modal owner remains topmost while its dialog is open. Close the
             // dialog first, then dismiss Start after ShowDialog has unwound.
             Closed += (_, _) => _main.Dispatcher.BeginInvoke(() => _main.Dismiss(immediately: true));
-            Close();
+            DiscardAndClose();
         }
         catch (Exception ex) when (ex is IOException or InvalidOperationException or System.ComponentModel.Win32Exception)
         { _feedback.Text = ex.Message; }
@@ -209,7 +238,12 @@ internal sealed partial class SettingsWindow : Window
     }
     private void Save(object sender, RoutedEventArgs e)
     {
-        if (!ValidateColors() || !ValidateBackgroundImage()) return;
+        if (SaveDraft()) { _allowClose = true; DialogResult = true; }
+    }
+
+    private bool SaveDraft()
+    {
+        if (!ValidateColors() || !ValidateBackgroundImage()) return false;
         var previous = _main.Document.Preferences;
         StartupRegistration.Entry? registration = null;
         try
@@ -219,9 +253,9 @@ internal sealed partial class SettingsWindow : Window
                 registration = StartupRegistration.Current.Capture();
                 StartupRegistration.Current.SetEnabled(_draft.StartWithWindows);
             }
-            _main.Document.Preferences = _draft;
+            _main.Document.Preferences = JsonSerializer.Deserialize<Preferences>(JsonSerializer.Serialize(_draft))!;
             _store.Save(_main.Document);
-            DialogResult = true;
+            _baselineDraft = JsonSerializer.Serialize(_draft); _main.EndPreferencesPreview(this); return true;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.Security.SecurityException)
         {
@@ -229,9 +263,10 @@ internal sealed partial class SettingsWindow : Window
             if (registration != null)
             {
                 try { StartupRegistration.Current.Restore(registration); }
-                catch (Exception rollback) when (rollback is IOException or UnauthorizedAccessException or System.Security.SecurityException) { _feedback.Text = L.T(K.ErrorStartupRollback) + rollback.Message; return; }
+                catch (Exception rollback) when (rollback is IOException or UnauthorizedAccessException or System.Security.SecurityException) { _feedback.Text = L.T(K.ErrorStartupRollback) + rollback.Message; return false; }
             }
             _feedback.Text = L.T(K.ErrorSave) + ex.Message;
+            return false;
         }
     }
     private void Export()

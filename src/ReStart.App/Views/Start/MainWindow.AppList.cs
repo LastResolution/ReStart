@@ -34,8 +34,8 @@ public partial class MainWindow
                 AppsPanel.Children.Add(row);
             }
         }
-        if (Document.Preferences.ShowRecentlyAdded) HistorySection(K.RecentlyAdded, Activity.Recent(_apps, DateTimeOffset.Now));
-        if (Document.Preferences.ShowMostUsed) HistorySection(K.MostUsed, Activity.Frequent(_apps));
+        if (DisplayPreferences.ShowRecentlyAdded) HistorySection(K.RecentlyAdded, Activity.Recent(_apps, DateTimeOffset.Now));
+        if (DisplayPreferences.ShowMostUsed) HistorySection(K.MostUsed, Activity.Frequent(_apps));
         var tree = AppListTree.Build(_apps);
         foreach (var section in tree.GroupBy(n => n.Section).OrderBy(g => g.Key, StringComparer.CurrentCulture))
         {

@@ -890,4 +890,22 @@ public enum TextKey
     SettingsBlur,
     /// <summary>0 keeps the image sharp. Blur affects only ReStart’s background image.</summary>
     SettingsBlurHelp,
+    /// <summary>Explains the immediate appearance, geometry and language preview.</summary>
+    SettingsPreviewHelp,
+    /// <summary>Titles the unsaved-settings decision dialog.</summary>
+    SettingsUnsavedTitle,
+    /// <summary>Explains save, discard and restoration of visual draft settings.</summary>
+    SettingsUnsavedBody,
+    /// <summary>Keeps the settings editor open with its draft intact.</summary>
+    SettingsKeepEditing,
+    /// <summary>Discards draft settings and closes the editor.</summary>
+    SettingsDiscardClose,
+    /// <summary>Saves settings before closing the editor.</summary>
+    SettingsSaveClose,
+    /// <summary>Titles a reminder for an explicitly downloaded update.</summary>
+    UpdateReadyTitle,
+    /// <summary>Identifies the prepared release version in placeholder zero.</summary>
+    UpdateReadyBody,
+    /// <summary>Explains explicit restart consent and the persistent reminder.</summary>
+    UpdateReadyHelp,
 }

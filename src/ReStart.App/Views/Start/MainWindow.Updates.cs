@@ -26,7 +26,7 @@ public partial class MainWindow
 
     private void PresentStartupUpdate(UpdateCheckResult result)
     {
-        if (_exit || !Document.Preferences.CheckUpdatesOnStartup || _startupUpdateNotified || result.Status != UpdateCheckStatus.Available || result.Release == null) return;
+        if (_exit || UpdatePreparation == PreparationState.Ready || !Document.Preferences.CheckUpdatesOnStartup || _startupUpdateNotified || result.Status != UpdateCheckStatus.Available || result.Release == null) return;
         _startupUpdateNotified = true;
         ShowUpdateNotice(result.Release);
         StartupUpdateAvailable?.Invoke(result.Release);

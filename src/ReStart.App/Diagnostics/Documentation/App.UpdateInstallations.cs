@@ -21,12 +21,11 @@ public partial class App
         var source = Environment.ProcessPath!;
         string? successfulWorkspace = null;
         var current = ReleaseVersion.Parse(AppBuildInfo.Version)!;
-        var previous = current.Patch > 0 ? new ReleaseVersion(current.Major, current.Minor, current.Patch - 1)
+        var previous = previousExecutable != null
+            ? ReleaseVersion.Parse(FileVersionInfo.GetVersionInfo(previousExecutable).ProductVersion) ?? throw new InvalidDataException("Previous fixture executable has no semantic version.")
+            : current.Patch > 0 ? new ReleaseVersion(current.Major, current.Minor, current.Patch - 1)
             : current.Minor > 0 ? new ReleaseVersion(current.Major, current.Minor - 1, 0) : new ReleaseVersion(Math.Max(0, current.Major - 1), 0, 0);
-        if (previous.CompareTo(current) >= 0) throw new InvalidOperationException("Fixture requires a version after 0.0.0.");
-        if (previousExecutable != null)
-            Check(ReleaseVersion.Parse(FileVersionInfo.GetVersionInfo(previousExecutable).ProductVersion)?.ToString() == previous.ToString(),
-                "Previous fixture executable does not match the preceding release version.");
+        if (previous.CompareTo(current) >= 0) throw new InvalidOperationException("Fixture requires an older previous release.");
         foreach (var scenario in new[] { "success", "startup-failure", "locked-file", "interrupted" })
         {
             var installation = Path.Combine(directory, scenario);
@@ -44,6 +43,23 @@ public partial class App
             WriteFixtureManifest(payload, current.ToString());
             var manifest = UpdatePackage.ReadManifest(payload);
             PortableUpdates.FinalizePreparation(workspace, manifest, installation, fixture: true);
+            Check(PortableUpdates.RestorePrepared(installation)?.Id == id, "Explicit preparation was not restored without applying it.");
+            Check(UpdatePackage.ReadManifest(installation).Version == previous.ToString(), "Restoring preparation installed an update without consent.");
+            Check(PortableUpdates.RestorePrepared(Path.Combine(directory, "another-installation")) == null, "An unrelated installation adopted this preparation.");
+            if (scenario == "success")
+            {
+                var metadata = Directory.GetFiles(PortableUpdates.CacheRoot, "prepared-*.json").Single(); var savedIndex = File.ReadAllText(metadata);
+                File.WriteAllText(metadata, "invalid"); Check(PortableUpdates.RestorePrepared(installation) == null, "Malformed readiness metadata was accepted.");
+                File.WriteAllText(metadata, new string('x', 129)); Check(PortableUpdates.RestorePrepared(installation) == null, "Oversized readiness metadata was accepted.");
+                File.WriteAllText(metadata, savedIndex);
+                foreach (var candidate in new[] { Path.Combine(payload, "README.txt"), Path.Combine(workspace, "ReStart.exe") })
+                {
+                    var originalBytes = File.ReadAllBytes(candidate); File.AppendAllText(candidate, "modified");
+                    Check(PortableUpdates.RestorePrepared(installation) == null, "A modified prepared payload or helper was accepted.");
+                    File.WriteAllBytes(candidate, originalBytes);
+                }
+                Check(PortableUpdates.RestorePrepared(installation)?.Id == id, "Rejecting modified preparation consumed the restored valid package.");
+            }
             if (scenario == "startup-failure") File.WriteAllText(Path.Combine(workspace, "simulate-startup-failure"), "fail");
             using var locked = scenario == "locked-file" ? new FileStream(Path.Combine(installation, "README.txt"), FileMode.Open, FileAccess.Read, FileShare.Read) : null;
             if (scenario == "interrupted")

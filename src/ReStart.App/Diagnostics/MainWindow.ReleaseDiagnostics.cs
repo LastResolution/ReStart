@@ -132,7 +132,7 @@ public partial class MainWindow
                             finally { license.Close(); }
                         }
                     }
-                    finally { settings.Close(); }
+                    finally { settings.DiscardAndClose(); }
                 }
             var wallpaperChecks = VerifyWallpaperRefresh(fixture, directory);
             var beforeDeferredSave = File.ReadAllText(path); var savedName = fixture.Document.Groups[0].Name;

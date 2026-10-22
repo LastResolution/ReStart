@@ -23,7 +23,7 @@ public partial class MainWindow
 
     private ScaleTransform ContentScale => (ScaleTransform)MainContent.RenderTransform;
 
-    private bool MotionEnabled => Document.Preferences.Animate &&
+    private bool MotionEnabled => DisplayPreferences.Animate &&
         (_preview && _verifyMotion || SystemParameters.ClientAreaAnimation && !SystemParameters.HighContrast);
 
     /// <summary>Dismisses Start with its exit transition, or immediately when motion is disabled or an OS session action requires it.</summary>
