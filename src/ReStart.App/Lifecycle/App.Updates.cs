@@ -32,10 +32,9 @@ public partial class App
             if (fixtureRoot != null && Value(args, "--verify-update-parent") is { } parentId)
             {
                 var request = PortableUpdates.ReadRequest(parentId);
-                using var process = System.Diagnostics.Process.GetCurrentProcess();
-                request = request with { ParentId = process.Id, ParentStart = process.StartTime.ToUniversalTime().Ticks };
-                File.WriteAllText(Path.Combine(PortableUpdates.Workspace(parentId), "request.json"), System.Text.Json.JsonSerializer.Serialize(request));
-                var ready = await PortableUpdates.StartAsync(new(parentId, PortableUpdates.Workspace(parentId), request.Version));
+                // Leave the stored creator PID untouched: StartAsync must bind
+                // the actual handoff parent, including preparation restored later.
+                var ready = await PortableUpdates.StartAsync(new(parentId, PortableUpdates.Workspace(parentId), request.Version, request.Installation));
                 Shutdown(ready ? 0 : 1); return true;
             }
             if (fixtureRoot != null && Value(args, "--complete-update") is { } completeFixture)
