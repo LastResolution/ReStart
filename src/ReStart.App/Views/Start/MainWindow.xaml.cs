@@ -445,7 +445,20 @@ public partial class MainWindow : Window
         }
         if (Document.Groups.Count == 0)
         {
-            var button = new Button { Content = L.T(K.EmptyGroups), Margin = new(0, 80, 0, 0), FontSize = 18 };
+            // Main content starts 20 DIPs below the rail: 28 + 48/2 aligns
+            // this action with the 72-DIP centre of the Pinned tiles row.
+            var button = new Button
+            {
+                Content = new TextBlock { Text = L.T(K.EmptyGroups), TextWrapping = TextWrapping.Wrap },
+                Margin = new(0, 28, 0, 0),
+                MinHeight = 48,
+                MaxWidth = 440,
+                FontSize = 14,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                HorizontalContentAlignment = HorizontalAlignment.Left,
+                IsEnabled = CanEditLayout
+            };
+            AutomationProperties.SetName(button, L.T(K.EmptyGroups));
             button.Click += (_, _) => AddGroup();
             GroupsPanel.Children.Add(button);
         }
@@ -842,7 +855,13 @@ public partial class MainWindow : Window
         ClearDropPreview();
         ContentScroll.ScrollToTop();
     }
-    private void ShowPinned(object sender, RoutedEventArgs e) => ResetToPinnedView();
+    private void ShowPinned(object sender, RoutedEventArgs e)
+    {
+        // Dragging a selection over the navigation item must retain its source
+        // selection. An ordinary navigation click finishes selection immediately.
+        if (!_dragging) SetLayoutEditing(false);
+        ResetToPinnedView();
+    }
     private void ShowAllApps(object sender, RoutedEventArgs e) { SetLayoutEditing(false); _searchRequested = false; _allApps = true; SearchBox.Clear(); SearchChanged(SearchBox, new(TextBox.TextChangedEvent, UndoAction.None)); ExpandedRail.Visibility = Visibility.Collapsed; ContentScroll.ScrollToTop(); }
     private void ClearSearch(object sender, RoutedEventArgs e) { SearchBox.Clear(); SearchBox.Focus(); }
     private void ToggleRail(object sender, RoutedEventArgs e) => SetRailOpen(ExpandedRail.Visibility != Visibility.Visible, explicitToggle: true);

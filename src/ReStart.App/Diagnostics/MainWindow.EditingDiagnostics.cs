@@ -163,6 +163,17 @@ public partial class MainWindow
                     Require(fixture.EditModeButton.Content is RailLabel && fixture.EditModeButton.IsDescendantOf(fixture.NavigationRail)
                         && fixture.ExpandedEditModeButton.IsDescendantOf(fixture.ExpandedRail), "Selection mode is not available from both sidebar variants.");
                     Require(fixture.EditBar.ActualHeight > 0 && fixture.EditBar.ActualWidth <= fixture.ContentScroll.ActualWidth + 1, "The editing toolbar overflows its viewport.");
+                    fixture.ExpandedEditModeButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); fixture.UpdateLayout();
+                    Require(!fixture._layoutEditing && !fixture.EditBar.IsVisible && fixture.GroupsPanel.IsVisible && !fixture._allApps && !fixture._searchRequested,
+                        "Finish selecting did not restore the pinned home directly.");
+                    fixture.EditModeButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    fixture.PinnedNav.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); fixture.UpdateLayout();
+                    Require(!fixture._layoutEditing && !fixture.EditBar.IsVisible && fixture.EditRailLabel.Label == L.T(K.EditLayout) && fixture.GroupsPanel.IsVisible,
+                        "Pinned tiles requires an All apps detour to leave selection mode.");
+                    fixture.SetLayoutEditing(true); fixture.ToggleTileSelection(a.Id); fixture._dragging = true;
+                    fixture.ShowPinned(fixture.PinnedNav, new());
+                    Require(fixture._layoutEditing && fixture._selectedTileIds.Contains(a.Id), "Navigation during a selection drag discarded the dragged selection.");
+                    fixture._dragging = false; fixture.ClearTileSelectionClick(this, new());
                     themes++;
                 }
             fixture.Document.Preferences.Language = "en"; fixture.ApplyAppearance();

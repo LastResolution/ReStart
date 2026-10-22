@@ -141,6 +141,7 @@ public partial class MainWindow
                     }
                     editorCases++;
                 }
+            checks += fixture.VerifyEmptyPinnedHome(directory);
             return new(checks, paletteCases, editorCases);
         }
         finally { fixture.Exit(); L.SetLanguage(language); ApplyAppearance(); Activate(); }
