@@ -439,5 +439,7 @@
   "UpdateCancelled": "다운로드를 취소했습니다. 설치 파일은 변경되지 않았습니다.",
   "UpdateInstalled": "ReStart 업데이트가 완료되었습니다.",
   "UpdateRepairHelp": "업데이트를 자동으로 복구하지 못했습니다. ReStart를 종료한 뒤 전체 포터블 ZIP을 설치 폴더에 압축 해제하세요. 로컬 설정은 유지하세요. 업데이트 백업은 로컬 앱 데이터의 ReStart.UpdateCache에 있습니다.",
-  "UpdateRestored": "업데이트를 완료하지 못했습니다. 이전 설치 파일로 ReStart를 실행했습니다."
+  "UpdateRestored": "업데이트를 완료하지 못했습니다. 이전 설치 파일로 ReStart를 실행했습니다.",
+  "SettingsBlur": "배경 이미지 흐림",
+  "SettingsBlurHelp": "0은 이미지를 선명하게 표시합니다. ReStart의 배경 이미지에만 적용됩니다."
 }

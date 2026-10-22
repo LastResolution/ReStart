@@ -99,6 +99,7 @@ jobs:
             artifacts/startup/*/*.png
             artifacts/startup/*/start.json
             artifacts/appearance/*/*.png
+            artifacts/appearance/*/fixture-*/*.png
             artifacts/appearance/*/start.json
             artifacts/app-menus/start.json
             artifacts/release-info/*.png

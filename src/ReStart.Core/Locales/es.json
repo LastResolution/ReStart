@@ -439,5 +439,7 @@
   "UpdateCancelled": "Descarga cancelada. La instalación no ha cambiado.",
   "UpdateInstalled": "ReStart se ha actualizado correctamente.",
   "UpdateRepairHelp": "No se pudo recuperar la actualización automáticamente. Cierre ReStart y extraiga el ZIP portátil completo en la carpeta de instalación. Conserve sus ajustes locales. Las copias están en ReStart.UpdateCache dentro de los datos locales de aplicaciones.",
-  "UpdateRestored": "La actualización no se completó. ReStart está usando la instalación anterior."
+  "UpdateRestored": "La actualización no se completó. ReStart está usando la instalación anterior.",
+  "SettingsBlur": "Desenfoque del fondo",
+  "SettingsBlurHelp": "0 mantiene la imagen nítida. Solo afecta a la imagen de fondo de ReStart."
 }

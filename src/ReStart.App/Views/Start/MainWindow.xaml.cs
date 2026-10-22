@@ -335,6 +335,9 @@ public partial class MainWindow : Window
         Application.Current.Resources["StartTileBrush"] = new SolidColorBrush(highContrast ? background
             : customBackground ? Mix(background, opposite, .12) : light ? Color.FromArgb(20, 0, 0, 0) : Color.FromArgb(32, 255, 255, 255));
         ThemeWindow.IsLight = light;
+        if (highContrast || p.BackgroundBlur <= 0) Wallpaper.Effect = null;
+        else if (Wallpaper.Effect is not System.Windows.Media.Effects.BlurEffect blur || Math.Abs(blur.Radius - p.BackgroundBlur) > .01)
+            Wallpaper.Effect = new System.Windows.Media.Effects.BlurEffect { Radius = p.BackgroundBlur, RenderingBias = System.Windows.Media.Effects.RenderingBias.Performance };
         foreach (Window window in Application.Current.Windows) ThemeWindow.Apply(window);
         Tint.Background = new SolidColorBrush(Color.FromArgb((byte)(highContrast ? 255 : 255 * p.BackgroundOpacity), startBackground.R, startBackground.G, startBackground.B));
         Root.Background = new SolidColorBrush(startBackground);

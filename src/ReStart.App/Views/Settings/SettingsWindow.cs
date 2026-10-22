@@ -163,15 +163,25 @@ internal sealed partial class SettingsWindow : Window
         System.Windows.Automation.AutomationProperties.SetName(select, label);
         select.SelectionChanged += (_, _) => changed(select.SelectedIndex); row.Children.Add(select); panel.Children.Add(row); return select;
     }
-    private static void Slide(Panel panel, string label, double min, double max, double value, Action<double> changed, bool snap)
+    /// <summary>Adds a named slider and localized value, keeping numeric blur radii distinct from percentages.</summary>
+    /// <param name="panel">Settings section receiving the row.</param>
+    /// <param name="label">Localized label and accessible slider name.</param>
+    /// <param name="min">Inclusive lower bound in the caller's units.</param>
+    /// <param name="max">Inclusive upper bound in the caller's units.</param>
+    /// <param name="value">Initial normalized draft value.</param>
+    /// <param name="changed">Updates the settings draft after a value change; no save is performed here.</param>
+    /// <param name="snap">Whether input snaps to the configured tick interval.</param>
+    /// <param name="percentage">True formats fractions as percentages with 0.05 ticks; false displays integers with unit ticks.</param>
+    private static void Slide(Panel panel, string label, double min, double max, double value, Action<double> changed, bool snap, bool percentage = true)
     {
+        string Display(double number) => number.ToString(percentage ? "P0" : "N0", L.Culture);
         var row = new DockPanel { Margin = new(0, 12, 0, 7) };
         row.Children.Add(new TextBlock { Text = label, Width = 170 });
-        var percent = new TextBlock { Text = $"{value:P0}", Width = 48, HorizontalAlignment = HorizontalAlignment.Right };
+        var percent = new TextBlock { Text = Display(value), Width = 48, HorizontalAlignment = HorizontalAlignment.Right };
         DockPanel.SetDock(percent, Dock.Right); row.Children.Add(percent);
-        var slider = new Slider { Minimum = min, Maximum = max, Value = value, TickFrequency = 0.05, IsSnapToTickEnabled = snap, VerticalAlignment = VerticalAlignment.Center, Margin = new(0, 0, 10, 0) };
+        var slider = new Slider { Minimum = min, Maximum = max, Value = value, TickFrequency = percentage ? 0.05 : 1, IsSnapToTickEnabled = snap, SmallChange = percentage ? 0.05 : 1, LargeChange = percentage ? 0.1 : 5, VerticalAlignment = VerticalAlignment.Center, Margin = new(0, 0, 10, 0) };
         System.Windows.Automation.AutomationProperties.SetName(slider, label);
-        slider.ValueChanged += (_, _) => { changed(slider.Value); percent.Text = $"{slider.Value:P0}"; }; row.Children.Add(slider); panel.Children.Add(row);
+        slider.ValueChanged += (_, _) => { changed(slider.Value); percent.Text = Display(slider.Value); }; row.Children.Add(slider); panel.Children.Add(row);
     }
     private static Button DataButton(Panel panel, string label, Action action)
     {

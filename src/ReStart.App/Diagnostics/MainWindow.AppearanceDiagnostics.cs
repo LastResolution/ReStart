@@ -15,6 +15,11 @@ public partial class MainWindow
         if (!_preview) throw new InvalidOperationException("Appearance verification requires preview mode.");
         var directory = Path.Combine(Path.GetDirectoryName(snapshotPath)!, "fixture-" + Guid.NewGuid().ToString("N"));
         var store = new LayoutStore(Path.Combine(directory, "layout.json"));
+        store.Save(new()
+        {
+            Preferences = new() { ShowWallpaper = false, Animate = false, Language = "en" },
+            Groups = [new() { Name = "Sample apps", Tiles = [new() { AppId = "editor", Label = "Sample editor" }, new() { AppId = "photos", Label = "Sample photos" }] }]
+        });
         var fixture = new MainWindow(store, true, () => Task.FromResult(new List<AppEntry> { new("editor", "Sample editor", "", false), new("photos", "Sample photos", "", false) }))
         { Owner = this, Width = 1280, Height = 800, Topmost = false };
         var language = L.Language; var checks = 0; var paletteCases = 0; var editorCases = 0;
@@ -140,6 +145,46 @@ public partial class MainWindow
                         });
                     }
                     editorCases++;
+                }
+            var pixels = new byte[640 * 360 * 4];
+            for (var y = 0; y < 360; y++)
+                for (var x = 0; x < 640; x++)
+                {
+                    var index = (y * 640 + x) * 4; var square = (x / 32 + y / 32) % 2 == 0;
+                    pixels[index] = square ? (byte)190 : (byte)70; pixels[index + 1] = square ? (byte)110 : (byte)180;
+                    pixels[index + 2] = square ? (byte)40 : (byte)220; pixels[index + 3] = 255;
+                }
+            var sampleImage = System.Windows.Media.Imaging.BitmapSource.Create(640, 360, 96, 96, PixelFormats.Bgra32, null, pixels, 640 * 4); sampleImage.Freeze();
+            fixture.Document.Preferences.ColorThemeId = ""; fixture.Document.Preferences.BackgroundColor = ""; fixture.Document.Preferences.Accent = "#0078D7";
+            foreach (var tag in L.SupportedLanguages)
+                foreach (var mode in new[] { ReStart.Core.ThemeMode.Dark, ReStart.Core.ThemeMode.Light })
+                {
+                    fixture.Document.Preferences.Language = tag; fixture.Document.Preferences.Theme = mode; fixture.ApplyAppearance();
+                    Edit(settings =>
+                    {
+                        var opacity = VisualChildren<Slider>(settings).Single(s => AutomationProperties.GetName(s) == L.T(K.SettingsOpacity));
+                        var blur = VisualChildren<Slider>(settings).Single(s => AutomationProperties.GetName(s) == L.T(K.SettingsBlur));
+                        Check(opacity.Minimum == .1 && opacity.Maximum == 1 && blur.Minimum == 0 && blur.Maximum == 50 && blur.IsSnapToTickEnabled,
+                            "Wallpaper controls lost their opacity or blur ranges.");
+                        opacity.Value = .1; blur.Value = 0; Save(settings);
+                    });
+                    var saved = store.Load()!.Preferences;
+                    Check(saved.BackgroundOpacity == .1 && saved.BackgroundBlur == 0, "Native save/reload lost low opacity or disabled blur.");
+                    foreach (var opacity in new[] { .1, .3, .86, 1d })
+                        foreach (var radius in new[] { 0d, 12d, 35d, 50d })
+                        {
+                            fixture.Document.Preferences.BackgroundOpacity = opacity; fixture.Document.Preferences.BackgroundBlur = radius;
+                            fixture.Document.Preferences.ShowWallpaper = true; fixture.Document.Preferences.UseCustomBackground = false;
+                            fixture.ApplyAppearance(); if (!SystemParameters.HighContrast) fixture.Wallpaper.Source = sampleImage; fixture.UpdateLayout();
+                            Check(((SolidColorBrush)fixture.Tint.Background).Color.A == (SystemParameters.HighContrast ? 255 : (byte)(255 * opacity)),
+                                "Rendered tint did not follow the selected alpha or high-contrast override.");
+                            Check(SystemParameters.HighContrast || radius == 0 ? fixture.Wallpaper.Effect == null
+                                : fixture.Wallpaper.Effect is System.Windows.Media.Effects.BlurEffect effect && effect.Radius == radius,
+                                "Wallpaper blur did not follow the configured radius.");
+                            Check(fixture.Root.Effect == null && fixture.Tint.Effect == null, "Wallpaper blur was applied to foreground controls.");
+                            if (tag == "en" && mode == ReStart.Core.ThemeMode.Dark && opacity == .1 && radius is 0 or 12 or 50)
+                                fixture.SaveScreenshot(Path.Combine(directory, $"wallpaper-10-blur-{radius:0}.png"));
+                        }
                 }
             checks += fixture.VerifyEmptyPinnedHome(directory);
             return new(checks, paletteCases, editorCases);

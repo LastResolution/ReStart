@@ -38,7 +38,8 @@ public sealed class LayoutDocument
         Preferences.LockedGroupIds = (Preferences.LockedGroupIds ?? []).Where(id => Groups.Any(g => g.Id == id)).Distinct(StringComparer.Ordinal).Take(2000).ToList();
         Preferences.Columns = Preferences.Columns == 8 ? 8 : 6;
         Preferences.TileScale = double.IsFinite(Preferences.TileScale) ? Math.Clamp(Preferences.TileScale, 0.7, 1.5) : 1;
-        Preferences.BackgroundOpacity = double.IsFinite(Preferences.BackgroundOpacity) ? Math.Clamp(Preferences.BackgroundOpacity, 0.3, 1) : 0.86;
+        Preferences.BackgroundOpacity = double.IsFinite(Preferences.BackgroundOpacity) ? Math.Clamp(Preferences.BackgroundOpacity, 0.1, 1) : 0.86;
+        Preferences.BackgroundBlur = double.IsFinite(Preferences.BackgroundBlur) ? Math.Clamp(Preferences.BackgroundBlur, 0, 50) : 12;
         if (!Enum.IsDefined(Preferences.Theme)) Preferences.Theme = ThemeMode.Dark;
         Preferences.Accent = ThemePresets.IsColor(Preferences.Accent) ? Preferences.Accent.ToUpperInvariant() : "#0078D7";
         Preferences.BackgroundColor = ThemePresets.IsColor(Preferences.BackgroundColor) ? Preferences.BackgroundColor.ToUpperInvariant() : "";

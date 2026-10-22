@@ -439,5 +439,7 @@
   "UpdateCancelled": "ダウンロードを中止しました。インストール内容は変更していません。",
   "UpdateInstalled": "ReStartの更新が完了しました。",
   "UpdateRepairHelp": "更新を自動で復旧できませんでした。ReStartを終了し、完全なポータブルZIPをインストール先に展開してください。ローカルのReStart設定は保持してください。更新前のバックアップはローカルアプリデータのReStart.UpdateCacheに残っています。",
-  "UpdateRestored": "更新を完了できませんでした。以前のインストール内容でReStartを起動しました。"
+  "UpdateRestored": "更新を完了できませんでした。以前のインストール内容でReStartを起動しました。",
+  "SettingsBlur": "背景画像のぼかし",
+  "SettingsBlurHelp": "0にすると画像を鮮明に表示します。ReStartの背景画像だけに適用されます。"
 }

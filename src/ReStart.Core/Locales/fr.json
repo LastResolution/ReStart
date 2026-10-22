@@ -439,5 +439,7 @@
   "UpdateCancelled": "Téléchargement annulé. L’installation n’a pas été modifiée.",
   "UpdateInstalled": "ReStart a été mis à jour.",
   "UpdateRepairHelp": "La restauration automatique a échoué. Quittez ReStart et extrayez le ZIP portable complet dans le dossier d’installation. Conservez vos paramètres locaux. Les sauvegardes sont dans ReStart.UpdateCache sous les données locales des applications.",
-  "UpdateRestored": "La mise à jour n’a pas abouti. ReStart utilise l’installation précédente."
+  "UpdateRestored": "La mise à jour n’a pas abouti. ReStart utilise l’installation précédente.",
+  "SettingsBlur": "Flou de l’arrière-plan",
+  "SettingsBlurHelp": "0 conserve une image nette. Le flou concerne uniquement l’image de fond de ReStart."
 }
