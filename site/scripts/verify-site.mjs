@@ -8,7 +8,13 @@ const attributes = tag => Object.fromEntries([...tag.matchAll(/([\w:-]+)="([^"]*
 const tags = (html, name) => [...html.matchAll(new RegExp(`<${name}\\b[^>]*>`, 'g'))].map(match => attributes(match[0]));
 const plain = text => text.replace(/<[^>]*>/g, '').replaceAll('&amp;', '&').replace(/\s+/g, ' ').trim();
 
-/** Verify every deployed HTML file, including links under a GitHub Pages project prefix. */
+/**
+ * Verify every deployed HTML file, including links under a GitHub Pages project prefix.
+ * @param {string} directory Deployment root to read; defaults to this site's dist directory.
+ * Relative paths resolve against the process working directory. Files are read without mutation.
+ * @returns {Promise<{pages: number, checks: number}>} Number of discovered HTML pages and successful assertions.
+ * @throws {Error} On the first invalid page, asset or sitemap entry, or an unreadable deployment file.
+ */
 export async function verifySite(directory = defaultRoot) {
   const root = path.resolve(directory);
   let checks = 0;

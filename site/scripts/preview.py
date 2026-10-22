@@ -9,6 +9,8 @@ root = repo / 'site' / 'dist'
 packages = {'orbit', 'cpu', 'memory', 'calendar', 'weather-scene', 'canvas-garden'}
 
 class Handler(SimpleHTTPRequestHandler):
+    """Serve only the static deployment and an allowlist of synthetic tile renderers."""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(root), **kwargs)
 
