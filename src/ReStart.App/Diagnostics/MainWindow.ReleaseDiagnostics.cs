@@ -82,7 +82,12 @@ public partial class MainWindow
                         settings.Show(); settings.SelectSection(L.T(K.SettingsAbout)); settings.UpdateLayout();
                         Require(VisualChildren<TextBlock>(settings).Any(t => t.Text.Contains(AppBuildInfo.Version, StringComparison.Ordinal)), "About does not display the current app version.");
                         string? copied = null;
-                        var diagnostics = new DiagnosticsWindow(settings, fixture, text => copied = text);
+                        var clipboardBusy = false;
+                        var diagnostics = new DiagnosticsWindow(settings, fixture, text =>
+                        {
+                            if (clipboardBusy) throw new System.Runtime.InteropServices.ExternalException();
+                            copied = text;
+                        });
                         try
                         {
                             diagnostics.Show(); diagnostics.UpdateLayout();
@@ -90,6 +95,12 @@ public partial class MainWindow
                             diagnostics.Copy.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                             Require(copied == diagnostics.Report.Text && !copied.Contains("Fixture", StringComparison.Ordinal)
                                 && !copied.Contains(directory, StringComparison.OrdinalIgnoreCase), "Copy did not match the preview or included fixture names/paths.");
+                            clipboardBusy = true; diagnostics.Width = 440;
+                            diagnostics.Copy.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); diagnostics.UpdateLayout();
+                            var feedback = VisualChildren<TextBlock>(diagnostics).Single(t => t.Text == L.T(K.DiagnosticsClipboardBusy));
+                            Require(feedback.ActualHeight > 0 && diagnostics.Copy.TranslatePoint(new(), diagnostics).X + diagnostics.Copy.ActualWidth <= diagnostics.ActualWidth,
+                                "Clipboard-busy feedback pushed the copy action outside a narrow dialog.");
+                            diagnostics.Width = 650; diagnostics.UpdateLayout();
                             if (language is "en" or "ja") SaveFixtureElement(diagnostics, Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"diagnostics-{language}-{theme}.png"));
                         }
                         finally { diagnostics.Close(); }

@@ -15,7 +15,12 @@ internal static class PortableUpdates
     /// <param name="Version">Verified candidate semantic version.</param>
     /// <param name="Runtime">Installed win-x64 or win-arm64 architecture.</param>
     /// <param name="Fixture">Whether restart uses isolated verification entry points instead of normal user settings.</param>
-    internal sealed record Request(string Installation, int ParentId, long ParentStart, string Version, string Runtime, bool Fixture = false);
+    /// <param name="Language">Supported UI language used by recovery prompts; defaults to English for old fixtures.</param>
+    /// <param name="Light">Resolved light/dark caption mode when the user confirms restart.</param>
+    /// <param name="Colors">Optional whitelist of ARGB palette colors; null leaves the helper's default palette.</param>
+    internal sealed record Request(string Installation, int ParentId, long ParentStart, string Version, string Runtime, bool Fixture = false,
+        string Language = "en", bool Light = false, Dictionary<string, string>? Colors = null);
+    internal static readonly string[] PaletteKeys = ["TextBrush", "MutedBrush", "PanelBrush", "TileBrush", "AccentBrush", "AccentTextBrush", "FocusAccentBrush", "ControlBrush", "BorderBrush", "HoverBrush", "ScrollThumbBrush"];
     /// <summary>Identifies one prepared workspace for explicit restart.</summary>
     /// <param name="Id">N-format GUID used beneath the update cache, never an arbitrary command line.</param>
     /// <param name="Directory">Absolute owned workspace containing the validated payload and helper copy.</param>
@@ -78,6 +83,14 @@ internal static class PortableUpdates
     internal static async Task<bool> StartAsync(Prepared prepared)
     {
         var request = ReadRequest(prepared.Id);
+        request = request with
+        {
+            Language = L.Language,
+            Light = ThemeWindow.IsLight,
+            Colors = PaletteKeys.Where(k => System.Windows.Application.Current.Resources[k] is System.Windows.Media.SolidColorBrush)
+                .ToDictionary(k => k, k => ((System.Windows.Media.SolidColorBrush)System.Windows.Application.Current.Resources[k]).Color.ToString())
+        };
+        File.WriteAllText(Path.Combine(prepared.Directory, "request.json"), JsonSerializer.Serialize(request, Json));
         File.Delete(Path.Combine(prepared.Directory, "ready"));
         File.Delete(Path.Combine(prepared.Directory, "accepted"));
         var start = StartInfo(Path.Combine(prepared.Directory, "ReStart.exe"));
@@ -258,7 +271,10 @@ internal static class PortableUpdates
         if (new FileInfo(path).Length > 8192) throw new InvalidDataException("Update request too large.");
         var request = JsonSerializer.Deserialize<Request>(File.ReadAllBytes(path), Json) ?? throw new InvalidDataException("Invalid update request.");
         if (!Path.IsPathFullyQualified(request.Installation) || !File.Exists(Path.Combine(request.Installation, UpdatePackage.ManifestName))
-            || ReleaseVersion.Parse(request.Version) == null || request.Runtime is not ("win-x64" or "win-arm64")) throw new InvalidDataException("Invalid installation request.");
+            || ReleaseVersion.Parse(request.Version) == null || request.Runtime is not ("win-x64" or "win-arm64")
+            || !TextCatalog.SupportedLanguages.Contains(request.Language)
+            || request.Colors != null && request.Colors.Any(pair => !PaletteKeys.Contains(pair.Key) || pair.Value is not { Length: 9 }
+                || pair.Value[0] != '#' || !pair.Value.AsSpan(1).ToArray().All(char.IsAsciiHexDigit))) throw new InvalidDataException("Invalid installation request.");
         return request;
     }
     /// <summary>Resolves only canonical job identifiers and rejects links in their cache ancestry.</summary>

@@ -19,6 +19,10 @@ public partial class App
             if (fixtureRoot != null) PortableUpdates.CacheRoot = Path.GetFullPath(fixtureRoot);
             if (Value(args, "--apply-update") is { } id)
             {
+                var presentation = PortableUpdates.ReadRequest(id);
+                LocalizationResources.Apply(presentation.Language); ThemeWindow.IsLight = presentation.Light;
+                foreach (var color in presentation.Colors ?? [])
+                    Resources[color.Key] = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color.Value));
                 var result = await PortableUpdates.RunAsync(id);
                 if (result == 3 && fixtureRoot == null) ShowUpdateRepair();
                 Shutdown(result); return true;

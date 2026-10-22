@@ -23,7 +23,8 @@ internal sealed class DiagnosticsWindow : Window
         Title = L.T(K.DiagnosticsTitle); Width = 650; Height = 610; MinWidth = 420; MinHeight = 350;
         WindowStartupLocation = WindowStartupLocation.CenterOwner; ShowInTaskbar = false;
         var root = new DockPanel { Margin = new(24) };
-        var footer = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new(0, 14, 0, 0) };
+        var footer = new DockPanel { Margin = new(0, 14, 0, 0) };
+        var actions = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
         var feedback = new TextBlock { VerticalAlignment = VerticalAlignment.Center, Margin = new(0, 0, 12, 0), TextWrapping = TextWrapping.Wrap };
         Copy = new() { Content = L.T(K.DiagnosticsCopy), MinWidth = 110 };
         var close = new Button { Content = L.T(K.CommonClose), IsCancel = true, MinWidth = 90, Margin = new(10, 0, 0, 0) };
@@ -33,7 +34,8 @@ internal sealed class DiagnosticsWindow : Window
             try { (copy ?? Clipboard.SetText)(Report!.Text); feedback.Text = L.T(K.DiagnosticsCopied); }
             catch (ExternalException) { feedback.Text = L.T(K.DiagnosticsClipboardBusy); }
         };
-        footer.Children.Add(feedback); footer.Children.Add(Copy); footer.Children.Add(close); DockPanel.SetDock(footer, Dock.Bottom); root.Children.Add(footer);
+        actions.Children.Add(Copy); actions.Children.Add(close); DockPanel.SetDock(actions, Dock.Right);
+        footer.Children.Add(actions); footer.Children.Add(feedback); DockPanel.SetDock(footer, Dock.Bottom); root.Children.Add(footer);
         var help = new TextBlock { Text = L.T(K.DiagnosticsHelp), TextWrapping = TextWrapping.Wrap, Margin = new(0, 0, 0, 16) };
         DockPanel.SetDock(help, Dock.Top); root.Children.Add(help);
         string? webView = null;
