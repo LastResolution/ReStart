@@ -6,7 +6,7 @@ const defaultRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '
 const siteUrl = 'https://lastresolution.github.io/ReStart/';
 const attributes = tag => Object.fromEntries([...tag.matchAll(/([\w:-]+)="([^"]*)"/g)].map(match => [match[1], match[2]]));
 const tags = (html, name) => [...html.matchAll(new RegExp(`<${name}\\b[^>]*>`, 'g'))].map(match => attributes(match[0]));
-const plain = text => text.replace(/<[^>]*>/g, '').replaceAll('&amp;', '&').replace(/\s+/g, ' ').trim();
+const normalizedText = text => text.replaceAll('&amp;', '&').replace(/\s+/g, ' ').trim();
 
 /**
  * Verify every deployed HTML file, including links under a GitHub Pages project prefix.
@@ -70,7 +70,7 @@ export async function verifySite(directory = defaultRoot) {
     require(external.some(link => link.hostname === 'buymeacoffee.com' && link.pathname === '/LastResolution'), `Missing support link: ${page}`);
     const navigation = html.match(/<nav\b[^>]*id="primary-nav"[^>]*>([\s\S]*?)<\/nav>/)?.[1];
     require(navigation && tags(navigation, 'a').some(link => new URL(link.href, url).href === siteUrl + 'guides/') &&
-      plain(navigation).includes('Guides'), `Missing Guides navigation: ${page}`);
+      navigation.includes('>Guides</a>'), `Missing Guides navigation: ${page}`);
     const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
     require(new Set(ids).size === ids.length, `Duplicate element ID: ${page}`);
     const targets = [...html.matchAll(/\b(?:href|src|poster|data-light|data-dark)="([^"]+)"/g)].map(match => match[1]);
@@ -119,7 +119,7 @@ export async function verifySite(directory = defaultRoot) {
         require(articles.length === 1, `Missing or duplicate Article schema: ${page}`);
         const article = articles[0];
         require(article.url === url && article.mainEntityOfPage?.['@id'] === url && article.inLanguage === 'en', `Article URL mismatch: ${page}`);
-        require(article.headline === plain(html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/)?.[1] || ''), `Article headline mismatch: ${page}`);
+        require(article.headline === normalizedText(html.match(/<h1\b[^>]*>([^<]+)<\/h1>/)?.[1] || ''), `Article headline mismatch: ${page}`);
         require(article.description === description.replaceAll('&amp;', '&'), `Article description mismatch: ${page}`);
         require(article.author?.name && article.author?.url && article.publisher?.name && article.image?.length, `Missing article attribution or image: ${page}`);
         for (const image of article.image) {
