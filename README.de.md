@@ -24,6 +24,8 @@ Vermisst du das Vollbild-Startmenü von Windows 10? ReStart gibt deinen Apps unt
 
 Sperre das gesamte Layout oder einzelne Gruppen. Strg+Umschalt+L schaltet die globale Sperre um. Strg+E wählt Kacheln; Strg+Pfeil verschiebt sie, Strg+Umschalt+Pfeil die Gruppe und Alt+1–4 ändert die Größe. Strg+G gruppiert eine Auswahl; Umschalt+F10 öffnet ihr Menü. Rückgängig/Wiederholen bleibt verfügbar. Ein eigenes Hintergrundbild kann unabhängig vom Desktop gespeichert werden.
 
+Unter **Einstellungen → Darstellung** lassen sich die Hintergrundtönung auf **10–100 %** und die Unschärfe des Hintergrundbilds auf **0–50** einstellen. Der Standardwert ist **12**; **0** zeigt das Bild scharf. Hoher Kontrast hat Vorrang. **Auswahl beenden** oder ein Klick auf **Angeheftete Kacheln** führt direkt zur Kachelansicht zurück.
+
 19 HTML/CSS/JavaScript-Kacheln sind enthalten. Tile Studio bearbeitet Quellen und Manifest, zeigt vier Größen mit Offline-Beispieldaten und speichert Entwürfe oder angeheftete Kacheln. Neu sind Wettergrafik, Systemübersicht, Nachrichtenwand und Canvas-Garten; die SVG-Uhr folgt der PC-Zeit. Live-Kachelnamen sind standardmäßig sichtbar und in den Einstellungen abschaltbar.
 
 Beim Ziehen folgt eine halbtransparente Kopie der Kachel, Gruppe oder Auswahl dem Mauszeiger. Die blaue Markierung zeigt das Ziel; verdrängte Kacheln zeigen ihre neue Position vor dem Ablegen.

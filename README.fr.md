@@ -24,6 +24,8 @@ Le menu Démarrer plein écran de Windows 10 vous manque ? ReStart offre un espa
 
 Verrouillez tout le placement ou certains groupes. Ctrl+Maj+L bascule le verrouillage global. Ctrl+E sélectionne, Ctrl+flèche déplace les tuiles, Ctrl+Maj+flèche leur groupe et Alt+1–4 change la taille. Ctrl+G regroupe la sélection ; Maj+F10 ouvre son menu. Annuler/Rétablir reste disponible. Un fond propre à ReStart peut être enregistré indépendamment du bureau.
 
+Dans **Paramètres → Apparence**, réglez la teinte du fond entre **10 et 100 %** et le flou de l’image entre **0 et 50**. Le flou vaut **12** par défaut ; **0** conserve une image nette. Le contraste élevé est prioritaire. **Terminer la sélection** ou cliquer sur **Vignettes épinglées** ramène directement à la vue des vignettes.
+
 Dix-neuf tuiles HTML/CSS/JavaScript sont incluses. Tile Studio permet de modifier le code et le manifeste, de tester quatre tailles avec des données fictives hors ligne, puis de sauvegarder ou épingler. Nouveaux exemples : scène météo, tableau système, actualités RSS et jardin Canvas. Les aiguilles SVG suivent l’heure du PC. Les noms sont visibles par défaut et peuvent être masqués dans les paramètres.
 
 Pendant le déplacement, une copie semi-transparente de la vignette, du groupe ou de la sélection suit le pointeur. Le repère bleu indique la destination et les vignettes déplacées prévisualisent leur position avant le dépôt.

@@ -52,8 +52,10 @@ Document destinations come from Windows Recent/Frequent lists only when allowed 
 
 **Lock layout** protects placement, size and membership globally; a group menu can lock one group. Both start off. Locks also cover import/reset, undo/redo and indirect neighbor displacement. Launching, data connections and appearance remain available. Ctrl+Shift+L toggles the global lock.
 
+**Finish selecting** and the **Pinned tiles** navigation action leave selection mode and return directly to the pinned home screen. The empty-home **Create a group and pin apps** action is aligned with the Pinned tiles row across tile scales and window sizes.
+
 In Select tiles mode (Ctrl+E), arrows choose a tile, Space changes selection, Ctrl+Arrow moves the focused selection by one small cell, Ctrl+Shift+Arrow moves its group, and Alt+1–4 selects small/medium/wide/large. Ctrl+G collects the selection into a group; Shift+F10 opens its context menu. Valid edits are atomic undo steps. Locked or invalid destinations leave the original layout unchanged.
 
 **Show live tile names**, under JavaScript tiles, defaults on. Turning it off hides native live-widget labels and bundled web-tile title markers; normal app labels and accessibility/tooltip names remain. Custom web packages receive `ctx.appearance.showTitle` and should mark their own name with `data-restart-title`.
 
-Appearance can use the desktop wallpaper or a separately imported image. ReStart stores its own decoded copy and does not retain the original path. High contrast takes precedence.
+Appearance can use the desktop wallpaper or a separately imported image. ReStart stores its own decoded copy and does not retain the original path. Background tint ranges from 10–100%; wallpaper blur is independently adjustable from 0–50 device-independent pixels, with a default of 12. A value of 0 disables blur. These effects apply to the background image, keeping foreground controls sharp. High contrast takes precedence.
