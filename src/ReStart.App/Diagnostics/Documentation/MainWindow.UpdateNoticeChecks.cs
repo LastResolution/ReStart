@@ -34,8 +34,9 @@ public partial class MainWindow
                     var notice = new UpdateNotice("1.5.1", "1.5.0", () => views++, () => dismissals++);
                     var panel = new Border { Width = 488, Padding = new(24), Child = notice, Background = Root.Background };
                     panel.Measure(new(488, 400)); panel.Arrange(new Rect(0, 0, 488, panel.DesiredSize.Height)); panel.UpdateLayout();
-                    Check(notice.ActualHeight > 100 && notice.ActualHeight < 350 && notice.ViewReleaseButton.ActualWidth > 0, "A localized notice clipped its actions.");
-                    notice.ViewReleaseButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); notice.LaterButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    Check(notice.ActualHeight > 100 && notice.ActualHeight < 350 && notice.ActionButton.ActualWidth > 0, "A localized notice clipped its actions.");
+                    Check(Equals(notice.ActionButton.Content, L.T(K.UpdateReview)), "The available update action still points to the release page.");
+                    notice.ActionButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); notice.LaterButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                     Check(views == 1 && dismissals == 1, "An update notice executed the wrong action.");
                     if (language is "en" or "ja") SaveFixtureElement(panel, Path.Combine(directory, $"update-notice-{language}-{theme}.png"));
                 }

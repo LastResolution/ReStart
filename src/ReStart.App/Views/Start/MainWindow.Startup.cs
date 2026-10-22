@@ -18,6 +18,7 @@ public partial class MainWindow
     private readonly HashSet<string> _scriptAttempts = [];
     private Task _startupWorkerWarmup = Task.CompletedTask;
     private bool _startupSettings;
+    private TextKey? _startupSettingsSection;
     internal Action? PresentationVisibilityChanged { get; set; }
     internal bool IsPresenting => IsVisible || _startupWindow?.IsVisible == true;
 
@@ -52,6 +53,7 @@ public partial class MainWindow
     {
         _startupWanted = false;
         _startupSettings = false;
+        _startupSettingsSection = null;
         var window = _startupWindow; _startupWindow = null; window?.Close();
         PauseScripts(); PresentationVisibilityChanged?.Invoke();
     }
@@ -126,18 +128,29 @@ public partial class MainWindow
             SearchBox.Text = query; SearchBox.CaretIndex = query.Length;
             FocusSearchInput();
             PresentationVisibilityChanged?.Invoke();
-            if (_startupSettings) { _startupSettings = false; ShowSettings(); }
+            if (_startupSettings)
+            {
+                var section = _startupSettingsSection;
+                _startupSettings = false; _startupSettingsSection = null; ShowSettings(section);
+            }
             else if (launch && SearchResults.SelectedItem is System.Windows.Controls.Button selected) selected.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
         }
         finally { _startButtonPoint = null; }
     }
 
     /// <summary>Opens settings after startup preparation, including when requested from the tray during loading.</summary>
-    public void PresentSettings()
+    public void PresentSettings() => PresentSettings(null);
+
+    /// <summary>Retains the requested settings section through cold preparation or activates the existing draft editor.</summary>
+    /// <param name="section">Section to select, or null to retain an open editor's current section and use the default for a new editor.</param>
+    private void PresentSettings(TextKey? section)
     {
+        if (_activeSettings != null) { ShowSettings(section); return; }
         _startupSettings = true;
+        _startupSettingsSection = section;
         Present();
-        if (_startupComplete && _startupWindow == null) { _startupSettings = false; ShowSettings(); }
+        if (_startupComplete && _startupWindow == null)
+        { _startupSettings = false; _startupSettingsSection = null; ShowSettings(section); }
     }
 
     private void SizeStartupContent()

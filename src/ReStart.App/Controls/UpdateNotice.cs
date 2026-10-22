@@ -9,13 +9,13 @@ namespace ReStart.App.Controls;
 /// <summary>Provides a nonmodal, keyboard-accessible update notice using the shared application palette.</summary>
 internal sealed class UpdateNotice : Border
 {
-    internal Button ViewReleaseButton { get; }
+    internal Button ActionButton { get; }
     internal Button LaterButton { get; }
 
     /// <summary>Creates an update notice without requesting focus or opening a browser.</summary>
     /// <param name="version">Available release version, displayed as ordinary text.</param>
     /// <param name="current">Currently installed version, displayed as ordinary text.</param>
-    /// <param name="view">Action invoked only by an explicit View release activation.</param>
+    /// <param name="view">Action invoked only by an explicit Review update or Restart and update activation.</param>
     /// <param name="dismiss">Action invoked when the user chooses Not now.</param>
     /// <param name="prepared">True presents an already downloaded package with an explicit restart action.</param>
     /// <param name="compact">True retains a small persistent ready indicator without a dismiss action.</param>
@@ -34,18 +34,18 @@ internal sealed class UpdateNotice : Border
         help.SetResourceReference(TextBlock.ForegroundProperty, "MutedBrush"); help.Visibility = compact ? Visibility.Collapsed : Visibility.Visible; root.Children.Add(help);
         var actions = new WrapPanel { HorizontalAlignment = HorizontalAlignment.Right };
         LaterButton = new() { Content = L.T(K.UpdateNoticeLater), MinHeight = 34, Margin = new(0, 0, 8, 0) };
-        ViewReleaseButton = new() { Content = L.T(prepared ? K.UpdateRestart : K.UpdateOpenRelease), MinHeight = 34 };
-        ViewReleaseButton.SetResourceReference(BackgroundProperty, "AccentBrush"); ViewReleaseButton.SetResourceReference(Control.ForegroundProperty, "AccentTextBrush");
+        ActionButton = new() { Content = L.T(prepared ? K.UpdateRestart : K.UpdateReview), MinHeight = 34 };
+        ActionButton.SetResourceReference(BackgroundProperty, "AccentBrush"); ActionButton.SetResourceReference(Control.ForegroundProperty, "AccentTextBrush");
         AutomationProperties.SetName(this, L.T(prepared ? K.UpdateReadyTitle : K.UpdateNoticeTitle)); AutomationProperties.SetLiveSetting(this, AutomationLiveSetting.Polite);
         LaterButton.Visibility = compact ? Visibility.Collapsed : Visibility.Visible;
-        LaterButton.Click += (_, _) => dismiss(); ViewReleaseButton.Click += (_, _) => view();
+        LaterButton.Click += (_, _) => dismiss(); ActionButton.Click += (_, _) => view();
         if (compact)
         {
-            var reminder = new DockPanel(); ViewReleaseButton.Margin = new(12, 0, 0, 0);
-            DockPanel.SetDock(ViewReleaseButton, Dock.Right); reminder.Children.Add(ViewReleaseButton);
+            var reminder = new DockPanel(); ActionButton.Margin = new(12, 0, 0, 0);
+            DockPanel.SetDock(ActionButton, Dock.Right); reminder.Children.Add(ActionButton);
             reminder.Children.Add(new TextBlock { Text = L.F(K.UpdateReadyBody, version), TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center, FontSize = 13 });
             Child = reminder;
         }
-        else { actions.Children.Add(LaterButton); actions.Children.Add(ViewReleaseButton); root.Children.Add(actions); }
+        else { actions.Children.Add(LaterButton); actions.Children.Add(ActionButton); root.Children.Add(actions); }
     }
 }

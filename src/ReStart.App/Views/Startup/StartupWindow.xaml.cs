@@ -11,6 +11,7 @@ namespace ReStart.App;
 internal partial class StartupWindow : Window
 {
     private System.Drawing.Point? _targetPoint;
+    private bool _centeringPending;
     internal event Action? CancelRequested;
     internal bool LaunchRequested { get; private set; }
     internal StartupWindow(Func<bool> closeOnDeactivate)
@@ -25,7 +26,7 @@ internal partial class StartupWindow : Window
         Query.TextChanged += (_, _) => LaunchRequested = false;
         Deactivated += (_, _) => Dispatcher.BeginInvoke(() => { if (IsVisible && !IsActive && closeOnDeactivate()) CancelRequested?.Invoke(); });
         ContentRendered += (_, _) => Query.Focus();
-        SizeChanged += (_, _) => CenterOnTargetMonitor();
+        SizeChanged += (_, _) => QueueCentering();
     }
 
     internal void ShowAt(System.Drawing.Point point, bool requestForeground)
@@ -55,7 +56,16 @@ internal partial class StartupWindow : Window
     protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi)
     {
         base.OnDpiChanged(oldDpi, newDpi);
-        Dispatcher.BeginInvoke(CenterOnTargetMonitor, System.Windows.Threading.DispatcherPriority.Loaded);
+        QueueCentering();
+    }
+
+    private void QueueCentering()
+    {
+        if (_targetPoint == null || _centeringPending) return;
+        _centeringPending = true;
+        // SizeChanged can precede the HWND resize. Wait for WPF to commit its
+        // native size (and DPI suggestion) before measuring physical bounds.
+        Dispatcher.BeginInvoke(() => { _centeringPending = false; CenterOnTargetMonitor(); }, System.Windows.Threading.DispatcherPriority.Loaded);
     }
 
     internal void UpdateProgress(TextKey text, double fraction)

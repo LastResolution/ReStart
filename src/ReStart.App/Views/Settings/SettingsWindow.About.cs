@@ -65,6 +65,7 @@ internal sealed partial class SettingsWindow
         void checkButton(bool enabled) { if (check != null) check.IsEnabled = enabled && !_main.IsPreview; if (!enabled) status.Text = L.T(K.UpdateChecking); }
         check.IsEnabled = !_main.IsPreview;
         var download = DataButton(buttons, L.T(K.UpdateDownload), async () => await _main.PrepareUpdateAsync());
+        download.SetResourceReference(BackgroundProperty, "AccentBrush"); download.SetResourceReference(ForegroundProperty, "AccentTextBrush");
         var cancel = DataButton(buttons, L.T(K.CommonCancel), _main.CancelUpdateDownload);
         Button? install = null;
         install = DataButton(buttons, L.T(K.UpdateRestart), async () =>

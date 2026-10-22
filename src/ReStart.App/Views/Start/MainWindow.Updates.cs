@@ -35,18 +35,19 @@ public partial class MainWindow
     private void ShowUpdateNotice(UpdateRelease release)
     {
         if (_updateNotice != null) Root.Children.Remove(_updateNotice);
-        _updateNotice = new(release.Version.ToString(), AppBuildInfo.Version, () => OpenUpdateRelease(release), () =>
+        _updateNotice = new(release.Version.ToString(), AppBuildInfo.Version, ReviewAvailableUpdate, () =>
         { Root.Children.Remove(_updateNotice!); _updateNotice = null; })
         { HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new(24), MaxWidth = Math.Max(240, (Root.ActualWidth > 0 ? Root.ActualWidth : 488) - 48) };
         Root.Children.Add(_updateNotice);
     }
 
-    internal void OpenUpdateRelease(UpdateRelease release)
+    /// <summary>Opens the in-app update choice without downloading, launching a browser or discarding an existing settings draft.</summary>
+    internal void ReviewAvailableUpdate()
     {
-        if (_preview) return;
-        Dismiss();
-        try { ShellLauncher.Launch(release.Page.AbsoluteUri); }
-        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception) { SetStatus(L.T(K.ErrorLaunch) + ex.Message); }
+        if (_exit) return;
+        if (UpdatePreparation != PreparationState.Ready && _updateNotice != null)
+        { Root.Children.Remove(_updateNotice); _updateNotice = null; }
+        PresentSettings(K.SettingsUpdates);
     }
 
     internal Task<UpdateCheckResult> CheckForUpdatesAsync(bool? includePrereleases = null)

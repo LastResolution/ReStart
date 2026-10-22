@@ -834,14 +834,16 @@ public enum TextKey
     ErrorWebTileRuntime,
     /// <summary>Show live tile names</summary>
     ShowLiveTileNames,
-    /// <summary>A new version is ready</summary>
+    /// <summary>An update is available</summary>
     UpdateNoticeTitle,
     /// <summary>ReStart {0} is available. You’re using {1}.</summary>
     UpdateNoticeBody,
     /// <summary>Not now</summary>
     UpdateNoticeLater,
-    /// <summary>View release notes and downloads on GitHub.</summary>
+    /// <summary>Review what's new in ReStart, then choose whether to download the update.</summary>
     UpdateNoticeHelp,
+    /// <summary>Review update</summary>
+    UpdateReview,
     /// <summary>Format document</summary>
     StudioFormat,
     /// <summary>Formatting…</summary>

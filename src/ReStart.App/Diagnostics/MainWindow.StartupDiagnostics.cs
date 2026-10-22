@@ -72,6 +72,15 @@ public partial class MainWindow
                     if (tag is "en" or "ja") SaveStartupScreenshot(splash, Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"startup-{tag}-{theme}.png"));
                     languageCases++;
                 }
+            var initialHeight = splash.ActualHeight;
+            splash.Width = 320;
+            splash.Stage.Text = string.Join(" ", Enumerable.Repeat("Fictional startup progress with wrapped text.", 8)); splash.UpdateLayout();
+            await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
+            Check(splash.ActualHeight > initialHeight, "The splash size-change case did not exercise SizeToContent.");
+            CheckSplashCenter(splash);
+            splash.Width = 440; splash.UpdateProgress(K.StartupReady, 1); splash.UpdateLayout();
+            await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
+            CheckSplashCenter(splash);
             fixture.Toggle(); Check(fixture._startupWindow == null && !fixture.IsVisible, "Toggling during startup did not cancel presentation.");
             fixture.Present();
             var cancel = fixture._startupWindow!.CancelButton; cancel.Focus();
@@ -108,11 +117,16 @@ public partial class MainWindow
             { Owner = this, Width = 1280, Height = 800, _startupComplete = false, Topmost = false };
             var foreign = new Window { Title = "Sample application", Width = 220, Height = 120, ShowInTaskbar = false };
             var settingsClosed = 0;
+            var expectUpdates = false; var updateChoiceShown = false;
             var closeSettings = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(10) };
             closeSettings.Tick += (_, _) =>
             {
                 foreach (var settings in Application.Current.Windows.OfType<SettingsWindow>().Where(w => w.IsVisible).ToArray())
-                { settings.DiscardAndClose(); settingsClosed++; }
+                {
+                    settings.UpdateLayout();
+                    if (expectUpdates) updateChoiceShown = VisualChildren<TextBox>(settings).Any(box => box.IsVisible && box.IsReadOnly && box.Text == "Fictional cold-start update notes.");
+                    settings.DiscardAndClose(); settingsClosed++;
+                }
             };
             closeSettings.Start();
             try
@@ -134,12 +148,15 @@ public partial class MainWindow
             { Owner = this, Width = 1280, Height = 800, _startupComplete = false, Topmost = false };
             try
             {
-                cold.PresentSettings();
+                expectUpdates = true;
+                cold.LastUpdateCheck = new(UpdateCheckStatus.Available, new("v9.0.0", ReleaseVersion.Parse("9.0.0")!, "Fictional cold-start update notes."));
+                cold.ReviewAvailableUpdate();
                 Check(cold._scriptWorkerPool != null && cold._startupWorkerWarmup != Task.CompletedTask && !cold.IsVisible,
                     "Foreground initialization did not warm isolated workers before revealing the main window.");
                 await cold._startupPresentation!;
                 Check(cold.IsVisible && cold.ScriptFrameCount == ScriptTilePackages.BundledIds.Count && cold._startupWindow == null && settingsClosed == 2 && !cold._startupSettings,
                     $"Parallel worker warmup did not produce all frames or open pending settings: visible={cold.IsVisible}, frames={cold.ScriptFrameCount}, settings={settingsClosed}, pending={cold._startupSettings}.");
+                Check(updateChoiceShown && cold.UpdatePreparation == PreparationState.Idle, "Cold preparation lost the update destination or started an unrequested download.");
             }
             finally { closeSettings.Stop(); cold.Exit(); fixture.Activate(); }
             var cacheChecks = VerifyIconCache(directory);
