@@ -65,7 +65,7 @@ public partial class App
             }
             else if (args.Length == 0 || args.SequenceEqual(new[] { "--background" })) PortableUpdates.CleanupFinished();
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.Text.Json.JsonException or System.ComponentModel.Win32Exception)
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or InvalidOperationException or System.Text.Json.JsonException or System.ComponentModel.Win32Exception)
         {
             if (Value(args, "--verify-update-installations") is { } output)
                 File.WriteAllText(Path.Combine(output, "verification.json"), System.Text.Json.JsonSerializer.Serialize(new { success = false, error = ex.Message }));
@@ -90,7 +90,7 @@ public partial class App
             window.SetStatus(L.T(K.UpdateInstalled));
             return true;
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or InvalidOperationException)
         { window.Exit(); Shutdown(1); return false; }
     }
 

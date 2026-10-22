@@ -139,6 +139,21 @@ public partial class MainWindow
             Check(readyEvents == 1 && fixture._updateNotice != null, "Finishing preparation did not announce a persistent ready notice.");
             fixture._updateNotice!.LaterButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             Check(fixture._updateNotice.LaterButton.Visibility == Visibility.Collapsed && fixture.Root.Children.Contains(fixture._updateNotice), "Not now removed the ready indicator.");
+            fixture.UpdateLayout(); fixture.SaveScreenshot(Path.Combine(directory, "update-ready-compact.png"));
+            var readySettings = new SettingsWindow(fixture, store) { Owner = fixture }; Exception? readyError = null;
+            readySettings.Loaded += (_, _) => readySettings.Dispatcher.BeginInvoke(() =>
+            {
+                try
+                {
+                    Check(VisualChildren<Button>(readySettings).Any(button => AutomationProperties.GetName(button).Contains(L.T(K.UpdateReadyTitle), StringComparison.Ordinal)),
+                        "Settings navigation did not expose prepared-update readiness.");
+                    readySettings.SelectSection(L.T(K.SettingsUpdates)); readySettings.UpdateLayout();
+                    Check(VisualChildren<TextBlock>(readySettings).Any(text => text.Text == L.F(K.UpdatePrepared, "9.0.0")), "Updates settings lost the prepared version after reopening.");
+                }
+                catch (Exception ex) { readyError = ex; }
+                finally { readySettings.DiscardAndClose(); }
+            });
+            readySettings.ShowDialog(); if (readyError != null) throw readyError;
             foreach (var tag in L.SupportedLanguages)
             {
                 fixture.Document.Preferences.Language = tag; fixture.ApplyAppearance();

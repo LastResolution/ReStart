@@ -44,7 +44,7 @@ public partial class MainWindow
             PresentPreparedUpdate();
         }
         catch (OperationCanceledException) { UpdatePreparation = cancellation.IsCancellationRequested ? PreparationState.Cancelled : PreparationState.Failed; }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or HttpRequestException or InvalidOperationException or System.ComponentModel.Win32Exception or BadImageFormatException)
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or HttpRequestException or InvalidOperationException or System.ComponentModel.Win32Exception or BadImageFormatException)
         { UpdatePreparation = PreparationState.Failed; }
         finally
         {
@@ -111,7 +111,7 @@ public partial class MainWindow
     {
         if (!CanInstallUpdates || PreparedUpdate == null || UpdatePreparation != PreparationState.Ready || !TrySaveLayout()) return false;
         try { return await PortableUpdates.StartAsync(PreparedUpdate); }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception)
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception)
         { PortableUpdates.Record(DiagnosticCode.UpdatePreparationFailed); return false; }
     }
 }

@@ -56,6 +56,10 @@ public partial class App
                 {
                     var originalBytes = File.ReadAllBytes(candidate); File.AppendAllText(candidate, "modified");
                     Check(PortableUpdates.RestorePrepared(installation) == null, "A modified prepared payload or helper was accepted.");
+                    var rejected = false;
+                    try { await PortableUpdates.StartAsync(new(id, workspace, manifest.Version, installation)); }
+                    catch (InvalidDataException) { rejected = true; }
+                    Check(rejected && !File.Exists(Path.Combine(workspace, "accepted")), "Modified preparation reached an accepted handoff.");
                     File.WriteAllBytes(candidate, originalBytes);
                 }
                 Check(PortableUpdates.RestorePrepared(installation)?.Id == id, "Rejecting modified preparation consumed the restored valid package.");

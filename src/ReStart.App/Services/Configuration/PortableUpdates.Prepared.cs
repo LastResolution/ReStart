@@ -31,7 +31,7 @@ internal static partial class PortableUpdates
             if (File.Exists(path) && new FileInfo(path).Length <= 128 && (File.GetAttributes(path) & FileAttributes.ReparsePoint) == 0
                 && JsonSerializer.Deserialize<string>(File.ReadAllText(path)) == id) File.Delete(path);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException) { }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or JsonException) { }
     }
 
     /// <summary>Restores an explicitly downloaded update without starting a helper or accepting a handoff.</summary>
@@ -52,7 +52,7 @@ internal static partial class PortableUpdates
             if (File.Exists(Path.Combine(directory, "accepted")) || File.Exists(Path.Combine(directory, "outcome")) || File.Exists(Path.Combine(directory, "transaction.json"))) return null;
             var prepared = new Prepared(id, directory, request.Version, Path.GetFullPath(installation)); ValidatePrepared(prepared, request); return prepared;
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or ArgumentException or BadImageFormatException) { return null; }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or JsonException or ArgumentException or BadImageFormatException) { return null; }
     }
 
     /// <summary>Rechecks current distribution, cached payload and helper before restoring or launching a staged update.</summary>

@@ -44,7 +44,7 @@ internal static partial class PortableUpdates
             var manifest = UpdatePackage.ReadManifest(installation);
             return manifest.Version == AppBuildInfo.Version && manifest.Runtime == AppBuildInfo.Runtime && !File.Exists(Path.Combine(installation, "ReStart.dll"));
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { return false; }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException) { return false; }
     }
 
     /// <summary>Checks the executable identity and creates the local helper handoff after archive validation.</summary>
@@ -79,7 +79,7 @@ internal static partial class PortableUpdates
     }
 
     /// <summary>Starts the cached helper and explicitly accepts its readiness handshake.</summary>
-    /// <param name="prepared">Validated workspace created in the current process by FinalizePreparation.</param>
+    /// <param name="prepared">Validated workspace returned by FinalizePreparation or RestorePrepared; its installation boundary is checked again.</param>
     /// <returns>True when the helper is ready and accepted; only then may the caller exit for installation.</returns>
     /// <exception cref="IOException">Handoff files cannot be read or written.</exception>
     internal static async Task<bool> StartAsync(Prepared prepared)
@@ -153,13 +153,13 @@ internal static partial class PortableUpdates
                 }
             }
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception)
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception)
         {
             if (replacement is { HasExited: false }) { replacement.Kill(entireProcessTree: true); await replacement.WaitForExitAsync(); }
             if (File.Exists(Path.Combine(directory, "transaction.json")))
             {
                 try { transaction.Rollback(); result = "rolled-back"; }
-                catch (Exception rollback) when (rollback is IOException or UnauthorizedAccessException or InvalidOperationException) { result = "recovery-failed"; }
+                catch (Exception rollback) when (rollback is IOException or InvalidDataException or UnauthorizedAccessException or InvalidOperationException) { result = "recovery-failed"; }
             }
         }
         finally { replacement?.Dispose(); }
@@ -167,7 +167,7 @@ internal static partial class PortableUpdates
         if (result != "complete" && result != "recovery-failed")
         {
             try { using var restored = Process.Start(RestartInfo(request, id, completing: false)); }
-            catch (Exception ex) when (ex is IOException or System.ComponentModel.Win32Exception) { return 3; }
+            catch (Exception ex) when (ex is IOException or InvalidDataException or System.ComponentModel.Win32Exception) { return 3; }
         }
         return result == "complete" ? 0 : result == "rolled-back" ? 1 : 3;
     }
@@ -263,10 +263,10 @@ internal static partial class PortableUpdates
                     File.Delete(leasePath);
                     if (!Directory.EnumerateFileSystemEntries(directory).Any()) Directory.Delete(directory);
                 }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException) { }
+                catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or JsonException) { }
             }
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException) { }
     }
     /// <summary>Reads a bounded local request after validating its workspace and basic installation identity.</summary>
     /// <param name="id">N-GUID immediately beneath CacheRoot.</param>
