@@ -26,6 +26,8 @@ Sperre das gesamte Layout oder einzelne Gruppen. Strg+Umschalt+L schaltet die gl
 
 Unter **Einstellungen → Darstellung** lassen sich die Hintergrundtönung auf **10–100 %** und die Unschärfe des Hintergrundbilds auf **0–50** einstellen. Der Standardwert ist **12**; **0** zeigt das Bild scharf. Hoher Kontrast hat Vorrang. **Auswahl beenden** oder ein Klick auf **Angeheftete Kacheln** führt direkt zur Kachelansicht zurück.
 
+Darstellung, Kachelskalierung, Gruppenbreite und Sprache lassen sich vor dem Speichern ausprobieren. Beim Schließen stehen Speichern, Verwerfen oder Weiterbearbeiten zur Wahl; Verwerfen stellt die gespeicherte Ansicht wieder her. Nach einem ausdrücklich gestarteten Update-Download bleibt eine Neustart-Erinnerung sichtbar. Das geprüfte Paket wird beim nächsten Start wiedererkannt, jedoch nicht automatisch installiert.
+
 19 HTML/CSS/JavaScript-Kacheln sind enthalten. Tile Studio bearbeitet Quellen und Manifest, zeigt vier Größen mit Offline-Beispieldaten und speichert Entwürfe oder angeheftete Kacheln. Neu sind Wettergrafik, Systemübersicht, Nachrichtenwand und Canvas-Garten; die SVG-Uhr folgt der PC-Zeit. Live-Kachelnamen sind standardmäßig sichtbar und in den Einstellungen abschaltbar.
 
 Beim Ziehen folgt eine halbtransparente Kopie der Kachel, Gruppe oder Auswahl dem Mauszeiger. Die blaue Markierung zeigt das Ziel; verdrängte Kacheln zeigen ihre neue Position vor dem Ablegen.

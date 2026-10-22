@@ -70,3 +70,7 @@ See [Start behavior](start-behavior.md) for feature switches, defaults and local
 - [Microsoft: Windows 10 Start layout](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/configuration/customize-and-export-start-layout)
 
 Placement locks, full keyboard placement editing, Tile Studio, separate owned background images and browser live tiles are ReStart extensions. They are not claims about the Windows 10 shell. Nineteen web examples are checked at four sizes and in eight languages through a real hidden browser fixture; browser sandbox restrictions and runtime requirements are documented in the tile guide.
+
+## Additional settings workflow
+
+ReStart previews appearance, geometry and language without saving them, and offers save/discard/continue on closing a changed settings editor. It also retains a downloaded update across ordinary launches with a persistent restart reminder. These are ReStart conveniences, rather than claims about a native Windows 10 settings or update interface.

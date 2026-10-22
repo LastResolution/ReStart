@@ -8,12 +8,18 @@ Complete portable packages from v1.6.0 include `ReStart-package.json`, the distr
 
 1. Choose **Check now**. Read the available version and release notes.
 2. Choose **Download update**. ReStart fetches the current-architecture ZIP and SHA-256 sidecar from the fixed public repository. You can cancel; the installed application is not changed during preparation.
-3. When the package is verified, choose **Restart and update** and accept the confirmation. Save any Settings changes first: this confirmation preserves saved settings but does not apply unsaved edits in the Settings window.
+3. When the package is verified, choose **Restart and update** and accept the confirmation. If Settings has unsaved changes, choose to save, discard or keep editing before proceeding.
 4. ReStart saves its current layout, starts a separate copy of its updater, and exits. The updater backs up distribution files, replaces the package and starts the new app from the same location. The update commits only after the new app initializes and acknowledges startup.
 
 The installation must be writable without elevation. New package files may not overwrite unrelated local files. Modified distribution-owned files also stop the update; keep custom live tiles in ReStart's local tile library instead of editing bundled installation files. Settings, tile sources and data connections in local app data remain separate from the installed package. Settings writes are deferred until startup is acknowledged, so a failed candidate does not stamp its version into the saved layout.
 
 Installation or startup failure restores the previous distribution and launches it again. A durable journal allows an interrupted transaction to be restored before normal startup. If automatic recovery cannot finish, the app shows repair guidance rather than continuing with a partly replaced distribution. Close ReStart and extract the complete trusted portable ZIP into the installation folder, keeping local settings. Workspaces and backups are under `%LOCALAPPDATA%\ReStart.UpdateCache`; completed update files are removed on a later ordinary startup, while incomplete recovery material is retained. Cleanup removes known update-owned files, never unrelated files.
+
+## Prepared updates and reminders
+
+An explicit download continues if you close Settings. Once verified, a nonmodal ready notice appears at the top right; a hidden launcher may request a Windows notification. **Not now** reduces it to a persistent reminder with a **Restart and update** action. Language/theme changes and reopening Start retain the reminder. The Updates settings section also keeps the ready version and restart action visible.
+
+A small local index associates the preparation with its exact portable installation. Ordinary startup rechecks the installed inventory, newer version, architecture, cached payload and helper hashes before restoring readiness. It neither redownloads nor applies the update automatically. Missing, stale, modified, linked or incomplete workspaces are rejected. A ready update is restored even if optional online startup checks are disabled, because its download was already requested explicitly. A normal exit/relaunch is not installation consent: **Restart and update** and its confirmation remain required.
 
 ## Manual updates
 

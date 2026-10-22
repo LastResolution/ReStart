@@ -59,3 +59,11 @@ In Select tiles mode (Ctrl+E), arrows choose a tile, Space changes selection, Ct
 **Show live tile names**, under JavaScript tiles, defaults on. Turning it off hides native live-widget labels and bundled web-tile title markers; normal app labels and accessibility/tooltip names remain. Custom web packages receive `ctx.appearance.showTitle` and should mark their own name with `data-restart-title`.
 
 Appearance can use the desktop wallpaper or a separately imported image. ReStart stores its own decoded copy and does not retain the original path. Background tint ranges from 10–100%; wallpaper blur is independently adjustable from 0–50 device-independent pixels, with a default of 12. A value of 0 disables blur. These effects apply to the background image, keeping foreground controls sharp. High contrast takes precedence.
+
+## Settings preview and close decisions
+
+Appearance, wallpaper, tile scale, group width, sidebar presentation and language preview before saving. Changes are coalesced while a control is being adjusted. An open settings editor relabels itself in the selected language while retaining its draft and section. Invalid in-progress RGB text remains an unsaved edit; it cannot be saved.
+
+Closing through Close, Escape, Alt+F4 or the title bar offers **Save and close**, **Discard and close**, and **Keep editing** when there are changes. The default and Escape keep editing. Discard restores the latest committed palette, geometry and language; save errors leave the editor and draft available. An unchanged editor closes without a prompt. Imported background copies that were created by that editor and never saved are removed on close.
+
+Preview uses a detached presentation overlay. It does not change saved preferences, tile coordinates, history, startup registration, Explorer integration or input hooks; unrelated layout saves cannot capture it. Explicit Start-board edits, layout import/reset and live-tile library actions keep their existing separately confirmed/immediate behavior. They do not become part of the settings draft. External folder/support actions, application exit and update restart resolve unsaved settings before proceeding.

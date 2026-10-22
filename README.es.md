@@ -26,6 +26,8 @@ Bloquea todo el diseño o grupos individuales. Ctrl+Mayús+L cambia el bloqueo g
 
 En **Configuración → Apariencia**, ajusta el tinte del fondo entre **10–100 %** y el desenfoque de la imagen entre **0–50**. El desenfoque predeterminado es **12**; **0** conserva la imagen nítida. El alto contraste tiene prioridad. **Finalizar selección** o pulsar **Mosaicos anclados** vuelve directamente a la vista de mosaicos.
 
+Prueba la apariencia, la escala, el ancho de los grupos y el idioma antes de guardar. Al cerrar, puedes guardar, descartar o seguir editando; descartar restaura la presentación guardada. Tras descargar una actualización expresamente, queda un aviso para reiniciar. La preparación verificada se recupera en el siguiente inicio, sin instalarse automáticamente.
+
 Incluye 19 mosaicos HTML/CSS/JavaScript. Tile Studio permite editar código y manifiesto, probar cuatro tamaños con datos de ejemplo sin conexión y guardar borradores o anclarlos. Los nuevos ejemplos muestran tiempo atmosférico, panel del sistema, noticias RSS y arte Canvas. Las agujas del reloj SVG siguen la hora del PC. Los nombres se muestran por defecto y pueden ocultarse en los ajustes.
 
 Al arrastrar, una copia semitransparente del mosaico, grupo o selección sigue al puntero. La marca azul indica el destino y los mosaicos desplazados muestran su posición antes de soltar.
