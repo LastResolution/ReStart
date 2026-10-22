@@ -251,7 +251,7 @@ public partial class MainWindow : Window
             _wallpaperMonitor = screen.Bounds;
             RefreshWallpaper();
             RefreshNavigationShortcuts();
-            Native.SetWindowPos(handle, new nint(-1), area.X, area.Y, area.Width, area.Height, 0x0040);
+            MonitorPlacement.FitWorkingArea(handle, new nint(-1), area, 0x0040);
         }
         if (!_preview || _verifyNativeActivation) ForegroundActivation.Request(handle);
         Activate();

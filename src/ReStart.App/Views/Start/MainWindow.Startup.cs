@@ -149,7 +149,7 @@ public partial class MainWindow
             var area = screen.WorkingArea;
             _wallpaperMonitor = screen.Bounds; RefreshWallpaper();
             // Size the hidden HWND without showing it or taking focus from the splash.
-            Services.Native.SetWindowPos(handle, 0, area.X, area.Y, area.Width, area.Height, 0x0014);
+            Services.MonitorPlacement.FitWorkingArea(handle, 0, area, 0x0014);
         }
         var transform = HwndSource.FromHwnd(handle).CompositionTarget.TransformFromDevice;
         var size = !_preview ? transform.Transform(new Point(System.Windows.Forms.Screen.FromPoint(_startupPoint).WorkingArea.Width,
