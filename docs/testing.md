@@ -82,6 +82,12 @@ Add `-Visible` to `test-platform.ps1` to exercise the same checks with the actua
 
 For mixed-DPI testing, configure different per-display scales in Windows, run the fixture, and restore the original configuration afterward. A report with only 96-DPI passes is not mixed-DPI evidence. Complete a separate visible interaction check for opening on each monitor, moving between them, taskbar dismissal and reconnects. For Narrator, check announced names/roles/selection, Tab and arrow order, dialogs, folders and web-tile content with the actual screen reader. Touch requires a physical digitizer; mouse promotion and injected events alone do not establish it.
 
+## Live tile display recovery
+
+The Studio fixture includes 55 display-recovery assertions against two isolated browser tiles. It injects display/DPI notifications while a browser render is in flight and checks coalescing, fresh browser instances, retained JSON state and queued input, rejected stale replies, resumed frames and unchanged layout/configuration. Ordinary color changes retain browser instances; display recovery waits until an active drag or inline rename ends. These tests do not change Windows display settings or certify a particular GPU/driver reset.
+
+Run just this regression with `./scripts/test-studio.ps1 -Executable <built-executable> -RecoveryOnly`. The full Studio run includes it automatically. Removing browser regeneration makes the focused regression fail at the stale-presentation assertion.
+
 ## Manual coverage still required
 
 | Area | Check |

@@ -12,19 +12,44 @@ public partial class MainWindow
     private long _wallpaperLength;
     private System.Drawing.Rectangle? _wallpaperMonitor;
     private DispatcherTimer? _appearanceRefresh;
+    private bool _refreshWebPresentations;
 
     private void WatchDesktopAppearance()
     {
         if (_preview) return;
-        _appearanceRefresh = new(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(200) };
-        _appearanceRefresh.Tick += (_, _) => { _appearanceRefresh.Stop(); if (!_exit) { _wallpaperPath = null; RefreshLayout(); } };
+        InitializeAppearanceRefresh();
         SystemEvents.UserPreferenceChanged += OnDesktopAppearanceChanged;
         SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
         SystemEvents.TimeChanged += OnSystemTimeChanged;
     }
 
     private void OnDesktopAppearanceChanged(object sender, UserPreferenceChangedEventArgs args) => QueueAppearanceRefresh();
-    private void OnDisplaySettingsChanged(object? sender, EventArgs args) => QueueAppearanceRefresh();
+    private void OnDisplaySettingsChanged(object? sender, EventArgs args) => QueueAppearanceRefresh(recreateWebPresentations: true);
+
+    /// <summary>Invalidates browser composition surfaces after the window changes its actual display scale.</summary>
+    /// <param name="oldDpi">Previous device-independent-to-physical pixel scale.</param>
+    /// <param name="newDpi">New device-independent-to-physical pixel scale supplied by WPF.</param>
+    protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi)
+    {
+        base.OnDpiChanged(oldDpi, newDpi);
+        QueueAppearanceRefresh(recreateWebPresentations: true);
+    }
+
+    private void InitializeAppearanceRefresh()
+    {
+        if (_appearanceRefresh != null) return;
+        _appearanceRefresh = new(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(200) };
+        _appearanceRefresh.Tick += (_, _) =>
+        {
+            // Finish the user's current placement/name transaction before
+            // replacing any browser that belongs to its retained visual tree.
+            if (_refreshWebPresentations && (_dragging || _editingGroupHeader?.IsEditing == true)) return;
+            _appearanceRefresh.Stop();
+            if (_exit) return;
+            if (_refreshWebPresentations) { _refreshWebPresentations = false; ResetHtmlPresentations(); }
+            _wallpaperPath = null; RefreshLayout();
+        };
+    }
     private void OnSystemTimeChanged(object? sender, EventArgs args) => Dispatcher.BeginInvoke(async () =>
     {
         if (_exit) return;
@@ -35,9 +60,10 @@ public partial class MainWindow
         foreach (var runtime in _scriptSessions.Values) runtime.NextUpdate = DateTimeOffset.MinValue;
         UpdateLiveTiles(); await UpdateScriptTilesAsync();
     });
-    private void QueueAppearanceRefresh() => Dispatcher.BeginInvoke(() =>
+    private void QueueAppearanceRefresh(bool recreateWebPresentations = false) => Dispatcher.BeginInvoke(() =>
     {
         if (_exit || _appearanceRefresh == null) return;
+        _refreshWebPresentations |= recreateWebPresentations;
         _appearanceRefresh.Stop(); _appearanceRefresh.Start();
     });
 

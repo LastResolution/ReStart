@@ -96,6 +96,28 @@ public partial class MainWindow
         { _htmlTiles.Remove(id, out var view); _htmlFootprints.Remove(id); view!.Dispose(); }
     }
 
+    private void ResetHtmlPresentations()
+    {
+        // WPF layout refreshes ordinarily keep browser instances to avoid
+        // flicker. A display/DPI reset can invalidate their capture surfaces,
+        // so this path must replace the controls as the manual Reload does.
+        // Keep host-owned state and queued input, unlike an explicit Reload.
+        _scriptPresentationGeneration++;
+        foreach (var id in _htmlTiles.Keys)
+        {
+            _scriptFrames.Remove(id); _scriptAttempts.Remove(id);
+            if (_scriptSessions.TryGetValue(id, out var session))
+                _scriptSessions[id] = new()
+                {
+                    State = session.State,
+                    Inputs = new(session.Inputs),
+                    Attempts = session.Attempts,
+                    NextUpdate = DateTimeOffset.MinValue
+                };
+        }
+        RetireHtmlTiles(all: true);
+    }
+
     private async Task<(ScriptTileFrame? Frame, string? Error)> RenderHtmlTileAsync(Tile tile, object context, string source, ScriptTileManifest manifest)
     {
         if (!_htmlTiles.TryGetValue(tile.Id, out var view)) return (null, null);

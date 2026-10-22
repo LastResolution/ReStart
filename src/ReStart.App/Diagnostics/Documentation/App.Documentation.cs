@@ -24,6 +24,7 @@ public partial class App
             store.Save(new() { Preferences = new() { Language = "en", Animate = false, ShowWallpaper = false } });
             renderer = new(store, true);
             if (platform) await renderer.VerifyPlatformAsync(directory, arguments.Contains("--visible") || arguments.Contains("--interactive"), arguments.Contains("--interactive"));
+            else if (studio && arguments.Contains("--recovery-only")) await renderer.VerifyWebTileRecoveryAsync(directory);
             else if (studio) await renderer.RenderStudioDocumentationAsync(directory);
             else if (promo)
             {
