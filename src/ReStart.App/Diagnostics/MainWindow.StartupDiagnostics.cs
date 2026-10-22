@@ -45,6 +45,8 @@ public partial class MainWindow
             Check(!fixture.IsVisible && fixture._startupWindow?.IsVisible == true && fixture._startupWindow.Query.IsKeyboardFocused,
                 "Cold startup exposed an unprepared main window or failed to focus splash input.");
             var splash = fixture._startupWindow!;
+            splash.UpdateLayout();
+            CheckSplashCenter(splash);
             fixture.ComposeFixtureText("E"); fixture.Present();
             Check(fixture._startupWindow == splash && splash.Query.Text == "E", "Repeated activation reset the startup query or opened another splash.");
             foreach (var tag in L.SupportedLanguages)
@@ -54,6 +56,7 @@ public partial class MainWindow
                     fixture.Document.Preferences.Accent = theme switch { ReStart.Core.ThemeMode.Light => "#D83B01", ReStart.Core.ThemeMode.System => "#008272", _ => "#0078D7" };
                     fixture.ApplyAppearance();
                     splash.UpdateProgress(K.StartupApps, .25); splash.UpdateLayout();
+                    CheckSplashCenter(splash);
                     Check(splash.Stage.Text == L.T(K.StartupApps) && splash.Query.Text == "E" && splash.ActualHeight > 200 && splash.ActualHeight < 500,
                         "The localized splash lost its input, progress or bounded layout.");
                     Check(splash.StartupTitle.Text == L.T(K.StartupTitle) && (string)splash.CancelButton.Content == L.T(K.CommonCancel)
@@ -141,6 +144,15 @@ public partial class MainWindow
             finally { closeSettings.Stop(); cold.Exit(); fixture.Activate(); }
             var cacheChecks = VerifyIconCache(directory);
             return new(checks, languageCases, cacheChecks, fixture.StartupMetrics);
+
+            void CheckSplashCenter(StartupWindow window)
+            {
+                var area = System.Windows.Forms.Screen.FromPoint(fixture._startupPoint).WorkingArea;
+                Check(PlatformWindowRect(new System.Windows.Interop.WindowInteropHelper(window).Handle, out var bounds)
+                    && Math.Abs((bounds.Left + bounds.Right) / 2d - (area.Left + area.Width / 2d)) <= 1
+                    && Math.Abs((bounds.Top + bounds.Bottom) / 2d - (area.Top + area.Height / 2d)) <= 1,
+                    $"The splash is not centered in its monitor working area: bounds={bounds.Left},{bounds.Top},{bounds.Right},{bounds.Bottom}; area={area}.");
+            }
         }
         finally { fixture.Exit(); L.SetLanguage(language); ApplyAppearance(); Activate(); }
     }
