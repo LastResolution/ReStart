@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([Parameter(Mandatory)][string]$Executable)
+param([Parameter(Mandatory)][string]$Executable, [string]$PreviousExecutable)
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $source = (Resolve-Path -LiteralPath $Executable).Path
@@ -8,7 +8,12 @@ if (-not (Test-Path -LiteralPath (Join-Path (Split-Path -Parent $source) 'ReStar
 }
 $directory = Join-Path $repoRoot ('artifacts/update-installation/' + [Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $directory -Force | Out-Null
-$process = Start-Process -FilePath $source -ArgumentList @('--verify-update-installations', ('"' + $directory + '"')) -WindowStyle Hidden -PassThru
+$arguments = @('--verify-update-installations', ('"' + $directory + '"'))
+if ($PreviousExecutable) {
+    $previous = (Resolve-Path -LiteralPath $PreviousExecutable).Path
+    $arguments += @('--previous-update-executable', ('"' + $previous + '"'))
+}
+$process = Start-Process -FilePath $source -ArgumentList $arguments -WindowStyle Hidden -PassThru
 try {
     if (-not $process.WaitForExit(240000)) { $process.Kill($true); throw 'Update installation verification timed out.' }
     if ($process.ExitCode -ne 0) { throw "Update installation verification failed: $($process.ExitCode)" }

@@ -18,7 +18,12 @@ public partial class MainWindow
         string? Group, string? Folder, double X, double Y, int Columns, int TileColumns, double Cell);
     private (SelectionPlanKey Key, List<TileGroup>? Groups)? _selectionPlanCache;
 
-    private void ToggleLayoutEditing(object sender, RoutedEventArgs e) => SetLayoutEditing(!_layoutEditing);
+    private void ToggleLayoutEditing(object sender, RoutedEventArgs e)
+    {
+        var entering = !_layoutEditing;
+        SetLayoutEditing(entering);
+        if (!entering) ResetToPinnedView();
+    }
 
     private void SetLayoutEditing(bool editing)
     {

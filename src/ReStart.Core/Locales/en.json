@@ -439,5 +439,7 @@
   "UpdateCancelled": "Download cancelled. Your installation was not changed.",
   "UpdateInstalled": "ReStart was updated successfully.",
   "UpdateRepairHelp": "The update could not be recovered automatically. Exit ReStart and extract the complete portable ZIP into the installation folder. Keep your local ReStart settings. Update backups remain in ReStart.UpdateCache under local app data.",
-  "UpdateRestored": "The update did not finish. ReStart is running the previous installation."
+  "UpdateRestored": "The update did not finish. ReStart is running the previous installation.",
+  "SettingsBlur": "Wallpaper blur",
+  "SettingsBlurHelp": "0 keeps the image sharp. Blur affects only ReStart’s background image."
 }

@@ -35,9 +35,7 @@
     </Style>
   </Window.Resources>
   <Grid x:Name="Root" ClipToBounds="True">
-    <Image x:Name="Wallpaper" Stretch="UniformToFill" IsHitTestVisible="False">
-      <Image.Effect><BlurEffect Radius="35" /></Image.Effect>
-    </Image>
+    <Image x:Name="Wallpaper" Stretch="UniformToFill" IsHitTestVisible="False" />
     <Border x:Name="Tint" Background="#E8202020" IsHitTestVisible="False" />
     <Grid>
       <Grid.ColumnDefinitions><ColumnDefinition Width="48" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>

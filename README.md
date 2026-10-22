@@ -66,6 +66,8 @@ Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button
 - **Create in Tile Studio:** HTML, CSS, browser JavaScript, all four size previews and offline sample input. Nineteen bundled examples provide a starting point.
 - **Keep the names you want:** live tile names are shown by default and can be hidden in settings. Tooltips and accessibility names remain available.
 
+In **Settings → Appearance**, adjust background tint from **10–100%** and wallpaper blur from **0–50**. Blur defaults to **12**; choose **0** for a sharp image. High contrast overrides these effects. **Finish selecting**, or clicking **Pinned tiles**, returns directly to the pinned home screen.
+
 ![Tile Studio: HTML, CSS and JavaScript with four live previews](docs/images/tile-studio.png)
 
 ![Weather scene, System dashboard, News board and Canvas garden](docs/images/web-examples.png)
@@ -212,7 +214,7 @@ Have a layout to show, an idea for a tile, or a bug to report? [Open an issue](h
 
 Win+letter shortcuts are forwarded to Windows. Settings can disable Windows-key and taskbar Start-button capture. [Compatibility](docs/fidelity.md) describes the desktop integration and platform coverage.
 
-Selection mode provides **Move to group…**, **Unpin selected** and **Finish selecting**. Dragging keeps relative positions; the group menu collects the selection into a compact block. Overlapping an independent non-folder tile collects the selection into a compact ordinary group. A single tile can create a folder inside a group; multiple selected tiles can enter an existing folder but do not create one accidentally. Use a folder's **Open folder** context action to arrange its children. A folder with one remaining child stays a folder; removing its last child removes the folder. `Esc` clears selection, then leaves editing. Reopening Start leaves edit mode. Layout history lasts for the running session (up to 100 edits within a 32 MiB memory budget); it preserves current preferences and is never saved to disk. Each successful pin, move, resize, rename, color change, folder edit, import or reset is undoable as one operation.
+Selection mode provides **Move to group…**, **Unpin selected** and **Finish selecting**. Finishing selection returns directly to the pinned home screen; clicking **Pinned tiles** also leaves selection mode. Dragging keeps relative positions; the group menu collects the selection into a compact block. Overlapping an independent non-folder tile collects the selection into a compact ordinary group. A single tile can create a folder inside a group; multiple selected tiles can enter an existing folder but do not create one accidentally. Use a folder's **Open folder** context action to arrange its children. A folder with one remaining child stays a folder; removing its last child removes the folder. `Esc` clears selection, then leaves editing. Reopening Start leaves edit mode. Layout history lasts for the running session (up to 100 edits within a 32 MiB memory budget); it preserves current preferences and is never saved to disk. Each successful pin, move, resize, rename, color change, folder edit, import or reset is undoable as one operation.
 
 </details>
 

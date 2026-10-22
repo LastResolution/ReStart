@@ -886,4 +886,8 @@ public enum TextKey
     UpdateRepairHelp,
     /// <summary>The update did not finish. ReStart is running the previous installation.</summary>
     UpdateRestored,
+    /// <summary>Wallpaper blur</summary>
+    SettingsBlur,
+    /// <summary>0 keeps the image sharp. Blur affects only ReStart’s background image.</summary>
+    SettingsBlurHelp,
 }

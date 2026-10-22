@@ -62,7 +62,9 @@ internal sealed partial class SettingsWindow
         Check(content, L.T(K.SettingsAnimation), _draft.Animate, v => _draft.Animate = v);
         Select(content, L.T(K.SettingsGroupWidth), new[] { L.T(K.ColumnsThree), L.T(K.ColumnsFour) }, _draft.Columns == 8 ? 1 : 0, i => _draft.Columns = i == 1 ? 8 : 6);
         Slide(content, L.T(K.SettingsTileSize), 0.7, 1.5, _draft.TileScale, v => _draft.TileScale = v, true);
-        Slide(content, L.T(K.SettingsOpacity), 0.3, 1, _draft.BackgroundOpacity, v => _draft.BackgroundOpacity = v, false);
+        Slide(content, L.T(K.SettingsOpacity), 0.1, 1, _draft.BackgroundOpacity, v => _draft.BackgroundOpacity = v, false);
+        Slide(content, L.T(K.SettingsBlur), 0, 50, _draft.BackgroundBlur, v => _draft.BackgroundBlur = v, true, percentage: false);
+        Note(content, L.T(K.SettingsBlurHelp));
         RefreshPresetPreviews();
     }
 

@@ -40,7 +40,7 @@ public sealed class GroupBoardPanel : Panel
         Columns = GroupLayout.ColumnCount(width, TileColumns, Cell);
         Placements = DragPlacements ?? GroupLayout.Pack(InternalChildren.OfType<FrameworkElement>().Select(e => e.Tag).OfType<TileGroup>(), Columns, TileColumns, Cell, expandedFolderId: ExpandedFolderId, preserveColumns: true);
         foreach (FrameworkElement child in InternalChildren)
-            child.Measure(new(child.Tag is TileGroup group ? Placements.First(p => p.Group == group).Width : TileColumns * Cell, double.PositiveInfinity));
+            child.Measure(new(child.Tag is TileGroup group ? Placements.First(p => p.Group == group).Width : width > 0 ? width : TileColumns * Cell, double.PositiveInfinity));
         var height = Placements.Count == 0 ? Cell * 4 : Placements.Max(p => p.Top + p.Height);
         var occupiedWidth = Placements.Count == 0 ? 0 : Placements.Max(p => p.Left + p.Width);
         return new(Math.Max(width, Math.Max(occupiedWidth, DragMinimumWidth)), Math.Max(height, Math.Max(MinHeight, DragMinimumHeight)));

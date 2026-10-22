@@ -33,7 +33,7 @@ The mixed-DPI runs exposed WPF's suggested DPI-scaled window size overriding phy
 | Launching | Optional per-tile arguments, working directory and canonical administrator launch for supported desktop apps/shortcuts; Windows retains elevation consent |
 | Desktop integration | Reversible Windows-key and Start-button capture, tray, optional sign-in startup and Explorer pin commands; no shell injection |
 | Motion | Separate window fade, bottom-anchored zoom and bottom-to-top tile reveal; animated dismissal, interrupted reopen and reduced-motion support |
-| Appearance | Dark, light, system and high contrast; wallpaper blur/tint approximates the original composition |
+| Appearance | Dark, light, system and high contrast; 10–100% background tint and independently adjustable wallpaper blur (0–50, default 12) approximate the original composition |
 | Live tiles | Local clock/calendar, native JS compatibility and HTML/CSS/browser JavaScript packages, including opt-in cached Web API/feed/file inputs; these are ReStart extensions, without legacy UWP notifications or background delivery |
 | App history | Optional Recently added and Most used, based on local discovery dates and opt-in successful ReStart launches. Existing apps are baselined; history can be cleared. Windows usage history is not imported |
 | Data | Schema migration with original-file backups and protection against newer producers; no direct Windows layout import |

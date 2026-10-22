@@ -24,6 +24,8 @@ https://github.com/user-attachments/assets/243a5c5a-46bc-4180-8a0c-cee71ab63f06
 
 Bloquea todo el diseño o grupos individuales. Ctrl+Mayús+L cambia el bloqueo global. Ctrl+E selecciona; Ctrl+flecha mueve mosaicos, Ctrl+Mayús+flecha mueve el grupo y Alt+1–4 cambia el tamaño. Ctrl+G agrupa la selección; Mayús+F10 abre su menú. Se mantiene Deshacer/Rehacer. Puedes guardar un fondo propio, independiente del escritorio.
 
+En **Configuración → Apariencia**, ajusta el tinte del fondo entre **10–100 %** y el desenfoque de la imagen entre **0–50**. El desenfoque predeterminado es **12**; **0** conserva la imagen nítida. El alto contraste tiene prioridad. **Finalizar selección** o pulsar **Mosaicos anclados** vuelve directamente a la vista de mosaicos.
+
 Incluye 19 mosaicos HTML/CSS/JavaScript. Tile Studio permite editar código y manifiesto, probar cuatro tamaños con datos de ejemplo sin conexión y guardar borradores o anclarlos. Los nuevos ejemplos muestran tiempo atmosférico, panel del sistema, noticias RSS y arte Canvas. Las agujas del reloj SVG siguen la hora del PC. Los nombres se muestran por defecto y pueden ocultarse en los ajustes.
 
 Al arrastrar, una copia semitransparente del mosaico, grupo o selección sigue al puntero. La marca azul indica el destino y los mosaicos desplazados muestran su posición antes de soltar.

@@ -71,8 +71,10 @@ public sealed class Preferences
     public string BackgroundColor { get; set; } = "";
     /// <summary>Gets or sets the adaptive color family; empty means explicit custom RGB, while null identifies unlabelled legacy preferences.</summary>
     public string? ColorThemeId { get; set; }
-    /// <summary>Gets or sets background tint opacity, normalized to 0.3 through 1.</summary>
+    /// <summary>Gets or sets background-image tint opacity, normalized to 0.1 through 1; high contrast renders an opaque surface.</summary>
     public double BackgroundOpacity { get; set; } = 0.86;
+    /// <summary>Gets or sets background-image blur radius in DIPs, normalized to 0–50. Zero keeps the image sharp; missing/nonfinite values use 12. Foreground controls are never blurred.</summary>
+    public double BackgroundBlur { get; set; } = 12;
     /// <summary>Gets or sets the cell scale, normalized to 0.7 through 1.5.</summary>
     public double TileScale { get; set; } = 1;
     /// <summary>Gets or sets six or eight logical cells per tile group.</summary>
