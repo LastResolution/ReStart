@@ -28,7 +28,7 @@ public partial class App
                 Shutdown(result); return true;
             }
             if (Value(args, "--verify-update-installations") is { } directory)
-            { await VerifyUpdateInstallationsAsync(Path.GetFullPath(directory)); Shutdown(0); return true; }
+            { await VerifyUpdateInstallationsAsync(Path.GetFullPath(directory), Value(args, "--previous-update-executable")); Shutdown(0); return true; }
             if (fixtureRoot != null && Value(args, "--verify-update-parent") is { } parentId)
             {
                 var request = PortableUpdates.ReadRequest(parentId);

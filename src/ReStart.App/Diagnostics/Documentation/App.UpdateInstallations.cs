@@ -8,9 +8,11 @@ namespace ReStart.App;
 
 public partial class App
 {
-    // This fixture creates only fictional installations, never normal settings,
-    // shell integration, real application lists, or update network requests.
-    private static async Task VerifyUpdateInstallationsAsync(string directory)
+    /// <summary>Exercises updater handoff and rollback using fictional installations, without ordinary settings, hooks or network requests.</summary>
+    /// <param name="directory">New owned fixture root for installations, updater workspaces and the JSON report.</param>
+    /// <param name="previousExecutable">Optional standalone preceding-release binary copied into each old installation. Null uses the current binary with a fictional old manifest.</param>
+    /// <returns>A task completing after four process scenarios and owned-cache cleanup are verified.</returns>
+    private static async Task VerifyUpdateInstallationsAsync(string directory, string? previousExecutable = null)
     {
         Directory.CreateDirectory(directory); PortableUpdates.CacheRoot = Path.Combine(directory, "jobs");
         Directory.CreateDirectory(PortableUpdates.CacheRoot);
@@ -22,11 +24,14 @@ public partial class App
         var previous = current.Patch > 0 ? new ReleaseVersion(current.Major, current.Minor, current.Patch - 1)
             : current.Minor > 0 ? new ReleaseVersion(current.Major, current.Minor - 1, 0) : new ReleaseVersion(Math.Max(0, current.Major - 1), 0, 0);
         if (previous.CompareTo(current) >= 0) throw new InvalidOperationException("Fixture requires a version after 0.0.0.");
+        if (previousExecutable != null)
+            Check(ReleaseVersion.Parse(FileVersionInfo.GetVersionInfo(previousExecutable).ProductVersion)?.ToString() == previous.ToString(),
+                "Previous fixture executable does not match the preceding release version.");
         foreach (var scenario in new[] { "success", "startup-failure", "locked-file", "interrupted" })
         {
             var installation = Path.Combine(directory, scenario);
             Directory.CreateDirectory(Path.Combine(installation, "TileHost"));
-            File.Copy(source, Path.Combine(installation, "ReStart.exe"), overwrite: true);
+            File.Copy(previousExecutable ?? source, Path.Combine(installation, "ReStart.exe"), overwrite: true);
             File.WriteAllText(Path.Combine(installation, "TileHost", "ReStart.TileHost.exe"), "fictional worker");
             File.WriteAllText(Path.Combine(installation, "README.txt"), "old instructions");
             WriteFixtureManifest(installation, previous.ToString());
@@ -50,7 +55,7 @@ public partial class App
             }
             else
             {
-                var start = new ProcessStartInfo(source) { UseShellExecute = false, CreateNoWindow = true };
+                var start = new ProcessStartInfo(Path.Combine(installation, "ReStart.exe")) { UseShellExecute = false, CreateNoWindow = true };
                 foreach (var argument in new[] { "--verify-update-parent", id, "--verify-update-root", PortableUpdates.CacheRoot }) start.ArgumentList.Add(argument);
                 using var parent = Process.Start(start) ?? throw new IOException("Fixture parent failed to start.");
                 using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
@@ -76,7 +81,7 @@ public partial class App
         Check(File.ReadAllText(unrelated) == "retained", "Cache cleanup removed an unrelated file.");
         Check(!File.Exists(Path.Combine(successfulWorkspace!, "ReStart.exe")), "Completed update binaries were not cleaned up.");
         Check(File.ReadAllText(Path.Combine(directory, "success", "local-sentinel.txt")) == "private fixture sentinel", "Cache cleanup changed the installed user's file.");
-        File.WriteAllText(Path.Combine(directory, "verification.json"), JsonSerializer.Serialize(new { success = true, scenarios = 4, checks }, new JsonSerializerOptions { WriteIndented = true }));
+        File.WriteAllText(Path.Combine(directory, "verification.json"), JsonSerializer.Serialize(new { success = true, scenarios = 4, checks, previousExecutableVersion = previousExecutable == null ? null : previous.ToString() }, new JsonSerializerOptions { WriteIndented = true }));
     }
 
     private static void WriteFixtureManifest(string installation, string version)
