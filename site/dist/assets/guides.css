@@ -31,6 +31,7 @@
   .guide-prose li { margin-block:10px; padding-left:4px; }
   .guide-prose ul,.guide-prose ol { padding-left:24px; }
   .guide-prose a { text-underline-offset:3px; }
+  .guide-prose pre:focus-visible { outline-offset:-3px; }
   .guide-prose [id] { scroll-margin-top:110px; }
   .guide-answer { border-left:3px solid var(--accent); padding:24px 28px; background:var(--accent-soft); border-radius:0 8px 8px 0; margin-bottom:34px; }
   .guide-answer p:last-child { margin-bottom:0; }

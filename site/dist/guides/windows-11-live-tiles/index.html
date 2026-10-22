@@ -134,7 +134,7 @@
 <figure class="guide-figure"><a href="../../assets/studio-dark.png"><img data-theme-image data-light="../../assets/studio-light.png" data-dark="../../assets/studio-dark.png" src="../../assets/studio-dark.png" width="1240" height="820" alt="Tile Studio showing syntax-highlighted source and Small, Medium, Wide and Large previews with offline sample input." loading="lazy" decoding="async"></a><figcaption>Preview every size before pinning. Tile Studio uses offline sample input so authoring previews do not read personal connections, chosen photos or credentials.</figcaption></figure>
 <h3>Design for the space available</h3>
 <p>A useful Small tile may show one number while a Large tile adds a chart and detail. ReStart supplies a size attribute and context so the same package can adapt. For example, this CSS reduces a custom value’s font size and hides secondary text in the Small footprint:</p>
-<div class="code-panel"><div class="code-label">tile.css · responsive content within a tile</div><pre><code>.value { font-size: calc(28px * var(--tile-scale, 1)); }
+<div class="code-panel"><div class="code-label">tile.css · responsive content within a tile</div><pre tabindex="0" aria-label="Responsive tile CSS example"><code>.value { font-size: calc(28px * var(--tile-scale, 1)); }
 [data-size="small"] .value {
   font-size: calc(16px * var(--tile-scale, 1));
 }
