@@ -36,7 +36,7 @@ https://github.com/user-attachments/assets/243a5c5a-46bc-4180-8a0c-cee71ab63f06
 
 1. Download the **[x64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-x64.zip)** for an Intel/AMD PC, or the **[ARM64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip)** for Windows on ARM.
 2. Extract the **entire ZIP** into a folder you want to keep. Leave `TileHost`, `Examples`, `third-party` and `ReStart-package.json` beside `ReStart.exe`.
-3. Run **ReStart.exe**. Press the **Windows key**, then type an app name to search. **Ctrl+Alt+Space** and the tray menu also open Start.
+3. Run **ReStart.exe**. Press the **Windows key**, then type an app name to search. <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Space</kbd> and the tray menu also open Start.
 
 Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button integration and updates. Normal use needs no administrator rights. Checksums are included on the [release page](https://github.com/LastResolution/ReStart/releases/latest).
 
@@ -44,12 +44,15 @@ Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button
 
 ![ReStart opening and closing with apps and live tiles](docs/images/start-motion.gif)
 
-- **Make room for your apps.** Four tile sizes, movable groups, independent tiles and folders that expand in place. Drag, resize and rename without leaving Start. A translucent copy follows the pointer for tiles, groups and selections. Ordinary moves preview displaced tiles before you drop; cancellation restores the original positions.
-- **Choose several tiles without accidental launches.** Use **Select tiles** in the sidebar or background context menu, or press **Ctrl+E**. Move a selection together, then undo or redo the whole operation. Individual tiles and groups can be dragged directly while unlocked. Global and per-group placement locks prevent accidental changes; Ctrl+Arrow moves selected tiles without a mouse.
+- **Make room for your apps.** Four tile sizes, movable groups, optional independent tiles and folders that expand in place. Drag, resize and rename without leaving Start. A translucent copy follows the pointer for tiles, groups and selections. Ordinary moves preview displaced tiles before you drop; cancellation restores the original positions.
+
+- **Choose several tiles without accidental launches.** Use **Select tiles** in the sidebar or background context menu, or press <kbd>Ctrl</kbd> + <kbd>E</kbd>. Move a selection together, then undo or redo the whole operation. Individual tiles and groups can be dragged directly while unlocked. Global and per-group placement locks prevent accidental changes; Ctrl+Arrow moves selected tiles without a mouse.
 - **Keep your files close.** Pin a document, directory or shortcut from Explorer's **Pin to ReStart** command.
 - **Find the next thing.** Search apps, Windows settings and indexed local filenames. App menus can show recent/frequent documents. Choose sidebar folders, optional app history and per-tile launch options. Control each feature in **Settings → Start behavior**. [Explore the switches](docs/start-behavior.md).
 - **Open and type.** The first launch prepares icons and live tiles behind a localized progress screen with the app logo. Keystrokes typed while loading carry into Start automatically. Enter launches the highlighted search result; reopening returns to your pinned home. Installed and removed apps refresh in the background while ReStart keeps running.
 - **Set the mood.** Choose Midnight, Ocean, Forest, Rose or Sand independently of light, dark or system mode: every family has both variants. Entering your own background or accent switches to exact custom RGB colors. Text, controls, both scrollbars and the splash adapt together. Light, dark, system and high contrast remain available; wallpaper, individual tile colors and animation are optional.
+
+**Groups by default, freedom when you need it.** Drop into empty space to create an unnamed group; overlap a tile and wait to make a folder. Hold <kbd>Shift</kbd> while dragging to rearrange without folders, or <kbd>Alt</kbd> to place independently in empty space. Settings → Start behavior → **Use free tile placement** makes independent placement the default. Existing layouts and folders are preserved. Neighboring tiles ease into place without changing the recipient under your pointer.
 
 <details>
 <summary><strong>See the light theme</strong></summary>
@@ -60,8 +63,8 @@ Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button
 
 ## More control, more room to create
 
-- **Protect your layout:** lock every placement or one group. Use **Ctrl+Shift+L** for the global lock.
-- **Edit with the keyboard:** **Ctrl+E** selects tiles, arrows choose one, **Ctrl+Arrow** moves it, **Ctrl+Shift+Arrow** moves its group, and **Alt+1–4** changes its size. **Ctrl+G** groups a selection; **Shift+F10** opens its menu. Undo/redo remains available.
+- **Protect your layout:** lock every placement or one group. Use <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>L</kbd> for the global lock.
+- **Edit with the keyboard:** <kbd>Ctrl</kbd> + <kbd>E</kbd> selects tiles, arrows choose one, <kbd>Ctrl</kbd> + <kbd>Arrow</kbd> moves it, <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Arrow</kbd> moves its group, and <kbd>Alt</kbd> + <kbd>1–4</kbd> changes its size. <kbd>Ctrl</kbd> + <kbd>G</kbd> groups a selection; <kbd>Shift</kbd> + <kbd>F10</kbd> opens its menu. Undo/redo remains available.
 - **Choose a separate background:** keep the desktop wallpaper or import an image just for ReStart. The app stores its own decoded copy, without keeping the original source path.
 - **Create in Tile Studio:** HTML, CSS, browser JavaScript, all four size previews and offline sample input. Nineteen bundled examples provide a starting point.
 - **Keep the names you want:** live tile names are shown by default and can be hidden in settings. Tooltips and accessibility names remain available.
@@ -80,8 +83,8 @@ Preview appearance, tile scale, group width and language before saving. Closing 
 | --- | --- |
 | Open and close | Optional Windows-key and taskbar Start-button capture, Ctrl+Alt+Space, tray controls, foreground activation, close on app/taskbar switching, monitor-aware working area and a single running instance |
 | Startup | Optional sign-in startup, silent background mode, a themed preparation screen with typeahead, icon caching and background catalog refresh |
-| Tiles and groups | Small, medium, wide and large tiles; independent pins; movable rectangular groups with content-sized bounds; half-cell horizontal anchors; automatic placement and scrolling in both directions |
-| Folders | Create by overlap inside a group, open inline, add/remove/reorder children, rename inline and unpack; one remaining child keeps its folder |
+| Tiles and groups | Small, medium, wide and large tiles; unnamed groups by default, optional independent pins; movable rectangular groups with content-sized bounds; half-cell horizontal anchors; automatic placement and scrolling in both directions |
+| Folders | Create by sustained overlap, open inline, add/remove/reorder children, rename inline and unpack; one remaining child keeps its folder |
 | Layout editing | Global/per-group placement locks, keyboard placement/resize/group moves, edit mode, multi-selection and session Undo/Redo; cancelled drags preserve the original layout |
 | Drag feedback | Distinct group/folder/drop destinations, dwell progress, optional hints, hover boundaries and stationary edge scrolling; automatic group/folder creation can be switched off |
 | Pin anything | Apps, files, directories, shortcuts and websites; Explorer's Pin to ReStart, app/search context menus, drag from app lists, and explicit destinations |
@@ -162,7 +165,7 @@ A web tile contains `manifest.json`, `index.html`, `tile.css` and `tile.js`, plu
 
 Open **Tile Studio** from settings or the tile menu. Edit the source, preview all four sizes with offline sample data, test click actions, then save a draft or save and pin. Installed-tile edits keep the package ID, placement and local connection bindings.
 
-**Editor controls:** syntax highlighting for JavaScript, HTML, CSS and JSON; **Tab / Shift+Tab** for indentation; **Format document / Ctrl+Shift+F** for offline formatting with one-step undo. Feed headlines and News board scroll within their own tile. Closed folders show uniformly sized live previews. New and reset layouts use the included Month dots and Orbit clock. Optional startup checks show a dismissible notice when a newer release is available.
+**Editor controls:** syntax highlighting for JavaScript, HTML, CSS and JSON; <kbd>Tab</kbd> / <kbd>Shift</kbd> + <kbd>Tab</kbd> for indentation; **Format document / Ctrl+Shift+F** for offline formatting with one-step undo. Feed headlines and News board scroll within their own tile. Closed folders show uniformly sized live previews. New and reset layouts use the included Month dots and Orbit clock. Optional startup checks show a dismissible notice when a newer release is available.
 
 ```json
 { "version": 2, "renderer": "web", "title": "My tile", "refreshSeconds": 1 }
@@ -198,25 +201,26 @@ Have a layout to show, an idea for a tile, or a bug to report? [Open an issue](h
 
 | Action | Result |
 | --- | --- |
-| Bare Windows key / `Ctrl+Alt+Space` | Open or close |
-| Type / `Ctrl+F` | Search apps, enabled settings and indexed filenames |
-| `Enter` in search | Launch the highlighted result; use `↓` / `↑` to change it |
-| `Esc` | Close the current search, folder or overlay, then Start |
-| `Tab` / arrows / `Enter` | Navigate and activate |
+| Bare Windows key / <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Space</kbd> | Open or close |
+| Type / <kbd>Ctrl</kbd> + <kbd>F</kbd> | Search apps, enabled settings and indexed filenames |
+| <kbd>Enter</kbd> in search | Launch the highlighted result; use `↓` / `↑` to change it |
+| <kbd>Esc</kbd> | Close the current search, folder or overlay, then Start |
+| <kbd>Tab</kbd> / arrows / <kbd>Enter</kbd> | Navigate and activate |
 | Drag a tile / group header | Move it |
-| Drop a tile in empty space | Create an independent pin |
-| Partly overlap an independent tile for about 0.3 seconds, then drop when **Create group** appears | Collect the tiles into an ordinary group |
-| Overlap a tile inside a group for about 0.6 seconds, then drop when the folder preview is ready | Create a tile folder; dropping onto an existing folder adds to it |
-| **Select tiles** in the sidebar/background menu / `Ctrl+E` | Select several tiles without launching apps; normal dragging remains available outside this mode |
-| `Ctrl+A` / `Delete` in edit mode | Select root tiles / unpin the selection |
-| `Ctrl+Z` / `Ctrl+Y` or `Ctrl+Shift+Z` | Undo / redo a layout edit; text fields keep their own text undo |
+| Drop a tile in empty space | Create an unnamed group |
+| <kbd>Alt</kbd> + drag into empty space | Place independently for this drag |
+| <kbd>Shift</kbd> + drag | Rearrange and displace neighbors without overlap grouping or folder actions |
+| Overlap a tile for about 0.6 seconds, then drop when the folder preview is ready | Create a tile folder; an existing folder accepts children |
+| **Select tiles** in the sidebar/background menu / <kbd>Ctrl</kbd> + <kbd>E</kbd> | Select several tiles without launching apps; normal dragging remains available outside this mode |
+| <kbd>Ctrl</kbd> + <kbd>A</kbd> / <kbd>Delete</kbd> in edit mode | Select root tiles / unpin the selection |
+| <kbd>Ctrl</kbd> + <kbd>Z</kbd> / <kbd>Ctrl</kbd> + <kbd>Y</kbd> or <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd> | Undo / redo a layout edit; text fields keep their own text undo |
 | Pencil button / double-click a group or folder name | Rename inline |
 | Right-click an app, tile or background | Pin, resize, add tiles and more |
-| `Shift` + mouse wheel | Scroll horizontally |
+| <kbd>Shift</kbd> + mouse wheel | Scroll horizontally |
 
 Win+letter shortcuts are forwarded to Windows. Settings can disable Windows-key and taskbar Start-button capture. [Compatibility](docs/fidelity.md) describes the desktop integration and platform coverage.
 
-Selection mode provides **Move to group…**, **Unpin selected** and **Finish selecting**. Finishing selection returns directly to the pinned home screen; clicking **Pinned tiles** also leaves selection mode. Dragging keeps relative positions; the group menu collects the selection into a compact block. Overlapping an independent non-folder tile collects the selection into a compact ordinary group. A single tile can create a folder inside a group; multiple selected tiles can enter an existing folder but do not create one accidentally. Use a folder's **Open folder** context action to arrange its children. A folder with one remaining child stays a folder; removing its last child removes the folder. `Esc` clears selection, then leaves editing. Reopening Start leaves edit mode. Layout history lasts for the running session (up to 100 edits within a 32 MiB memory budget); it preserves current preferences and is never saved to disk. Each successful pin, move, resize, rename, color change, folder edit, import or reset is undoable as one operation.
+Selection mode provides **Move to group…**, **Unpin selected** and **Finish selecting**. Finishing selection returns directly to the pinned home screen; clicking **Pinned tiles** also leaves selection mode. Dragging keeps relative positions; the group menu collects the selection into a compact block. A sustained overlap can create a folder from a tile or selection, or add to an existing folder. Optional free-mode overlap grouping collects independent tiles into an ordinary group. Hold <kbd>Shift</kbd> while dragging to suppress overlap actions. Use a folder's **Open folder** context action to arrange its children. A folder with one remaining child stays a folder; removing its last child removes the folder. <kbd>Esc</kbd> clears selection, then leaves editing. Reopening Start leaves edit mode. Layout history lasts for the running session (up to 100 edits within a 32 MiB memory budget); it preserves current preferences and is never saved to disk. Each successful pin, move, resize, rename, color change, folder edit, import or reset is undoable as one operation.
 
 </details>
 

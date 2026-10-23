@@ -36,13 +36,13 @@ HTML/CSS/JavaScript 타일 19개를 제공합니다. Tile Studio에서 코드와
 
 ![Weather scene, System dashboard, News board and Canvas garden](docs/images/web-examples.png)
 
-**편집기 조작:** JavaScript, HTML, CSS, JSON 구문 강조; **Tab / Shift+Tab** 들여쓰기; **Format document / Ctrl+Shift+F** 오프라인 서식 정리를 지원하며 한 번에 실행 취소할 수 있습니다. Feed headlines와 News board는 타일 안에서 스크롤됩니다. 닫힌 폴더는 같은 크기의 라이브 미리보기를 표시합니다. 초기 및 초기화 배치는 Month dots와 Orbit clock을 사용합니다. 선택적인 시작 시 업데이트 확인은 새 버전을 닫을 수 있는 알림으로 안내합니다.
+**편집기 조작:** JavaScript, HTML, CSS, JSON 구문 강조; <kbd>Tab</kbd> / <kbd>Shift</kbd> + <kbd>Tab</kbd> 들여쓰기; **Format document / Ctrl+Shift+F** 오프라인 서식 정리를 지원하며 한 번에 실행 취소할 수 있습니다. Feed headlines와 News board는 타일 안에서 스크롤됩니다. 닫힌 폴더는 같은 크기의 라이브 미리보기를 표시합니다. 초기 및 초기화 배치는 Month dots와 Orbit clock을 사용합니다. 선택적인 시작 시 업데이트 확인은 새 버전을 닫을 수 있는 알림으로 안내합니다.
 
 ## 시작하기
 
 1. Intel/AMD PC용 **[x64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-x64.zip)** 또는 Windows on ARM용 **[ARM64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip)**을 받습니다.
 2. **ZIP 전체를** 압축 해제합니다. `TileHost`, `Examples`, `third-party`를 `ReStart.exe` 옆에 유지합니다.
-3. **ReStart.exe**를 실행하고 **Windows 키**를 누른 다음 앱 이름을 입력합니다. **Ctrl+Alt+Space**와 트레이 메뉴로도 열 수 있습니다.
+3. **ReStart.exe**를 실행하고 **Windows 키**를 누른 다음 앱 이름을 입력합니다. <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Space</kbd>와 트레이 메뉴로도 열 수 있습니다.
 
 톱니바퀴에서 테마, 로그인 시 시작, Windows 키/시작 버튼 연동, 업데이트를 설정합니다. 일반 사용에는 관리자 권한이 필요 없습니다. [SHA-256 체크섬](https://github.com/LastResolution/ReStart/releases/latest)을 제공합니다.
 
@@ -50,12 +50,15 @@ HTML/CSS/JavaScript 타일 19개를 제공합니다. Tile Studio에서 코드와
 
 ![ReStart 열기 및 닫기](docs/images/start-motion.gif)
 
+**기본은 그룹, 필요할 때 자유 배치.** 빈 공간에 놓으면 이름 없는 그룹을 만들고, 타일 위에서 기다리면 폴더를 만듭니다. <kbd>Shift</kbd>를 누른 채 드래그하면 폴더 없이 재배치하고, <kbd>Alt</kbd>를 누르면 빈 공간에 독립 배치합니다. Settings → Start behavior의 **Use free tile placement**로 독립 배치를 기본값으로 선택할 수 있습니다. 기존 배치와 폴더는 유지됩니다. 포인터 아래 대상을 바꾸지 않고 주변 타일이 부드럽게 이동합니다.
+
+
 | 영역 | 제공 기능 |
 | --- | --- |
 | 열기 및 닫기 | 선택적 Windows 키/작업 표시줄 시작 버튼 가로채기, Ctrl+Alt+Space, 트레이, 전경 활성화, 앱/작업 표시줄 전환 시 닫기, 모니터별 작업 영역, 단일 인스턴스 |
 | 시작 | 선택적 로그인 시 시작, 백그라운드 모드, 테마가 적용된 준비 화면과 미리 입력, 아이콘 캐시, 앱 목록 새로 고침 |
 | 타일 및 그룹 | 4가지 크기, 독립 타일, 내용에 맞는 직사각형 이동 그룹, 가로 반 셀 기준점, 자동 배치와 양방향 스크롤 |
-| 폴더 | 그룹 안에서 겹쳐 만들기, 배치 안에서 펼치기, 항목 추가/제거/정렬, 인라인 이름 변경 및 풀기; 항목이 하나 남아도 폴더 유지 |
+| 폴더 | 겹쳐서 기다리면 만들기, 배치 안에서 펼치기, 항목 추가/제거/정렬, 인라인 이름 변경 및 풀기; 항목이 하나 남아도 폴더 유지 |
 | 배치 편집 | 편집 모드, 다중 선택, 일괄 이동, 세션 실행 취소/다시 실행; 드래그 취소 시 원래 배치 유지 |
 | 드래그 안내 | 그룹/폴더 대상 구분, 대기 진행률, 선택적 힌트와 그룹 경계, 가장자리 자동 스크롤; 자동 그룹/폴더 생성 끄기 |
 | 고정 | 앱, 파일, 디렉터리, 바로 가기, 웹사이트; Explorer **Pin to ReStart**, 우클릭 메뉴, 앱 목록에서 드래그, 명시적 대상 지정 |
@@ -108,17 +111,18 @@ HTML/CSS/JavaScript 타일 19개를 제공합니다. Tile Studio에서 코드와
 
 | 동작 | 결과 |
 | --- | --- |
-| Windows 키 / `Ctrl+Alt+Space` | 열기 또는 닫기 |
-| 입력 / `Ctrl+F` | 검색; Enter는 강조된 결과를 실행하고 방향키는 선택 변경 |
-| `Esc` | 검색, 폴더, 오버레이를 닫은 다음 시작 화면 닫기 |
-| 타일 / 그룹 제목 드래그 | 이동; 빈 공간에 놓으면 독립 타일 생성 |
-| 독립 타일에 약 0.3초 겹치기 | 미리 보기 준비 후 일반 그룹 생성 |
-| 그룹 내 타일에 약 0.6초 겹치기 | 폴더 생성; 기존 폴더에는 항목 추가 |
-| 사이드바/배경 메뉴의 **타일 선택** / `Ctrl+E` | 앱을 열지 않고 여러 타일 선택. 평소에도 타일을 바로 끌어 이동할 수 있습니다 |
-| 편집 중 `Ctrl+A` / `Delete` | 루트 타일 전체 선택 / 선택 고정 해제 |
-| `Ctrl+Z` / `Ctrl+Y` 또는 `Ctrl+Shift+Z` | 배치 실행 취소 / 다시 실행 |
+| Windows 키 / <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Space</kbd> | 열기 또는 닫기 |
+| 입력 / <kbd>Ctrl</kbd> + <kbd>F</kbd> | 검색; Enter는 강조된 결과를 실행하고 방향키는 선택 변경 |
+| <kbd>Esc</kbd> | 검색, 폴더, 오버레이를 닫은 다음 시작 화면 닫기 |
+| 타일 / 그룹 제목 드래그 | 이동; 빈 공간에 놓으면 이름 없는 그룹 생성 |
+| <kbd>Alt</kbd> + 빈 공간으로 드래그 | 이번 드래그만 독립 배치 |
+| <kbd>Shift</kbd> + 드래그 | 겹쳐도 그룹이나 폴더 동작 없이 주변 타일을 밀어 재배치 |
+| 타일에 약 0.6초 겹치기 | 미리 보기 후 폴더 생성; 기존 폴더에는 항목 추가 |
+| 사이드바/배경 메뉴의 **타일 선택** / <kbd>Ctrl</kbd> + <kbd>E</kbd> | 앱을 열지 않고 여러 타일 선택. 평소에도 타일을 바로 끌어 이동할 수 있습니다 |
+| 편집 중 <kbd>Ctrl</kbd> + <kbd>A</kbd> / <kbd>Delete</kbd> | 루트 타일 전체 선택 / 선택 고정 해제 |
+| <kbd>Ctrl</kbd> + <kbd>Z</kbd> / <kbd>Ctrl</kbd> + <kbd>Y</kbd> 또는 <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd> | 배치 실행 취소 / 다시 실행 |
 | 연필 / 이름 더블클릭 | 그룹 또는 폴더 이름 인라인 변경 |
-| `Shift` + 휠 | 가로 스크롤 |
+| <kbd>Shift</kbd> + 휠 | 가로 스크롤 |
 
 Windows 조합 키는 운영체제로 전달합니다. 배치 기록은 세션 중 최대 100회/32 MiB이며 텍스트 필드는 자체 실행 취소를 사용합니다. 다시 열면 고정 타일 화면으로 돌아옵니다.
 

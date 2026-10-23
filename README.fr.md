@@ -50,12 +50,15 @@ La roue dentée permet de régler les thèmes, le lancement à l’ouverture de 
 
 ![Ouverture et fermeture de ReStart](docs/images/start-motion.gif)
 
+**Des groupes par défaut, un placement libre au choix.** Un dépôt dans le vide crée un groupe sans nom ; attendre sur une vignette crée un dossier. <kbd>Shift</kbd> pendant le glissement réorganise sans dossier ; <kbd>Alt</kbd> permet un placement indépendant dans le vide. **Use free tile placement**, dans Settings → Start behavior, en fait le mode par défaut. Les dispositions et dossiers existants sont conservés. Les voisins glissent vers leur place sans changer la cible sous le pointeur.
+
+
 | Domaine | Fonctions incluses |
 | --- | --- |
 | Ouverture et fermeture | Capture facultative de la touche Windows et du bouton Démarrer, Ctrl+Alt+Espace, zone de notification, activation au premier plan, fermeture lors du changement d’application/barre des tâches, zone de travail selon l’écran, instance unique |
 | Démarrage | Lancement à la connexion facultatif, mode arrière-plan, écran de préparation adapté au thème avec saisie anticipée, cache d’icônes et actualisation du catalogue |
 | Vignettes et groupes | Quatre tailles, épingles indépendantes, groupes rectangulaires déplaçables aux dimensions adaptées au contenu, ancrage horizontal au demi-pas, placement automatique et défilement sur les deux axes |
-| Dossiers | Création par superposition dans un groupe, ouverture dans la disposition, ajout/retrait/réorganisation, renommage direct et dissociation ; un enfant unique conserve son dossier |
+| Dossiers | Création par superposition prolongée, ouverture dans la disposition, ajout/retrait/réorganisation, renommage direct et dissociation ; un enfant unique conserve son dossier |
 | Édition | Mode édition, sélection multiple, déplacement collectif, annuler/rétablir pour la session ; l’annulation d’un glissement conserve la disposition |
 | Retour pendant le glissement | Cibles de groupe/dossier distinctes, progression d’attente, indications et limites facultatives, défilement aux bords ; création automatique de groupes/dossiers désactivable |
 | Épinglage | Applications, fichiers, répertoires, raccourcis et sites ; commande Explorer **Pin to ReStart**, menus contextuels, glissement depuis la liste et destinations explicites |
@@ -108,17 +111,18 @@ Une tuile web contient manifest.json, index.html, tile.css, tile.js et des asset
 
 | Action | Résultat |
 | --- | --- |
-| Touche Windows / `Ctrl+Alt+Space` | Ouvrir ou fermer |
-| Saisir / `Ctrl+F` | Rechercher ; Entrée lance le résultat surligné, les flèches changent la sélection |
-| `Esc` | Fermer la recherche, le dossier ou la surcouche, puis Démarrer |
-| Glisser une vignette / un titre de groupe | Déplacer ; un espace vide crée une épingle indépendante |
-| Superposer une vignette indépendante environ 0,3 s | Créer un groupe lorsque l’aperçu est prêt |
-| Superposer une vignette d’un groupe environ 0,6 s | Créer un dossier ; les dossiers existants acceptent des ajouts |
-| **Sélectionner des vignettes** dans la barre latérale/le menu du fond / `Ctrl+E` | Sélection multiple sans ouvrir d’applications ; le déplacement direct reste disponible |
-| `Ctrl+A` / `Delete` en édition | Sélectionner les vignettes racines / détacher la sélection |
-| `Ctrl+Z` / `Ctrl+Y` ou `Ctrl+Shift+Z` | Annuler / rétablir la disposition |
+| Touche Windows / <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Space</kbd> | Ouvrir ou fermer |
+| Saisir / <kbd>Ctrl</kbd> + <kbd>F</kbd> | Rechercher ; Entrée lance le résultat surligné, les flèches changent la sélection |
+| <kbd>Esc</kbd> | Fermer la recherche, le dossier ou la surcouche, puis Démarrer |
+| Glisser une vignette / un titre de groupe | Déplacer ; un espace vide crée un groupe sans nom |
+| <kbd>Alt</kbd> + glisser dans le vide | Placement indépendant pour ce glissement |
+| <kbd>Shift</kbd> + glisser | Réorganiser les voisins sans regroupement ni action de dossier par superposition |
+| Superposer une vignette environ 0,6 s | Créer un dossier après l’aperçu ; les dossiers existants acceptent des ajouts |
+| **Sélectionner des vignettes** dans la barre latérale/le menu du fond / <kbd>Ctrl</kbd> + <kbd>E</kbd> | Sélection multiple sans ouvrir d’applications ; le déplacement direct reste disponible |
+| <kbd>Ctrl</kbd> + <kbd>A</kbd> / <kbd>Delete</kbd> en édition | Sélectionner les vignettes racines / détacher la sélection |
+| <kbd>Ctrl</kbd> + <kbd>Z</kbd> / <kbd>Ctrl</kbd> + <kbd>Y</kbd> ou <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd> | Annuler / rétablir la disposition |
 | Crayon / double-clic sur un nom | Renommer directement le groupe ou dossier |
-| `Shift` + molette | Défiler horizontalement |
+| <kbd>Shift</kbd> + molette | Défiler horizontalement |
 
 Les raccourcis Windows sont transmis au système. L’historique conserve jusqu’à 100 modifications dans une limite de 32 Mio pendant la session ; les champs de texte gardent leur propre annulation. La réouverture retourne aux vignettes épinglées.
 

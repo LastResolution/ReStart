@@ -24,8 +24,8 @@ The mixed-DPI runs exposed WPF's suggested DPI-scaled window size overriding phy
 | Area | ReStart behavior |
 | --- | --- |
 | Home | Full-screen working area, rail, pinned/all-apps views; reopening resets search, overlays and scroll. Optional hover expansion and configurable known-folder shortcuts |
-| Tiles | Four sizes; movable rectangular groups; inline names and expandable tile folders |
-| Placement extensions | Independent tiles, overlap-to-collect ordinary groups, content-sized group width, half-cell horizontal anchors, horizontal scrolling and individual colors |
+| Tiles | Four sizes; movable rectangular groups; empty-space drops create unnamed groups by default; overlap creates expandable tile folders; inline names |
+| Placement extensions | Optional independent placement, Alt-drag override, Shift-drag rearrangement without folders, optional free-mode overlap grouping, content-sized group width, half-cell horizontal anchors, horizontal scrolling and individual colors |
 | Editing extensions | Explicit edit mode, multi-selection moves and session-only layout undo/redo; these are ReStart additions |
 | Search | Immediate app-name results, fifteen localized Windows settings entry points and cancellable local Windows-indexed filename results; selection matches Enter. Settings and files can be disabled independently. No Web or Cortana |
 | Catalog | AppsFolder and Start-menu links with native display names and icons; ambiguous shortcuts may appear twice |
@@ -43,7 +43,7 @@ The [test guide](testing.md) describes isolated native fixtures and manual check
 
 ## Opening and closing
 
-ReStart collects tiles into an ordinary group when the overlap target is an independent non-folder tile; grouped targets create tile folders. Existing folders accept children regardless of their surrounding container. This independent-tile collection is a ReStart extension. A folder with one child is retained; it is removed after its last child leaves, following the documented [Windows 10 folder removal procedure](https://support.microsoft.com/en-au/windows/experience/personalization/customize-the-windows-start-menu).
+Default drag behavior follows the Windows 10 distinction: empty space creates an unnamed group, while a sustained tile overlap creates a tile folder. Microsoft documents [group creation and naming](https://blogs.windows.com/windowsexperience/2016/11/07/windows-10-tip-four-ways-to-customize-the-start-menu/) and [tile folders introduced with the Creators Update](https://blogs.windows.com/windowsexperience/2017/06/05/windows-10-tip-organize-start-files-new-tile-folders/). Existing folders accept children regardless of their surrounding container. Free placement, Alt-drag, Shift-drag and optional independent-tile collection are ReStart extensions. A folder with one child is retained; it is removed after its last child leaves, following the documented [Windows 10 folder removal procedure](https://support.microsoft.com/en-au/windows/experience/personalization/customize-the-windows-start-menu).
 
 The [Microsoft full-screen Start recording](https://blogs.windows.com/windowsexperience/2017/09/11/windows-10-tip-make-start-full-screen/) shows a gradual, bottom-anchored expansion and a lower-to-upper tile reveal. ReStart uses a 367 ms content entrance, a separate 120 ms window fade and up to 80 ms of row staggering. Exit recedes and fades over 167 ms. These are independently tuned WPF values based on the recording and [Microsoft motion guidance](https://learn.microsoft.com/en-us/windows/apps/design/signature-experiences/motion), not recovered shell constants. The current guidance is newer than Windows 10 and does not establish its exact timing. A Windows 10 22H2 device comparison remains necessary for frame-exact fidelity.
 
@@ -53,9 +53,11 @@ Typing or clicking completes an entrance immediately so input does not wait for 
 
 The [November 2019 announcement](https://blogs.windows.com/windowsexperience/2019/11/12/how-to-get-the-windows-10-november-2019-update/) documents Start navigation expanding on hover. ReStart uses an independently chosen 600 ms delay. Tile press transitions and the 140 ms local folder reveal respect reduced motion. Hover brightness has its own switch.
 
-Drag intent uses a 300 ms dwell for independent-tile groups and 600 ms for new folders inside a group. Folder overlap enters at 65% and retains the current target down to 55%; independent groups use 40%/30%. These are ReStart choices, not recovered shell constants. Preview captions and progress can be hidden. Edge scrolling follows a stationary viewport pointer without committing preview coordinates.
+Drag intent uses a 600 ms dwell for folders. The optional free-mode independent-tile group gesture uses 300 ms. Folder overlap enters at 65% and retains the current target down to 55%; free-mode groups use 40%/30%. Shift suppresses overlap intent and allows ordinary displacement at the same location. These are ReStart choices, not recovered shell constants. Preview captions and progress can be hidden. Edge scrolling follows a stationary viewport pointer without committing preview coordinates.
 
 Ordinary single-tile drops project displaced tiles and neighboring groups before committing, including inside open folders. The projection uses the same layout operations as a drop, keeps live browser instances, and restores the original visuals on cancellation. Overlap recipients remain stationary during group/folder intent detection so that moving feedback cannot change the target underneath the pointer.
+
+Pointer ghosts and edge scrolling share a display-frame callback. Neighbor displacement, group preview and committed placement use retained translation animations with a 200 ms ease-out; new targets continue from the currently displayed value. Logical hit testing excludes those transient transforms. Native checks cover intermediate states, rapid retargeting, cancellation, reduced motion and stationary-preview reuse. These checks establish behavior, not a hardware frame-rate guarantee or an exact match to Windows shell timing.
 
 Tiles, groups, app-list rows and multiple selections use a translucent pointer-following snapshot while their original views are dimmed. The grab position and relative selection geometry are retained; oversized selections scale down to a bounded preview. This is a ReStart interaction improvement. The overlay never receives input, and leaving the launcher or cancelling a drag hides it without changing the layout.
 

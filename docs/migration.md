@@ -1,5 +1,13 @@
 # Settings migration and rollback
 
+## Version 1.8 placement defaults
+
+Schema 4 is unchanged. The additive `FreeTilePlacement` preference defaults to false: future empty-space drops and pins create unnamed groups. The existing `GroupTilesOnDrop` preference is only active when free placement is enabled. Alt temporarily permits independent empty-space placement; Shift suppresses overlap actions. Neither gesture changes saved preferences.
+
+Loading an existing schema-4 layout does not convert or resize anything. Folder IDs, child IDs, names, sizes, colors, local cells and group anchors are preserved. Existing independent entries remain independent. Folders are not flattened or changed into Small tiles. Moving an existing item later follows the chosen placement mode. The normal same-schema upgrade backup remains available.
+
+## Earlier layouts and rollback
+
 Normal data is %LOCALAPPDATA%\ReStart\layout.json; preview data is isolated beside its executable. v1.0 writes schema 4 with producer version and the last upgrade record.
 
 Schemas 1–3 preserve settings, IDs, names, launch targets and tile ownership. Earlier unnamed single-item groups become independent entries. Schema 4 aligns independent tiles to the same visible tile baseline as named groups. Schema-3 independent row anchors subtract the former approximate header offset, rounded to a half-cell; named groups are unchanged. Schemas 1/2 use the original child position directly. Migration is applied once. X anchors and individual colors round-trip. Imported layouts retain this PC's preferences.
