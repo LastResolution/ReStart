@@ -122,38 +122,43 @@ public partial class MainWindow
                 }
                 if (stage == 2)
                 {
-                    var progress = Math.Clamp((seconds - 9) / 2, 0, 1);
+                    var progress = Math.Clamp((seconds - 9) / 2.5, 0, 1);
                     var eased = progress * progress * (3 - 2 * progress);
-                    cursor = new(from.X + (to.X - from.X) * eased, from.Y - 24 * Math.Sin(progress * Math.PI));
-                    if (seconds >= 9 && seconds < 12)
+                    cursor = new(from.X + (to.X - from.X) * eased, from.Y);
+                    if (seconds >= 9 && seconds < 12.5)
                     {
                         _dragging = true; _reorderGesture = true; _dragOffset = new(button.ActualWidth / 2, button.ActualHeight / 2);
                         if (_dragGhost == null) StartDragGhost(button, "ReStart.Tile", movingId, from);
                         StopDragFrames();
                         MoveDragGhost(cursor.Value);
                         PreviewSingleTileDrop(moving, Root.TranslatePoint(cursor.Value, GroupsPanel), movingId);
+                        var projected = _projectedGroups!.Single(g => g.Id == group.Id);
+                        Require(TileLayout.Pack(projected.Tiles, Document.Preferences.Columns).Max(p => p.Column + p.Width) == 6,
+                            "The demonstration drag temporarily expanded its group.");
                     }
-                    else if (seconds >= 12 && !dragCommitted)
+                    else if (seconds >= 12.5 && !dragCommitted)
                     {
                         _dragging = false; StopDragGhost();
                         Require(CommitSingleTileDrop(moving, Root.TranslatePoint(to, GroupsPanel), movingId), "The demonstration tile drop was rejected.");
                         Require(FindTile(movingId)?.Column == 0 && FindTile(movingId)?.Row == 0, "The demonstrated move did not reach its visible destination.");
+                        Require(Document.Groups.Single(g => g.Id == group.Id).Tiles.Single(t => t.AppId == "notepad").Column == 2,
+                            "The demonstration neighbor did not use the released slot.");
                         _reorderGesture = false;
                         dragCommitted = true;
                     }
-                    if (seconds >= 14 && !undone)
+                    if (seconds >= 15 && !undone)
                     {
                         _dragging = false; RestoreLayoutHistory(false); undone = true;
                         Require(FindTile(movingId)?.Column == 2, "Undo did not restore the demonstration tile.");
                     }
-                    if (seconds >= 16 && !keyboardMoved)
+                    if (seconds >= 17 && !keyboardMoved)
                     {
                         SetLayoutEditing(true); ToggleTileSelection(movingId);
                         var plan = KeyboardLayoutEditor.Nudge(Document, [movingId], -2, 0, GroupsPanel.Columns);
                         Require(plan != null, "The demonstrated keyboard nudge was rejected.");
                         Document.Groups = plan!; CommitLayout(); keyboardMoved = true;
                     }
-                    if (seconds >= 18 && !locked) { SetLayoutLocked(true); locked = true; }
+                    if (seconds >= 18.5 && !locked) { SetLayoutLocked(true); locked = true; }
                 }
                 if (stage == 4)
                 {
@@ -167,7 +172,7 @@ public partial class MainWindow
                 var composed = ComposePromoFrame(seconds, stage, scene, logo, cursor);
                 composed.CopyPixels(pixels, 1920 * 4, 0);
                 await encoder.StandardInput.BaseStream.WriteAsync(pixels);
-                if (frame % 90 == 0 || frame is 216 or 252 or 405 or 567 or 738 or 834)
+                if (frame % 90 == 0 || frame is 216 or 252 or 303 or 321 or 339 or 375 or 405 or 450 or 510 or 567 or 738 or 834)
                     SaveBitmap(Path.Combine(frames, $"frame-{frame:D4}.png"), composed);
                 if (frame == 105) SaveBitmap(Path.Combine(directory, "promo-poster.png"), composed);
                 if (frame % 90 == 0) Console.Error.WriteLine($"Rendered {frame / 30}/60 seconds.");
@@ -253,7 +258,7 @@ public partial class MainWindow
                 var (heading, detail) = stage switch
                 {
                     1 => ("A familiar place to begin.", "Your apps and live tiles, together in full screen."),
-                    2 => (seconds >= 18 ? "Keep it just right. Lock your layout." : seconds >= 16 ? "Move it with the keyboard, too." : seconds >= 14 ? "Try a new layout. Undo in a moment." : "Make room. Keep things moving.", seconds >= 18 ? "Ctrl + Shift + L  /  Lock placement" : seconds >= 16 ? "Ctrl + E, then Ctrl + Left twice  /  Move selected tiles" : seconds >= 14 ? "Ctrl + Z  /  Undo the whole move" : "Shift + drag  /  Rearrange without folders     Alt + drag  /  Place independently"),
+                    2 => (seconds >= 18.5 ? "Keep it just right. Lock your layout." : seconds >= 17 ? "Move it with the keyboard, too." : seconds >= 15 ? "Try a new layout. Undo in a moment." : "Make room. Keep things moving.", seconds >= 18.5 ? "Ctrl + Shift + L  /  Lock placement" : seconds >= 17 ? "Ctrl + E, then Ctrl + Left twice  /  Move selected tiles" : seconds >= 15 ? "Ctrl + Z  /  Undo the whole move" : "Shift + drag  /  Rearrange without folders     Alt + drag  /  Place independently"),
                     3 => ("Keep the small things together.", "Folders open right where you need them."),
                     4 => ("Open. Type. Find.", "Start typing to find your apps immediately."),
                     5 => seconds < 37 ? ("HTML. CSS. A little live magic.", "SVG clocks, custom layouts, PC activity and your own data.")

@@ -14,7 +14,7 @@
 
 <p align="center"><strong>Voir la démo de 60 secondes</strong><br><sub>1080p · Anglais · Sans son</sub></p>
 
-https://github.com/user-attachments/assets/243a5c5a-46bc-4180-8a0c-cee71ab63f06
+https://github.com/user-attachments/assets/ab737d41-8918-437d-aa70-0cde37abcb67
 
 Le menu Démarrer plein écran de Windows 10 vous manque ? ReStart offre un espace familier à vos applications sous Windows 11 et Windows 10. Épinglez vos contenus, organisez l’écran à votre façon et ajoutez des vignettes que vous pouvez écrire en JavaScript.
 
