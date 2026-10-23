@@ -89,12 +89,27 @@ public partial class MainWindow
             _tileTransitions.SetCaptureTime(TimeSpan.FromMilliseconds(50));
             var first = captured.RenderTransform.Transform(new Point()).X;
             Check(first > 0 && first < 100, "A synthetic placement frame has no intermediate state.");
+            Check(Math.Abs(first - 57.8125) < .01, "Capture does not match the 200 ms cubic ease-out placement curve.");
             await Task.Delay(250);
-            Check(Math.Abs(captured.RenderTransform.Transform(new Point()).X - first) < .1, "Encoding wall time advanced a paused capture clock.");
+            Check(Math.Abs(captured.RenderTransform.Transform(new Point()).X - first) < .1, "Encoding wall time advanced a synthetic capture frame.");
             _tileTransitions.Move(captured, new(200, 0), true);
             Check(Math.Abs(captured.RenderTransform.Transform(new Point()).X - first) < .1, "A captured retarget jumped away from its displayed origin.");
             _tileTransitions.SetCaptureTime(TimeSpan.FromMilliseconds(300));
             Check(Math.Abs(captured.RenderTransform.Transform(new Point()).X - 200) < .1, "A captured move did not reach its final slot.");
+            _tileTransitions.Move(captured, new(300, 0), true);
+            _tileTransitions.SetCaptureTime(TimeSpan.FromMilliseconds(350));
+            var resumed = captured.RenderTransform.Transform(new Point()).X;
+            _tileTransitions.SetCaptureTime(null);
+            Check(Math.Abs(captured.RenderTransform.Transform(new Point()).X - resumed) < .1, "Leaving capture jumped away from the displayed value.");
+            await Task.Delay(70);
+            var middle = captured.RenderTransform.Transform(new Point()).X;
+            Check(middle > resumed && middle < 300, "Leaving capture did not restore ordinary display-clock animation.");
+            await Task.Delay(250);
+            Check(Math.Abs(captured.RenderTransform.Transform(new Point()).X - 300) < .1, "Resumed display motion did not finish.");
+            _tileTransitions.SetCaptureTime(TimeSpan.FromMilliseconds(400));
+            _tileTransitions.Move(captured, new(350, 0), false);
+            _tileTransitions.SetCaptureTime(TimeSpan.FromMilliseconds(450));
+            Check(Math.Abs(captured.RenderTransform.Transform(new Point()).X - 350) < .1, "Capture animated a reduced-motion offset.");
         }
         finally { _tileTransitions.Reset(); _tileTransitions.SetCaptureTime(null); Root.Children.Remove(captured); }
         checks += VerifyInternalTileReflow();
