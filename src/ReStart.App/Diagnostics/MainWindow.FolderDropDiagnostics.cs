@@ -21,6 +21,8 @@ public partial class MainWindow
         {
             await fixture.InitializeAsync();
             fixture.Root.Width = 1280; fixture.Root.Height = 800;
+            fixture.Present();
+            var native = fixture.VerifyNativePlacement(directory);
             foreach (var standalone in new[] { true, false })
                 foreach (var editing in new[] { false, true })
                     foreach (var sizes in new[] { (Source: TileSize.Medium, Target: TileSize.Medium), (Source: TileSize.Wide, Target: TileSize.Small), (Source: TileSize.Large, Target: TileSize.Small) })
@@ -44,7 +46,7 @@ public partial class MainWindow
                         fixture._dragging = true;
                         Require(fixture.PreviewSingleTileDrop(source, point, source.Id), "A valid folder overlap was rejected.");
                         Require(fixture._pendingFolderDrop?.Target == target, "The drag did not start the folder dwell timer.");
-                        await Task.Delay(HoverDelay(panel, target) + 150);
+                        await Task.Delay(fixture.HoverDelay(panel, target) + 150);
                         Require(fixture._pendingFolderDrop?.Target == target && (standalone ? fixture._dropAdorner?.GroupTarget == true : fixture._dropAdorner?.FolderTarget == true),
                             $"The stationary OLE hover lost its target before drop: standalone={standalone}, editing={editing}, pending={fixture._pendingFolderDrop != null}.");
                         fixture.SaveScreenshot(Path.Combine(directory, $"ready-{standalone}-{editing}-{sizes.Source}-{sizes.Target}.png"));
@@ -69,7 +71,7 @@ public partial class MainWindow
                                 fixture._dragOffset = grab switch { 0 => new(3, 3), 1 => new((w * fixture.Cell - 4) / 2, (h * fixture.Cell - 4) / 2), _ => new(w * fixture.Cell - 7, h * fixture.Cell - 7) };
                                 var point = Pointer(panel, target);
                                 Require(fixture.PreviewSingleTileDrop(source, point, source.Id, 0)
-                                    && fixture.PreviewSingleTileDrop(source, point, source.Id, HoverDelay(panel, target))
+                                    && fixture.PreviewSingleTileDrop(source, point, source.Id, fixture.HoverDelay(panel, target))
                                     && (standalone ? fixture._dropAdorner?.GroupTarget == true : fixture._dropAdorner?.FolderTarget == true),
                                     $"A folder preview failed: standalone={standalone}, editing={editing}, source={sourceSize}, target={targetSize}, grab={grab}.");
                                 Require(fixture.CommitSingleTileDrop(source, point, source.Id), "A geometry-verified folder drop was rejected.");
@@ -192,7 +194,7 @@ public partial class MainWindow
                 Require(fixture.GroupsPanel.Placements.Single(p => p.Group.Id == upper.Id).Top == upperTop, "Creating a group pushed its earlier neighbor below the new group.");
                 fixture.SaveScreenshot(Path.Combine(directory, $"group-header-{editing}.png")); routes++;
             }
-            return new(timers, geometry, routes, cancellations, thresholds, directory);
+            return new(timers, geometry, routes, cancellations, thresholds, native, directory);
         }
         finally { fixture._dragging = false; fixture.Exit(); }
 
@@ -204,7 +206,7 @@ public partial class MainWindow
             var group = new TileGroup { Name = "Workspace", IsStandalone = standalone, X = standalone ? 8 : 0, Column = standalone ? 1 : 0, Row = standalone ? 16 : 0, Tiles = [target] };
             fixture.Document = new()
             {
-                Preferences = new() { Animate = false, ShowWallpaper = false, Language = "en" },
+                Preferences = new() { FreeTilePlacement = true, Animate = false, ShowWallpaper = false, Language = "en" },
                 Groups = standalone
                 ? [new() { IsStandalone = true, X = 0, Column = 0, Row = 0, Tiles = [source] }, group] : [group]
             };
@@ -245,4 +247,4 @@ public partial class MainWindow
     }
 }
 
-internal sealed record FolderDropSmokeResult(int StationaryTimerCases, int SizeGrabModeCases, int DestinationCases, int CancellationCases, int ThresholdCases, string Screenshots);
+internal sealed record FolderDropSmokeResult(int StationaryTimerCases, int SizeGrabModeCases, int DestinationCases, int CancellationCases, int ThresholdCases, int NativePlacementChecks, string Screenshots);

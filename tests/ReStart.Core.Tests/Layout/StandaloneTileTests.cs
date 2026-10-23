@@ -215,7 +215,7 @@ public sealed class StandaloneTileTests
     [Fact]
     public void PinningNeverAddsAnotherAppToAnIndependentTile()
     {
-        var document = new LayoutDocument();
+        var document = new LayoutDocument { Preferences = new() { FreeTilePlacement = true } };
         AppPinning.Pin(document, new("a", "A", "a"));
         AppPinning.Pin(document, new("b", "B", "b"));
         Assert.Equal(2, document.Groups.Count);

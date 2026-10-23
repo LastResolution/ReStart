@@ -75,7 +75,16 @@ public partial class MainWindow
         var seconds = Math.Clamp(Stopwatch.GetElapsedTime(_dragFrameTicks, now).TotalSeconds, 0, .05);
         _dragFrameTicks = now;
         TrackDragGhostCursor();
-        if (_dragScrolling && _dragging && IsVisible) ScrollDragAt(_dragViewportPoint, seconds);
+        var changed = false;
+        if (_dragging && _activeDragFormat != "ReStart.Group")
+        {
+            var alt = Native.GetAsyncKeyState(0x12) < 0;
+            var shift = Native.GetAsyncKeyState(0x10) < 0;
+            changed = alt != _freePlacementGesture || shift != _reorderGesture;
+            SetFreePlacementGesture(alt); SetReorderGesture(shift);
+        }
+        var scrolled = _dragScrolling && _dragging && IsVisible && ScrollDragAt(_dragViewportPoint, seconds);
+        if (changed && !scrolled) RefreshDragProposal();
     }
 
     private void TrackDragGhostCursor()
@@ -83,7 +92,7 @@ public partial class MainWindow
         if (_dragGhost == null || PresentationSource.FromVisual(Root) == null || !Native.GetCursorPos(out var cursor)) return;
         var point = Root.PointFromScreen(new(cursor.X, cursor.Y));
         MoveDragGhost(point);
-        if (_dragScrolling) _dragViewportPoint = Root.TranslatePoint(point, ContentScroll);
+        _dragViewportPoint = Root.TranslatePoint(point, ContentScroll);
     }
 
     private void MoveDragGhost(Point point)
@@ -107,5 +116,15 @@ public partial class MainWindow
     {
         if (_dragFrameSubscribed) CompositionTarget.Rendering -= OnDragFrame;
         _dragFrameSubscribed = false; _dragScrolling = false;
+    }
+
+    private void RefreshDragProposal()
+    {
+        if (_activeDragId == null) return;
+        var board = ContentScroll.TranslatePoint(_dragViewportPoint, GroupsPanel);
+        if (_activeDragFormat == "ReStart.Selection" && PlanSelectionDrop(_activeDragId, board) is { } selection)
+        { ShowSelectionPreview(selection, board, _activeDragId); ShowPendingFolderPreview(); }
+        else if ((_activeDragFormat == "ReStart.App" ? TileForAppDrag(_activeDragId) : FindTile(_activeDragId)) is { } tile)
+            PreviewSingleTileDrop(tile, board, _activeDragId);
     }
 }

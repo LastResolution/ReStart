@@ -738,6 +738,12 @@ public enum TextKey
     SettingsDropHints,
     /// <summary>Create groups by overlapping independent tiles</summary>
     SettingsDropGroups,
+    /// <summary>Use free tile placement</summary>
+    SettingsFreePlacement,
+    /// <summary>Normally, dropping into empty space creates an unnamed group. Hold Alt while dragging for independent placement. Existing layouts are kept.</summary>
+    SettingsFreePlacementHelp,
+    /// <summary>Create a new group</summary>
+    DropNewGroup,
     /// <summary>Create folders by overlapping grouped tiles</summary>
     SettingsDropFolders,
     /// <summary>Show group boundaries on hover</summary>

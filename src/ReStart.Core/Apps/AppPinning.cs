@@ -12,7 +12,7 @@ public static class AppPinning
     /// <summary>Pins an app once in free board space or an explicitly requested group, preserving existing pins and layout.</summary>
     /// <param name="document">Layout to mutate in memory; the caller is responsible for saving it.</param>
     /// <param name="app">Launch identity and display name to pin.</param>
-    /// <param name="destination">Explicit named destination group, or null to find free independent board space.</param>
+    /// <param name="destination">Explicit named destination group, or null to find unused board space using the saved group/free-placement mode.</param>
     /// <param name="availableColumns">Number of available board lanes, from 1 through 64.</param>
     /// <param name="cell">Size of one small tile cell in device-independent pixels (DIPs).</param>
     /// <param name="viewportWidth">Usable board width in DIPs; zero uses the configured group width.</param>
@@ -25,7 +25,7 @@ public static class AppPinning
         if (Find(document, app) is { } existing) return existing;
         if (destination?.IsStandalone == true) throw new ArgumentException("An independent tile is not a destination group.", nameof(destination));
         var tile = Tile.FromApp(app);
-        if (destination == null) LayoutEditor.PinIndependent(document, tile, availableColumns, cell,
+        if (destination == null) LayoutEditor.PinOnBoard(document, tile, availableColumns, cell,
             viewportWidth > 0 ? viewportWidth : document.Preferences.Columns * cell, preferredTop);
         else destination.Tiles.Add(tile);
         return tile;

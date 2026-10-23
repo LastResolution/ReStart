@@ -14,7 +14,8 @@ public partial class MainWindow
     private void WatchFolderDwell(Tile source, TilePanel panel, Point point, string sourceId, Tile? target, bool existingFoldersOnly)
     {
         if (target == null) { StopFolderDwell(); return; }
-        _pendingFolderDrop = new(source, panel, sourceId, target, existingFoldersOnly, panel.TranslatePoint(point, ContentScroll));
+        var origin = LayoutOrigin(panel, GroupsPanel);
+        _pendingFolderDrop = new(source, panel, sourceId, target, existingFoldersOnly, GroupsPanel.TranslatePoint(new(origin.X + point.X, origin.Y + point.Y), ContentScroll));
         if (_folderDwellTimer != null) return;
         _folderDwellTimer = new(DispatcherPriority.Input) { Interval = TimeSpan.FromMilliseconds(50) };
         _folderDwellTimer.Tick += (_, _) =>
@@ -26,7 +27,7 @@ public partial class MainWindow
             var boardPoint = ContentScroll.TranslatePoint(pending.ViewportPoint, GroupsPanel);
             if (!pending.Panel.IsLoaded || TileDropTarget(pending.Source, boardPoint)?.Panel != pending.Panel)
             { _folderHover.Reset(); StopFolderDwell(); ClearDropPreview(); return; }
-            FolderHoverTarget(pending.Source, pending.Panel, GroupsPanel.TranslatePoint(boardPoint, pending.Panel), pending.SourceId, existingFoldersOnly: pending.ExistingFoldersOnly);
+            FolderHoverTarget(pending.Source, pending.Panel, PanelPoint(boardPoint, pending.Panel), pending.SourceId, existingFoldersOnly: pending.ExistingFoldersOnly);
             ShowPendingFolderPreview();
         };
         _folderDwellTimer.Start();
@@ -52,8 +53,9 @@ public partial class MainWindow
         }
         var fits = true;
         if (armed && _selectionDragPositions is { } selection)
-            fits = CachedSelectionPlan(selection, pending.SourceId, pending.Panel.Tag is TileGroup { IsStandalone: false } group ? group.Id : null,
-                pending.Target.Id, 0, 0) != null;
+            fits = pending.Target.IsFolder
+                ? CachedSelectionPlan(selection, pending.SourceId, pending.Panel.Tag is TileGroup { IsStandalone: false } group ? group.Id : null, pending.Target.Id, 0, 0) != null
+                : PlanSelectionFolder(selection, pending.SourceId, pending.Target) != null;
         ShowDropPreview(pending.Panel, pending.Target, placement.Column, placement.Row);
         _dropAdorner!.FolderTarget = armed && fits;
         _dropAdorner.HoverProgress = _folderHover.Progress(Environment.TickCount64);

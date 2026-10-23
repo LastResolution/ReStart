@@ -10,7 +10,7 @@ public readonly record struct SelectedTilePosition(string Id, double X, double Y
 public static class TileBatchMove
 {
     /// <summary>Plans a rigid selection move into a group/folder or onto open board space. Returns null when the selection cannot fit.</summary>
-    /// <remarks>Group/folder destinations snap to whole cells. Open-space destinations use half cells and create independent tiles.</remarks>
+    /// <remarks>Group/folder destinations snap to whole cells. Open-space destinations use half cells and create independent tiles or one unnamed group.</remarks>
     /// <param name="document">Original layout to inspect without modifying its groups or preferences.</param>
     /// <param name="selection">Selected tile IDs and their visible origins in board small-cell units.</param>
     /// <param name="anchorId">Selected tile whose origin follows the destination anchor.</param>
@@ -20,9 +20,10 @@ public static class TileBatchMove
     /// <param name="y">Destination anchor Y in small-cell units, local to a group/folder or absolute on the board.</param>
     /// <param name="availableColumns">Number of available board lanes, from 1 through 64.</param>
     /// <param name="cell">Size of one small tile cell in device-independent pixels (DIPs).</param>
+    /// <param name="independent">Whether an empty-space destination creates independent entries; false collects the selection into one new unnamed group.</param>
     /// <returns>A deep-copied group tree for an atomic commit, or null for an invalid, colliding, or unfit selection.</returns>
     public static List<TileGroup>? Plan(LayoutDocument document, IReadOnlyList<SelectedTilePosition> selection,
-        string anchorId, string? groupId, string? folderId, double x, double y, int availableColumns, double cell)
+        string anchorId, string? groupId, string? folderId, double x, double y, int availableColumns, double cell, bool independent = true)
     {
         if (selection.Count == 0 || selection.Select(s => s.Id).Distinct().Count() != selection.Count
             || !double.IsFinite(x) || !double.IsFinite(y) || x is < -10000 or > 10000 || y is < -10000 or > 10000
@@ -43,6 +44,19 @@ public static class TileBatchMove
         foreach (var p in GroupLayout.Pack(copy.Groups, availableColumns, copy.Preferences.Columns, cell, preserveColumns: true))
         { p.Group.X = p.Left / cell - (p.Group.IsStandalone ? TileLayout.Pack(p.Group.Tiles, copy.Preferences.Columns)[0].Column : 0); p.Group.Column = p.Column; p.Group.Row = p.Row; }
         var offsets = selection.Select(s => (X: s.X - anchor.X, Y: s.Y - anchor.Y)).ToArray();
+        if (!independent && group == null && folder == null)
+        {
+            var minX = offsets.Min(o => o.X); var minY = offsets.Min(o => o.Y);
+            var left = Math.Max(0, x + minX); var top = Math.Max(0, y + minY);
+            group = new()
+            {
+                Name = "",
+                X = left,
+                Column = Math.Clamp((int)(left * cell / (copy.Preferences.Columns * cell + GroupLayout.Gap)), 0, 63),
+                Row = Math.Clamp((int)Math.Round(top * 2, MidpointRounding.AwayFromZero), 0, 20000)
+            };
+            copy.Groups.Add(group); x = -minX; y = -minY;
+        }
         var target = folder?.Children ?? group?.Tiles;
         if (target != null)
         {

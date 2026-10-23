@@ -23,7 +23,7 @@ public partial class MainWindow
             var left = new TileGroup { Name = "Left", Column = 0, Row = 0, Tiles = [a, b] };
             var right = new TileGroup { Name = "Right", Column = 1, Row = 8, Tiles = [new() { Label = "Sample C" }] };
             var moving = new TileGroup { Name = "Movable", Column = 2, Row = 0, Tiles = [new() { Label = "Sample D" }] };
-            Document = new() { Preferences = new() { Animate = false, ShowWallpaper = false, Language = "en" }, Groups = [left, right, moving] };
+            Document = new() { Preferences = new() { FreeTilePlacement = true, Animate = false, ShowWallpaper = false, Language = "en" }, Groups = [left, right, moving] };
             ApplyAppearance();
             Root.Width = 1920;
             Root.Height = 1000;
@@ -251,7 +251,7 @@ public partial class MainWindow
 
     private void VerifyRectangularGroupsAndFolderExpansion(string snapshotPath)
     {
-        Document = new() { Preferences = new() { Animate = false, ShowWallpaper = false, Language = "en" } };
+        Document = new() { Preferences = new() { FreeTilePlacement = true, Animate = false, ShowWallpaper = false, Language = "en" } };
         var tall = new TileGroup
         {
             Name = "Tall sample",
@@ -292,7 +292,7 @@ public partial class MainWindow
                     Row = i * 4,
                     Tiles = [new() { Label = "Unrelated live tile", Size = TileSize.Wide }]
                 }).ToArray();
-                Document = new() { Preferences = new() { Animate = false, ShowWallpaper = false, TileScale = scale, Language = "en" }, Groups = [lower, owner, .. adjacent] };
+                Document = new() { Preferences = new() { FreeTilePlacement = true, Animate = false, ShowWallpaper = false, TileScale = scale, Language = "en" }, Groups = [lower, owner, .. adjacent] };
                 ApplyAppearance(); RenderGroups(); UpdateLayout();
                 var before = GroupsPanel.Placements.ToArray();
                 var root = RootPanelFor(owner).Children.OfType<Button>().Single().TranslatePoint(new Point(), GroupsPanel);
@@ -318,7 +318,7 @@ public partial class MainWindow
             {
                 var tile = new Tile { Label = "Detach sample", Column = 0, Row = 6 };
                 var group = new TileGroup { Name = "Baseline sample", Column = 0, Row = 0, Tiles = [tile, new() { Label = "Neighbor", Column = 2, Row = 6 }] };
-                Document = new() { Preferences = new() { Columns = columns, TileScale = scale, Animate = false, ShowWallpaper = false, Language = "en" }, Groups = [group] };
+                Document = new() { Preferences = new() { FreeTilePlacement = true, Columns = columns, TileScale = scale, Animate = false, ShowWallpaper = false, Language = "en" }, Groups = [group] };
                 ApplyAppearance(); RenderGroups(); UpdateLayout();
                 var button = RootPanelFor(group).Children.OfType<Button>().Single(b => b.Tag == tile);
                 var top = button.TranslatePoint(new Point(), GroupsPanel).Y;
@@ -343,7 +343,7 @@ public partial class MainWindow
         var originalTile = new Tile { Label = "Existing tile" };
         var incoming = new Tile { Label = "Incoming tile" };
         var group = new TileGroup { Name = "Drop into this group", Column = 0, Row = 0, Tiles = [originalTile] };
-        Document = new() { Preferences = new() { Animate = false, ShowWallpaper = false, Language = "en" }, Groups = [group] };
+        Document = new() { Preferences = new() { FreeTilePlacement = true, Animate = false, ShowWallpaper = false, Language = "en" }, Groups = [group] };
         ApplyAppearance(); RenderGroups(); UpdateLayout();
         var point = new Point(3 * Cell, GroupLayout.HeaderHeight + Cell);
         _dragOffset = new(Cell, Cell);

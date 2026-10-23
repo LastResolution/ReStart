@@ -154,6 +154,7 @@ public partial class MainWindow
 
     private void RespectMotionPreference()
     {
+        if (!MotionEnabled) { _tileTransitions.Settle(); _groupTransitions.Settle(); }
         if (_motion == null || MotionEnabled) return;
         var hide = _dismissing;
         StopMotion();

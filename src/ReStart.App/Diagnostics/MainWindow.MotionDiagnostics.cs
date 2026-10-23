@@ -106,9 +106,10 @@ public partial class MainWindow
             fixture.Document.Preferences.Animate = false; fixture.ApplyAppearance();
             Require(!fixture.IsVisible && fixture._motion == null, "Disabling motion during exit did not hide Start.");
             fixture.Document.Preferences.Animate = true;
+            var placementChecks = await fixture.VerifyPlacementMotionAsync(directory);
             fixture.Present(); fixture.Exit();
             Require(fixture._motion == null && fixture._motionTiles.Count == 0, "Shutdown retained motion clocks.");
-            return new(5, 5, 5, 5, 1, directory);
+            return new(5, 5, 5, 5, 1, placementChecks, directory);
         }
         finally
         {
@@ -189,4 +190,4 @@ public partial class MainWindow
 }
 
 internal sealed record MotionSmokeResult(int EntranceChecks, int ExitChecks, int InterruptionChecks, int ReducedMotionChecks,
-    int ShutdownChecks, string Frames);
+    int ShutdownChecks, int PlacementChecks, string Frames);
