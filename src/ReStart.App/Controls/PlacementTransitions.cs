@@ -13,8 +13,11 @@ internal sealed class PlacementTransitions
         internal readonly TranslateTransform Offset = offset;
         internal Vector Target;
         internal int Generation;
+        internal AnimationClock? Horizontal, Vertical;
+        internal TimeSpan Started;
     }
     private readonly Dictionary<FrameworkElement, Entry> _entries = [];
+    private TimeSpan? _captureTime;
     internal int Count => _entries.Count;
     internal long RetargetCount { get; private set; }
     internal static TimeSpan Duration => TimeSpan.FromMilliseconds(200);
@@ -69,16 +72,32 @@ internal sealed class PlacementTransitions
         foreach (var (element, entry) in _entries.ToArray()) Settle(element, entry);
     }
 
+    /// <summary>Seeks controllable clocks for deterministic hidden documentation capture, independently of encoding speed.</summary>
+    /// <param name="time">Synthetic monotonic capture time, or null to resume ordinary display-clock scheduling.</param>
+    internal void SetCaptureTime(TimeSpan? time)
+    {
+        _captureTime = time;
+        foreach (var entry in _entries.Values.ToArray())
+        {
+            if (time == null) { entry.Horizontal?.Controller?.Resume(); entry.Vertical?.Controller?.Resume(); continue; }
+            var elapsed = time.Value > entry.Started ? time.Value - entry.Started : TimeSpan.Zero;
+            entry.Horizontal?.Controller?.SeekAlignedToLastTick(elapsed, TimeSeekOrigin.BeginTime);
+            entry.Vertical?.Controller?.SeekAlignedToLastTick(elapsed, TimeSeekOrigin.BeginTime);
+        }
+    }
+
     private void Animate(FrameworkElement element, Entry entry, Vector from, Vector target, bool animate)
     {
         entry.Generation++; var generation = entry.Generation; RetargetCount++;
         entry.Offset.BeginAnimation(TranslateTransform.XProperty, null); entry.Offset.BeginAnimation(TranslateTransform.YProperty, null);
         entry.Target = target; entry.Offset.X = from.X; entry.Offset.Y = from.Y;
         if (!animate) { Settle(element, entry); return; }
-        var horizontal = Animation(from.X, target.X); var vertical = Animation(from.Y, target.Y);
+        var horizontal = (AnimationClock)Animation(from.X, target.X).CreateClock(true); var vertical = (AnimationClock)Animation(from.Y, target.Y).CreateClock(true);
         vertical.Completed += (_, _) => { if (entry.Generation == generation) Settle(element, entry); };
-        entry.Offset.BeginAnimation(TranslateTransform.XProperty, horizontal, HandoffBehavior.SnapshotAndReplace);
-        entry.Offset.BeginAnimation(TranslateTransform.YProperty, vertical, HandoffBehavior.SnapshotAndReplace);
+        entry.Horizontal = horizontal; entry.Vertical = vertical; entry.Started = _captureTime ?? TimeSpan.Zero;
+        entry.Offset.ApplyAnimationClock(TranslateTransform.XProperty, horizontal, HandoffBehavior.SnapshotAndReplace);
+        entry.Offset.ApplyAnimationClock(TranslateTransform.YProperty, vertical, HandoffBehavior.SnapshotAndReplace);
+        if (_captureTime.HasValue) { horizontal.Controller!.Pause(); vertical.Controller!.Pause(); }
 
         static DoubleAnimation Animation(double start, double end) => new(start, end, Duration)
         { FillBehavior = FillBehavior.HoldEnd, EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
@@ -88,6 +107,7 @@ internal sealed class PlacementTransitions
     {
         entry.Generation++;
         entry.Offset.BeginAnimation(TranslateTransform.XProperty, null); entry.Offset.BeginAnimation(TranslateTransform.YProperty, null);
+        entry.Horizontal = null; entry.Vertical = null;
         entry.Offset.X = entry.Target.X; entry.Offset.Y = entry.Target.Y;
         if (entry.Target.LengthSquared < .0001) Remove(element, entry);
     }
@@ -96,6 +116,7 @@ internal sealed class PlacementTransitions
     {
         entry.Generation++;
         entry.Offset.BeginAnimation(TranslateTransform.XProperty, null); entry.Offset.BeginAnimation(TranslateTransform.YProperty, null);
+        entry.Horizontal = null; entry.Vertical = null;
         element.RenderTransform = entry.Original; _entries.Remove(element);
     }
 }

@@ -47,9 +47,7 @@ public partial class MainWindow
             Document.Preferences.Animate = false;
             Root.Height = 900;
             var group = Document.Groups.Single(item => item.Name == "Create & work");
-            group.Tiles.RemoveAll(tile => tile.AppId == "calc");
-            var moving = group.Tiles.Single(tile => tile.AppId == "notepad");
-            moving.Column = 2;
+            var moving = group.Tiles.Single(tile => tile.AppId == "calc");
             var movingId = moving.Id;
             var folderId = group.Tiles.Single(tile => tile.IsFolder).Id;
             var studioScenes = await RenderStudioPromoScenesAsync(directory);
@@ -79,14 +77,18 @@ public partial class MainWindow
             var keyboardMoved = false;
             var locked = false;
             var creative = false;
+            _tileTransitions.SetCaptureTime(TimeSpan.Zero);
+            _groupTransitions.SetCaptureTime(TimeSpan.Zero);
             for (var frame = 0; frame < 1800; frame++)
             {
                 var seconds = frame / 30d;
+                _tileTransitions.SetCaptureTime(TimeSpan.FromSeconds(seconds));
+                _groupTransitions.SetCaptureTime(TimeSpan.FromSeconds(seconds));
                 Require(!IsVisible, "The product demonstration unexpectedly opened a window.");
                 var stage = seconds < 3 ? 0 : seconds < 8 ? 1 : seconds < 20 ? 2 : seconds < 25 ? 3 : seconds < 31 ? 4 : seconds < 43 ? 5 : seconds < 55 ? 6 : 7;
                 if (stage != lastStage)
                 {
-                    StopMotion(); StopDragGhost(); ClearDropPreview(); StopFolderDwell(); _dragging = false;
+                    StopMotion(); StopDragGhost(); ClearDropPreview(); StopFolderDwell(); _dragging = false; _reorderGesture = false;
                     if (stage == 1)
                     {
                         _verifyMotion = true; Document.Preferences.Animate = true;
@@ -125,7 +127,7 @@ public partial class MainWindow
                     cursor = new(from.X + (to.X - from.X) * eased, from.Y - 24 * Math.Sin(progress * Math.PI));
                     if (seconds >= 9 && seconds < 12)
                     {
-                        _dragging = true; _dragOffset = new(button.ActualWidth / 2, button.ActualHeight / 2);
+                        _dragging = true; _reorderGesture = true; _dragOffset = new(button.ActualWidth / 2, button.ActualHeight / 2);
                         if (_dragGhost == null) StartDragGhost(button, "ReStart.Tile", movingId, from);
                         StopDragFrames();
                         MoveDragGhost(cursor.Value);
@@ -136,6 +138,7 @@ public partial class MainWindow
                         _dragging = false; StopDragGhost();
                         Require(CommitSingleTileDrop(moving, Root.TranslatePoint(to, GroupsPanel), movingId), "The demonstration tile drop was rejected.");
                         Require(FindTile(movingId)?.Column == 0 && FindTile(movingId)?.Row == 0, "The demonstrated move did not reach its visible destination.");
+                        _reorderGesture = false;
                         dragCommitted = true;
                     }
                     if (seconds >= 14 && !undone)
@@ -146,7 +149,7 @@ public partial class MainWindow
                     if (seconds >= 16 && !keyboardMoved)
                     {
                         SetLayoutEditing(true); ToggleTileSelection(movingId);
-                        var plan = KeyboardLayoutEditor.Nudge(Document, [movingId], -1, 0, GroupsPanel.Columns);
+                        var plan = KeyboardLayoutEditor.Nudge(Document, [movingId], -2, 0, GroupsPanel.Columns);
                         Require(plan != null, "The demonstrated keyboard nudge was rejected.");
                         Document.Groups = plan!; CommitLayout(); keyboardMoved = true;
                     }
@@ -159,7 +162,7 @@ public partial class MainWindow
                     if (query != lastQuery) { SetSmokeSearch(query); lastQuery = query; }
                     if (length == 4) Require(SearchResultNames.Contains("Microsoft Edge"), "The demonstration search did not find Edge.");
                 }
-                if (frame % 3 == 0 || stage == 1 && seconds < 3.4) snapshot = CapturePromoSurface(surface);
+                if (frame % 3 == 0 || stage == 2 || stage == 1 && seconds < 3.4) snapshot = CapturePromoSurface(surface);
                 var scene = stage == 6 ? studioScenes[seconds < 47 ? 0 : seconds < 51 ? 1 : 2] : snapshot;
                 var composed = ComposePromoFrame(seconds, stage, scene, logo, cursor);
                 composed.CopyPixels(pixels, 1920 * 4, 0);
@@ -196,6 +199,7 @@ public partial class MainWindow
         {
             if (encoder is { HasExited: false }) encoder.Kill(entireProcessTree: true);
             encoder?.Dispose(); StopMotion(); StopDragGhost(); ClearDropPreview(); StopFolderDwell();
+            ClearPlacementMotion(); _tileTransitions.SetCaptureTime(null); _groupTransitions.SetCaptureTime(null);
             _startupPreparing = false; _documentationNow = null; _documentationMetrics = null; _documentationMonotonicMilliseconds = null; _documentationSampleConnections = false; _dragging = false;
         }
     }
@@ -249,7 +253,7 @@ public partial class MainWindow
                 var (heading, detail) = stage switch
                 {
                     1 => ("A familiar place to begin.", "Your apps and live tiles, together in full screen."),
-                    2 => (seconds >= 18 ? "Keep it just right. Lock your layout." : seconds >= 16 ? "Move it with the keyboard, too." : seconds >= 14 ? "Try a new layout. Undo in a moment." : "Arrange it your way.", seconds >= 18 ? "Ctrl + Shift + L  /  Lock placement" : seconds >= 16 ? "Ctrl + Arrow  /  Move selected tiles" : "Drag tiles freely. Undo whenever you need."),
+                    2 => (seconds >= 18 ? "Keep it just right. Lock your layout." : seconds >= 16 ? "Move it with the keyboard, too." : seconds >= 14 ? "Try a new layout. Undo in a moment." : "Make room. Keep things moving.", seconds >= 18 ? "Ctrl + Shift + L  /  Lock placement" : seconds >= 16 ? "Ctrl + E, then Ctrl + Left twice  /  Move selected tiles" : seconds >= 14 ? "Ctrl + Z  /  Undo the whole move" : "Shift + drag  /  Rearrange without folders     Alt + drag  /  Place independently"),
                     3 => ("Keep the small things together.", "Folders open right where you need them."),
                     4 => ("Open. Type. Find.", "Start typing to find your apps immediately."),
                     5 => seconds < 37 ? ("HTML. CSS. A little live magic.", "SVG clocks, custom layouts, PC activity and your own data.")

@@ -79,6 +79,24 @@ public partial class MainWindow
         Document.Preferences.Animate = false; RespectMotionPreference(); UpdateLayout();
         Check(_groupTransitions.Count == 0 && (movingView.TranslatePoint(new(), GroupsPanel) - final).Length < 1, "Disabling animation did not settle group motion.");
         ClearDropPreview(); _dragging = false;
+        // Offline video encoding must not speed up, slow down or skip the real
+        // placement curve merely because a frame takes longer to render.
+        var captured = new Button(); Root.Children.Add(captured);
+        try
+        {
+            _tileTransitions.SetCaptureTime(TimeSpan.Zero);
+            _tileTransitions.Move(captured, new(100, 0), true);
+            _tileTransitions.SetCaptureTime(TimeSpan.FromMilliseconds(50));
+            var first = captured.RenderTransform.Transform(new Point()).X;
+            Check(first > 0 && first < 100, "A synthetic placement frame has no intermediate state.");
+            await Task.Delay(250);
+            Check(Math.Abs(captured.RenderTransform.Transform(new Point()).X - first) < .1, "Encoding wall time advanced a paused capture clock.");
+            _tileTransitions.Move(captured, new(200, 0), true);
+            Check(Math.Abs(captured.RenderTransform.Transform(new Point()).X - first) < .1, "A captured retarget jumped away from its displayed origin.");
+            _tileTransitions.SetCaptureTime(TimeSpan.FromMilliseconds(300));
+            Check(Math.Abs(captured.RenderTransform.Transform(new Point()).X - 200) < .1, "A captured move did not reach its final slot.");
+        }
+        finally { _tileTransitions.Reset(); _tileTransitions.SetCaptureTime(null); Root.Children.Remove(captured); }
         File.WriteAllText(Path.Combine(directory, "placement-timings.json"), JsonSerializer.Serialize(new
         {
             checks,

@@ -158,7 +158,8 @@ public partial class MainWindow
             var libraryItem = libraryMenu.Items.OfType<MenuItem>().Single(item => item.IsEnabled);
             var pinCount = fixture.Document.Groups.Count;
             libraryItem.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
-            Require(fixture.Document.Groups.Count == pinCount + 1 && fixture.Document.Groups[^1].IsStandalone, "Right-click library addition did not create an independent tile.");
+            Require(fixture.Document.Groups.Count == pinCount + 1 && fixture.Document.Groups[^1].IsStandalone == fixture.Document.Preferences.FreeTilePlacement,
+                "Right-click library addition did not respect the board placement mode.");
             foreach (var languageTag in TextCatalog.SupportedLanguages)
             {
                 stage = "language " + languageTag;

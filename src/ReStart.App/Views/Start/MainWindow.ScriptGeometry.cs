@@ -7,6 +7,9 @@ namespace ReStart.App;
 public partial class MainWindow
 {
     /// <summary>Checks that native tile dimensions and local content bounds depend on size/scale, not board position or ownership.</summary>
+    /// <param name="tile">Owned fictional script tile whose geometry is exercised without launching an app.</param>
+    /// <param name="directory">Isolated output directory for the measurements.</param>
+    /// <returns>Number of measured size, position and alignment cases.</returns>
     private int VerifyScriptGeometry(Tile tile, string directory)
     {
         var measurements = new List<object>();
@@ -63,7 +66,7 @@ public partial class MainWindow
             var above = new TileGroup { Column = 2, Row = 0, X = laneLeft / 52, IsStandalone = true, Tiles = [new() { Size = TileSize.Large }] };
             var neighbor = new TileGroup { Column = 2, Row = 8, X = 17, IsStandalone = true, Tiles = [new() { Size = TileSize.Wide }] };
             var moving = new TileGroup { Column = 2, Row = 8, X = 13, IsStandalone = true, Tiles = [tile] };
-            Document = new() { Preferences = new() { TileScale = 1, Columns = 6, ShowWallpaper = false, Animate = false }, Groups = [above, neighbor, moving] };
+            Document = new() { Preferences = new() { FreeTilePlacement = true, TileScale = 1, Columns = 6, ShowWallpaper = false, Animate = false }, Groups = [above, neighbor, moving] };
             RenderGroups(); UpdateLayout();
             var pointer = new Point(676, GroupLayout.HeaderHeight + 8 * 26);
             PreviewStandalone(tile, pointer);
