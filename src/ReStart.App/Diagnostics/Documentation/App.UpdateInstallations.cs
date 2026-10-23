@@ -18,6 +18,7 @@ public partial class App
         Directory.CreateDirectory(PortableUpdates.CacheRoot);
         var checks = 0;
         void Check(bool condition, string message) { if (!condition) throw new InvalidOperationException(message); checks++; }
+        checks += ReStart.App.MainWindow.VerifyProtectedUpdateControls(Path.Combine(directory, "protected-layouts"));
         var acknowledgedAfterFirstProbe = false; var reads = 0;
         Check(await PortableUpdates.WaitForAcknowledgementAsync(() => { reads++; return acknowledgedAfterFirstProbe; },
             () => { acknowledgedAfterFirstProbe = true; return true; }, TimeSpan.FromSeconds(1)), "Startup confirmation was lost between the marker and exit probes.");

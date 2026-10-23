@@ -82,6 +82,7 @@ internal sealed partial class SettingsWindow
         void installButton(bool enabled) { if (install != null) install.IsEnabled = enabled; }
         var canInstall = _main.CanInstallUpdates;
         if (!canInstall && !_main.IsPreview) Note(panel, L.T(K.UpdatePortableRequired));
+        if (_store.IsReadOnly) Note(panel, L.T(K.MigrationReadOnly));
         DataButton(buttons, L.T(K.UpdateOpenRelease), () => ShellLauncher.Launch((_main.LastUpdateCheck?.Release?.Page ?? ReleaseClient.ReleasesPage).AbsoluteUri));
         panel.Children.Add(buttons); panel.Children.Add(status); panel.Children.Add(checkedAt); panel.Children.Add(notes);
         void Refresh()
