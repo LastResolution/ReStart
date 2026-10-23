@@ -137,13 +137,8 @@ internal static partial class PortableUpdates
                 {
                     transaction.Apply();
                     replacement = Process.Start(RestartInfo(request, id, completing: true)) ?? throw new IOException("Replacement could not start.");
-                    var acknowledged = false;
-                    for (var i = 0; i < 1200; i++)
-                    {
-                        if (File.Exists(Path.Combine(directory, "acknowledged"))) { acknowledged = true; break; }
-                        if (replacement.HasExited) break;
-                        await Task.Delay(100);
-                    }
+                    var acknowledged = await WaitForAcknowledgementAsync(() => File.Exists(Path.Combine(directory, "acknowledged")),
+                        () => replacement.HasExited, TimeSpan.FromSeconds(120));
                     if (!acknowledged)
                     {
                         if (!replacement.HasExited) { replacement.Kill(entireProcessTree: true); await replacement.WaitForExitAsync(); }
@@ -155,6 +150,9 @@ internal static partial class PortableUpdates
         }
         catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception)
         {
+            if (request.Fixture)
+                File.WriteAllText(Path.Combine(directory, "failure-kind"), ex is System.ComponentModel.Win32Exception native
+                    ? $"win32-{native.NativeErrorCode}" : ex is IOException io ? $"io-{io.HResult:X8}" : ex.GetType().Name);
             if (replacement is { HasExited: false }) { replacement.Kill(entireProcessTree: true); await replacement.WaitForExitAsync(); }
             if (File.Exists(Path.Combine(directory, "transaction.json")))
             {

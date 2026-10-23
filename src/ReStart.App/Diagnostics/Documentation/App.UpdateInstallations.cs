@@ -18,6 +18,15 @@ public partial class App
         Directory.CreateDirectory(PortableUpdates.CacheRoot);
         var checks = 0;
         void Check(bool condition, string message) { if (!condition) throw new InvalidOperationException(message); checks++; }
+        var acknowledgedAfterFirstProbe = false; var reads = 0;
+        Check(await PortableUpdates.WaitForAcknowledgementAsync(() => { reads++; return acknowledgedAfterFirstProbe; },
+            () => { acknowledgedAfterFirstProbe = true; return true; }, TimeSpan.FromSeconds(1)), "Startup confirmation was lost between the marker and exit probes.");
+        Check(reads == 2, "An exited replacement did not receive a final confirmation probe.");
+        Check(!await PortableUpdates.WaitForAcknowledgementAsync(() => false, () => true, TimeSpan.FromSeconds(1)), "An unacknowledged exit was accepted.");
+        var queriedExit = false;
+        Check(await PortableUpdates.WaitForAcknowledgementAsync(() => true, () => { queriedExit = true; return true; }, TimeSpan.FromSeconds(1))
+            && !queriedExit, "An already acknowledged startup unnecessarily depended on the replacement staying alive.");
+        Check(!await PortableUpdates.WaitForAcknowledgementAsync(() => false, () => false, TimeSpan.Zero), "An expired startup deadline was accepted without confirmation.");
         var source = Environment.ProcessPath!;
         string? successfulWorkspace = null;
         var current = ReleaseVersion.Parse(AppBuildInfo.Version)!;
@@ -85,7 +94,12 @@ public partial class App
             var outcome = Path.Combine(workspace, "outcome");
             for (var i = 0; i < 600 && !File.Exists(outcome); i++) await Task.Delay(100);
             Check(File.Exists(outcome), "Updater did not finish the isolated scenario.");
-            Check(File.ReadAllText(outcome) == (scenario == "success" ? "complete" : "rolled-back"), "Updater returned the wrong completion outcome.");
+            var expectedOutcome = scenario == "success" ? "complete" : "rolled-back";
+            var actualOutcome = PortableUpdates.Outcome(id);
+            var failurePath = Path.Combine(workspace, "failure-kind");
+            var failure = File.Exists(failurePath) ? File.ReadAllText(failurePath) : "none";
+            Check(actualOutcome == expectedOutcome,
+                $"Updater returned {actualOutcome} for {scenario}, expected {expectedOutcome}; acknowledged={File.Exists(Path.Combine(workspace, "acknowledged"))}, started={File.Exists(Path.Combine(workspace, "fixture-started"))}, failure={failure}.");
             Check(UpdatePackage.ReadManifest(installation).Version == (scenario == "success" ? current.ToString() : previous.ToString()), "Installation version was not committed or restored.");
             UpdatePackage.VerifyFiles(installation, UpdatePackage.ReadManifest(installation)); checks++;
             Check(!File.Exists(Path.Combine(installation, UpdateTransaction.PendingName)), "Pending marker survived a completed update.");
