@@ -35,6 +35,8 @@ internal sealed partial class SettingsWindow
         Check(panel, L.T(K.SettingsDropFolders), _draft.CreateFoldersOnDrop, value => _draft.CreateFoldersOnDrop = value);
         Check(panel, L.T(K.SettingsDragScroll), _draft.DragEdgeScrolling, value => _draft.DragEdgeScrolling = value);
         Check(panel, L.T(K.SettingsDropHints), _draft.ShowDropHints, value => _draft.ShowDropHints = value);
+        Check(panel, L.T(K.SettingsDragShortcutHints), _draft.ShowDragShortcutHints, value => _draft.ShowDragShortcutHints = value);
+        DataButton(panel, L.T(K.KeyboardShortcuts), () => _main.ShowKeyboardShortcuts(this));
         Heading(panel, L.T(K.NavAllApps));
         Check(panel, L.T(K.SettingsShowRecentApps), _draft.ShowRecentlyAdded, value => _draft.ShowRecentlyAdded = value);
         Check(panel, L.T(K.SettingsShowMostUsed), _draft.ShowMostUsed, value => _draft.ShowMostUsed = value);

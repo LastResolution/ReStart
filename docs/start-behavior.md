@@ -18,6 +18,7 @@ Open **ReStart settings → Start behavior** to choose how Start responds. Each 
 | Create folders by overlapping tiles | On | Existing folders and explicit menu actions remain usable |
 | Scroll automatically near board edges | On | Dragging does not scroll or extend empty board space |
 | Drop hints and hover progress | On | Destination geometry remains visible without captions/progress |
+| Show shortcut tips while dragging | On | Hides the five-second Alt/Shift toast; drag behavior is unchanged |
 | Recently added apps | On | Hides the optional app-list section |
 | Most used apps | Off | Stops recording successful ReStart launches and hides the section |
 
@@ -34,6 +35,10 @@ An internal rearrangement first reuses the space released by the move when the d
 Hold <kbd>Alt</kbd> while dragging to place a tile independently in empty space without changing your saved mode. Enable **Use free tile placement** to make independent empty-space drops and new pins the normal behavior. Free mode can optionally collect overlapping independent tiles into ordinary groups. Alt alone in the default mode does not change tile-over-tile folder behavior. Shift and Alt can be combined.
 
 A translucent snapshot follows the pointer on display frames. Displaced neighbors ease to their proposed slots and retarget from their displayed positions; cancellation returns them to the saved layout. Folder recipients stay still while intent is being detected. Preview animation changes neither ownership nor saved coordinates. Existing layouts are not reorganized when upgrading; see [migration](migration.md#version-18-placement-defaults).
+
+A noninteractive toast at the bottom explains Alt and Shift when a tile, selection or app drag starts. After five seconds it fades out over 220 ms; ending or cancelling the drag also dismisses it. It does not appear for group drags. Disable **Show shortcut tips while dragging** in Start behavior to hide it independently of destination captions. Reduced-motion settings skip the fade.
+
+Press <kbd>F1</kbd> while Start is open, or choose **ReStart settings → Start behavior → Keyboard shortcuts**, for the localized reference. It groups launcher navigation, drag modifiers, selection-mode commands and Tile Studio commands.
 
 ## Initial layout and reset
 

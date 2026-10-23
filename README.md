@@ -24,7 +24,7 @@ English is the primary documentation. The translated guides are AI-assisted and 
 
 <p align="center"><strong>Watch the 60-second demo</strong><br><sub>1080p · English · No audio</sub></p>
 
-https://github.com/user-attachments/assets/ab737d41-8918-437d-aa70-0cde37abcb67
+https://github.com/user-attachments/assets/a893cd20-8c82-4c47-b5fb-bf22743f67e1
 
 **Miss the Windows 10 full-screen Start menu?** ReStart gives your apps a familiar home on Windows 11 and Windows 10. Pin what you use, arrange the screen your way, and add live tiles that you can build with HTML, CSS and JavaScript.
 
@@ -53,6 +53,8 @@ Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button
 - **Set the mood.** Choose Midnight, Ocean, Forest, Rose or Sand independently of light, dark or system mode: every family has both variants. Entering your own background or accent switches to exact custom RGB colors. Text, controls, both scrollbars and the splash adapt together. Light, dark, system and high contrast remain available; wallpaper, individual tile colors and animation are optional.
 
 **Groups by default, freedom when you need it.** Drop into empty space to create an unnamed group; overlap a tile and wait to make a folder. Hold <kbd>Shift</kbd> while dragging to rearrange without folders, or <kbd>Alt</kbd> to place independently in empty space. Settings → Start behavior → **Use free tile placement** makes independent placement the default. Existing layouts and folders are preserved. Neighboring tiles ease into place without changing the recipient under your pointer.
+
+Drag shortcut tips appear briefly at the bottom of Start and can be disabled in Start behavior settings. Press <kbd>F1</kbd>, or open **Keyboard shortcuts** in those settings, for the complete reference.
 
 <details>
 <summary><strong>See the light theme</strong></summary>

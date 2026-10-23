@@ -27,10 +27,11 @@ The renderer also checks collapsed/expanded glyph geometry across eight language
 With FFmpeg and ffprobe on `PATH`, run:
 
 ```powershell
-./scripts/render-promo.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+./scripts/render-promo.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe -Theme Dark
+./scripts/render-promo.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe -Theme Light
 ```
 
-The separate `--render-promo` entry point uses the same hidden, isolated renderer. It produces a silent 60-second, 1920 × 1080, 30 fps H.264 MP4, a poster, a short GIF preview and review frames under `artifacts/promo/<run>/`. Scenes show the full launcher, its native entrance transition, an actual tile move and undo, inline folder expansion, app search, HTML/CSS/SVG live tiles, four distinct web examples, keyboard placement/locking and Tile Studio in dark and light themes. Time and aggregate metrics are synthetic. The renderer checks actual move/undo/keyboard/lock results and rejects any visible window.
+The separate `--render-promo` entry point uses the same hidden, isolated renderer. It produces a silent 60-second, 1920 × 1080, 30 fps H.264 MP4, a poster, a short GIF preview and review frames under `artifacts/promo/<run>/`. Scenes show the full launcher, its native entrance transition, an actual tile move and undo, inline folder expansion, app search, HTML/CSS/SVG live tiles, four distinct web examples, keyboard placement/locking and Tile Studio. Each run uses the chosen base theme throughout, including the video frame and title cards. Time and aggregate metrics are synthetic. The renderer checks actual move/undo/keyboard/lock results and rejects any visible window.
 
 The wrapper verifies playback format, duration and attachment size with ffprobe, then fully decodes the MP4 with FFmpeg. Inspect decoded frames across every scene as well as the poster and GIF; technical validation alone does not verify composition or privacy. The rearrangement scene keeps the pointer path straight and holds the before/after states. It uses production planners and checks that the group never expands mid-drag and that the displaced neighbor uses the released slot. Placement easing is sampled at synthetic frame times, so encoder speed cannot change the movement curve.
 
@@ -41,3 +42,5 @@ Attach the reviewed MP4 to the release for downloading. For inline README playba
 Inspect every selected PNG and representative opening/closing GIF frames. Confirm readable real icons; English labels inside tiles; no username, path, personal filenames, real weather location, taskbar, notification or desktop imagery. Check that file metadata does not include personal source data. Copy **only reviewed PNG/GIF files** into `docs/images`; never copy fixture directories, caches, JSON, logs, bindings or source icon catalogs. Existing live/data/size images also use isolated English synthetic fixtures.
 
 Run `scripts/check-readmes.ps1`, the staged privacy guard and `git diff --check`. The privacy guard scans bytes and private paths/credentials but does **not** replace visual review or detect every word drawn inside an image. All language READMEs share these English images. Translated prose has an AI-translation notice and links back to English.
+
+`test-studio.ps1` also writes native-resolution 720×720 dark/light gallery PNGs from the real bundled HTML/CSS/JavaScript, with offline sample input. These captures retain the packages’ own colors and theme-aware transparent artwork. Use the paired launcher, inline-folder, search, web-example, Studio and gallery assets on Pages. Theme changes update full-resolution links and video posters as well as the video source; a playing video keeps its position, and a paused video stays paused.

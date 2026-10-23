@@ -118,7 +118,7 @@
   .tab-list button>span:last-child { margin-left:auto; color:var(--accent); }
   .tab-list button small { display:block; font-size:.77rem; margin-top:4px; color:var(--muted); }
   .tab-number { font:12px "Cascadia Code",Consolas,monospace; color:var(--accent); line-height:2.1; }
-  .feature-image { border:1px solid var(--line); border-radius:6px; overflow:hidden; background:#1e1e1e; aspect-ratio:2.35; }
+  .feature-image { border:1px solid var(--line); border-radius:6px; overflow:hidden; background:var(--surface); aspect-ratio:2.35; }
   .feature-image img { width:100%; }
   .feature-image.studio-image { aspect-ratio:auto; margin-top:24px; }
   .tile-gallery { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
@@ -129,7 +129,7 @@
   .detail-note { color:var(--muted); font-size:.78rem; line-height:1.7; }
   .feature-copy .detail-note { padding-top:8px; margin-bottom:0; }
   .no-js .tab-panels article+article { margin-top:40px; }
-  .live-art { min-width:0; overflow:hidden; border-radius:5px; box-shadow:var(--shadow); background:#1e1e1e; }
+  .live-art { min-width:0; overflow:hidden; border-radius:5px; box-shadow:var(--shadow); background:var(--surface-soft); }
   .live-art img { width:100%; }
   .live-copy>p:not(.eyebrow) { color:var(--muted); }
   .live-copy>.detail-note { margin-top:26px; margin-bottom:0; }
@@ -137,8 +137,8 @@
   .plain-list li { display:flex; gap:12px; align-items:baseline; }
   .list-mark { color:var(--accent); font-weight:600; }
   .demo-heading>p:not(.eyebrow) { color:var(--muted); }
-  .video-frame { border:1px solid var(--line); background:#1e1e1e; border-radius:7px; overflow:hidden; box-shadow:var(--shadow); }
-  .video-frame video { width:100%; aspect-ratio:16/9; }
+  .video-frame { border:1px solid var(--line); background:var(--surface); border-radius:7px; overflow:hidden; box-shadow:var(--shadow); }
+  .video-frame video { display:block; width:100%; height:auto; aspect-ratio:16/9; background:var(--surface); }
   .download-grid>div>p:not(.eyebrow) { max-width:490px; color:var(--muted); }
   .install-steps { list-style:none; padding:0; margin:0; display:grid; gap:30px; }
   .install-steps li { display:flex; gap:22px; align-items:flex-start; }

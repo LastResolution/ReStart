@@ -14,7 +14,7 @@
 
 <p align="center"><strong>60초 데모 보기</strong><br><sub>1080p · 영어 · 소리 없음</sub></p>
 
-https://github.com/user-attachments/assets/ab737d41-8918-437d-aa70-0cde37abcb67
+https://github.com/user-attachments/assets/a893cd20-8c82-4c47-b5fb-bf22743f67e1
 
 Windows 10의 전체 화면 시작 메뉴가 그리우신가요? ReStart는 Windows 11과 Windows 10에서 익숙한 앱 공간을 제공합니다. 자주 쓰는 항목을 고정하고 원하는 대로 배치하며 JavaScript로 작성할 수 있는 라이브 타일을 추가하세요.
 
@@ -51,6 +51,8 @@ HTML/CSS/JavaScript 타일 19개를 제공합니다. Tile Studio에서 코드와
 ![ReStart 열기 및 닫기](docs/images/start-motion.gif)
 
 **기본은 그룹, 필요할 때 자유 배치.** 빈 공간에 놓으면 이름 없는 그룹을 만들고, 타일 위에서 기다리면 폴더를 만듭니다. <kbd>Shift</kbd>를 누른 채 드래그하면 폴더 없이 재배치하고, <kbd>Alt</kbd>를 누르면 빈 공간에 독립 배치합니다. Settings → Start behavior의 **Use free tile placement**로 독립 배치를 기본값으로 선택할 수 있습니다. 기존 배치와 폴더는 유지됩니다. 포인터 아래 대상을 바꾸지 않고 주변 타일이 부드럽게 이동합니다.
+
+드래그 중에는 화면 아래에 단축키 도움말이 잠시 표시됩니다. 시작 동작 설정에서 끌 수 있습니다. <kbd>F1</kbd> 또는 설정의 **키보드 단축키**에서 전체 목록을 확인할 수 있습니다.
 
 
 | 영역 | 제공 기능 |

@@ -14,7 +14,7 @@
 
 <p align="center"><strong>Voir la démo de 60 secondes</strong><br><sub>1080p · Anglais · Sans son</sub></p>
 
-https://github.com/user-attachments/assets/ab737d41-8918-437d-aa70-0cde37abcb67
+https://github.com/user-attachments/assets/a893cd20-8c82-4c47-b5fb-bf22743f67e1
 
 Le menu Démarrer plein écran de Windows 10 vous manque ? ReStart offre un espace familier à vos applications sous Windows 11 et Windows 10. Épinglez vos contenus, organisez l’écran à votre façon et ajoutez des vignettes que vous pouvez écrire en JavaScript.
 
@@ -51,6 +51,8 @@ La roue dentée permet de régler les thèmes, le lancement à l’ouverture de 
 ![Ouverture et fermeture de ReStart](docs/images/start-motion.gif)
 
 **Des groupes par défaut, un placement libre au choix.** Un dépôt dans le vide crée un groupe sans nom ; attendre sur une vignette crée un dossier. <kbd>Shift</kbd> pendant le glissement réorganise sans dossier ; <kbd>Alt</kbd> permet un placement indépendant dans le vide. **Use free tile placement**, dans Settings → Start behavior, en fait le mode par défaut. Les dispositions et dossiers existants sont conservés. Les voisins glissent vers leur place sans changer la cible sous le pointeur.
+
+Des astuces clavier apparaissent brièvement en bas pendant le déplacement des tuiles. Vous pouvez les désactiver dans les paramètres de comportement. <kbd>F1</kbd> ou **Raccourcis clavier** dans ces paramètres ouvre la liste complète.
 
 
 | Domaine | Fonctions incluses |

@@ -41,7 +41,15 @@ public partial class MainWindow
             var folderGroup = Document.Groups.Single(g => g.Tiles.Contains(_openFolder));
             var closedOwner = GroupsPanel.Placements.Single(p => p.Group == folderGroup);
             var sideNeighbors = GroupsPanel.Placements.Where(p => p.Left >= closedOwner.Left + closedOwner.Width).ToArray();
-            RenderGroups(); SaveScreenshot(Path.Combine(directory, "inline-folder.png"));
+            foreach (var theme in new[] { ReStart.Core.ThemeMode.Dark, ReStart.Core.ThemeMode.Light })
+            {
+                Document.Preferences.Theme = theme; ApplyAppearance(); RenderGroups();
+                Root.Measure(new(Root.Width, Root.Height)); Root.Arrange(new Rect(0, 0, Root.Width, Root.Height)); FitPanels(); UpdateLayout();
+                foreach (var runtime in _scriptSessions.Values) runtime.NextUpdate = DateTimeOffset.MinValue;
+                await UpdateScriptTilesAsync(); await WaitForDocumentationFramesAsync();
+                SaveScreenshot(Path.Combine(directory, "inline-folder-" + theme.ToString().ToLowerInvariant() + ".png"));
+            }
+            SaveScreenshot(Path.Combine(directory, "inline-folder.png"));
             Require(sideNeighbors.All(p => GroupsPanel.Placements.Single(a => a.Group == p.Group).Top == p.Top), "A content-sized documentation folder displaced an unrelated side group.");
             _openFolder = null; RenderGroups();
             Document.Preferences.ShowRecentlyAdded = false; Document.Preferences.ShowMostUsed = false;
@@ -121,7 +129,13 @@ public partial class MainWindow
         SetSmokeSearch("Power");
         for (var attempt = 0; attempt < 100 && !SearchResultNames.Contains("Power plan.txt"); attempt++) await Task.Delay(25);
         Require(SearchResultNames.Contains("Power plan.txt"), "The offline search showcase did not render its file fixture.");
-        SetStatus(""); SaveScreenshot(Path.Combine(directory, "unified-search.png"));
+        SetStatus("");
+        foreach (var theme in new[] { ReStart.Core.ThemeMode.Dark, ReStart.Core.ThemeMode.Light })
+        {
+            Document.Preferences.Theme = theme; ApplyAppearance(); UpdateLayout();
+            SaveScreenshot(Path.Combine(directory, "unified-search-" + theme.ToString().ToLowerInvariant() + ".png"));
+        }
+        SaveScreenshot(Path.Combine(directory, "unified-search.png"));
     }
 
     /// <summary>Captures the complete launcher with a fixed, nonpersonal app list and demonstration live data.</summary>

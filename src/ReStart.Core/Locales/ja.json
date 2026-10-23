@@ -454,5 +454,22 @@
   "SettingsSaveClose": "保存して閉じる",
   "UpdateReadyTitle": "更新の準備ができました",
   "UpdateReadyBody": "ReStart {0} のダウンロードが完了しました。",
-  "UpdateReadyHelp": "再起動して更新すると適用されます。「あとで」を選んでも案内は残ります。通常の起動では自動適用しません。"
+  "UpdateReadyHelp": "再起動して更新すると適用されます。「あとで」を選んでも案内は残ります。通常の起動では自動適用しません。",
+  "SettingsDragShortcutHints": "ドラッグ中にショートカットのヒントを表示",
+  "DragHintIndependent": "空いている場所に単独で配置",
+  "DragHintReorder": "フォルダを作成・移動先にせず並べ替え",
+  "KeyboardShortcuts": "キーボードショートカット",
+  "ShortcutsGeneral": "スタートとナビゲーション",
+  "ShortcutsDragging": "タイルのドラッグ中",
+  "ShortcutsSelection": "タイルの選択中（Ctrl+E）",
+  "ShortcutOpen": "ReStartを開く／閉じる（Winキーは設定で有効化）",
+  "ShortcutEscape": "現在の表示を閉じ、最後にスタートを閉じる",
+  "ShortcutFocus": "タイルにフォーカスを移動",
+  "ShortcutSelect": "フォーカス中のタイルの選択を切り替え",
+  "ShortcutMoveTiles": "小タイル1マス分移動",
+  "ShortcutMoveGroup": "フォーカス中のタイルが属するグループを移動",
+  "ShortcutSize": "サイズ変更：小／中／横長／大",
+  "ShortcutNewGroup": "選択したタイルでグループを作成",
+  "ShortcutTileMenu": "フォーカス中のタイルのメニューを開く",
+  "ShortcutClearSelection": "選択を解除し、次に選択モードを終了"
 }

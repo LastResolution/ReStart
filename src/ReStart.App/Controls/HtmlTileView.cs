@@ -36,6 +36,7 @@ internal sealed class HtmlTileView : Grid, IDisposable
     private CoreWebView2? Core => _disposed ? null : _headlessController?.CoreWebView2 ?? _browser.CoreWebView2;
     internal bool BrowserReady => Core != null;
     internal bool OffscreenOnly => _offscreenOnly;
+    internal bool HostObjectsDisabled => Core?.Settings.AreHostObjectsAllowed == false;
 
     internal HtmlTileView(string dataDirectory, string id, bool offscreen = false)
     {
@@ -115,6 +116,7 @@ internal sealed class HtmlTileView : Grid, IDisposable
         core.NavigationStarting += (_, e) => { if (!Own(e.Uri)) e.Cancel = true; };
         core.FrameNavigationStarting += (_, e) => e.Cancel = true;
         core.NewWindowRequested += (_, e) => e.Handled = true;
+        core.LaunchingExternalUriScheme += (_, e) => e.Cancel = true;
         core.DownloadStarting += (_, e) => e.Cancel = true;
         core.PermissionRequested += (_, e) => e.State = CoreWebView2PermissionState.Deny;
         core.ProcessFailed += (_, _) => { _signature = ""; _reply?.TrySetException(new InvalidOperationException(TextCatalog.T(K.ErrorWebTileProcess))); };

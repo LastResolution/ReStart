@@ -73,7 +73,7 @@ export async function verifySite(directory = defaultRoot) {
       navigation.includes('>Guides</a>'), `Missing Guides navigation: ${page}`);
     const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
     require(new Set(ids).size === ids.length, `Duplicate element ID: ${page}`);
-    const targets = [...html.matchAll(/\b(?:href|src|poster|data-light|data-dark)="([^"]+)"/g)].map(match => match[1]);
+    const targets = [...html.matchAll(/\b(?:href|src|poster|data-light|data-dark|data-light-poster|data-dark-poster)="([^"]+)"/g)].map(match => match[1]);
     for (const image of tags(html, 'img')) {
       require(Object.hasOwn(image, 'alt') && Number(image.width) > 0 && Number(image.height) > 0, `Missing image alternative or dimensions: ${page}`);
       if (image.srcset) for (const candidate of image.srcset.split(',')) {
@@ -82,6 +82,9 @@ export async function verifySite(directory = defaultRoot) {
         targets.push(target);
       }
     }
+    for (const themed of [...tags(html, 'img'), ...tags(html, 'video')].filter(item => item['data-light'] || item['data-dark'])) {
+      require(themed['data-light'] && themed['data-dark'] && themed['data-light'] !== themed['data-dark'], `Missing paired theme media: ${page}`);
+    }
     for (const target of targets) {
       if (target.startsWith('https://')) {
         const link = new URL(target.replaceAll('&amp;', '&'));
@@ -89,7 +92,8 @@ export async function verifySite(directory = defaultRoot) {
         continue;
       }
       require(!/^\/|^[a-z]+:/i.test(target), `Link will break under a Pages project prefix: ${page}: ${target}`);
-      const [relative, fragment] = target.split('#');
+      const [resource, fragment] = target.split('#');
+      const relative = resource.split('?')[0];
       let resolved = path.resolve(path.dirname(filename), decodeURIComponent(relative || path.basename(filename)));
       require(resolved === root || resolved.startsWith(root + path.sep), `Link escaped the static directory: ${target}`);
       if ((await stat(resolved)).isDirectory()) resolved = path.join(resolved, 'index.html');
@@ -161,6 +165,11 @@ export async function verifySite(directory = defaultRoot) {
   }
   require(galleryBytes < 1_000_000, 'Tile gallery exceeds the combined 1 MB image budget.');
   require((await stat(path.join(root, 'assets/social-preview.jpg'))).size < 1_000_000, 'Social preview exceeds 1 MB.');
+  for (const name of ['orbit', 'cpu', 'memory', 'calendar', 'weather-scene', 'canvas-garden']) {
+    const png = await readFile(path.join(root, `assets/tile-${name}-light.png`));
+    require(png.readUInt32BE(16) >= 720 && png.readUInt32BE(20) >= 720, `Low-resolution light tile gallery image: ${name}`);
+  }
+  for (const movie of ['demo.mp4', 'demo-light.mp4']) require((await stat(path.join(root, 'assets', movie))).size < 10_000_000, `Video exceeds playback budget: ${movie}`);
   return { pages: pages.length, checks };
 }
 

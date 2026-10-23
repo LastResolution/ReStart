@@ -8,7 +8,7 @@ namespace ReStart.App;
 
 public partial class MainWindow
 {
-    private async Task RenderCreativeGalleryAsync(string directory)
+    private async Task RenderCreativeGalleryAsync(string directory, ReStart.Core.ThemeMode theme = ReStart.Core.ThemeMode.Dark)
     {
         _documentationSampleConnections = true;
         var tiles = new[] { "weather-scene", "system-dashboard", "news-board", "canvas-garden" }
@@ -16,7 +16,7 @@ public partial class MainWindow
         foreach (var tile in tiles) { tile.Size = TileSize.Large; tile.Column = 0; tile.Row = 0; }
         Document = new()
         {
-            Preferences = new() { Language = "en", Theme = ReStart.Core.ThemeMode.Dark, Columns = 8, TileScale = 1.5, ShowWallpaper = false, Animate = false },
+            Preferences = new() { Language = "en", Theme = theme, Columns = 8, TileScale = 1.5, ShowWallpaper = false, Animate = false },
             Groups = tiles.Select((tile, index) => new TileGroup { IsStandalone = true, Column = 0, X = 2 + index * 4.7, Row = 5, Tiles = [tile] }).ToList()
         };
         ApplyAppearance(); ResetToPinnedView(); RenderGroups(); SetStatus("");
@@ -26,10 +26,10 @@ public partial class MainWindow
         SaveScreenshot(Path.Combine(directory, "web-examples.png"));
     }
 
-    private async Task<BitmapSource[]> RenderStudioPromoScenesAsync(string directory)
+    private async Task<BitmapSource[]> RenderStudioPromoScenesAsync(string directory, ReStart.Core.ThemeMode theme)
     {
         var result = new List<BitmapSource>();
-        foreach (var (document, theme) in new[] { (1, ReStart.Core.ThemeMode.Dark), (2, ReStart.Core.ThemeMode.Dark), (0, ReStart.Core.ThemeMode.Light) })
+        foreach (var document in new[] { 1, 2, 0 })
         {
             Document.Preferences.Theme = theme; ApplyAppearance();
             var studio = new TileStudioWindow(this, offscreen: true) { Width = 1600, Height = 760 };
@@ -58,7 +58,7 @@ public partial class MainWindow
             }
             finally { studio.Close(); }
         }
-        Document.Preferences.Theme = ReStart.Core.ThemeMode.Dark; ApplyAppearance();
+        Document.Preferences.Theme = theme; ApplyAppearance();
         return result.ToArray();
     }
 }

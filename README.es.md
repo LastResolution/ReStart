@@ -14,7 +14,7 @@
 
 <p align="center"><strong>Ver la demostración de 60 segundos</strong><br><sub>1080p · Inglés · Sin audio</sub></p>
 
-https://github.com/user-attachments/assets/ab737d41-8918-437d-aa70-0cde37abcb67
+https://github.com/user-attachments/assets/a893cd20-8c82-4c47-b5fb-bf22743f67e1
 
 ¿Echas de menos Inicio a pantalla completa de Windows 10? ReStart ofrece un espacio familiar para tus aplicaciones en Windows 11 y Windows 10. Ancla lo que utilizas, organiza la pantalla y añade mosaicos que puedes escribir en JavaScript.
 
@@ -51,6 +51,8 @@ El engranaje permite elegir temas, inicio con Windows, integración de la tecla 
 ![Apertura y cierre de ReStart](docs/images/start-motion.gif)
 
 **Grupos por defecto, colocación libre cuando la necesites.** Soltar en vacío crea un grupo sin nombre; esperar sobre un mosaico crea una carpeta. <kbd>Shift</kbd> al arrastrar reorganiza sin carpetas; <kbd>Alt</kbd> permite colocar de forma independiente en vacío. **Use free tile placement**, en Settings → Start behavior, lo convierte en el modo predeterminado. Se conservan los diseños y carpetas existentes. Los vecinos se deslizan sin cambiar el destino bajo el puntero.
+
+Al arrastrar aparecen brevemente consejos de teclado en la parte inferior. Se pueden desactivar en los ajustes de comportamiento. <kbd>F1</kbd> o **Atajos de teclado** en esos ajustes abre la lista completa.
 
 
 | Área | Incluye |

@@ -70,6 +70,8 @@ Internal rearrangement checks follow complete horizontal and vertical trajectori
 
 Core tests include semantic release ordering, bounded/invalid feeds, unauthenticated feed/rate/network distinctions, schema 1–3 originals retained through later saves, future producer protection and repeated group collisions without internal tile movement. Data-source tests use injected HTTP handlers and temporary files for selectors, RSS/Atom, response/depth bounds, redirects, credentials, timeouts, cancellation, concurrency, conditional reads and stale-cache backoff. Startup tests use `HKCU/Software/ReStart.Tests/<GUID>`, never the production Run value.
 
+The update-installation fixture also forces startup confirmation to appear between a missing-marker probe and an observed process exit. It checks that the final probe commits acknowledged startup, rejects unacknowledged exit and expired deadlines, and does not require an already acknowledged process to remain alive. Its four real process scenarios retain rollback, locked-file, interruption and unrelated-file checks; failure reports identify the scenario and fixed error category without installation paths.
+
 For local coverage, build portable symbols and allow the neutral mapped source paths. Keep coverage reports and symbols outside release packages:
 
 ```powershell

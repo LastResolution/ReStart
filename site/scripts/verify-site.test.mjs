@@ -1,3 +1,4 @@
+import { runInNewContext } from 'node:vm';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
@@ -46,4 +47,33 @@ test('public-site validation accepts the deployment and rejects broken discovery
     // This exact directory was created by mkdtemp above and contains only this test's deployment copy.
     await rm(fixture, { recursive: true, force: true });
   }
+});
+
+
+test('theme changes update media and preserve a playing video across rapid switches', async () => {
+  const source = await readFile(new URL('../dist/assets/site.js', import.meta.url), 'utf8');
+  const functionSource = source.slice(source.indexOf('  const applyTheme ='), source.indexOf('  const changeTheme ='));
+  const listeners = [];
+  const videoSource = { src: 'assets/demo.mp4', getAttribute() { return this.src; }, setAttribute(_, value) { this.src = value; } };
+  const video = {
+    dataset: { dark: 'assets/demo.mp4', light: 'assets/demo-light.mp4', darkPoster: 'dark.png', lightPoster: 'light.png' },
+    currentTime: 12.5, duration: 60, paused: false, ended: false, loads: 0, plays: 0,
+    querySelector() { return videoSource; }, pause() { this.paused = true; },
+    play() { this.paused = false; this.plays++; return Promise.resolve(); },
+    load() { this.loads++; }, addEventListener(_, callback) { listeners.push(callback); }
+  };
+  const image = { dataset: { dark: 'dark.png', light: 'light.png' } };
+  const link = { dataset: { dark: 'dark-full.png', light: 'light-full.png' } };
+  const root = { dataset: {} };
+  const apply = runInNewContext(`let preference; const themePlayback = new WeakMap(); ${functionSource}; applyTheme;`, {
+    root, system: { matches: false }, localStorage: { setItem() {} },
+    document: { querySelectorAll(selector) { return ({ '[data-theme-image]': [image], '[data-theme-link]': [link], '[data-theme-video]': [video] })[selector] || []; } }
+  });
+  apply('dark'); assert.equal(video.loads, 0);
+  apply('light'); assert.equal(image.src, 'light.png'); assert.equal(link.href, 'light-full.png');
+  assert.equal(video.poster, 'light.png'); assert.equal(videoSource.src, 'assets/demo-light.mp4');
+  apply('dark'); listeners.shift()(); assert.equal(video.plays, 0, 'A stale metadata event must not resume the wrong source.');
+  listeners.shift()(); assert.equal(video.currentTime, 12.5); assert.equal(video.plays, 1);
+  video.paused = true; apply('light'); listeners.shift()(); assert.equal(video.plays, 1, 'A paused video must remain paused.');
+  apply('system'); assert.equal(root.dataset.theme, 'light');
 });

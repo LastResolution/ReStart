@@ -454,5 +454,22 @@
   "SettingsSaveClose": "儲存並關閉",
   "UpdateReadyTitle": "更新已準備就緒",
   "UpdateReadyBody": "ReStart {0} 已下載，可以安裝。",
-  "UpdateReadyHelp": "重新啟動並更新以套用。選擇稍後仍會保留提醒。一般啟動不會自動安裝。"
+  "UpdateReadyHelp": "重新啟動並更新以套用。選擇稍後仍會保留提醒。一般啟動不會自動安裝。",
+  "SettingsDragShortcutHints": "拖曳時顯示快捷鍵提示",
+  "DragHintIndependent": "在空白處獨立放置",
+  "DragHintReorder": "重新排列，不建立資料夾或移入資料夾",
+  "KeyboardShortcuts": "鍵盤快捷鍵",
+  "ShortcutsGeneral": "開始功能表與導覽",
+  "ShortcutsDragging": "拖曳磚塊時",
+  "ShortcutsSelection": "選取磚塊時（Ctrl+E）",
+  "ShortcutOpen": "開啟或關閉 ReStart（需啟用 Win 鍵設定）",
+  "ShortcutEscape": "關閉目前檢視，最後關閉開始功能表",
+  "ShortcutFocus": "將焦點移至磚塊",
+  "ShortcutSelect": "切換焦點磚塊的選取狀態",
+  "ShortcutMoveTiles": "將磚塊移動一個小網格",
+  "ShortcutMoveGroup": "移動焦點磚塊所在的群組",
+  "ShortcutSize": "調整大小：小／中／寬／大",
+  "ShortcutNewGroup": "以選取的磚塊建立群組",
+  "ShortcutTileMenu": "開啟焦點磚塊的功能表",
+  "ShortcutClearSelection": "清除選取，然後結束選取模式"
 }

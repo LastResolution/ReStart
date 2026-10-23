@@ -14,7 +14,7 @@
 
 <p align="center"><strong>觀看 60 秒示範</strong><br><sub>1080p · 英文 · 無音訊</sub></p>
 
-https://github.com/user-attachments/assets/ab737d41-8918-437d-aa70-0cde37abcb67
+https://github.com/user-attachments/assets/a893cd20-8c82-4c47-b5fb-bf22743f67e1
 
 懷念 Windows 10 的全螢幕開始功能表？ReStart 在 Windows 11 和 Windows 10 上提供熟悉的應用程式空間。釘選常用內容，自由安排配置，再加入能以 JavaScript 撰寫的動態磚。
 
@@ -51,6 +51,8 @@ https://github.com/user-attachments/assets/ab737d41-8918-437d-aa70-0cde37abcb67
 ![ReStart 的開啟與關閉動畫](docs/images/start-motion.gif)
 
 **預設使用群組，需要時自由放置。** 在空白處放下會建立未命名群組；在磚上停留會建立資料夾。拖曳時按住 <kbd>Shift</kbd> 可重新排列而不建立資料夾，按住 <kbd>Alt</kbd> 可在空白處獨立放置。Settings → Start behavior → **Use free tile placement** 可將獨立放置設為預設。既有配置和資料夾保持不變。相鄰磚平滑移位，指標下的目標判定保持穩定。
+
+拖曳時，畫面底部會短暫顯示快捷鍵提示，可在開始功能表行為設定中關閉。按 <kbd>F1</kbd>，或在設定中開啟 **鍵盤快捷鍵**，即可查看完整清單。
 
 
 | 類別 | 包含功能 |

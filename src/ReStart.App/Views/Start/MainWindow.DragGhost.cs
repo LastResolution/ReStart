@@ -62,6 +62,7 @@ public partial class MainWindow
         _dragFrameTime = TimeSpan.MinValue; _dragFrameTicks = Stopwatch.GetTimestamp();
         _dragFrameSubscribed = true;
         CompositionTarget.Rendering += OnDragFrame;
+        ShowDragShortcutHint(format);
     }
 
     private void OnDragFrame(object? sender, EventArgs e)
@@ -106,6 +107,7 @@ public partial class MainWindow
 
     private void StopDragGhost()
     {
+        HideDragShortcutHint();
         StopDragFrames();
         if (_dragGhostLayer != null) Root.Children.Remove(_dragGhostLayer);
         foreach (var (view, opacity) in _dragGhostSources) view.Opacity = opacity;

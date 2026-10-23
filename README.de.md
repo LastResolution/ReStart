@@ -14,7 +14,7 @@
 
 <p align="center"><strong>60-Sekunden-Demo ansehen</strong><br><sub>1080p · Englisch · Ohne Ton</sub></p>
 
-https://github.com/user-attachments/assets/ab737d41-8918-437d-aa70-0cde37abcb67
+https://github.com/user-attachments/assets/a893cd20-8c82-4c47-b5fb-bf22743f67e1
 
 Vermisst du das Vollbild-Startmenü von Windows 10? ReStart gibt deinen Apps unter Windows 11 und Windows 10 ein vertrautes Zuhause. Hefte häufig verwendete Inhalte an, ordne den Bildschirm frei an und ergänze Live-Kacheln, die du in JavaScript schreiben kannst.
 
@@ -51,6 +51,8 @@ Beim Ziehen folgt eine halbtransparente Kopie der Kachel, Gruppe oder Auswahl de
 ![Öffnen und Schließen von ReStart](docs/images/start-motion.gif)
 
 **Standardmäßig Gruppen, auf Wunsch freie Platzierung.** Leere Flächen erstellen eine unbenannte Gruppe; über einer Kachel warten erstellt einen Ordner. <kbd>Shift</kbd> beim Ziehen ordnet ohne Ordner um; <kbd>Alt</kbd> platziert auf leerer Fläche unabhängig. **Use free tile placement** unter Settings → Start behavior macht dies zum Standard. Vorhandene Layouts und Ordner bleiben erhalten. Nachbarn gleiten in ihre neue Position, ohne das Ziel unter dem Zeiger zu verändern.
+
+Beim Ziehen erscheinen kurz Tastentipps am unteren Rand. Sie lassen sich in den Startverhalten-Einstellungen deaktivieren. <kbd>F1</kbd> oder **Tastenkombinationen** in diesen Einstellungen öffnet die vollständige Übersicht.
 
 
 | Bereich | Enthalten |

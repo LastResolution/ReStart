@@ -25,6 +25,9 @@ public sealed class ScriptTileTests
     [InlineData("function render(){ return eval('({text: 1})'); }")]
     [InlineData("function render(){ return System.IO.File.ReadAllText('secret'); }")]
     [InlineData("function render(){ return require('fs'); }")]
+    [InlineData("function render(){ return new Function('return {text: 1}')(); }")]
+    [InlineData("function render(){ return ({}).constructor.constructor('return process')(); }")]
+    [InlineData("function render(){ return importNamespace('System').Diagnostics.Process.Start('blocked'); }")]
     [InlineData("function render(){ function f(){return f()+1;} return f(); }")]
     public void RejectsInvalidFramesAndStopsRunawayScripts(string source) => Assert.ThrowsAny<Exception>(() => Render(source));
 
@@ -34,6 +37,7 @@ public sealed class ScriptTileTests
         Render("function render(){ Object.prototype.leak = true; return {}; }");
         Assert.Equal("undefined", Render("function render(){ return {text:typeof ({}).leak}; }").Text);
         Assert.Equal("undefined,undefined,undefined,undefined", Render("function render(){ return {text:[typeof fetch,typeof process,typeof importNamespace,typeof document].join(',')}; }").Text);
+        Assert.Equal("undefined,undefined,undefined,undefined,undefined", Render("function render(){ return {text:[typeof require,typeof Buffer,typeof System,typeof ActiveXObject,typeof __contextJson].join(',')}; }").Text);
     }
 
     [Fact]

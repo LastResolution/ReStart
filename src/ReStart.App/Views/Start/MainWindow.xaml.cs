@@ -1103,6 +1103,8 @@ public partial class MainWindow : Window
         if (_dismissing) { e.Handled = true; return; }
         if (_dragging) return;
         CompleteEntrance();
+        if (e.Key == Key.F1 && Keyboard.Modifiers == ModifierKeys.None)
+        { e.Handled = true; ShowKeyboardShortcuts(this); return; }
         if (_editingGroupHeader?.IsEditing == true && e.OriginalSource is TextBox) return;
         if (HandleLayoutEditingKey(e)) return;
         if (HandleSearchSelectionKey(e)) return;

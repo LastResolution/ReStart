@@ -454,5 +454,22 @@
   "SettingsSaveClose": "Speichern und schließen",
   "UpdateReadyTitle": "Bereit zum Aktualisieren",
   "UpdateReadyBody": "ReStart {0} ist heruntergeladen und zur Installation bereit.",
-  "UpdateReadyHelp": "Mit Neustart und Aktualisieren wird das Update installiert. Nicht jetzt behält eine Erinnerung. Ein normaler Start installiert es nicht automatisch."
+  "UpdateReadyHelp": "Mit Neustart und Aktualisieren wird das Update installiert. Nicht jetzt behält eine Erinnerung. Ein normaler Start installiert es nicht automatisch.",
+  "SettingsDragShortcutHints": "Tastentipps beim Ziehen anzeigen",
+  "DragHintIndependent": "Unabhängig auf freier Fläche platzieren",
+  "DragHintReorder": "Umordnen, ohne Ordner zu erstellen oder zu öffnen",
+  "KeyboardShortcuts": "Tastenkombinationen",
+  "ShortcutsGeneral": "Start und Navigation",
+  "ShortcutsDragging": "Beim Ziehen von Kacheln",
+  "ShortcutsSelection": "Bei der Kachelauswahl (Ctrl+E)",
+  "ShortcutOpen": "ReStart öffnen oder schließen (Win-Taste muss aktiviert sein)",
+  "ShortcutEscape": "Aktuelle Ansicht schließen, danach Start",
+  "ShortcutFocus": "Eine Kachel fokussieren",
+  "ShortcutSelect": "Auswahl der fokussierten Kachel umschalten",
+  "ShortcutMoveTiles": "Kacheln um eine kleine Zelle verschieben",
+  "ShortcutMoveGroup": "Gruppe der fokussierten Kachel verschieben",
+  "ShortcutSize": "Größe: klein / mittel / breit / groß",
+  "ShortcutNewGroup": "Gruppe aus der Auswahl erstellen",
+  "ShortcutTileMenu": "Menü der fokussierten Kachel öffnen",
+  "ShortcutClearSelection": "Auswahl aufheben, danach Auswahlmodus beenden"
 }

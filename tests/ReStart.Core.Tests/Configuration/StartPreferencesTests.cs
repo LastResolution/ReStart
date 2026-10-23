@@ -9,7 +9,7 @@ public class StartPreferencesTests
     {
         var preferences = JsonSerializer.Deserialize<Preferences>("{}")!;
         Assert.True(preferences.SearchSettings && preferences.SearchFiles && preferences.ShowJumpLists && preferences.ExpandNavigationOnHover);
-        Assert.True(preferences.TileHoverHighlight && preferences.DragEdgeScrolling && preferences.ShowDropHints);
+        Assert.True(preferences.TileHoverHighlight && preferences.DragEdgeScrolling && preferences.ShowDropHints && preferences.ShowDragShortcutHints);
         Assert.True(preferences.GroupTilesOnDrop && preferences.CreateFoldersOnDrop && preferences.ShowGroupBoundariesOnHover && preferences.ShowRecentlyAdded);
         Assert.False(preferences.ShowMostUsed); Assert.Null(preferences.NavigationFolders);
     }

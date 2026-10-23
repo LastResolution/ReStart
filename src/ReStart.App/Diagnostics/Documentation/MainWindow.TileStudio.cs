@@ -25,11 +25,25 @@ public partial class MainWindow
                 browser.Measure(new(200, 200)); browser.Arrange(new Rect(0, 0, 200, 200)); browser.UpdateLayout();
                 const string html = "<!doctype html><html><head><title>Browser fixture</title><link rel='stylesheet' href='/tile.css'></head><body><svg viewBox='0 0 200 200'><circle cx='100' cy='100' r='80' fill='#0078d7'/><text x='100' y='108' text-anchor='middle' fill='white'>ReStart</text></svg><script src='/tile.js'></script></body></html>";
                 const string css = "html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent}svg{width:100%;height:100%}";
-                const string source = "async function render(ctx){let denied=0;try{denied=(await fetch('/data-bindings.dat')).status}catch{};return {text:'Browser fixture',state:{count:(ctx.state.count||0)+1,denied}};}";
+                const string source = """
+                    async function render(ctx) {
+                      let denied=0; try { denied=(await fetch('/data-bindings.dat')).status; } catch {}
+                      let evalBlocked=false, constructorBlocked=false, fileBlocked=false, networkBlocked=false;
+                      try { eval('1'); } catch { evalBlocked=true; }
+                      try { ({}).constructor.constructor('return 1')(); } catch { constructorBlocked=true; }
+                      try { await fetch('file:///ReStart-boundary-fixture.txt'); } catch { fileBlocked=true; }
+                      try { await fetch('https://restart-boundary.invalid/'); } catch { networkBlocked=true; }
+                      return {text:'Browser fixture',state:{count:(ctx.state.count||0)+1,denied,evalBlocked,constructorBlocked,fileBlocked,networkBlocked,
+                        nodeAbsent:typeof require==='undefined' && typeof process==='undefined' && typeof Buffer==='undefined'}};
+                    }
+                    """;
                 var (frame, error) = await browser.RenderAsync(html, css, source, false, new { state = new { count = 0 }, size = "large", bounds = new { width = 200, height = 200, scale = 1 } });
                 Check(frame != null, "Web tile rendering failed: " + error);
                 Check(frame!.State.GetProperty("denied").GetInt32() == 404, "The browser exposed a host binding file.");
                 Check(frame.State.GetProperty("count").GetInt32() == 1, "Browser state did not round-trip.");
+                foreach (var key in new[] { "evalBlocked", "constructorBlocked", "fileBlocked", "networkBlocked", "nodeAbsent" })
+                    Check(frame.State.GetProperty(key).GetBoolean(), "The web tile boundary failed: " + key);
+                Check(browser.HostObjectsDisabled, "Web tiles may access native host objects.");
                 Check(!IsVisible, "A documentation browser unexpectedly opened a window.");
                 File.WriteAllText(System.IO.Path.Combine(directory, "browser.json"), await browser.InspectAsync("JSON.stringify({width:innerWidth,height:innerHeight,visibility:document.visibilityState,body:document.body.innerHTML})").WaitAsync(TimeSpan.FromSeconds(5)));
                 await Task.Delay(100);
@@ -61,6 +75,7 @@ public partial class MainWindow
         checks += await VerifyFolderPreviewsAsync(directory);
         checks += await VerifyWebTileRecoveryAsync(directory);
         checks += await VerifyWebLayoutMatrixAsync(directory);
+        await RenderTileGalleryAsync(directory);
         _documentationHtmlRendering = true; _startupPreparing = true; Root.Width = 1920; Root.Height = 900;
         _documentationNow = new DateTimeOffset(2026, 10, 18, 9, 41, 0, TimeSpan.Zero);
         Content = null;

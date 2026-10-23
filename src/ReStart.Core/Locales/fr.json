@@ -454,5 +454,22 @@
   "SettingsSaveClose": "Enregistrer et fermer",
   "UpdateReadyTitle": "Mise à jour prête",
   "UpdateReadyBody": "ReStart {0} est téléchargé et prêt à être installé.",
-  "UpdateReadyHelp": "Redémarrez et mettez à jour pour l’appliquer. Pas maintenant conserve un rappel. Un démarrage ordinaire ne l’installe pas automatiquement."
+  "UpdateReadyHelp": "Redémarrez et mettez à jour pour l’appliquer. Pas maintenant conserve un rappel. Un démarrage ordinaire ne l’installe pas automatiquement.",
+  "SettingsDragShortcutHints": "Afficher les astuces clavier pendant le déplacement",
+  "DragHintIndependent": "Placer une tuile indépendante dans un espace libre",
+  "DragHintReorder": "Réorganiser sans créer de dossier ni y déplacer de tuile",
+  "KeyboardShortcuts": "Raccourcis clavier",
+  "ShortcutsGeneral": "Démarrage et navigation",
+  "ShortcutsDragging": "Pendant le déplacement des tuiles",
+  "ShortcutsSelection": "Pendant la sélection des tuiles (Ctrl+E)",
+  "ShortcutOpen": "Ouvrir ou fermer ReStart (touche Win à activer)",
+  "ShortcutEscape": "Fermer la vue actuelle, puis le menu Démarrer",
+  "ShortcutFocus": "Placer le focus sur une tuile",
+  "ShortcutSelect": "Sélectionner ou désélectionner la tuile active",
+  "ShortcutMoveTiles": "Déplacer les tuiles d’une petite cellule",
+  "ShortcutMoveGroup": "Déplacer le groupe de la tuile active",
+  "ShortcutSize": "Taille : petite / moyenne / large / grande",
+  "ShortcutNewGroup": "Créer un groupe à partir de la sélection",
+  "ShortcutTileMenu": "Ouvrir le menu de la tuile active",
+  "ShortcutClearSelection": "Effacer la sélection, puis quitter le mode de sélection"
 }

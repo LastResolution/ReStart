@@ -29,7 +29,7 @@ public partial class App
             else if (promo)
             {
                 if (index + 2 >= arguments.Length) throw new ArgumentException("Supply the FFmpeg executable after the output directory.");
-                await renderer.RenderPromoAsync(directory, Path.GetFullPath(arguments[index + 2]));
+                await renderer.RenderPromoAsync(directory, Path.GetFullPath(arguments[index + 2]), arguments.Contains("--light"));
             }
             else await renderer.RenderDocumentationAsync(directory);
             Shutdown(0);
