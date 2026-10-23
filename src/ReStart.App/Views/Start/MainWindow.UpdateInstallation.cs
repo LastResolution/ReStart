@@ -15,7 +15,7 @@ public partial class MainWindow
     internal event Action? PreparedUpdateAvailable;
     private bool _readyNoticeExpanded = true, _updateRestarting;
     private CancellationTokenSource? _updateDownloadCancellation;
-    internal bool CanInstallUpdates => !_preview && !_store.IsReadOnly && PortableUpdates.SupportsInstallation(AppContext.BaseDirectory);
+    internal bool CanInstallUpdates => !_preview && PortableUpdates.SupportsInstallation(AppContext.BaseDirectory);
     internal void CancelUpdateDownload() => _updateDownloadCancellation?.Cancel();
 
     /// <summary>Stages the explicitly selected release asynchronously; cancellation/failure never mutates the installation.</summary>
@@ -105,13 +105,17 @@ public partial class MainWindow
         finally { _updateRestarting = false; }
     }
 
-    /// <summary>Saves the layout and hands off a prepared update without exiting the process itself.</summary>
+    /// <summary>Saves a writable layout, preserves a protected layout unchanged, and hands off a prepared update without exiting the process itself.</summary>
     /// <returns>True only after helper readiness/acceptance; the caller then closes its dialog and exits normally.</returns>
     internal async Task<bool> BeginPreparedUpdateAsync()
     {
-        if (!CanInstallUpdates || PreparedUpdate == null || UpdatePreparation != PreparationState.Ready || !TrySaveLayout()) return false;
+        if (!CanInstallUpdates || PreparedUpdate == null || UpdatePreparation != PreparationState.Ready || !SaveLayoutBeforeUpdate()) return false;
         try { return await PortableUpdates.StartAsync(PreparedUpdate); }
         catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception)
         { PortableUpdates.Record(DiagnosticCode.UpdatePreparationFailed); return false; }
     }
+
+    // A newer producer or schema protects settings, not distribution files.
+    // Keep normal save failures blocking restart; never rewrite a protected layout.
+    private bool SaveLayoutBeforeUpdate() => _store.IsReadOnly || TrySaveLayout();
 }

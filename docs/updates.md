@@ -9,7 +9,7 @@ Complete portable packages from v1.6.0 include `ReStart-package.json`, the distr
 1. Choose **Check now**. Read the available version and release notes.
 2. Choose **Download update**. ReStart fetches the current-architecture ZIP and SHA-256 sidecar from the fixed public repository. You can cancel; the installed application is not changed during preparation.
 3. When the package is verified, choose **Restart and update** and accept the confirmation. If Settings has unsaved changes, choose to save, discard or keep editing before proceeding.
-4. ReStart saves its current layout, starts a separate copy of its updater, and exits. The updater backs up distribution files, replaces the package and starts the new app from the same location. The update commits only after the new app initializes and acknowledges startup.
+4. ReStart saves its current layout, starts a separate copy of its updater, and exits. If a newer app version or layout format has made the saved layout read-only, ReStart preserves that file unchanged and still permits updating. The updater backs up distribution files, replaces the package and starts the new app from the same location. The update commits only after the new app initializes and acknowledges startup.
 
 The installation must be writable without elevation. New package files may not overwrite unrelated local files. Modified distribution-owned files also stop the update; keep custom live tiles in ReStart's local tile library instead of editing bundled installation files. Settings, tile sources and data connections in local app data remain separate from the installed package. Settings writes are deferred until startup is acknowledged, so a failed candidate does not stamp its version into the saved layout.
 
