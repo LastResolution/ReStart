@@ -97,6 +97,7 @@ public partial class MainWindow
             Check(Math.Abs(captured.RenderTransform.Transform(new Point()).X - 200) < .1, "A captured move did not reach its final slot.");
         }
         finally { _tileTransitions.Reset(); _tileTransitions.SetCaptureTime(null); Root.Children.Remove(captured); }
+        checks += VerifyInternalTileReflow();
         File.WriteAllText(Path.Combine(directory, "placement-timings.json"), JsonSerializer.Serialize(new
         {
             checks,

@@ -194,15 +194,12 @@ public static class LayoutEditor
         if (folder.Children.Contains(tile)) folder.Children.Remove(tile);
         else Remove(document, tile.Id);
         tile.Column = column; tile.Row = row;
-        foreach (var p in previous.Where(p => p.Tile != tile))
-            if (p.Column < column + width && p.Column + p.Width > column && p.Row < row + height && p.Row + p.Height > row)
-            { p.Tile.Column = null; p.Tile.Row = null; }
         folder.Children.Insert(0, tile);
-        foreach (var p in TileLayout.Pack(folder.Children, columns)) { p.Tile.Column = p.Column; p.Tile.Row = p.Row; }
+        TileReflow.Apply(folder.Children, previous, [new(tile, column, row, width, height)], columns);
         PruneSource(document, source, Owner(document, folder));
     }
 
-    /// <summary>Moves a tile to an explicit cell, preserving unaffected positions and repacking only conflicting tiles.</summary>
+    /// <summary>Moves a tile to an explicit cell, preserving unaffected positions and moving conflicts into vacated or nearby space.</summary>
     /// <param name="document">Layout to mutate in memory; the caller is responsible for saving it.</param>
     /// <param name="tile">Existing root tile or one-level folder child, identified by its stable ID.</param>
     /// <param name="destination">Existing non-independent group receiving the root tile.</param>
@@ -221,11 +218,8 @@ public static class LayoutEditor
         foreach (var p in previous) { p.Tile.Column = p.Column; p.Tile.Row = p.Row; }
         Remove(document, tile.Id);
         tile.Column = column; tile.Row = row;
-        foreach (var p in previous.Where(p => p.Tile != tile))
-            if (p.Column < column + width && p.Column + p.Width > column && p.Row < row + height && p.Row + p.Height > row)
-            { p.Tile.Column = null; p.Tile.Row = null; }
         destination.Tiles.Insert(0, tile);
-        foreach (var p in TileLayout.Pack(destination.Tiles, columns)) { p.Tile.Column = p.Column; p.Tile.Row = p.Row; }
+        TileReflow.Apply(destination.Tiles, previous, [new(tile, column, row, width, height)], columns);
         PruneSource(document, source, destination);
     }
 

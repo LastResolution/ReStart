@@ -78,18 +78,15 @@ public static class TileBatchMove
                     for (var xx = 0; xx < w; xx++)
                         if (!cells.Add((positions[i].Column + xx, positions[i].Row + yy))) return null;
             }
-            foreach (var p in TileLayout.Pack(target, columns)) { p.Tile.Column = p.Column; p.Tile.Row = p.Row; }
+            var previous = TileLayout.Pack(target, columns);
+            foreach (var p in previous) { p.Tile.Column = p.Column; p.Tile.Row = p.Row; }
             RemoveSelection(copy, ids, group, folder);
-            foreach (var tile in target)
-            {
-                var (w, h) = TileLayout.Dimensions(tile.Size);
-                if (Enumerable.Range(0, w).Any(xx => Enumerable.Range(0, h).Any(yy => cells.Contains((tile.Column!.Value + xx, tile.Row!.Value + yy)))))
-                { tile.Column = null; tile.Row = null; }
-            }
             for (var i = 0; i < tiles.Length; i++)
             { tiles[i]!.Column = positions[i].Column; tiles[i]!.Row = positions[i].Row; }
             target.InsertRange(0, tiles!);
-            foreach (var p in TileLayout.Pack(target, columns)) { p.Tile.Column = p.Column; p.Tile.Row = p.Row; }
+            var moved = tiles.Select((t, i) => new TilePlacement(t!, positions[i].Column, positions[i].Row,
+                TileLayout.Dimensions(t!.Size).Width, TileLayout.Dimensions(t.Size).Height)).ToArray();
+            TileReflow.Apply(target, previous, moved, columns);
         }
         else
         {

@@ -140,7 +140,8 @@ public partial class MainWindow
         if (!CanEditGroup(target.Group)) return null;
         var relative = PanelPoint(point, target.Panel);
         var model = target.Panel.ToModelPoint(relative);
-        var (column, row) = TileLayout.Snap(model.X - _dragOffset.X, model.Y - _dragOffset.Y, Cell, tile.Size, Document.Preferences.Columns);
+        var (column, row) = TileLayout.SnapMove(target.Panel.FolderOwner?.Children ?? target.Group.Tiles,
+            tile, model.X - _dragOffset.X, model.Y - _dragOffset.Y, Cell, Document.Preferences.Columns);
         if (target.Panel.FolderOwner != null)
         {
             _folderHover.Reset(); StopFolderDwell();

@@ -42,7 +42,8 @@ try {
         $matches = @($tiles | Where-Object { $_.Target -ceq $path })
         if ($matches.Count -ne 1 -or $matches[0].IsShellApp -or $matches[0].Children.Count -gt 0) { throw 'A filesystem pin lost its target, duplicated, or became a tile folder.' }
         $owner = @($layout.Groups | Where-Object { @($_.Tiles | Where-Object { $_.Target -ceq $path }).Count -gt 0 })
-        if ($owner.Count -ne 1 -or -not $owner[0].IsStandalone) { throw 'A default filesystem pin was inserted into an existing group.' }
+        if ($owner.Count -ne 1 -or $owner[0].IsStandalone -ne [bool]$layout.Preferences.FreeTilePlacement -or
+            $owner[0].Name -ne '' -or $owner[0].Tiles.Count -ne 1) { throw 'A default filesystem pin did not receive its own entry in the selected placement mode.' }
     }
     $invalid = Start-Process -FilePath $app -ArgumentList @('--preview', '--pin', ('"' + (Join-Path $testRoot 'missing') + '"')) -WindowStyle Hidden -PassThru
     try {

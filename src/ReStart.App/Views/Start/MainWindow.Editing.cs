@@ -234,9 +234,15 @@ public partial class MainWindow
                 var plan = PlanSelectionFolder(selection, anchorId, closedFolder);
                 return plan != null && PlacementAllowed(plan) ? plan : null;
             }
+            var snap = FindTile(anchorId) is Tile moving
+                ? TileLayout.SnapMove((destination.Panel.FolderOwner?.Children ?? destination.Group.Tiles)
+                    .Where(t => t.Id == anchorId || !_selectedTileIds.Contains(t.Id)), moving,
+                    local.X - _dragOffset.X, local.Y - _dragOffset.Y, Cell, Document.Preferences.Columns)
+                : (Column: (int)Math.Round((local.X - _dragOffset.X) / Cell, MidpointRounding.AwayFromZero),
+                    Row: (int)Math.Round((local.Y - _dragOffset.Y) / Cell, MidpointRounding.AwayFromZero));
             return CachedSelectionPlan(selection, anchorId, destination.Group.IsStandalone ? null : destination.Group.Id,
-                destination.Panel.FolderOwner?.Id ?? closedFolder?.Id, closedFolder == null ? Math.Round((local.X - _dragOffset.X) / Cell, MidpointRounding.AwayFromZero) : 0,
-                closedFolder == null ? Math.Round((local.Y - _dragOffset.Y) / Cell, MidpointRounding.AwayFromZero) : 0);
+                destination.Panel.FolderOwner?.Id ?? closedFolder?.Id, closedFolder == null ? snap.Column : 0,
+                closedFolder == null ? snap.Row : 0);
         }
         if (target is { } independent && FindTile(anchorId) is Tile lead)
         {

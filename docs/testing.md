@@ -66,6 +66,8 @@ dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory 
 
 Fixtures use isolated preview state, disable production hooks/startup/update requests and use temporary local connection files, and output PNG/JSON under artifacts. Placement copies binaries into a fresh directory. The WPF root can exceed the CI desktop's size, and tests verify the requested render width. Inspect images as well as success fields. Native routed/composition events are not physical OS input.
 
+Internal rearrangement checks follow complete horizontal and vertical trajectories across all four sizes, in normal and selection modes, both in groups and open folders. They require occupied-slot previews to stay within the original extent, unrelated groups to remain fixed, preview cancellation to leave the model unchanged, committed neighbors to use the released cells, and one-step undo to restore the original tree. Core cases also cover earlier unused holes, external insertions, mixed sizes and rigid multi-tile selections.
+
 Core tests include semantic release ordering, bounded/invalid feeds, unauthenticated feed/rate/network distinctions, schema 1–3 originals retained through later saves, future producer protection and repeated group collisions without internal tile movement. Data-source tests use injected HTTP handlers and temporary files for selectors, RSS/Atom, response/depth bounds, redirects, credentials, timeouts, cancellation, concurrency, conditional reads and stale-cache backoff. Startup tests use `HKCU/Software/ReStart.Tests/<GUID>`, never the production Run value.
 
 For local coverage, build portable symbols and allow the neutral mapped source paths. Keep coverage reports and symbols outside release packages:
