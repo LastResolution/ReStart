@@ -49,6 +49,7 @@ public partial class MainWindow
             var group = Document.Groups.Single(item => item.Name == "Create & work");
             var moving = group.Tiles.Single(tile => tile.AppId == "calc");
             var movingId = moving.Id;
+            var keyboardId = Document.Groups.Single(item => item.Name == "Files & folders").Tiles[1].Id;
             var folderId = group.Tiles.Single(tile => tile.IsFolder).Id;
             var studioScenes = await RenderStudioPromoScenesAsync(directory);
             ApplyAppearance(); ResetToPinnedView(); RenderGroups();
@@ -153,11 +154,16 @@ public partial class MainWindow
                     }
                     if (seconds >= 17 && !keyboardMoved)
                     {
-                        SetLayoutEditing(true); ToggleTileSelection(movingId);
-                        var plan = KeyboardLayoutEditor.Nudge(Document, [movingId], -2, 0, GroupsPanel.Columns);
+                        SetLayoutEditing(true); ToggleTileSelection(keyboardId);
+                        // Match one Ctrl+Right event exactly. Combining repeated
+                        // nudges into one delta can produce a different reflow.
+                        var plan = KeyboardLayoutEditor.Nudge(Document, [keyboardId], 1, 0, GroupsPanel.Columns);
                         Require(plan != null, "The demonstrated keyboard nudge was rejected.");
                         Document.Groups = plan!; CommitLayout(); keyboardMoved = true;
+                        Require(FindTile(keyboardId)?.Column == 3 && FindTile(keyboardId)?.Row == 0,
+                            "The demonstrated keyboard step did not match one Ctrl+Right input.");
                     }
+                    if (seconds >= 15) cursor = null;
                     if (seconds >= 18.5 && !locked) { SetLayoutLocked(true); locked = true; }
                 }
                 if (stage == 4)
@@ -258,7 +264,7 @@ public partial class MainWindow
                 var (heading, detail) = stage switch
                 {
                     1 => ("A familiar place to begin.", "Your apps and live tiles, together in full screen."),
-                    2 => (seconds >= 18.5 ? "Keep it just right. Lock your layout." : seconds >= 17 ? "Move it with the keyboard, too." : seconds >= 15 ? "Try a new layout. Undo in a moment." : "Make room. Keep things moving.", seconds >= 18.5 ? "Ctrl + Shift + L  /  Lock placement" : seconds >= 17 ? "Ctrl + E, then Ctrl + Left twice  /  Move selected tiles" : seconds >= 15 ? "Ctrl + Z  /  Undo the whole move" : "Shift + drag  /  Rearrange without folders     Alt + drag  /  Place independently"),
+                    2 => (seconds >= 18.5 ? "Keep it just right. Lock your layout." : seconds >= 17 ? "Arrange tiles with the keyboard." : seconds >= 15 ? "Try a new layout. Undo in a moment." : "Make room. Keep things moving.", seconds >= 18.5 ? "Ctrl + Shift + L  /  Lock placement" : seconds >= 17 ? "Ctrl + E, then Ctrl + Right  /  Move a selected tile" : seconds >= 15 ? "Ctrl + Z  /  Undo the whole move" : "Shift + drag  /  Rearrange without folders     Alt + drag  /  Place independently"),
                     3 => ("Keep the small things together.", "Folders open right where you need them."),
                     4 => ("Open. Type. Find.", "Start typing to find your apps immediately."),
                     5 => seconds < 37 ? ("HTML. CSS. A little live magic.", "SVG clocks, custom layouts, PC activity and your own data.")
