@@ -24,7 +24,7 @@ English is the primary documentation. The translated guides are AI-assisted and 
 
 <p align="center"><strong>Watch the 60-second demo</strong><br><sub>1080p · English · No audio</sub></p>
 
-https://github.com/user-attachments/assets/ab737d41-8918-437d-aa70-0cde37abcb67
+https://github.com/user-attachments/assets/a893cd20-8c82-4c47-b5fb-bf22743f67e1
 
 **Miss the Windows 10 full-screen Start menu?** ReStart gives your apps a familiar home on Windows 11 and Windows 10. Pin what you use, arrange the screen your way, and add live tiles that you can build with HTML, CSS and JavaScript.
 
