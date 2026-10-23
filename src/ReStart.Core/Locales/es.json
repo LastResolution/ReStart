@@ -454,5 +454,22 @@
   "SettingsSaveClose": "Guardar y cerrar",
   "UpdateReadyTitle": "Actualización preparada",
   "UpdateReadyBody": "ReStart {0} se ha descargado y está listo para instalarse.",
-  "UpdateReadyHelp": "Reinicia y actualiza para aplicarla. Ahora no mantiene un recordatorio. Un inicio normal no la instala automáticamente."
+  "UpdateReadyHelp": "Reinicia y actualiza para aplicarla. Ahora no mantiene un recordatorio. Un inicio normal no la instala automáticamente.",
+  "SettingsDragShortcutHints": "Mostrar consejos de teclado al arrastrar",
+  "DragHintIndependent": "Colocar de forma independiente en un espacio vacío",
+  "DragHintReorder": "Reorganizar sin crear carpetas ni mover fichas a ellas",
+  "KeyboardShortcuts": "Atajos de teclado",
+  "ShortcutsGeneral": "Inicio y navegación",
+  "ShortcutsDragging": "Al arrastrar fichas",
+  "ShortcutsSelection": "Al seleccionar fichas (Ctrl+E)",
+  "ShortcutOpen": "Abrir o cerrar ReStart (hay que activar la tecla Win)",
+  "ShortcutEscape": "Cerrar la vista actual y después Inicio",
+  "ShortcutFocus": "Enfocar una ficha",
+  "ShortcutSelect": "Alternar la selección de la ficha enfocada",
+  "ShortcutMoveTiles": "Mover fichas una celda pequeña",
+  "ShortcutMoveGroup": "Mover el grupo de la ficha enfocada",
+  "ShortcutSize": "Tamaño: pequeño / mediano / ancho / grande",
+  "ShortcutNewGroup": "Crear un grupo con la selección",
+  "ShortcutTileMenu": "Abrir el menú de la ficha enfocada",
+  "ShortcutClearSelection": "Borrar la selección y después salir del modo de selección"
 }

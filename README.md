@@ -54,6 +54,8 @@ Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button
 
 **Groups by default, freedom when you need it.** Drop into empty space to create an unnamed group; overlap a tile and wait to make a folder. Hold <kbd>Shift</kbd> while dragging to rearrange without folders, or <kbd>Alt</kbd> to place independently in empty space. Settings → Start behavior → **Use free tile placement** makes independent placement the default. Existing layouts and folders are preserved. Neighboring tiles ease into place without changing the recipient under your pointer.
 
+Drag shortcut tips appear briefly at the bottom of Start and can be disabled in Start behavior settings. Press <kbd>F1</kbd>, or open **Keyboard shortcuts** in those settings, for the complete reference.
+
 <details>
 <summary><strong>See the light theme</strong></summary>
 

@@ -52,6 +52,8 @@ La roue dentée permet de régler les thèmes, le lancement à l’ouverture de 
 
 **Des groupes par défaut, un placement libre au choix.** Un dépôt dans le vide crée un groupe sans nom ; attendre sur une vignette crée un dossier. <kbd>Shift</kbd> pendant le glissement réorganise sans dossier ; <kbd>Alt</kbd> permet un placement indépendant dans le vide. **Use free tile placement**, dans Settings → Start behavior, en fait le mode par défaut. Les dispositions et dossiers existants sont conservés. Les voisins glissent vers leur place sans changer la cible sous le pointeur.
 
+Des astuces clavier apparaissent brièvement en bas pendant le déplacement des tuiles. Vous pouvez les désactiver dans les paramètres de comportement. <kbd>F1</kbd> ou **Raccourcis clavier** dans ces paramètres ouvre la liste complète.
+
 
 | Domaine | Fonctions incluses |
 | --- | --- |

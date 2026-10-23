@@ -52,6 +52,8 @@ Beim Ziehen folgt eine halbtransparente Kopie der Kachel, Gruppe oder Auswahl de
 
 **Standardmäßig Gruppen, auf Wunsch freie Platzierung.** Leere Flächen erstellen eine unbenannte Gruppe; über einer Kachel warten erstellt einen Ordner. <kbd>Shift</kbd> beim Ziehen ordnet ohne Ordner um; <kbd>Alt</kbd> platziert auf leerer Fläche unabhängig. **Use free tile placement** unter Settings → Start behavior macht dies zum Standard. Vorhandene Layouts und Ordner bleiben erhalten. Nachbarn gleiten in ihre neue Position, ohne das Ziel unter dem Zeiger zu verändern.
 
+Beim Ziehen erscheinen kurz Tastentipps am unteren Rand. Sie lassen sich in den Startverhalten-Einstellungen deaktivieren. <kbd>F1</kbd> oder **Tastenkombinationen** in diesen Einstellungen öffnet die vollständige Übersicht.
+
 
 | Bereich | Enthalten |
 | --- | --- |

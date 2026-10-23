@@ -454,5 +454,22 @@
   "SettingsSaveClose": "保存并关闭",
   "UpdateReadyTitle": "更新已准备就绪",
   "UpdateReadyBody": "ReStart {0} 已下载，可以安装。",
-  "UpdateReadyHelp": "重新启动并更新以应用。选择稍后仍会保留提醒。普通启动不会自动安装。"
+  "UpdateReadyHelp": "重新启动并更新以应用。选择稍后仍会保留提醒。普通启动不会自动安装。",
+  "SettingsDragShortcutHints": "拖动时显示快捷键提示",
+  "DragHintIndependent": "在空白处独立放置",
+  "DragHintReorder": "重新排列，不创建文件夹或移入文件夹",
+  "KeyboardShortcuts": "键盘快捷键",
+  "ShortcutsGeneral": "开始菜单与导航",
+  "ShortcutsDragging": "拖动磁贴时",
+  "ShortcutsSelection": "选择磁贴时（Ctrl+E）",
+  "ShortcutOpen": "打开或关闭 ReStart（需启用 Win 键设置）",
+  "ShortcutEscape": "关闭当前视图，最后关闭开始菜单",
+  "ShortcutFocus": "聚焦磁贴",
+  "ShortcutSelect": "切换焦点磁贴的选中状态",
+  "ShortcutMoveTiles": "将磁贴移动一个小网格",
+  "ShortcutMoveGroup": "移动焦点磁贴所在的分组",
+  "ShortcutSize": "调整大小：小／中／宽／大",
+  "ShortcutNewGroup": "将选中的磁贴创建为分组",
+  "ShortcutTileMenu": "打开焦点磁贴的菜单",
+  "ShortcutClearSelection": "清除选择，然后退出选择模式"
 }

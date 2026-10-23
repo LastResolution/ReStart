@@ -176,6 +176,7 @@ public partial class MainWindow
                 [K.SettingsDropFolders] = p => p.CreateFoldersOnDrop,
                 [K.SettingsDragScroll] = p => p.DragEdgeScrolling,
                 [K.SettingsDropHints] = p => p.ShowDropHints,
+                [K.SettingsDragShortcutHints] = p => p.ShowDragShortcutHints,
                 [K.SettingsShowRecentApps] = p => p.ShowRecentlyAdded,
                 [K.SettingsShowMostUsed] = p => p.ShowMostUsed
             };

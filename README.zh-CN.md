@@ -52,6 +52,8 @@ https://github.com/user-attachments/assets/ab737d41-8918-437d-aa70-0cde37abcb67
 
 **默认使用分组，需要时自由放置。** 在空白处放下会创建未命名组；在磁贴上停留会创建文件夹。拖动时按住 <kbd>Shift</kbd> 可重新排列而不创建文件夹，按住 <kbd>Alt</kbd> 可在空白处独立放置。Settings → Start behavior → **Use free tile placement** 可将独立放置设为默认。现有布局和文件夹保持不变。相邻磁贴平滑移位，指针下的目标判定保持稳定。
 
+拖动时，屏幕底部会短暂显示快捷键提示，可在开始菜单行为设置中关闭。按 <kbd>F1</kbd>，或在设置中打开 **键盘快捷键**，可查看完整列表。
+
 
 | 类别 | 包含功能 |
 | --- | --- |

@@ -152,6 +152,8 @@ public partial class MainWindow
             fixture.UndoButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             fixture.ToggleTileSelection(a.Id); fixture.ToggleTileSelection(b.Id);
 
+            checks += await fixture.VerifyDragHintsAsync(directory);
+            fixture.SetLayoutEditing(true);
             var themes = 0;
             foreach (var language in TextCatalog.SupportedLanguages)
                 foreach (var theme in new[] { ReStart.Core.ThemeMode.Dark, ReStart.Core.ThemeMode.Light })

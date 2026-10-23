@@ -916,4 +916,38 @@ public enum TextKey
     UpdateReadyBody,
     /// <summary>Explains explicit restart consent and the persistent reminder.</summary>
     UpdateReadyHelp,
+    /// <summary>Show shortcut tips while dragging.</summary>
+    SettingsDragShortcutHints,
+    /// <summary>Place independently in empty space.</summary>
+    DragHintIndependent,
+    /// <summary>Rearrange without creating or entering folders.</summary>
+    DragHintReorder,
+    /// <summary>Keyboard shortcuts.</summary>
+    KeyboardShortcuts,
+    /// <summary>Start and navigation.</summary>
+    ShortcutsGeneral,
+    /// <summary>While dragging tiles.</summary>
+    ShortcutsDragging,
+    /// <summary>While selecting tiles (Ctrl+E).</summary>
+    ShortcutsSelection,
+    /// <summary>Open or close ReStart (Win key must be enabled).</summary>
+    ShortcutOpen,
+    /// <summary>Close the current view, then Start.</summary>
+    ShortcutEscape,
+    /// <summary>Focus a tile.</summary>
+    ShortcutFocus,
+    /// <summary>Toggle the focused tile’s selection.</summary>
+    ShortcutSelect,
+    /// <summary>Move tiles by one small cell.</summary>
+    ShortcutMoveTiles,
+    /// <summary>Move the focused tile’s group.</summary>
+    ShortcutMoveGroup,
+    /// <summary>Resize: small / medium / wide / large.</summary>
+    ShortcutSize,
+    /// <summary>Create a group from the selection.</summary>
+    ShortcutNewGroup,
+    /// <summary>Open the focused tile’s menu.</summary>
+    ShortcutTileMenu,
+    /// <summary>Clear selection, then finish selecting.</summary>
+    ShortcutClearSelection,
 }

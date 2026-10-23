@@ -52,6 +52,8 @@ El engranaje permite elegir temas, inicio con Windows, integración de la tecla 
 
 **Grupos por defecto, colocación libre cuando la necesites.** Soltar en vacío crea un grupo sin nombre; esperar sobre un mosaico crea una carpeta. <kbd>Shift</kbd> al arrastrar reorganiza sin carpetas; <kbd>Alt</kbd> permite colocar de forma independiente en vacío. **Use free tile placement**, en Settings → Start behavior, lo convierte en el modo predeterminado. Se conservan los diseños y carpetas existentes. Los vecinos se deslizan sin cambiar el destino bajo el puntero.
 
+Al arrastrar aparecen brevemente consejos de teclado en la parte inferior. Se pueden desactivar en los ajustes de comportamiento. <kbd>F1</kbd> o **Atajos de teclado** en esos ajustes abre la lista completa.
+
 
 | Área | Incluye |
 | --- | --- |

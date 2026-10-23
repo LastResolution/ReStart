@@ -454,5 +454,22 @@
   "SettingsSaveClose": "Save and close",
   "UpdateReadyTitle": "Ready to update",
   "UpdateReadyBody": "ReStart {0} is downloaded and ready to install.",
-  "UpdateReadyHelp": "Restart and update to apply it. Not now keeps a reminder. An ordinary launch does not install it automatically."
+  "UpdateReadyHelp": "Restart and update to apply it. Not now keeps a reminder. An ordinary launch does not install it automatically.",
+  "SettingsDragShortcutHints": "Show shortcut tips while dragging",
+  "DragHintIndependent": "Place independently in empty space",
+  "DragHintReorder": "Rearrange without creating or entering folders",
+  "KeyboardShortcuts": "Keyboard shortcuts",
+  "ShortcutsGeneral": "Start and navigation",
+  "ShortcutsDragging": "While dragging tiles",
+  "ShortcutsSelection": "While selecting tiles (Ctrl+E)",
+  "ShortcutOpen": "Open or close ReStart (Win key must be enabled)",
+  "ShortcutEscape": "Close the current view, then Start",
+  "ShortcutFocus": "Focus a tile",
+  "ShortcutSelect": "Toggle the focused tile’s selection",
+  "ShortcutMoveTiles": "Move tiles by one small cell",
+  "ShortcutMoveGroup": "Move the focused tile’s group",
+  "ShortcutSize": "Resize: small / medium / wide / large",
+  "ShortcutNewGroup": "Create a group from the selection",
+  "ShortcutTileMenu": "Open the focused tile’s menu",
+  "ShortcutClearSelection": "Clear selection, then finish selecting"
 }
