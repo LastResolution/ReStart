@@ -1,34 +1,18 @@
 using System.Windows;
-using System.Windows.Threading;
 
 namespace ReStart.App;
 
 public partial class MainWindow
 {
-    private DispatcherTimer? _dragScrollTimer;
+    private bool _dragScrolling;
     private Point _dragViewportPoint;
-    private long _dragScrollTime;
     private string? _activeDragFormat, _activeDragId;
 
     private void TrackDragScrolling(DragEventArgs e)
     {
-        if (!Document.Preferences.DragEdgeScrolling || !HasDrag(e)) { _dragScrollTimer?.Stop(); return; }
+        if (!Document.Preferences.DragEdgeScrolling || !HasDrag(e)) { _dragScrolling = false; return; }
         _dragViewportPoint = e.GetPosition(ContentScroll);
-        _dragScrollTimer ??= MakeDragScrollTimer();
-        if (!_dragScrollTimer.IsEnabled) { _dragScrollTime = Environment.TickCount64; _dragScrollTimer.Start(); }
-    }
-
-    private DispatcherTimer MakeDragScrollTimer()
-    {
-        var timer = new DispatcherTimer(DispatcherPriority.Input) { Interval = TimeSpan.FromMilliseconds(32) };
-        timer.Tick += (_, _) =>
-        {
-            if (!_dragging || !IsVisible || _activeDragId == null) { timer.Stop(); return; }
-            var now = Environment.TickCount64;
-            var seconds = Math.Clamp((now - _dragScrollTime) / 1000d, 0, .1); _dragScrollTime = now;
-            ScrollDragAt(_dragViewportPoint, seconds);
-        };
-        return timer;
+        _dragScrolling = true;
     }
 
     private bool ScrollDragAt(Point point, double seconds)

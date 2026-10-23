@@ -127,7 +127,7 @@ public partial class MainWindow
                     {
                         _dragging = true; _dragOffset = new(button.ActualWidth / 2, button.ActualHeight / 2);
                         if (_dragGhost == null) StartDragGhost(button, "ReStart.Tile", movingId, from);
-                        _dragGhostTimer?.Stop();
+                        StopDragFrames();
                         MoveDragGhost(cursor.Value);
                         PreviewSingleTileDrop(moving, Root.TranslatePoint(cursor.Value, GroupsPanel), movingId);
                     }

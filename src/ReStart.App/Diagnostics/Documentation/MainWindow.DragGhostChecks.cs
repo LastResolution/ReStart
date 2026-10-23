@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
+using System.Windows.Media;
 using ReStart.Core;
 
 namespace ReStart.App;
@@ -39,9 +40,9 @@ public partial class MainWindow
                     var bitmap = (BitmapSource)_dragGhost.Source;
                     var pixels = new byte[bitmap.PixelWidth * bitmap.PixelHeight * 4]; bitmap.CopyPixels(pixels, bitmap.PixelWidth * 4, 0);
                     Check(Enumerable.Range(0, pixels.Length / 4).Any(index => pixels[index * 4 + 3] > 0), "A drag snapshot was empty.");
-                    var oldLeft = Canvas.GetLeft(_dragGhost); var oldTop = Canvas.GetTop(_dragGhost);
+                    var oldLeft = ((TranslateTransform)_dragGhost.RenderTransform).X; var oldTop = ((TranslateTransform)_dragGhost.RenderTransform).Y;
                     MoveDragGhost(new(grab.X + 173, grab.Y + 81));
-                    Check(Math.Abs(Canvas.GetLeft(_dragGhost) - oldLeft - 173) < .01 && Math.Abs(Canvas.GetTop(_dragGhost) - oldTop - 81) < .01, "The drag image changed its grab offset.");
+                    Check(Math.Abs(((TranslateTransform)_dragGhost.RenderTransform).X - oldLeft - 173) < .01 && Math.Abs(((TranslateTransform)_dragGhost.RenderTransform).Y - oldTop - 81) < .01, "The drag image changed its grab offset.");
                     MoveDragGhost(new(-20, -20));
                     Check(_dragGhost.Visibility == Visibility.Hidden, "A drag image remained visible outside the launcher.");
                     MoveDragGhost(new(grab.X + 100, grab.Y + 60));
@@ -50,7 +51,7 @@ public partial class MainWindow
                     if (size == TileSize.Medium && format != "ReStart.App") SaveScreenshot(Path.Combine(directory, "drag-" + format[8..].ToLowerInvariant() + ".png"));
                     Check(before == JsonSerializer.Serialize(Document.Groups, LayoutStore.JsonOptions), "Drawing a drag ghost mutated the layout.");
                     StopDragGhost();
-                    Check(_dragGhost == null && _dragGhostLayer == null && _dragGhostTimer == null && _dragGhostSources.Count == 0, "A finished drag leaked its overlay or timer.");
+                    Check(_dragGhost == null && _dragGhostLayer == null && !_dragFrameSubscribed && _dragGhostSources.Count == 0, "A finished drag leaked its overlay or timer.");
                     Check(button.Opacity == .9, "Ending a drag did not restore the source opacity.");
                     StopDragGhost();
                     Check(!IsVisible, "Drag verification unexpectedly opened a native window.");
