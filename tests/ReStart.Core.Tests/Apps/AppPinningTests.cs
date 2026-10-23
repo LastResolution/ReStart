@@ -14,7 +14,8 @@ public sealed class AppPinningTests
         var pin = AppPinning.Pin(document, App, availableColumns: 3, viewportWidth: 1000);
         Assert.Single(group.Tiles);
         Assert.Equal(before, GroupLayout.Pack(document.Groups, 3, 6, 52)[0]);
-        Assert.Same(pin, Assert.Single(Assert.Single(document.Groups, g => g.IsStandalone).Tiles));
+        Assert.Same(pin, Assert.Single(Assert.Single(document.Groups, g => g != group).Tiles));
+        Assert.False(document.Groups.Single(g => g != group).IsStandalone);
         var explicitPin = AppPinning.Pin(document, App with { Id = "second" }, group);
         Assert.Contains(explicitPin, group.Tiles);
     }

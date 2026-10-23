@@ -14,7 +14,7 @@
 
 <p align="center"><strong>Voir la démo de 60 secondes</strong><br><sub>1080p · Anglais · Sans son</sub></p>
 
-https://github.com/user-attachments/assets/243a5c5a-46bc-4180-8a0c-cee71ab63f06
+https://github.com/user-attachments/assets/ab737d41-8918-437d-aa70-0cde37abcb67
 
 Le menu Démarrer plein écran de Windows 10 vous manque ? ReStart offre un espace familier à vos applications sous Windows 11 et Windows 10. Épinglez vos contenus, organisez l’écran à votre façon et ajoutez des vignettes que vous pouvez écrire en JavaScript.
 
@@ -50,12 +50,15 @@ La roue dentée permet de régler les thèmes, le lancement à l’ouverture de 
 
 ![Ouverture et fermeture de ReStart](docs/images/start-motion.gif)
 
+**Des groupes par défaut, un placement libre au choix.** Un dépôt dans le vide crée un groupe sans nom ; attendre sur une vignette crée un dossier. <kbd>Shift</kbd> pendant le glissement réorganise sans dossier ; <kbd>Alt</kbd> permet un placement indépendant dans le vide. **Use free tile placement**, dans Settings → Start behavior, en fait le mode par défaut. Les dispositions et dossiers existants sont conservés. Les voisins glissent vers leur place sans changer la cible sous le pointeur.
+
+
 | Domaine | Fonctions incluses |
 | --- | --- |
 | Ouverture et fermeture | Capture facultative de la touche Windows et du bouton Démarrer, Ctrl+Alt+Espace, zone de notification, activation au premier plan, fermeture lors du changement d’application/barre des tâches, zone de travail selon l’écran, instance unique |
 | Démarrage | Lancement à la connexion facultatif, mode arrière-plan, écran de préparation adapté au thème avec saisie anticipée, cache d’icônes et actualisation du catalogue |
 | Vignettes et groupes | Quatre tailles, épingles indépendantes, groupes rectangulaires déplaçables aux dimensions adaptées au contenu, ancrage horizontal au demi-pas, placement automatique et défilement sur les deux axes |
-| Dossiers | Création par superposition dans un groupe, ouverture dans la disposition, ajout/retrait/réorganisation, renommage direct et dissociation ; un enfant unique conserve son dossier |
+| Dossiers | Création par superposition prolongée, ouverture dans la disposition, ajout/retrait/réorganisation, renommage direct et dissociation ; un enfant unique conserve son dossier |
 | Édition | Mode édition, sélection multiple, déplacement collectif, annuler/rétablir pour la session ; l’annulation d’un glissement conserve la disposition |
 | Retour pendant le glissement | Cibles de groupe/dossier distinctes, progression d’attente, indications et limites facultatives, défilement aux bords ; création automatique de groupes/dossiers désactivable |
 | Épinglage | Applications, fichiers, répertoires, raccourcis et sites ; commande Explorer **Pin to ReStart**, menus contextuels, glissement depuis la liste et destinations explicites |
@@ -108,17 +111,18 @@ Une tuile web contient manifest.json, index.html, tile.css, tile.js et des asset
 
 | Action | Résultat |
 | --- | --- |
-| Touche Windows / `Ctrl+Alt+Space` | Ouvrir ou fermer |
-| Saisir / `Ctrl+F` | Rechercher ; Entrée lance le résultat surligné, les flèches changent la sélection |
-| `Esc` | Fermer la recherche, le dossier ou la surcouche, puis Démarrer |
-| Glisser une vignette / un titre de groupe | Déplacer ; un espace vide crée une épingle indépendante |
-| Superposer une vignette indépendante environ 0,3 s | Créer un groupe lorsque l’aperçu est prêt |
-| Superposer une vignette d’un groupe environ 0,6 s | Créer un dossier ; les dossiers existants acceptent des ajouts |
-| **Sélectionner des vignettes** dans la barre latérale/le menu du fond / `Ctrl+E` | Sélection multiple sans ouvrir d’applications ; le déplacement direct reste disponible |
-| `Ctrl+A` / `Delete` en édition | Sélectionner les vignettes racines / détacher la sélection |
-| `Ctrl+Z` / `Ctrl+Y` ou `Ctrl+Shift+Z` | Annuler / rétablir la disposition |
+| Touche Windows / <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Space</kbd> | Ouvrir ou fermer |
+| Saisir / <kbd>Ctrl</kbd> + <kbd>F</kbd> | Rechercher ; Entrée lance le résultat surligné, les flèches changent la sélection |
+| <kbd>Esc</kbd> | Fermer la recherche, le dossier ou la surcouche, puis Démarrer |
+| Glisser une vignette / un titre de groupe | Déplacer ; un espace vide crée un groupe sans nom |
+| <kbd>Alt</kbd> + glisser dans le vide | Placement indépendant pour ce glissement |
+| <kbd>Shift</kbd> + glisser | Réorganiser les voisins sans regroupement ni action de dossier par superposition |
+| Superposer une vignette environ 0,6 s | Créer un dossier après l’aperçu ; les dossiers existants acceptent des ajouts |
+| **Sélectionner des vignettes** dans la barre latérale/le menu du fond / <kbd>Ctrl</kbd> + <kbd>E</kbd> | Sélection multiple sans ouvrir d’applications ; le déplacement direct reste disponible |
+| <kbd>Ctrl</kbd> + <kbd>A</kbd> / <kbd>Delete</kbd> en édition | Sélectionner les vignettes racines / détacher la sélection |
+| <kbd>Ctrl</kbd> + <kbd>Z</kbd> / <kbd>Ctrl</kbd> + <kbd>Y</kbd> ou <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd> | Annuler / rétablir la disposition |
 | Crayon / double-clic sur un nom | Renommer directement le groupe ou dossier |
-| `Shift` + molette | Défiler horizontalement |
+| <kbd>Shift</kbd> + molette | Défiler horizontalement |
 
 Les raccourcis Windows sont transmis au système. L’historique conserve jusqu’à 100 modifications dans une limite de 32 Mio pendant la session ; les champs de texte gardent leur propre annulation. La réouverture retourne aux vignettes épinglées.
 
@@ -149,7 +153,7 @@ dotnet run --project src/ReStart.App -c Release -- --preview
 
 Pour ARM64, utilisez `win-arm64`. ZIP et sommes de contrôle sont dans `artifacts/packages`. Distribuez toujours le ZIP complet.
 
-[Bugs et idées](https://github.com/LastResolution/ReStart/issues/new/choose) · [Contribuer (anglais)](CONTRIBUTING.md) · [Architecture (anglais)](docs/architecture.md) · [Tests (anglais)](docs/testing.md) · [Versions](https://github.com/LastResolution/ReStart/releases)
+[Questions et créations](https://github.com/LastResolution/ReStart/discussions) · [Signaler un bug](https://github.com/LastResolution/ReStart/issues/new/choose) · [Contribuer (anglais)](CONTRIBUTING.md) · [Architecture (anglais)](docs/architecture.md) · [Tests (anglais)](docs/testing.md) · [Versions](https://github.com/LastResolution/ReStart/releases)
 
 ReStart est un projet MIT indépendant, inspiré du menu Démarrer plein écran des dernières versions de Windows 10 et non affilié à Microsoft. Captures et animation montrent la vraie application avec une démonstration anglaise, des mesures synthétiques et des couleurs de photos générées. Noms et icônes appartiennent à leurs propriétaires. [Licence MIT](LICENSE) · [Mentions tierces (anglais)](docs/third-party.md) · [Assistance (anglais)](SUPPORT.md)
 

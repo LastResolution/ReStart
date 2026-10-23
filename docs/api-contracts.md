@@ -10,7 +10,7 @@ App, Core and TileHost emit XML documentation. Missing public/protected comments
 | TileLayout | Pure cell packing; reserve valid explicit positions before auto placement |
 | GroupLayout | Pure bounds and previews; Move alone commits anchors/collision displacement, never child coordinates |
 | FolderExpansion | Temporary inline geometry; preserve persisted root rows |
-| LayoutEditor | Transfer ownership while preserving IDs; Detach creates an independent entry; no nested folders |
+| LayoutEditor | Transfer ownership while preserving IDs; PinOnBoard follows the placement preference; Detach explicitly chooses an independent entry or unnamed group; no nested folders |
 | TileGrouping | Pure plan collecting independent non-folder targets and sources into ordinary groups; reserve earlier neighbors, retain root identities and keep the target origin when space permits; cancellation does not mutate input |
 | LayoutHistory | Deep group-only snapshots; bounded session memory; record after successful writes; no-op saves preserve redo |
 | TileBatchMove | Copy before planning; preserve IDs and relative offsets; reject invalid/nested selections atomically; reserve the selection before reflowing others |
@@ -39,4 +39,4 @@ Changes to schemas or protocols require round-trip and backward-input tests, doc
 
 ## Live-tile host capabilities
 
-See [the complete JS contract](javascript-tiles.md) for optional capability-gated metrics, opaque image binding, PC time, local click events and validated native visuals. Four workers serve every visible tile. Source/manifest import never copies host-bindings.json or data-bindings.dat. The optional data.sources capability provides explicit Web API, RSS/Atom and selected-file inputs through asynchronous host reads; JS stays synchronous. New custom pins are placed in free independent board space.
+See [the complete JS contract](javascript-tiles.md) for optional capability-gated metrics, opaque image binding, PC time, local click events and validated native visuals. Four workers serve every visible tile. Source/manifest import never copies host-bindings.json or data-bindings.dat. The optional data.sources capability provides explicit Web API, RSS/Atom and selected-file inputs through asynchronous host reads; JS stays synchronous. New custom pins use unoccupied board space: an unnamed group by default, or an independent entry in free placement mode.

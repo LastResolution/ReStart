@@ -84,6 +84,7 @@ public partial class MainWindow : Window
         IsVisibleChanged += (_, _) => { if (!IsVisible) PauseScripts(); };
         InitializeComponent();
         InstallGroupBoundaries();
+        InstallPlacementMotion();
         InstallNavigationBehavior();
         ThemeWindow.Attach(this);
         WatchDesktopAppearance();
@@ -105,7 +106,7 @@ public partial class MainWindow : Window
         ContentScroll.DragLeave += (_, e) =>
         {
             if (new Rect(new Point(), ContentScroll.RenderSize).Contains(e.GetPosition(ContentScroll))) return;
-            _folderHover.Reset(); StopFolderDwell(); _dragScrollTimer?.Stop(); ClearDropPreview();
+            _folderHover.Reset(); StopFolderDwell(); _dragScrolling = false; ClearDropPreview();
         };
         ContentScroll.PreviewMouseWheel += OnContentMouseWheel;
         GroupsPanel.PreviewDragOver += OnBoardDragOver;
@@ -114,7 +115,7 @@ public partial class MainWindow : Window
         ContentScroll.PreviewDragOver += (_, e) => TrackDragScrolling(e);
         UserRailLabel.Label = _preview ? "ReStart" : Environment.UserName;
         PreviewMouseDown += (_, _) => CompleteEntrance();
-        IsVisibleChanged += (_, _) => { if (!IsVisible) { StopMotion(); SetLayoutEditing(false); } };
+        IsVisibleChanged += (_, _) => { if (!IsVisible) { StopMotion(); StopDragGhost(); ClearPlacementMotion(); SetLayoutEditing(false); } };
         Loaded += async (_, _) => await InitializeAsync();
         SourceInitialized += (_, _) =>
         {
@@ -402,6 +403,8 @@ public partial class MainWindow : Window
     {
         _boardRenderCount++;
         if (_editingGroupHeader?.IsEditing == true) { _groupsRenderPending = true; return; }
+        var previousPositions = CapturePlacementMotion();
+        ClearPlacementMotion();
         _groupsRenderPending = false;
         _scriptPresentationGeneration++;
         foreach (var runtime in _scriptSessions.Values) runtime.NextUpdate = DateTimeOffset.MinValue;
@@ -472,6 +475,7 @@ public partial class MainWindow : Window
         RefreshEntranceTargets();
         RefreshTileSelection();
         ShowGroupBoundaries(_layoutEditing || _dragging);
+        RestorePlacementMotion(previousPositions);
     }
 
     private double Cell => 52 * DisplayPreferences.TileScale;
@@ -684,6 +688,8 @@ public partial class MainWindow : Window
         var point = e.GetPosition(this);
         if (Math.Abs(point.X - _dragOrigin.X) < SystemParameters.MinimumHorizontalDragDistance && Math.Abs(point.Y - _dragOrigin.Y) < SystemParameters.MinimumVerticalDragDistance) return;
         _dragging = true;
+        _freePlacementGesture = Keyboard.Modifiers.HasFlag(ModifierKeys.Alt);
+        _reorderGesture = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
         ShowGroupBoundaries(true);
         _folderHover.Reset();
         if (format == "ReStart.Group" && _openFolder != null) { CloseFolder(this, new()); UpdateLayout(); }
@@ -720,7 +726,8 @@ public partial class MainWindow : Window
         finally
         {
             StopDragGhost();
-            _dragScrollTimer?.Stop(); _activeDragFormat = null; _activeDragId = null;
+            _dragScrolling = false; _activeDragFormat = null; _activeDragId = null;
+            _freePlacementGesture = false; _reorderGesture = false;
             ShowGroupBoundaries(_layoutEditing);
             ClearDropPreview();
             _folderHover.Reset();
@@ -773,7 +780,7 @@ public partial class MainWindow : Window
     }
     private void ClearDropPreview()
     {
-        RestoreDropProjection(); _dropPlanKey = null; _dropPlan = null;
+        RestoreDropProjection(_dragging && MotionEnabled); _dropPlanKey = null; _dropPlan = null;
         if (GroupsPanel.DragPlacements != null) { GroupsPanel.DragPlacements = null; GroupsPanel.InvalidateMeasure(); }
         if (_dropAdorner == null) return;
         AdornerLayer.GetAdornerLayer(_dropAdorner.AdornedElement)?.Remove(_dropAdorner);
@@ -919,7 +926,7 @@ public partial class MainWindow : Window
     private void PinCustom(Tile tile)
     {
         if (!CanEditLayout) { SetStatus(L.T(K.LayoutLockedStatus)); return; }
-        LayoutEditor.PinIndependent(Document, tile, GroupsPanel.Columns, Cell, ContentScroll.ViewportWidth, ContentScroll.VerticalOffset);
+        LayoutEditor.PinOnBoard(Document, tile, GroupsPanel.Columns, Cell, ContentScroll.ViewportWidth, ContentScroll.VerticalOffset);
         CommitLayout();
     }
 
@@ -1142,7 +1149,7 @@ public partial class MainWindow : Window
     private static bool IsAnyMenuOpen() => Mouse.Captured is ContextMenu || Mouse.Captured is System.Windows.Controls.Primitives.MenuBase;
     private void OnClosing(object? sender, CancelEventArgs e) { if (!_exit) { e.Cancel = true; Dismiss(); } }
     /// <summary>Stops timers and isolated script workers before permanently closing the launcher.</summary>
-    public void Exit() { _exit = true; CancelStartupPresentation(); StopMotion(); StopFolderDwell(); StopDragGhost(); StopWatchingDesktopAppearance(); _clock.Stop(); _nameRefreshTimer?.Stop(); _railHoverTimer?.Stop(); _dragScrollTimer?.Stop(); _fileSearchCancellation?.Cancel(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); RetireHtmlTiles(all: true); foreach (var data in _tileData.Values) data.Runtime.Dispose(); _tileData.Clear(); _tileDataTransport?.Dispose(); _systemMetrics?.Dispose(); Close(); }
+    public void Exit() { _exit = true; CancelStartupPresentation(); StopMotion(); StopFolderDwell(); StopDragGhost(); StopWatchingDesktopAppearance(); _clock.Stop(); _nameRefreshTimer?.Stop(); _railHoverTimer?.Stop(); _dragScrolling = false; _fileSearchCancellation?.Cancel(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); RetireHtmlTiles(all: true); foreach (var data in _tileData.Values) data.Runtime.Dispose(); _tileData.Clear(); _tileDataTransport?.Dispose(); _systemMetrics?.Dispose(); Close(); }
 
     /// <summary>Renders only the launcher root to a PNG for reproducible UI verification.</summary>
     /// <param name="path">Destination PNG path for the current preview visual; missing parent directories are created.</param>

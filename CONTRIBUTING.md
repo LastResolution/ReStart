@@ -2,6 +2,8 @@
 
 ReStart independently recreates Windows 10 full-screen Start. State the Windows version and primary evidence behind visual or behavioral changes. Implementation is not proof of exact fidelity.
 
+Use [Discussions](https://github.com/LastResolution/ReStart/discussions) for questions, early ideas and community showcases. Use [issue forms](https://github.com/LastResolution/ReStart/issues/new/choose) for reproducible bugs and concrete development requests. The [welcome post](https://github.com/LastResolution/ReStart/discussions/29) explains the categories.
+
 ## Workflow
 
 1. Update main and create a short `feat/*`, `fix/*`, `docs/*` or `chore/*` branch.

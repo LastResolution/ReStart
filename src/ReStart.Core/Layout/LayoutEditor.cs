@@ -14,30 +14,47 @@ public static class LayoutEditor
     /// <exception cref="ArgumentException">The tile ID is already pinned in the document.</exception>
     /// <exception cref="InvalidOperationException">No free board position can be found within the supported bounds.</exception>
     public static TileGroup PinIndependent(LayoutDocument document, Tile tile, int availableColumns, double cell, double viewportWidth, double preferredTop = 0)
+        => PinEntry(document, tile, availableColumns, cell, viewportWidth, preferredTop, true);
+
+    /// <summary>Adds a tile in unused board space, using an unnamed group by default or independent placement when explicitly enabled.</summary>
+    /// <param name="document">Destination layout; existing groups and tile coordinates are retained.</param>
+    /// <param name="tile">New tile whose ID must not already be pinned.</param>
+    /// <param name="availableColumns">Number of viewport group lanes, from 1 through 64.</param>
+    /// <param name="cell">Small-cell size in DIPs.</param>
+    /// <param name="viewportWidth">Usable board width in DIPs.</param>
+    /// <param name="preferredTop">Preferred vertical board offset in DIPs, normally the current scroll position.</param>
+    /// <returns>The new group or independent entry, according to the saved placement preference.</returns>
+    /// <exception cref="ArgumentException">The tile ID already exists.</exception>
+    /// <exception cref="InvalidOperationException">No unused position can be found within layout bounds.</exception>
+    public static TileGroup PinOnBoard(LayoutDocument document, Tile tile, int availableColumns, double cell, double viewportWidth, double preferredTop = 0)
+        => PinEntry(document, tile, availableColumns, cell, viewportWidth, preferredTop, document.Preferences.FreeTilePlacement);
+
+    private static TileGroup PinEntry(LayoutDocument document, Tile tile, int availableColumns, double cell, double viewportWidth, double preferredTop, bool independent)
     {
         if (Find(document, tile.Id) != null) throw new ArgumentException("The tile is already pinned.", nameof(tile));
         var placed = GroupLayout.Pack(document.Groups, availableColumns, document.Preferences.Columns, cell, preserveColumns: true);
-        var (w, h) = TileLayout.Dimensions(tile.Size); var width = w * cell; var height = h * cell;
+        var (w, h) = TileLayout.Dimensions(tile.Size); var width = w * cell; var height = h * cell + (independent ? 0 : GroupLayout.HeaderHeight);
+        var origin = independent ? GroupLayout.HeaderHeight : 0;
         var half = cell / 2; var gap = GroupLayout.Gap;
-        var preferred = Math.Max(0, Math.Ceiling((preferredTop - GroupLayout.HeaderHeight) / half));
-        var rows = placed.Select(p => Math.Max(preferred, Math.Ceiling((p.Top + p.Height + gap - GroupLayout.HeaderHeight) / half))).Append(preferred).Distinct().Order();
+        var preferred = Math.Max(0, Math.Ceiling((preferredTop - origin) / half));
+        var rows = placed.Select(p => Math.Max(preferred, Math.Ceiling((p.Top + p.Height + gap - origin) / half))).Append(preferred).Distinct().Order();
         var xs = placed.Select(p => Math.Ceiling((p.Left + p.Width + gap) / half) * half).Append(0).Distinct().Order()
             .Where(x => x + width <= Math.Max(width, viewportWidth)).ToArray();
         foreach (var row in rows)
             foreach (var left in xs)
             {
-                var top = GroupLayout.HeaderHeight + row * half;
+                var top = origin + row * half;
                 if (placed.Any(p => left < p.Left + p.Width + gap && left + width + gap > p.Left && top < p.Top + p.Height + gap && top + height + gap > p.Top)) continue;
                 foreach (var p in placed) { p.Group.Column = p.Column; p.Group.Row = p.Row; }
                 tile.Column = 0; tile.Row = 0;
                 var column = Math.Clamp((int)(left / (document.Preferences.Columns * cell + gap)), 0, 63);
-                var entry = new TileGroup { IsStandalone = true, Name = "", Column = column, Row = (int)row, X = left / cell, Tiles = [tile] };
+                var entry = new TileGroup { IsStandalone = independent, Name = "", Column = column, Row = (int)row, X = left / cell, Tiles = [tile] };
                 document.Groups.Add(entry); return entry;
             }
         throw new InvalidOperationException("No free board position was found.");
     }
 
-    /// <summary>Detaches a root or folder child as one independent board tile, preserving its identity and freezing existing visible anchors.</summary>
+    /// <summary>Detaches a root or folder child into a new board entry, preserving its identity and freezing existing visible anchors.</summary>
     /// <param name="document">Layout to mutate in memory; the caller is responsible for saving it.</param>
     /// <param name="tile">Existing root tile or one-level folder child, identified by its stable ID.</param>
     /// <param name="column">Requested zero-based board lane.</param>
@@ -46,8 +63,9 @@ public static class LayoutEditor
     /// <param name="availableColumns">Number of available board lanes, from 1 through 64.</param>
     /// <param name="cell">Size of one small tile cell in device-independent pixels (DIPs).</param>
     /// <param name="x">Optional precise group origin in small-cell units; null uses the lane.</param>
-    /// <returns>The new independent board entry containing the original tile identity.</returns>
-    public static TileGroup Detach(LayoutDocument document, Tile tile, int column, int row, int tileColumn, int availableColumns, double cell, double? x = null)
+    /// <param name="independent">True creates an independent entry; false creates an unnamed group with its ordinary header. Existing entries are not converted.</param>
+    /// <returns>The new board entry containing the original tile identity.</returns>
+    public static TileGroup Detach(LayoutDocument document, Tile tile, int column, int row, int tileColumn, int availableColumns, double cell, double? x = null, bool independent = true)
     {
         var source = document.Groups.FirstOrDefault(g => g.Tiles.Any(t => t == tile || t.Children.Contains(tile)));
         foreach (var p in GroupLayout.Pack(document.Groups, availableColumns, document.Preferences.Columns, cell, preserveColumns: true))
@@ -56,7 +74,7 @@ public static class LayoutEditor
         if (source?.Tiles.Count == 0) document.Groups.Remove(source);
         tile.Column = Math.Clamp(tileColumn, 0, document.Preferences.Columns - TileLayout.Dimensions(tile.Size).Width);
         tile.Row = 0;
-        var entry = new TileGroup { IsStandalone = true, Name = "", Column = column, Row = row, X = x, Tiles = [tile] };
+        var entry = new TileGroup { IsStandalone = independent, Name = "", Column = column, Row = row, X = x, Tiles = [tile] };
         document.Groups.Add(entry);
         GroupLayout.Move(document, entry, column, row, availableColumns, cell, x);
         return entry;
@@ -176,15 +194,12 @@ public static class LayoutEditor
         if (folder.Children.Contains(tile)) folder.Children.Remove(tile);
         else Remove(document, tile.Id);
         tile.Column = column; tile.Row = row;
-        foreach (var p in previous.Where(p => p.Tile != tile))
-            if (p.Column < column + width && p.Column + p.Width > column && p.Row < row + height && p.Row + p.Height > row)
-            { p.Tile.Column = null; p.Tile.Row = null; }
         folder.Children.Insert(0, tile);
-        foreach (var p in TileLayout.Pack(folder.Children, columns)) { p.Tile.Column = p.Column; p.Tile.Row = p.Row; }
+        TileReflow.Apply(folder.Children, previous, [new(tile, column, row, width, height)], columns);
         PruneSource(document, source, Owner(document, folder));
     }
 
-    /// <summary>Moves a tile to an explicit cell, preserving unaffected positions and repacking only conflicting tiles.</summary>
+    /// <summary>Moves a tile to an explicit cell, preserving unaffected positions and moving conflicts into vacated or nearby space.</summary>
     /// <param name="document">Layout to mutate in memory; the caller is responsible for saving it.</param>
     /// <param name="tile">Existing root tile or one-level folder child, identified by its stable ID.</param>
     /// <param name="destination">Existing non-independent group receiving the root tile.</param>
@@ -203,11 +218,8 @@ public static class LayoutEditor
         foreach (var p in previous) { p.Tile.Column = p.Column; p.Tile.Row = p.Row; }
         Remove(document, tile.Id);
         tile.Column = column; tile.Row = row;
-        foreach (var p in previous.Where(p => p.Tile != tile))
-            if (p.Column < column + width && p.Column + p.Width > column && p.Row < row + height && p.Row + p.Height > row)
-            { p.Tile.Column = null; p.Tile.Row = null; }
         destination.Tiles.Insert(0, tile);
-        foreach (var p in TileLayout.Pack(destination.Tiles, columns)) { p.Tile.Column = p.Column; p.Tile.Row = p.Row; }
+        TileReflow.Apply(destination.Tiles, previous, [new(tile, column, row, width, height)], columns);
         PruneSource(document, source, destination);
     }
 

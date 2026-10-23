@@ -26,7 +26,7 @@ public partial class MainWindow
                             var owner = new TileGroup { Name = "Destination", Column = 0, Row = 0, X = 0, IsStandalone = kind == "independent", Tiles = [kind == "folder" ? folder : target] };
                             Document = new()
                             {
-                                Preferences = new() { Columns = 8, Animate = false, ShowWallpaper = false, CreateFoldersOnDrop = false, GroupTilesOnDrop = false },
+                                Preferences = new() { FreeTilePlacement = true, Columns = 8, Animate = false, ShowWallpaper = false, CreateFoldersOnDrop = false, GroupTilesOnDrop = false },
                                 Groups = [owner, new() { Column = 0, Row = 0, X = 20, IsStandalone = true, Tiles = [source] }]
                             };
                             _openFolder = kind == "folder" ? folder : null;
@@ -39,7 +39,7 @@ public partial class MainWindow
                             var initial = Position(target.Id);
                             Check(PreviewSingleTileDrop(source, point, source.Id, 0), "A displacement preview was rejected.");
                             var projected = Position(target.Id);
-                            Check((projected - initial).Length > 1, $"An overlapping {kind} tile did not move during preview: {sourceSize}/{targetSize}/{live}; hover={_folderHover.TargetId}; plan={_dropPlan != null}; transforms={_dropTransforms.Count}; destination={_dropPlanKey?.Group}.");
+                            Check((projected - initial).Length > 1, $"An overlapping {kind} tile did not move during preview: {sourceSize}/{targetSize}/{live}; hover={_folderHover.TargetId}; plan={_dropPlan != null}; transforms={_tileTransitions.Count}; destination={_dropPlanKey?.Group}.");
                             Check(before == JsonSerializer.Serialize(Document.Groups, LayoutStore.JsonOptions), "A transient displacement changed the saved layout.");
                             PreviewSingleTileDrop(source, point, source.Id, 0);
                             Check((Position(target.Id) - projected).Length < .1, "A stationary tile preview oscillated between positions.");

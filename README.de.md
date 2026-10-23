@@ -14,7 +14,7 @@
 
 <p align="center"><strong>60-Sekunden-Demo ansehen</strong><br><sub>1080p · Englisch · Ohne Ton</sub></p>
 
-https://github.com/user-attachments/assets/243a5c5a-46bc-4180-8a0c-cee71ab63f06
+https://github.com/user-attachments/assets/ab737d41-8918-437d-aa70-0cde37abcb67
 
 Vermisst du das Vollbild-Startmenü von Windows 10? ReStart gibt deinen Apps unter Windows 11 und Windows 10 ein vertrautes Zuhause. Hefte häufig verwendete Inhalte an, ordne den Bildschirm frei an und ergänze Live-Kacheln, die du in JavaScript schreiben kannst.
 
@@ -50,12 +50,15 @@ Beim Ziehen folgt eine halbtransparente Kopie der Kachel, Gruppe oder Auswahl de
 
 ![Öffnen und Schließen von ReStart](docs/images/start-motion.gif)
 
+**Standardmäßig Gruppen, auf Wunsch freie Platzierung.** Leere Flächen erstellen eine unbenannte Gruppe; über einer Kachel warten erstellt einen Ordner. <kbd>Shift</kbd> beim Ziehen ordnet ohne Ordner um; <kbd>Alt</kbd> platziert auf leerer Fläche unabhängig. **Use free tile placement** unter Settings → Start behavior macht dies zum Standard. Vorhandene Layouts und Ordner bleiben erhalten. Nachbarn gleiten in ihre neue Position, ohne das Ziel unter dem Zeiger zu verändern.
+
+
 | Bereich | Enthalten |
 | --- | --- |
 | Öffnen und Schließen | Optionale Windows-Taste und Startschaltfläche, Strg+Alt+Leertaste, Infobereich, Vordergrundaktivierung, Schließen beim App-/Taskleistenwechsel, monitorabhängiger Arbeitsbereich, nur eine Instanz |
 | Start | Optionaler Autostart bei der Anmeldung, Hintergrundmodus, themenabhängige Ladeanzeige mit Eingabepuffer, Icon-Cache und Katalogaktualisierung |
 | Kacheln und Gruppen | Vier Größen, unabhängige Kacheln, bewegliche rechteckige Gruppen mit inhaltsabhängigen Abmessungen, horizontale Halbrasterpositionen, automatische Platzierung und Scrollen auf beiden Achsen |
-| Ordner | Durch Überlagern innerhalb einer Gruppe erstellen, direkt im Layout öffnen, Kinder hinzufügen/entfernen/verschieben, inline umbenennen und auflösen; ein einzelnes Kind bleibt im Ordner |
+| Ordner | Durch anhaltendes Überlagern erstellen, direkt im Layout öffnen, Kinder hinzufügen/entfernen/verschieben, inline umbenennen und auflösen; ein einzelnes Kind bleibt im Ordner |
 | Layout bearbeiten | Bearbeitungsmodus, Mehrfachauswahl, gemeinsames Verschieben und Rückgängig/Wiederholen pro Sitzung; Abbrechen erhält das Layout |
 | Ziehfeedback | Unterscheidbare Ziele für Gruppen und Ordner, Wartefortschritt, optionale Hinweise und Gruppengrenzen, automatisches Scrollen am Rand; Gruppierung und Ordnererstellung abschaltbar |
 | Anheften | Apps, Dateien, Verzeichnisse, Verknüpfungen und Websites; Explorer-Befehl **Pin to ReStart**, Kontextmenüs, Ziehen aus der App-Liste und explizite Ziele |
@@ -108,17 +111,18 @@ Webkacheln bestehen aus manifest.json, index.html, tile.css und tile.js sowie op
 
 | Aktion | Ergebnis |
 | --- | --- |
-| Windows-Taste / `Ctrl+Alt+Space` | Öffnen oder schließen |
-| Tippen / `Ctrl+F` | Suchen; Enter startet den markierten Treffer, Pfeile ändern die Auswahl |
-| `Esc` | Suche, Ordner oder Overlay schließen, danach Start |
-| Kachel / Gruppenüberschrift ziehen | Verschieben; leere Fläche erzeugt eine unabhängige Kachel |
-| Unabhängige Kachel etwa 0,3 s überlagern | Nach der Vorschau eine normale Gruppe erstellen |
-| Kachel in einer Gruppe etwa 0,6 s überlagern | Nach der Vorschau einen Ordner erstellen; bestehende Ordner nehmen Kacheln auf |
-| **Kacheln auswählen** in der Seitenleiste/im Hintergrundmenü / `Strg+E` | Mehrfachauswahl ohne App-Starts; direktes Ziehen ist jederzeit möglich |
-| `Ctrl+A` / `Delete` im Bearbeitungsmodus | Hauptkacheln auswählen / Auswahl lösen |
-| `Ctrl+Z` / `Ctrl+Y` oder `Ctrl+Shift+Z` | Layoutänderung rückgängig / wiederholen |
+| Windows-Taste / <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Space</kbd> | Öffnen oder schließen |
+| Tippen / <kbd>Ctrl</kbd> + <kbd>F</kbd> | Suchen; Enter startet den markierten Treffer, Pfeile ändern die Auswahl |
+| <kbd>Esc</kbd> | Suche, Ordner oder Overlay schließen, danach Start |
+| Kachel / Gruppenüberschrift ziehen | Verschieben; leere Fläche erstellt eine unbenannte Gruppe |
+| <kbd>Alt</kbd> + Ziehen auf leere Fläche | Für diesen Zug unabhängig platzieren |
+| <kbd>Shift</kbd> + Ziehen | Nachbarn verschieben, ohne Überlappungsgruppen oder Ordneraktionen |
+| Eine Kachel etwa 0,6 s überlagern | Nach der Vorschau einen Ordner erstellen; bestehende Ordner nehmen Kacheln auf |
+| **Kacheln auswählen** in der Seitenleiste/im Hintergrundmenü / <kbd>Strg</kbd> + <kbd>E</kbd> | Mehrfachauswahl ohne App-Starts; direktes Ziehen ist jederzeit möglich |
+| <kbd>Ctrl</kbd> + <kbd>A</kbd> / <kbd>Delete</kbd> im Bearbeitungsmodus | Hauptkacheln auswählen / Auswahl lösen |
+| <kbd>Ctrl</kbd> + <kbd>Z</kbd> / <kbd>Ctrl</kbd> + <kbd>Y</kbd> oder <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd> | Layoutänderung rückgängig / wiederholen |
 | Stift / Doppelklick auf Gruppen-/Ordnernamen | Direkt umbenennen |
-| `Shift` + Mausrad | Horizontal scrollen |
+| <kbd>Shift</kbd> + Mausrad | Horizontal scrollen |
 
 Windows-Tastenkombinationen werden an Windows weitergegeben. Rückgängig/Wiederholen behält bis zu 100 Änderungen innerhalb von 32 MiB während der Sitzung; Textfelder verwenden ihre eigene Textbearbeitung. Erneutes Öffnen kehrt zum angehefteten Startbildschirm zurück.
 
@@ -149,7 +153,7 @@ dotnet run --project src/ReStart.App -c Release -- --preview
 
 Für ARM64 `win-arm64` verwenden. ZIPs und Prüfsummen entstehen in `artifacts/packages`. Immer das ganze ZIP verteilen.
 
-[Fehler/Ideen](https://github.com/LastResolution/ReStart/issues/new/choose) · [Mitwirken (Englisch)](CONTRIBUTING.md) · [Architektur (Englisch)](docs/architecture.md) · [Tests (Englisch)](docs/testing.md) · [Releases](https://github.com/LastResolution/ReStart/releases)
+[Fragen und Beispiele](https://github.com/LastResolution/ReStart/discussions) · [Fehler melden](https://github.com/LastResolution/ReStart/issues/new/choose) · [Mitwirken (Englisch)](CONTRIBUTING.md) · [Architektur (Englisch)](docs/architecture.md) · [Tests (Englisch)](docs/testing.md) · [Releases](https://github.com/LastResolution/ReStart/releases)
 
 ReStart ist ein unabhängiges, von Microsoft nicht unterstütztes MIT-Projekt, inspiriert vom späteren Windows-10-Vollbild-Startmenü. Screenshots und Animation zeigen die echte App mit einer englischen Demo, synthetischen Messwerten und erzeugten Fotofarben. Namen und Icons gehören ihren Rechteinhabern. [MIT-Lizenz](LICENSE) · [Drittanbieterhinweise (Englisch)](docs/third-party.md) · [Support (Englisch)](SUPPORT.md)
 

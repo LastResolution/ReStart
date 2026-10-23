@@ -26,7 +26,12 @@ internal sealed partial class SettingsWindow
         Note(panel, L.T(K.LayoutLockHelp));
         Check(panel, L.T(K.SettingsTileHover), _draft.TileHoverHighlight, value => _draft.TileHoverHighlight = value);
         Check(panel, L.T(K.SettingsGroupHover), _draft.ShowGroupBoundariesOnHover, value => _draft.ShowGroupBoundariesOnHover = value);
-        Check(panel, L.T(K.SettingsDropGroups), _draft.GroupTilesOnDrop, value => _draft.GroupTilesOnDrop = value);
+        CheckBox? overlapGroups = null;
+        Check(panel, L.T(K.SettingsFreePlacement), _draft.FreeTilePlacement, value =>
+        { _draft.FreeTilePlacement = value; if (overlapGroups != null) overlapGroups.IsEnabled = value; });
+        Note(panel, L.T(K.SettingsFreePlacementHelp));
+        overlapGroups = Check(panel, L.T(K.SettingsDropGroups), _draft.GroupTilesOnDrop, value => _draft.GroupTilesOnDrop = value);
+        overlapGroups.IsEnabled = _draft.FreeTilePlacement;
         Check(panel, L.T(K.SettingsDropFolders), _draft.CreateFoldersOnDrop, value => _draft.CreateFoldersOnDrop = value);
         Check(panel, L.T(K.SettingsDragScroll), _draft.DragEdgeScrolling, value => _draft.DragEdgeScrolling = value);
         Check(panel, L.T(K.SettingsDropHints), _draft.ShowDropHints, value => _draft.ShowDropHints = value);

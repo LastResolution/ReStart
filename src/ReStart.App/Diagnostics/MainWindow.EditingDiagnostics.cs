@@ -29,7 +29,7 @@ public partial class MainWindow
             var folder = new Tile { Label = "Creative", Column = 0, Row = 2, Children = [c, d] };
             var source = new TileGroup { Name = "Everyday", Column = 0, Row = 0, Tiles = [a, b, folder] };
             var destination = new TileGroup { Name = "Workspace", Column = 1, Row = 0, Tiles = [new() { AppId = "calc", Label = "Calculator", Column = 0, Row = 0 }] };
-            fixture.Document = new() { Preferences = new() { ShowWallpaper = false, Animate = false, Language = "en" }, Groups = [source, destination] };
+            fixture.Document = new() { Preferences = new() { FreeTilePlacement = true, ShowWallpaper = false, Animate = false, Language = "en" }, Groups = [source, destination] };
             fixture.Root.Width = 1280; fixture.Root.Height = 800;
             fixture.ApplyAppearance(); fixture.RenderGroups(); fixture._layoutHistory.Reset(fixture.Document); fixture.SaveLayout();
             fixture.Present(); fixture.SetStatus("");

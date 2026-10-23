@@ -13,14 +13,27 @@ Open **ReStart settings → Start behavior** to choose how Start responds. Each 
 | Recent/frequent documents in app menus | On | Does not query Windows document history |
 | Highlight tiles on hover | On | Retains keyboard focus and press feedback |
 | Group boundaries on hover | On | Boundaries remain available during editing and dragging |
-| Create groups by overlapping independent tiles | On | Overlap does not collect independent tiles into a group |
-| Create folders by overlapping grouped tiles | On | Existing folders and explicit menu actions remain usable |
+| Use free tile placement | Off | Empty-space drops and pins create unnamed groups; existing independent entries are retained |
+| Create groups by overlap (free placement only) | On, active only in free mode | Independent overlaps use folder behavior instead of collecting an ordinary group |
+| Create folders by overlapping tiles | On | Existing folders and explicit menu actions remain usable |
 | Scroll automatically near board edges | On | Dragging does not scroll or extend empty board space |
 | Drop hints and hover progress | On | Destination geometry remains visible without captions/progress |
 | Recently added apps | On | Hides the optional app-list section |
 | Most used apps | Off | Stops recording successful ReStart launches and hides the section |
 
-**Animation** in Appearance controls opening, closing, tile press transitions and local folder reveal. Windows reduced-motion and high-contrast settings take precedence. Hover brightening has its own switch.
+**Animation** in Appearance controls opening, closing, tile press transitions, local folder reveal and placement transitions. Windows reduced-motion and high-contrast settings take precedence. Hover brightening has its own switch.
+
+## Dragging, groups and folders
+
+By default, dropping a tile into empty board space creates an **unnamed group**. Drag its header to move the group, or use the pencil to name it. Overlap another tile and wait for the folder preview to create a **tile folder**; a closed folder accepts more children. Groups and folders are separate containers, as in late Windows 10 Start.
+
+Drop near a tile's edge to rearrange it without waiting. Hold <kbd>Shift</kbd> during a tile or selection drag to suppress overlap grouping and folder entry/creation completely; the requested cells are reserved and displaced tiles reflow into available positions. They may move sideways or below, depending on space and size. Releasing Shift starts a fresh folder dwell if the pointer is still over a tile. An already open folder remains a normal placement surface.
+
+An internal rearrangement first reuses the space released by the move when the displaced tile fits. Other conflicts use nearby room before extending the container. Equal-sized neighbors yield a whole slot after half-overlap, keeping partial-cell previews from pushing them into a spare column. Moving in from another group or folder has no released slot in the destination.
+
+Hold <kbd>Alt</kbd> while dragging to place a tile independently in empty space without changing your saved mode. Enable **Use free tile placement** to make independent empty-space drops and new pins the normal behavior. Free mode can optionally collect overlapping independent tiles into ordinary groups. Alt alone in the default mode does not change tile-over-tile folder behavior. Shift and Alt can be combined.
+
+A translucent snapshot follows the pointer on display frames. Displaced neighbors ease to their proposed slots and retarget from their displayed positions; cancellation returns them to the saved layout. Folder recipients stay still while intent is being detected. Preview animation changes neither ownership nor saved coordinates. Existing layouts are not reorganized when upgrading; see [migration](migration.md#version-18-placement-defaults).
 
 ## Initial layout and reset
 

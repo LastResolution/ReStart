@@ -21,6 +21,8 @@ public sealed class Preferences
     public bool DragEdgeScrolling { get; set; } = true;
     /// <summary>Gets or sets whether drop previews display explanatory captions and dwell progress; destination geometry remains visible.</summary>
     public bool ShowDropHints { get; set; } = true;
+    /// <summary>Gets or sets whether empty-space drops create independent tiles instead of unnamed groups. Defaults to false; existing independent entries are retained unchanged.</summary>
+    public bool FreeTilePlacement { get; set; }
     /// <summary>Gets or sets whether overlapping independent tiles can create an ordinary group.</summary>
     public bool GroupTilesOnDrop { get; set; } = true;
     /// <summary>Gets or sets whether overlapping grouped tiles can create a tile folder; existing folders remain usable.</summary>

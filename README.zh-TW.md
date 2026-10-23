@@ -14,7 +14,7 @@
 
 <p align="center"><strong>觀看 60 秒示範</strong><br><sub>1080p · 英文 · 無音訊</sub></p>
 
-https://github.com/user-attachments/assets/243a5c5a-46bc-4180-8a0c-cee71ab63f06
+https://github.com/user-attachments/assets/ab737d41-8918-437d-aa70-0cde37abcb67
 
 懷念 Windows 10 的全螢幕開始功能表？ReStart 在 Windows 11 和 Windows 10 上提供熟悉的應用程式空間。釘選常用內容，自由安排配置，再加入能以 JavaScript 撰寫的動態磚。
 
@@ -36,13 +36,13 @@ https://github.com/user-attachments/assets/243a5c5a-46bc-4180-8a0c-cee71ab63f06
 
 ![Weather scene, System dashboard, News board and Canvas garden](docs/images/web-examples.png)
 
-**編輯器操作：** 支援 JavaScript、HTML、CSS 和 JSON 語法醒目提示，**Tab / Shift+Tab** 縮排，以及 **Format document / Ctrl+Shift+F** 離線格式化；一次復原即可還原。Feed headlines 和 News board 在動態磚內部捲動。關閉的資料夾顯示大小一致的即時預覽。初始與重設配置使用隨附的 Month dots 和 Orbit clock。選用的啟動更新檢查會透過可關閉的通知提示新版本。
+**編輯器操作：** 支援 JavaScript、HTML、CSS 和 JSON 語法醒目提示，<kbd>Tab</kbd> / <kbd>Shift</kbd> + <kbd>Tab</kbd> 縮排，以及 **Format document / Ctrl+Shift+F** 離線格式化；一次復原即可還原。Feed headlines 和 News board 在動態磚內部捲動。關閉的資料夾顯示大小一致的即時預覽。初始與重設配置使用隨附的 Month dots 和 Orbit clock。選用的啟動更新檢查會透過可關閉的通知提示新版本。
 
 ## 快速開始
 
 1. Intel/AMD 電腦下載 **[x64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-x64.zip)**；Windows on ARM 下載 **[ARM64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip)**。
 2. 解壓縮**整個 ZIP**。保留 `ReStart.exe` 旁的 `TileHost`、`Examples` 與 `third-party`。
-3. 執行 **ReStart.exe**，按 **Windows 鍵**後輸入應用程式名稱。也可用 **Ctrl+Alt+Space** 或通知區域選單開啟。
+3. 執行 **ReStart.exe**，按 **Windows 鍵**後輸入應用程式名稱。也可用 <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Space</kbd> 或通知區域選單開啟。
 
 齒輪設定可選擇佈景主題、登入時啟動、Windows 鍵/開始按鈕整合與更新。一般使用不需要系統管理員權限。提供 [SHA-256 校驗值](https://github.com/LastResolution/ReStart/releases/latest)。
 
@@ -50,12 +50,15 @@ https://github.com/user-attachments/assets/243a5c5a-46bc-4180-8a0c-cee71ab63f06
 
 ![ReStart 的開啟與關閉動畫](docs/images/start-motion.gif)
 
+**預設使用群組，需要時自由放置。** 在空白處放下會建立未命名群組；在磚上停留會建立資料夾。拖曳時按住 <kbd>Shift</kbd> 可重新排列而不建立資料夾，按住 <kbd>Alt</kbd> 可在空白處獨立放置。Settings → Start behavior → **Use free tile placement** 可將獨立放置設為預設。既有配置和資料夾保持不變。相鄰磚平滑移位，指標下的目標判定保持穩定。
+
+
 | 類別 | 包含功能 |
 | --- | --- |
 | 開啟與關閉 | 選擇性接管 Windows 鍵及工作列開始按鈕、Ctrl+Alt+Space、通知區域控制、前景啟用、切換應用程式/工作列時關閉、依螢幕工作區域顯示、單一執行個體 |
 | 啟動 | 選擇性登入啟動、背景模式、跟隨主題的準備畫面與預先輸入、圖示快取、背景應用程式目錄重新整理 |
 | 動態磚與群組 | 四種大小、獨立釘選、依內容調整大小的可移動矩形群組、水平半格錨點、自動放置、雙向捲動 |
-| 資料夾 | 在群組內重疊建立、原位展開、新增/移除/排序、就地重新命名及解散；只剩一個項目仍保留資料夾 |
+| 資料夾 | 重疊並等待建立、原位展開、新增/移除/排序、就地重新命名及解散；只剩一個項目仍保留資料夾 |
 | 配置編輯 | 編輯模式、多重選取、批次移動、工作階段內復原/重做；取消拖曳保留原配置 |
 | 拖曳回饋 | 區分群組/資料夾目標、停留進度、選擇性提示及群組邊界、邊緣自動捲動；可關閉自動群組/資料夾建立 |
 | 釘選內容 | 應用程式、檔案、目錄、捷徑、網站；檔案總管 **Pin to ReStart**、右鍵選單、從應用程式清單拖曳、明確指定目標 |
@@ -108,17 +111,18 @@ Web 動態磚包含 manifest.json、index.html、tile.css、tile.js 及選用 as
 
 | 操作 | 結果 |
 | --- | --- |
-| Windows 鍵 / `Ctrl+Alt+Space` | 開啟或關閉 |
-| 輸入 / `Ctrl+F` | 搜尋；Enter 啟動反白結果，方向鍵變更選取 |
-| `Esc` | 依序關閉搜尋、資料夾或覆疊，再關閉開始畫面 |
-| 拖曳動態磚 / 群組標題 | 移動；放到空白處建立獨立磚 |
-| 在獨立磚上部分重疊約 0.3 秒 | 預覽就緒後建立一般群組 |
-| 在群組內磚上重疊約 0.6 秒 | 建立資料夾；既有資料夾可接收新增項目 |
-| 側邊欄/背景選單的 **選取磚塊** / `Ctrl+E` | 多重選取而不開啟程式；平時也可以直接拖曳磚塊 |
-| 編輯時 `Ctrl+A` / `Delete` | 選取根磚 / 取消釘選所選項目 |
-| `Ctrl+Z` / `Ctrl+Y` 或 `Ctrl+Shift+Z` | 復原 / 重做配置 |
+| Windows 鍵 / <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Space</kbd> | 開啟或關閉 |
+| 輸入 / <kbd>Ctrl</kbd> + <kbd>F</kbd> | 搜尋；Enter 啟動反白結果，方向鍵變更選取 |
+| <kbd>Esc</kbd> | 依序關閉搜尋、資料夾或覆疊，再關閉開始畫面 |
+| 拖曳動態磚 / 群組標題 | 移動；空白處建立未命名群組 |
+| <kbd>Alt</kbd> + 拖到空白處 | 僅本次獨立放置 |
+| <kbd>Shift</kbd> + 拖曳 | 移動相鄰磚以重新排列，不觸發重疊群組或資料夾操作 |
+| 在磚上重疊約 0.6 秒 | 預覽就緒後建立資料夾；既有資料夾可接收新增項目 |
+| 側邊欄/背景選單的 **選取磚塊** / <kbd>Ctrl</kbd> + <kbd>E</kbd> | 多重選取而不開啟程式；平時也可以直接拖曳磚塊 |
+| 編輯時 <kbd>Ctrl</kbd> + <kbd>A</kbd> / <kbd>Delete</kbd> | 選取根磚 / 取消釘選所選項目 |
+| <kbd>Ctrl</kbd> + <kbd>Z</kbd> / <kbd>Ctrl</kbd> + <kbd>Y</kbd> 或 <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd> | 復原 / 重做配置 |
 | 鉛筆 / 按兩下名稱 | 就地重新命名群組或資料夾 |
-| `Shift` + 滾輪 | 水平捲動 |
+| <kbd>Shift</kbd> + 滾輪 | 水平捲動 |
 
 Windows 組合鍵會轉送給系統。配置歷程在工作階段內保留最多 100 次變更、上限 32 MiB；文字欄位保有自己的文字復原。再次開啟會回到釘選首頁。
 
@@ -149,7 +153,7 @@ dotnet run --project src/ReStart.App -c Release -- --preview
 
 ARM64 使用 `win-arm64`。ZIP 與校驗檔產生於 `artifacts/packages`。請始終發行完整 ZIP。
 
-[問題與建議](https://github.com/LastResolution/ReStart/issues/new/choose) · [參與貢獻（英文）](CONTRIBUTING.md) · [架構（英文）](docs/architecture.md) · [測試（英文）](docs/testing.md) · [發行](https://github.com/LastResolution/ReStart/releases)
+[問題與作品分享](https://github.com/LastResolution/ReStart/discussions) · [回報缺陷](https://github.com/LastResolution/ReStart/issues/new/choose) · [參與貢獻（英文）](CONTRIBUTING.md) · [架構（英文）](docs/architecture.md) · [測試（英文）](docs/testing.md) · [發行](https://github.com/LastResolution/ReStart/releases)
 
 ReStart 是受後期 Windows 10 全螢幕開始功能表啟發的獨立 MIT 專案，與 Microsoft 無關。圖片顯示真正程式的英文示範、合成指標與產生的照片色塊。名稱和圖示屬於各權利人。[MIT 授權](LICENSE) · [第三方聲明（英文）](docs/third-party.md) · [支援（英文）](SUPPORT.md)
 

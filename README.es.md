@@ -14,7 +14,7 @@
 
 <p align="center"><strong>Ver la demostración de 60 segundos</strong><br><sub>1080p · Inglés · Sin audio</sub></p>
 
-https://github.com/user-attachments/assets/243a5c5a-46bc-4180-8a0c-cee71ab63f06
+https://github.com/user-attachments/assets/ab737d41-8918-437d-aa70-0cde37abcb67
 
 ¿Echas de menos Inicio a pantalla completa de Windows 10? ReStart ofrece un espacio familiar para tus aplicaciones en Windows 11 y Windows 10. Ancla lo que utilizas, organiza la pantalla y añade mosaicos que puedes escribir en JavaScript.
 
@@ -50,12 +50,15 @@ El engranaje permite elegir temas, inicio con Windows, integración de la tecla 
 
 ![Apertura y cierre de ReStart](docs/images/start-motion.gif)
 
+**Grupos por defecto, colocación libre cuando la necesites.** Soltar en vacío crea un grupo sin nombre; esperar sobre un mosaico crea una carpeta. <kbd>Shift</kbd> al arrastrar reorganiza sin carpetas; <kbd>Alt</kbd> permite colocar de forma independiente en vacío. **Use free tile placement**, en Settings → Start behavior, lo convierte en el modo predeterminado. Se conservan los diseños y carpetas existentes. Los vecinos se deslizan sin cambiar el destino bajo el puntero.
+
+
 | Área | Incluye |
 | --- | --- |
 | Abrir y cerrar | Captura opcional de la tecla Windows y del botón Inicio, Ctrl+Alt+Espacio, área de notificación, activación en primer plano, cierre al cambiar de aplicación/barra de tareas, área según monitor e instancia única |
 | Arranque | Inicio de sesión opcional, modo en segundo plano, pantalla de preparación con tema y escritura anticipada, caché de iconos y actualización del catálogo |
 | Mosaicos y grupos | Cuatro tamaños, anclajes independientes, grupos rectangulares movibles ajustados al contenido, anclajes horizontales de media celda, colocación automática y desplazamiento en ambos ejes |
-| Carpetas | Creación al superponer dentro de un grupo, apertura en el diseño, añadir/quitar/ordenar, renombrar en línea y desagrupar; un único elemento sigue en su carpeta |
+| Carpetas | Creación al mantener la superposición, apertura en el diseño, añadir/quitar/ordenar, renombrar en línea y desagrupar; un único elemento sigue en su carpeta |
 | Edición | Modo de edición, selección múltiple, movimiento conjunto y deshacer/rehacer durante la sesión; cancelar un arrastre conserva el diseño |
 | Indicaciones al arrastrar | Destinos de grupo/carpeta distintos, progreso de espera, pistas y límites opcionales, desplazamiento en los bordes; creación automática de grupos/carpetas desactivable |
 | Anclar | Aplicaciones, archivos, directorios, accesos directos y sitios; comando **Pin to ReStart** de Explorer, menús contextuales, arrastre desde listas y destinos explícitos |
@@ -108,17 +111,18 @@ Un mosaico web contiene manifest.json, index.html, tile.css, tile.js y assets op
 
 | Acción | Resultado |
 | --- | --- |
-| Tecla Windows / `Ctrl+Alt+Space` | Abrir o cerrar |
-| Escribir / `Ctrl+F` | Buscar; Intro abre el resultado resaltado y las flechas cambian la selección |
-| `Esc` | Cerrar búsqueda, carpeta o superposición y después Inicio |
-| Arrastrar mosaico / cabecera | Mover; el espacio vacío crea un anclaje independiente |
-| Superponer un mosaico independiente unos 0,3 s | Crear un grupo cuando la vista previa esté preparada |
-| Superponer un mosaico de un grupo unos 0,6 s | Crear una carpeta; las existentes aceptan elementos |
-| **Seleccionar mosaicos** en la barra lateral/el menú del fondo / `Ctrl+E` | Selección múltiple sin abrir aplicaciones; siempre puedes arrastrar directamente |
-| `Ctrl+A` / `Delete` en edición | Seleccionar mosaicos raíz / desanclar la selección |
-| `Ctrl+Z` / `Ctrl+Y` o `Ctrl+Shift+Z` | Deshacer / rehacer diseño |
+| Tecla Windows / <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Space</kbd> | Abrir o cerrar |
+| Escribir / <kbd>Ctrl</kbd> + <kbd>F</kbd> | Buscar; Intro abre el resultado resaltado y las flechas cambian la selección |
+| <kbd>Esc</kbd> | Cerrar búsqueda, carpeta o superposición y después Inicio |
+| Arrastrar mosaico / cabecera | Mover; el espacio vacío crea un grupo sin nombre |
+| <kbd>Alt</kbd> + arrastrar en vacío | Colocación independiente para este arrastre |
+| <kbd>Shift</kbd> + arrastrar | Reorganizar y desplazar vecinos sin agrupación ni acciones de carpeta por superposición |
+| Superponer un mosaico unos 0,6 s | Crear una carpeta tras la vista previa; las existentes aceptan elementos |
+| **Seleccionar mosaicos** en la barra lateral/el menú del fondo / <kbd>Ctrl</kbd> + <kbd>E</kbd> | Selección múltiple sin abrir aplicaciones; siempre puedes arrastrar directamente |
+| <kbd>Ctrl</kbd> + <kbd>A</kbd> / <kbd>Delete</kbd> en edición | Seleccionar mosaicos raíz / desanclar la selección |
+| <kbd>Ctrl</kbd> + <kbd>Z</kbd> / <kbd>Ctrl</kbd> + <kbd>Y</kbd> o <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd> | Deshacer / rehacer diseño |
 | Lápiz / doble clic en nombre | Renombrar grupo o carpeta en línea |
-| `Shift` + rueda | Desplazar horizontalmente |
+| <kbd>Shift</kbd> + rueda | Desplazar horizontalmente |
 
 Los atajos de Windows se reenvían al sistema. El historial conserva hasta 100 cambios en 32 MiB durante la sesión; los campos de texto mantienen su propio deshacer. Al volver a abrir se muestra la pantalla de anclados.
 
@@ -149,7 +153,7 @@ dotnet run --project src/ReStart.App -c Release -- --preview
 
 Para ARM64 usa `win-arm64`. ZIP y sumas se generan en `artifacts/packages`. Distribuye siempre todo el ZIP.
 
-[Errores e ideas](https://github.com/LastResolution/ReStart/issues/new/choose) · [Contribuir (inglés)](CONTRIBUTING.md) · [Arquitectura (inglés)](docs/architecture.md) · [Pruebas (inglés)](docs/testing.md) · [Versiones](https://github.com/LastResolution/ReStart/releases)
+[Preguntas y ejemplos](https://github.com/LastResolution/ReStart/discussions) · [Informar de errores](https://github.com/LastResolution/ReStart/issues/new/choose) · [Contribuir (inglés)](CONTRIBUTING.md) · [Arquitectura (inglés)](docs/architecture.md) · [Pruebas (inglés)](docs/testing.md) · [Versiones](https://github.com/LastResolution/ReStart/releases)
 
 ReStart es un proyecto MIT independiente inspirado en Inicio a pantalla completa de las últimas versiones de Windows 10, sin afiliación con Microsoft. Las imágenes muestran la aplicación real con una demostración inglesa, métricas sintéticas y colores de fotos generados. Los nombres e iconos pertenecen a sus propietarios. [Licencia MIT](LICENSE) · [Avisos de terceros (inglés)](docs/third-party.md) · [Soporte (inglés)](SUPPORT.md)
 

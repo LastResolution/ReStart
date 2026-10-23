@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Threading;
+using System.Diagnostics;
 using ReStart.App.Services;
 using ReStart.Core;
 
@@ -15,7 +15,9 @@ public partial class MainWindow
     private Canvas? _dragGhostLayer;
     private Image? _dragGhost;
     private Point _dragGhostAnchor;
-    private DispatcherTimer? _dragGhostTimer;
+    private bool _dragFrameSubscribed;
+    private TimeSpan _dragFrameTime;
+    private long _dragFrameTicks;
     private readonly List<(FrameworkElement View, double Opacity)> _dragGhostSources = [];
 
     private void StartDragGhost(Button button, string format, string id, Point grab)
@@ -48,43 +50,81 @@ public partial class MainWindow
         var bitmap = new RenderTargetBitmap((int)Math.Ceiling(width * dpi), (int)Math.Ceiling(height * dpi), 96 * dpi, 96 * dpi, PixelFormats.Pbgra32);
         bitmap.Render(drawing); bitmap.Freeze();
         _dragGhostAnchor = new((grab.X - bounds.X) * scale, (grab.Y - bounds.Y) * scale);
-        _dragGhost = new() { Source = bitmap, Width = width, Height = height, Opacity = DragGhostOpacity, IsHitTestVisible = false };
+        _dragGhost = new() { Source = bitmap, Width = width, Height = height, Opacity = DragGhostOpacity, IsHitTestVisible = false, RenderTransform = new TranslateTransform() };
         RenderOptions.SetBitmapScalingMode(_dragGhost, BitmapScalingMode.HighQuality);
         _dragGhostLayer = new() { IsHitTestVisible = false, Focusable = false, ClipToBounds = true };
         Panel.SetZIndex(_dragGhostLayer, int.MaxValue);
         _dragGhostLayer.Children.Add(_dragGhost); Root.Children.Add(_dragGhostLayer);
         foreach (var source in sources) { _dragGhostSources.Add((source, source.Opacity)); source.Opacity *= .32; }
         MoveDragGhost(grab);
-        GiveFeedback += OnDragGhostFeedback;
         // OLE can leave WPF's Mouse.GetPosition at the initial grab point. Read
-        // the real screen cursor and convert physical pixels through WPF's DPI.
-        _dragGhostTimer = new(DispatcherPriority.Input) { Interval = TimeSpan.FromMilliseconds(16) };
-        _dragGhostTimer.Tick += (_, _) => TrackDragGhostCursor();
-        _dragGhostTimer.Start();
+        // the real cursor once per display frame without invalidating layout.
+        _dragFrameTime = TimeSpan.MinValue; _dragFrameTicks = Stopwatch.GetTimestamp();
+        _dragFrameSubscribed = true;
+        CompositionTarget.Rendering += OnDragFrame;
     }
 
-    private void OnDragGhostFeedback(object sender, GiveFeedbackEventArgs e) => TrackDragGhostCursor();
+    private void OnDragFrame(object? sender, EventArgs e)
+    {
+        if (e is RenderingEventArgs frame)
+        {
+            if (frame.RenderingTime == _dragFrameTime) return;
+            _dragFrameTime = frame.RenderingTime;
+        }
+        var now = Stopwatch.GetTimestamp();
+        var seconds = Math.Clamp(Stopwatch.GetElapsedTime(_dragFrameTicks, now).TotalSeconds, 0, .05);
+        _dragFrameTicks = now;
+        TrackDragGhostCursor();
+        var changed = false;
+        if (_dragging && _activeDragFormat != "ReStart.Group")
+        {
+            var alt = Native.GetAsyncKeyState(0x12) < 0;
+            var shift = Native.GetAsyncKeyState(0x10) < 0;
+            changed = alt != _freePlacementGesture || shift != _reorderGesture;
+            SetFreePlacementGesture(alt); SetReorderGesture(shift);
+        }
+        var scrolled = _dragScrolling && _dragging && IsVisible && ScrollDragAt(_dragViewportPoint, seconds);
+        if (changed && !scrolled) RefreshDragProposal();
+    }
 
     private void TrackDragGhostCursor()
     {
         if (_dragGhost == null || PresentationSource.FromVisual(Root) == null || !Native.GetCursorPos(out var cursor)) return;
-        MoveDragGhost(Root.PointFromScreen(new(cursor.X, cursor.Y)));
+        var point = Root.PointFromScreen(new(cursor.X, cursor.Y));
+        MoveDragGhost(point);
+        _dragViewportPoint = Root.TranslatePoint(point, ContentScroll);
     }
 
     private void MoveDragGhost(Point point)
     {
         if (_dragGhost == null) return;
         _dragGhost.Visibility = new Rect(Root.RenderSize).Contains(point) ? Visibility.Visible : Visibility.Hidden;
-        Canvas.SetLeft(_dragGhost, point.X - _dragGhostAnchor.X);
-        Canvas.SetTop(_dragGhost, point.Y - _dragGhostAnchor.Y);
+        var transform = (TranslateTransform)_dragGhost.RenderTransform;
+        transform.X = point.X - _dragGhostAnchor.X;
+        transform.Y = point.Y - _dragGhostAnchor.Y;
     }
 
     private void StopDragGhost()
     {
-        _dragGhostTimer?.Stop(); _dragGhostTimer = null;
-        GiveFeedback -= OnDragGhostFeedback;
+        StopDragFrames();
         if (_dragGhostLayer != null) Root.Children.Remove(_dragGhostLayer);
         foreach (var (view, opacity) in _dragGhostSources) view.Opacity = opacity;
         _dragGhostSources.Clear(); _dragGhost = null; _dragGhostLayer = null;
+    }
+
+    private void StopDragFrames()
+    {
+        if (_dragFrameSubscribed) CompositionTarget.Rendering -= OnDragFrame;
+        _dragFrameSubscribed = false; _dragScrolling = false;
+    }
+
+    private void RefreshDragProposal()
+    {
+        if (_activeDragId == null) return;
+        var board = ContentScroll.TranslatePoint(_dragViewportPoint, GroupsPanel);
+        if (_activeDragFormat == "ReStart.Selection" && PlanSelectionDrop(_activeDragId, board) is { } selection)
+        { ShowSelectionPreview(selection, board, _activeDragId); ShowPendingFolderPreview(); }
+        else if ((_activeDragFormat == "ReStart.App" ? TileForAppDrag(_activeDragId) : FindTile(_activeDragId)) is { } tile)
+            PreviewSingleTileDrop(tile, board, _activeDragId);
     }
 }

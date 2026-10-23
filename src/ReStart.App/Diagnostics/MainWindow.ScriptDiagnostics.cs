@@ -143,7 +143,8 @@ public partial class MainWindow
                 settings.UpdateLayout(); SaveFixtureElement(settings, Path.Combine(Path.GetDirectoryName(snapshotPath)!, "tile-library.png"));
                 var before = GroupLayout.Pack(fixture.Document.Groups, fixture.GroupsPanel.Columns, 8, fixture.Cell, preserveColumns: true).ToArray();
                 add.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); fixture.UpdateLayout();
-                Require(fixture.Document.Groups.Count == before.Length + 1 && fixture.Document.Groups[^1].IsStandalone, "Library click did not create an independent pin.");
+                Require(fixture.Document.Groups.Count == before.Length + 1 && fixture.Document.Groups[^1].IsStandalone == fixture.Document.Preferences.FreeTilePlacement,
+                    "Library click did not respect the board placement mode.");
                 var after = GroupLayout.Pack(fixture.Document.Groups, fixture.GroupsPanel.Columns, 8, fixture.Cell, preserveColumns: true);
                 Require(before.All(p => after.Single(a => a.Group == p.Group) == p), "Adding a library tile changed an existing group rectangle.");
             }
@@ -157,7 +158,8 @@ public partial class MainWindow
             var libraryItem = libraryMenu.Items.OfType<MenuItem>().Single(item => item.IsEnabled);
             var pinCount = fixture.Document.Groups.Count;
             libraryItem.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
-            Require(fixture.Document.Groups.Count == pinCount + 1 && fixture.Document.Groups[^1].IsStandalone, "Right-click library addition did not create an independent tile.");
+            Require(fixture.Document.Groups.Count == pinCount + 1 && fixture.Document.Groups[^1].IsStandalone == fixture.Document.Preferences.FreeTilePlacement,
+                "Right-click library addition did not respect the board placement mode.");
             foreach (var languageTag in TextCatalog.SupportedLanguages)
             {
                 stage = "language " + languageTag;

@@ -171,6 +171,7 @@ public partial class MainWindow
                 [K.SettingsJumpLists] = p => p.ShowJumpLists,
                 [K.SettingsTileHover] = p => p.TileHoverHighlight,
                 [K.SettingsGroupHover] = p => p.ShowGroupBoundariesOnHover,
+                [K.SettingsFreePlacement] = p => p.FreeTilePlacement,
                 [K.SettingsDropGroups] = p => p.GroupTilesOnDrop,
                 [K.SettingsDropFolders] = p => p.CreateFoldersOnDrop,
                 [K.SettingsDragScroll] = p => p.DragEdgeScrolling,

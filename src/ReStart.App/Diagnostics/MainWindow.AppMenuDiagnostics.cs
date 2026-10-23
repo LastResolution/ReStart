@@ -79,7 +79,8 @@ public partial class MainWindow
                 fixture.UpdateLayout();
                 Require(tile.Target == folderPath && !tile.IsFolder, "The app menu pinned folder children instead of the directory.");
                 var owner = fixture.Document.Groups.Single(g => g.Tiles.Contains(tile));
-                Require(explicitGroup ? owner == destination : owner.IsStandalone, "A directory pin did not respect the selected destination.");
+                Require(explicitGroup ? owner == destination : owner != destination && owner.IsStandalone == fixture.Document.Preferences.FreeTilePlacement,
+                    "A directory pin did not respect the selected destination or placement mode.");
                 Require(IconRendered(),
                     "Pinning a directory from its app menu leaves the fallback glyph until restart.");
                 fixture.SaveScreenshot(Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"app-menu-directory-{explicitGroup}.png"));

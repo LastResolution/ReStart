@@ -14,7 +14,7 @@
 
 <p align="center"><strong>观看 60 秒演示</strong><br><sub>1080p · 英文 · 无音频</sub></p>
 
-https://github.com/user-attachments/assets/243a5c5a-46bc-4180-8a0c-cee71ab63f06
+https://github.com/user-attachments/assets/ab737d41-8918-437d-aa70-0cde37abcb67
 
 怀念 Windows 10 的全屏开始菜单？ReStart 在 Windows 11 和 Windows 10 上为应用提供熟悉的空间。固定常用内容，自由安排布局，再加入可以用 JavaScript 编写的动态磁贴。
 
@@ -36,19 +36,22 @@ https://github.com/user-attachments/assets/243a5c5a-46bc-4180-8a0c-cee71ab63f06
 
 ![Weather scene, System dashboard, News board and Canvas garden](docs/images/web-examples.png)
 
-**编辑器操作：** 支持 JavaScript、HTML、CSS 和 JSON 语法高亮，**Tab / Shift+Tab** 缩进，以及 **Format document / Ctrl+Shift+F** 离线格式化；一次撤销即可恢复。Feed headlines 和 News board 在磁贴内部滚动。关闭的文件夹显示大小一致的动态预览。初始和重置布局使用随附的 Month dots 和 Orbit clock。可选的启动更新检查会通过可关闭的通知提示新版本。
+**编辑器操作：** 支持 JavaScript、HTML、CSS 和 JSON 语法高亮，<kbd>Tab</kbd> / <kbd>Shift</kbd> + <kbd>Tab</kbd> 缩进，以及 **Format document / Ctrl+Shift+F** 离线格式化；一次撤销即可恢复。Feed headlines 和 News board 在磁贴内部滚动。关闭的文件夹显示大小一致的动态预览。初始和重置布局使用随附的 Month dots 和 Orbit clock。可选的启动更新检查会通过可关闭的通知提示新版本。
 
 ## 快速开始
 
 1. Intel/AMD 电脑下载 **[x64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-x64.zip)**；Windows on ARM 下载 **[ARM64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip)**。
 2. 解压**整个 ZIP**。保留 `ReStart.exe` 旁的 `TileHost`、`Examples` 和 `third-party`。
-3. 运行 **ReStart.exe**，按 **Windows 键**并输入应用名称。也可以使用 **Ctrl+Alt+Space** 或托盘菜单打开。
+3. 运行 **ReStart.exe**，按 **Windows 键**并输入应用名称。也可以使用 <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Space</kbd> 或托盘菜单打开。
 
 齿轮设置中可选择主题、登录启动、Windows 键/开始按钮集成及更新。正常使用不需要管理员权限。提供 [SHA-256 校验值](https://github.com/LastResolution/ReStart/releases/latest)。
 
 ## 功能
 
 ![ReStart 的打开和关闭动画](docs/images/start-motion.gif)
+
+**默认使用分组，需要时自由放置。** 在空白处放下会创建未命名组；在磁贴上停留会创建文件夹。拖动时按住 <kbd>Shift</kbd> 可重新排列而不创建文件夹，按住 <kbd>Alt</kbd> 可在空白处独立放置。Settings → Start behavior → **Use free tile placement** 可将独立放置设为默认。现有布局和文件夹保持不变。相邻磁贴平滑移位，指针下的目标判定保持稳定。
+
 
 | 类别 | 包含功能 |
 | --- | --- |
@@ -108,17 +111,18 @@ Web 磁贴包含 manifest.json、index.html、tile.css、tile.js 及可选 asset
 
 | 操作 | 结果 |
 | --- | --- |
-| Windows 键 / `Ctrl+Alt+Space` | 打开或关闭 |
-| 输入 / `Ctrl+F` | 搜索；Enter 启动高亮结果，方向键更改选择 |
-| `Esc` | 依次关闭搜索、文件夹或叠加层，再关闭开始菜单 |
-| 拖动磁贴 / 分组标题 | 移动；放到空白处创建独立磁贴 |
-| 在独立磁贴上部分重叠约 0.3 秒 | 预览就绪后创建普通分组 |
-| 在分组内磁贴上重叠约 0.6 秒 | 创建文件夹；已有文件夹接收添加项 |
-| 侧栏/背景菜单的 **选择磁贴** / `Ctrl+E` | 多选而不打开应用；平时也可以直接拖动磁贴 |
-| 编辑时 `Ctrl+A` / `Delete` | 选择根磁贴 / 取消固定所选项 |
-| `Ctrl+Z` / `Ctrl+Y` 或 `Ctrl+Shift+Z` | 撤销 / 重做布局 |
+| Windows 键 / <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Space</kbd> | 打开或关闭 |
+| 输入 / <kbd>Ctrl</kbd> + <kbd>F</kbd> | 搜索；Enter 启动高亮结果，方向键更改选择 |
+| <kbd>Esc</kbd> | 依次关闭搜索、文件夹或叠加层，再关闭开始菜单 |
+| 拖动磁贴 / 分组标题 | 移动；空白处创建未命名组 |
+| <kbd>Alt</kbd> + 拖到空白处 | 仅本次独立放置 |
+| <kbd>Shift</kbd> + 拖动 | 移动相邻磁贴以重新排列，不触发重叠分组或文件夹操作 |
+| 在磁贴上重叠约 0.6 秒 | 预览就绪后创建文件夹；已有文件夹接收添加项 |
+| 侧栏/背景菜单的 **选择磁贴** / <kbd>Ctrl</kbd> + <kbd>E</kbd> | 多选而不打开应用；平时也可以直接拖动磁贴 |
+| 编辑时 <kbd>Ctrl</kbd> + <kbd>A</kbd> / <kbd>Delete</kbd> | 选择根磁贴 / 取消固定所选项 |
+| <kbd>Ctrl</kbd> + <kbd>Z</kbd> / <kbd>Ctrl</kbd> + <kbd>Y</kbd> 或 <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd> | 撤销 / 重做布局 |
 | 铅笔 / 双击名称 | 内联重命名分组或文件夹 |
-| `Shift` + 滚轮 | 横向滚动 |
+| <kbd>Shift</kbd> + 滚轮 | 横向滚动 |
 
 Windows 组合键会转发给系统。布局历史在会话内保留最多 100 次修改、占用不超过 32 MiB；文本框保留自身的文本撤销。再次打开会回到固定磁贴主界面。
 
@@ -149,7 +153,7 @@ dotnet run --project src/ReStart.App -c Release -- --preview
 
 ARM64 使用 `win-arm64`。ZIP 和校验文件生成在 `artifacts/packages`。请始终分发完整 ZIP。
 
-[问题与建议](https://github.com/LastResolution/ReStart/issues/new/choose) · [参与贡献（英文）](CONTRIBUTING.md) · [架构（英文）](docs/architecture.md) · [测试（英文）](docs/testing.md) · [发布](https://github.com/LastResolution/ReStart/releases)
+[问题与作品分享](https://github.com/LastResolution/ReStart/discussions) · [报告缺陷](https://github.com/LastResolution/ReStart/issues/new/choose) · [参与贡献（英文）](CONTRIBUTING.md) · [架构（英文）](docs/architecture.md) · [测试（英文）](docs/testing.md) · [发布](https://github.com/LastResolution/ReStart/releases)
 
 ReStart 是受后期 Windows 10 全屏开始菜单启发的独立 MIT 项目，与 Microsoft 无关联。图像展示真实应用的英文演示、合成指标和生成的照片色块。名称和图标归各权利人所有。[MIT 许可证](LICENSE) · [第三方声明（英文）](docs/third-party.md) · [支持（英文）](SUPPORT.md)
 
