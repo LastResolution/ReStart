@@ -13,15 +13,18 @@ namespace ReStart.App;
 
 public partial class MainWindow
 {
+    private ReStart.Core.ThemeMode _promoTheme;
     private SystemMetricsSnapshot? _documentationMetrics;
     private long? _documentationMonotonicMilliseconds;
     private bool _documentationSampleConnections;
 
     /// <summary>Exports a silent English product demonstration from real WPF controls without opening a window.</summary>
     /// <param name="directory">Isolated output directory for the movie, poster, contact sheets and fictional fixture state.</param>
+    /// <param name="light">Whether to capture the light launcher and a matching video frame; false captures dark.</param>
     /// <param name="encoderPath">Absolute path to a trusted local FFmpeg executable; arguments are passed separately.</param>
-    internal async Task RenderPromoAsync(string directory, string encoderPath)
+    internal async Task RenderPromoAsync(string directory, string encoderPath, bool light = false)
     {
+        _promoTheme = light ? ReStart.Core.ThemeMode.Light : ReStart.Core.ThemeMode.Dark;
         _documentationHtmlRendering = true;
         Require(_preview && !IsVisible, "Video rendering requires a hidden preview instance.");
         Require(File.Exists(encoderPath), "FFmpeg is required to export the demonstration.");
@@ -42,8 +45,11 @@ public partial class MainWindow
             WriteFixtureImage(Path.Combine(photos, "b.png"), Colors.Coral);
             SlideshowSource.Bind(_scriptPackages.SlideshowBindingPath(tiles[11].ScriptId), photos);
             await SaveLauncherShowcaseAsync(tiles, this, directory);
-            Document.Preferences.Theme = ReStart.Core.ThemeMode.Dark;
+            Document.Preferences.Theme = _promoTheme;
             Document.Preferences.SearchFiles = false;
+            // The movie supplies persistent captions for the same modifiers;
+            // avoid timing a transient toast against the encoder's wall clock.
+            Document.Preferences.ShowDragShortcutHints = false;
             Document.Preferences.Animate = false;
             Root.Height = 900;
             var group = Document.Groups.Single(item => item.Name == "Create & work");
@@ -51,7 +57,7 @@ public partial class MainWindow
             var movingId = moving.Id;
             var keyboardId = Document.Groups.Single(item => item.Name == "Files & folders").Tiles[1].Id;
             var folderId = group.Tiles.Single(tile => tile.IsFolder).Id;
-            var studioScenes = await RenderStudioPromoScenesAsync(directory);
+            var studioScenes = await RenderStudioPromoScenesAsync(directory, _promoTheme);
             ApplyAppearance(); ResetToPinnedView(); RenderGroups();
             _layoutHistory.Reset(Document); _historyReady = true;
             Content = null;
@@ -102,7 +108,7 @@ public partial class MainWindow
                 }
                 if (stage == 5 && seconds >= 37 && !creative)
                 {
-                    await RenderCreativeGalleryAsync(directory); creative = true;
+                    await RenderCreativeGalleryAsync(directory, _promoTheme); creative = true;
                 }
                 if (frame % 15 == 0)
                 {
@@ -196,6 +202,7 @@ public partial class MainWindow
                 duration = 60,
                 frames = 1800,
                 language = "en",
+                theme = _promoTheme.ToString().ToLowerInvariant(),
                 sampleData = true,
                 visibleWindows = 0,
                 tileMove = dragCommitted,
@@ -233,14 +240,16 @@ public partial class MainWindow
         var visual = new DrawingVisual();
         using (var dc = visual.RenderOpen())
         {
-            dc.DrawRectangle(new LinearGradientBrush(Color.FromRgb(10, 18, 32), Color.FromRgb(22, 38, 58), 30), null, new Rect(0, 0, 1920, 1080));
+            var light = _promoTheme == ReStart.Core.ThemeMode.Light;
+            var ink = light ? new SolidColorBrush(Color.FromRgb(20, 35, 52)) : Brushes.White;
+            dc.DrawRectangle(new LinearGradientBrush(light ? Color.FromRgb(246, 249, 253) : Color.FromRgb(10, 18, 32), light ? Color.FromRgb(221, 233, 245) : Color.FromRgb(22, 38, 58), 30), null, new Rect(0, 0, 1920, 1080));
             dc.PushOpacity(0.13); dc.DrawEllipse(Brushes.DeepSkyBlue, null, new Point(1730, 40), 620, 620); dc.Pop();
             dc.PushOpacity(0.07); dc.DrawEllipse(Brushes.MediumTurquoise, null, new Point(60, 1030), 640, 480); dc.Pop();
             if (stage == 0)
             {
                 dc.DrawImage(logo, new Rect(912, 38, 96, 96));
-                PromoText(dc, "ReStart", 64, 960, 146, Brushes.White, true, true);
-                PromoText(dc, "Full-screen Start. Yours again.", 44, 960, 241, Brushes.White, true);
+                PromoText(dc, "ReStart", 64, 960, 146, ink, true, true);
+                PromoText(dc, "Full-screen Start. Yours again.", 44, 960, 241, ink, true);
                 PromoText(dc, "Your apps. Your layout. Your own live tiles.", 27, 960, 308, PromoMuted, true);
                 PromoText(dc, "WINDOWS 10 & 11  /  PORTABLE  /  OPEN SOURCE", 17, 960, 365, PromoAccent, true);
                 dc.PushClip(new RectangleGeometry(new Rect(320, 414, 1280, 600), 12, 12));
@@ -252,8 +261,8 @@ public partial class MainWindow
                 var reveal = Math.Clamp((seconds - 55) * 2.5, 0, 1);
                 dc.PushOpacity(reveal);
                 dc.DrawImage(logo, new Rect(912, 180 + 20 * (1 - reveal), 96, 96));
-                PromoText(dc, "ReStart", 100, 960, 305, Brushes.White, true, true);
-                PromoText(dc, "Make room for what matters.", 52, 960, 460, Brushes.White, true);
+                PromoText(dc, "ReStart", 100, 960, 305, ink, true, true);
+                PromoText(dc, "Make room for what matters.", 52, 960, 460, ink, true);
                 PromoText(dc, "Free. Open source. Ready for your desktop.", 28, 960, 550, PromoMuted, true);
                 dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromRgb(28, 112, 180)), null, new Rect(475, 650, 970, 80), 18, 18);
                 PromoText(dc, "github.com/LastResolution/ReStart", 32, 960, 669, Brushes.White, true);
@@ -274,7 +283,7 @@ public partial class MainWindow
                 };
                 dc.DrawImage(logo, new Rect(64, 39, 48, 48));
                 PromoText(dc, "ReStart", 23, 127, 47, PromoMuted);
-                PromoText(dc, heading, 44, 64, 95, Brushes.White, bold: true);
+                PromoText(dc, heading, 44, 64, 95, ink, bold: true);
                 PromoText(dc, detail, 22, 1856, 113, PromoMuted, right: true);
                 var viewport = new Rect(64, 180, 1792, 840);
                 dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(80, 0, 0, 0)), null, new Rect(58, 185, 1804, 845), 18, 18);
@@ -310,8 +319,8 @@ public partial class MainWindow
         bitmap.Render(visual); return bitmap;
     }
 
-    private static readonly SolidColorBrush PromoMuted = new(Color.FromRgb(170, 193, 213));
-    private static readonly SolidColorBrush PromoAccent = new(Color.FromRgb(72, 185, 238));
+    private SolidColorBrush PromoMuted => new(_promoTheme == ReStart.Core.ThemeMode.Light ? Color.FromRgb(62, 83, 105) : Color.FromRgb(170, 193, 213));
+    private SolidColorBrush PromoAccent => new(_promoTheme == ReStart.Core.ThemeMode.Light ? Color.FromRgb(0, 102, 163) : Color.FromRgb(72, 185, 238));
 
     private static void PromoText(DrawingContext drawing, string text, double size, double x, double y, Brush color, bool centered = false, bool bold = false, bool right = false)
     {

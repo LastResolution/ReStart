@@ -4,6 +4,7 @@
   const system = matchMedia('(prefers-color-scheme: dark)');
   let preference = root.dataset.preference || 'system';
   let themeTransition;
+  const themePlayback = new WeakMap();
   const applyTheme = value => {
     preference = ['system', 'light', 'dark'].includes(value) ? value : 'system';
     const theme = preference === 'system' ? (system.matches ? 'dark' : 'light') : preference;
@@ -11,6 +12,25 @@
     root.dataset.preference = preference;
     document.querySelectorAll('[data-theme-picker]').forEach(picker => { picker.value = preference; });
     document.querySelectorAll('[data-theme-image]').forEach(image => { image.src = image.dataset[theme]; });
+    document.querySelectorAll('[data-theme-link]').forEach(link => { link.href = link.dataset[theme]; });
+    document.querySelectorAll('[data-theme-video]').forEach(video => {
+      video.poster = video.dataset[`${theme}Poster`];
+      const source = video.querySelector('source');
+      const target = video.dataset[theme];
+      if (source.getAttribute('src') === target) return;
+      const playback = themePlayback.get(video) || { time: video.currentTime, resume: !video.paused && !video.ended };
+      themePlayback.set(video, playback);
+      const generation = (Number(video.dataset.themeGeneration) || 0) + 1;
+      video.dataset.themeGeneration = generation;
+      video.pause(); source.setAttribute('src', target);
+      video.addEventListener('loadedmetadata', () => {
+        if (Number(video.dataset.themeGeneration) !== generation) return;
+        themePlayback.delete(video);
+        if (Number.isFinite(playback.time) && Number.isFinite(video.duration)) video.currentTime = Math.min(playback.time, video.duration);
+        if (playback.resume) video.play().catch(() => {});
+      }, { once: true });
+      video.load();
+    });
     try { localStorage.setItem('restart-site-theme', preference); } catch { /* Theme changes work without browser storage. */ }
   };
   const changeTheme = value => {

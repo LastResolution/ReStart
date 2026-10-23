@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([Parameter(Mandatory)][string]$Executable)
+param([Parameter(Mandatory)][string]$Executable, [ValidateSet('Dark', 'Light')][string]$Theme = 'Dark')
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $encoder = (Get-Command ffmpeg -ErrorAction Stop).Source
@@ -8,7 +8,9 @@ $directory = Join-Path $repoRoot ('artifacts/promo/' + [Guid]::NewGuid().ToStrin
 New-Item -ItemType Directory -Path $directory -Force | Out-Null
 $source = (Resolve-Path -LiteralPath $Executable).Path
 $errors = Join-Path $directory 'render.log'
-$process = Start-Process -FilePath $source -ArgumentList @('--render-promo', ('"' + $directory + '"'), ('"' + $encoder + '"')) -WindowStyle Hidden -PassThru -RedirectStandardError $errors
+$renderArguments = @('--render-promo', ('"' + $directory + '"'), ('"' + $encoder + '"'))
+if ($Theme -eq 'Light') { $renderArguments += '--light' }
+$process = Start-Process -FilePath $source -ArgumentList $renderArguments -WindowStyle Hidden -PassThru -RedirectStandardError $errors
 try {
     if (-not $process.WaitForExit(900000)) { $process.Kill(); throw 'Product video rendering timed out.' }
     if ($process.ExitCode -ne 0) { Get-Content -LiteralPath $errors | Write-Output; throw 'Product video rendering failed.' }
