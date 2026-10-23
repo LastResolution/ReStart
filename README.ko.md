@@ -153,7 +153,7 @@ dotnet run --project src/ReStart.App -c Release -- --preview
 
 ARM64는 `win-arm64`를 사용합니다. ZIP과 체크섬은 `artifacts/packages`에 생성합니다. 항상 전체 ZIP을 배포하세요.
 
-[버그 및 제안](https://github.com/LastResolution/ReStart/issues/new/choose) · [기여(영어)](CONTRIBUTING.md) · [아키텍처(영어)](docs/architecture.md) · [테스트(영어)](docs/testing.md) · [릴리스](https://github.com/LastResolution/ReStart/releases)
+[질문과 작품 공유](https://github.com/LastResolution/ReStart/discussions) · [버그 신고](https://github.com/LastResolution/ReStart/issues/new/choose) · [기여(영어)](CONTRIBUTING.md) · [아키텍처(영어)](docs/architecture.md) · [테스트(영어)](docs/testing.md) · [릴리스](https://github.com/LastResolution/ReStart/releases)
 
 ReStart는 후기 Windows 10 전체 화면 시작 메뉴에서 영감을 받은 독립 MIT 프로젝트이며 Microsoft와 제휴하지 않습니다. 이미지는 영어 데모, 합성 메트릭, 생성한 사진 색상을 사용하는 실제 앱입니다. 이름과 아이콘은 각 권리자에게 속합니다. [MIT 라이선스](LICENSE) · [타사 라이선스 안내(영어)](docs/third-party.md) · [지원(영어)](SUPPORT.md)
 

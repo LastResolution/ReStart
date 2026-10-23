@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Questions, ideas and community showcases
+    url: https://github.com/LastResolution/ReStart/discussions
+    about: Ask for help in Q&A, discuss ideas, or share layouts and custom live tiles in Show and tell.
   - name: Report a security vulnerability privately
     url: https://github.com/LastResolution/ReStart/security/advisories/new
     about: Use private vulnerability reporting for security issues. Do not publish exploit details or credentials.

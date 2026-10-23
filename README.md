@@ -192,7 +192,7 @@ The **Weather scene**, **System dashboard**, **News board** and **Canvas garden*
 
 The interface and bundled tiles support **English, Japanese, German, French, Spanish, Korean, Simplified Chinese and Traditional Chinese**.
 
-Have a layout to show, an idea for a tile, or a bug to report? [Open an issue](https://github.com/LastResolution/ReStart/issues/new/choose). Contributions to tiles, translations, accessibility and launcher behavior are welcome. The [contribution guide](CONTRIBUTING.md) explains how to get started.
+Have a question, a layout to show, or an idea for a tile? [Join Discussions](https://github.com/LastResolution/ReStart/discussions); the [getting-started FAQ](https://github.com/LastResolution/ReStart/discussions/30) covers common questions. For reproducible bugs, [open an issue](https://github.com/LastResolution/ReStart/issues/new/choose). Contributions to tiles, translations, accessibility and launcher behavior are welcome. The [contribution guide](CONTRIBUTING.md) explains how to get started.
 
 ## Everyday details
 

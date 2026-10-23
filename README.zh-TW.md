@@ -153,7 +153,7 @@ dotnet run --project src/ReStart.App -c Release -- --preview
 
 ARM64 使用 `win-arm64`。ZIP 與校驗檔產生於 `artifacts/packages`。請始終發行完整 ZIP。
 
-[問題與建議](https://github.com/LastResolution/ReStart/issues/new/choose) · [參與貢獻（英文）](CONTRIBUTING.md) · [架構（英文）](docs/architecture.md) · [測試（英文）](docs/testing.md) · [發行](https://github.com/LastResolution/ReStart/releases)
+[問題與作品分享](https://github.com/LastResolution/ReStart/discussions) · [回報缺陷](https://github.com/LastResolution/ReStart/issues/new/choose) · [參與貢獻（英文）](CONTRIBUTING.md) · [架構（英文）](docs/architecture.md) · [測試（英文）](docs/testing.md) · [發行](https://github.com/LastResolution/ReStart/releases)
 
 ReStart 是受後期 Windows 10 全螢幕開始功能表啟發的獨立 MIT 專案，與 Microsoft 無關。圖片顯示真正程式的英文示範、合成指標與產生的照片色塊。名稱和圖示屬於各權利人。[MIT 授權](LICENSE) · [第三方聲明（英文）](docs/third-party.md) · [支援（英文）](SUPPORT.md)
 

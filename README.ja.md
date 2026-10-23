@@ -68,7 +68,7 @@ HTML/CSS/JavaScript製のライブタイルを19種類同梱。Tile Studioでソ
 
 ![アプリとライブタイルを表示する ReStart の開閉アニメーション](docs/images/start-motion.gif)
 
-**既定はグループ、必要なときは自由配置。** 空き領域へドロップすると名前のないグループを作成し、タイルに重ねて待つとフォルダーを作成します。<kbd>Shift</kbd>を押しながらドラッグするとフォルダー化せず並べ替え、<kbd>Alt</kbd>では空き領域へ単独配置します。**設定 → スタートの動作 → 自由なタイル配置を使用**で単独配置を既定にできます。既存の配置・フォルダーは維持します。移動先の判定を保ちながら、周囲のタイルが滑らかに移動します。
+**既定はグループ、必要なときは自由配置。** 空き領域へドロップすると名前のないグループを作成し、タイルに重ねて待つとフォルダーを作成します。<kbd>Shift</kbd>を押しながらドラッグするとフォルダー化せず並べ替え、<kbd>Alt</kbd>では空き領域へ単独配置します。**設定 → スタートの動作 → タイルの自由配置を使う**で単独配置を既定にできます。既存の配置・フォルダーは維持します。移動先の判定を保ちながら、周囲のタイルが滑らかに移動します。
 
 
 - **自由に配置。** グループ間や空白へタイルを移動できます。グループは内容幅に合わせた長方形とし、ホバー時・ドラッグ中に境界を表示。重なり判定も同じ長方形に揃えます。
@@ -216,7 +216,7 @@ function render(ctx) {
 
 ## 使い方を共有する
 
-配置例、タイルのアイデア、不具合は [Issue](https://github.com/LastResolution/ReStart/issues/new/choose) へ。タイル、翻訳、アクセシビリティ、ランチャー本体への貢献も歓迎します。[開発参加ガイド](CONTRIBUTING.md)を参照してください。
+使い方の質問、配置例、タイルのアイデアは [Discussions](https://github.com/LastResolution/ReStart/discussions) へ。[基本FAQ（英語）](https://github.com/LastResolution/ReStart/discussions/30)もあります。再現できる不具合は [Issue](https://github.com/LastResolution/ReStart/issues/new/choose) で報告してください。タイル、翻訳、アクセシビリティ、ランチャー本体への貢献も歓迎します。[開発参加ガイド](CONTRIBUTING.md)を参照してください。
 
 <details>
 <summary><strong>初回起動と対応環境</strong></summary>

@@ -153,7 +153,7 @@ dotnet run --project src/ReStart.App -c Release -- --preview
 
 Pour ARM64, utilisez `win-arm64`. ZIP et sommes de contrôle sont dans `artifacts/packages`. Distribuez toujours le ZIP complet.
 
-[Bugs et idées](https://github.com/LastResolution/ReStart/issues/new/choose) · [Contribuer (anglais)](CONTRIBUTING.md) · [Architecture (anglais)](docs/architecture.md) · [Tests (anglais)](docs/testing.md) · [Versions](https://github.com/LastResolution/ReStart/releases)
+[Questions et créations](https://github.com/LastResolution/ReStart/discussions) · [Signaler un bug](https://github.com/LastResolution/ReStart/issues/new/choose) · [Contribuer (anglais)](CONTRIBUTING.md) · [Architecture (anglais)](docs/architecture.md) · [Tests (anglais)](docs/testing.md) · [Versions](https://github.com/LastResolution/ReStart/releases)
 
 ReStart est un projet MIT indépendant, inspiré du menu Démarrer plein écran des dernières versions de Windows 10 et non affilié à Microsoft. Captures et animation montrent la vraie application avec une démonstration anglaise, des mesures synthétiques et des couleurs de photos générées. Noms et icônes appartiennent à leurs propriétaires. [Licence MIT](LICENSE) · [Mentions tierces (anglais)](docs/third-party.md) · [Assistance (anglais)](SUPPORT.md)
 
