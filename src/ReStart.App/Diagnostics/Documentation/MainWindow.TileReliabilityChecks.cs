@@ -63,7 +63,8 @@ public partial class MainWindow
                 measurements.Add(new
                 {
                     tiles = count,
-                    active = active.Count,
+                    activeAtTop = active.Count,
+                    active = _scriptViews.Count(v => TileInViewport(v.Button)),
                     initialized = _htmlTiles.Count(v => v.Value.BrowserReady),
                     warmupMs = warmup,
                     scrollReadyMs = scrollMs,
