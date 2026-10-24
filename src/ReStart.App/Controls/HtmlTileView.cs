@@ -96,6 +96,7 @@ internal sealed class HtmlTileView : Grid, IDisposable
 
     private async Task InitializeAsync()
     {
+        if (Environments.TryGetValue(_dataDirectory, out var failed) && (failed.IsFaulted || failed.IsCanceled)) Environments.Remove(_dataDirectory);
         if (!Environments.TryGetValue(_dataDirectory, out var environment))
             Environments[_dataDirectory] = environment = CoreWebView2Environment.CreateAsync(userDataFolder: _dataDirectory);
         var env = await environment;

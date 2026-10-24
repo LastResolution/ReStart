@@ -167,6 +167,7 @@ public partial class MainWindow
                             [new("C:\\", 512L * 1024 * 1024 * 1024, 214L * 1024 * 1024 * 1024, 58.2)], 425984, 65536, 74, false);
                         else { _systemMetrics ??= new(); _systemMetrics.SetEnabled(true); metrics = _systemMetrics.Latest; }
                     }
+                    else _liveSessions.MetricTiles.Remove(view.Tile.Id);
                     SlideshowSource.Snapshot? slideshow = null;
                     if (manifest.Capabilities.Contains("images.slideshow"))
                     {
