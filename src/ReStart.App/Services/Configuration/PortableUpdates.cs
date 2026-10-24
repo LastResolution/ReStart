@@ -122,6 +122,7 @@ internal static partial class PortableUpdates
         var request = ReadRequest(id);
         var transaction = new UpdateTransaction(request.Installation, directory);
         var result = "failed";
+        var phase = "handoff";
         Process? replacement = null;
         try
         {
@@ -135,7 +136,9 @@ internal static partial class PortableUpdates
                 { transaction.Rollback(); result = "rolled-back"; }
                 else
                 {
-                    transaction.Apply();
+                    phase = "apply-0";
+                    transaction.Apply(count => phase = $"apply-{count}");
+                    phase = "restart";
                     replacement = Process.Start(RestartInfo(request, id, completing: true)) ?? throw new IOException("Replacement could not start.");
                     var acknowledged = await WaitForAcknowledgementAsync(() => File.Exists(Path.Combine(directory, "acknowledged")),
                         () => replacement.HasExited, TimeSpan.FromSeconds(120));
@@ -144,15 +147,15 @@ internal static partial class PortableUpdates
                         if (!replacement.HasExited) { replacement.Kill(entireProcessTree: true); await replacement.WaitForExitAsync(); }
                         transaction.Rollback(); result = "rolled-back";
                     }
-                    else { transaction.Complete(); result = "complete"; }
+                    else { phase = "commit"; transaction.Complete(); result = "complete"; }
                 }
             }
         }
         catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception)
         {
             if (request.Fixture)
-                File.WriteAllText(Path.Combine(directory, "failure-kind"), ex is System.ComponentModel.Win32Exception native
-                    ? $"win32-{native.NativeErrorCode}" : ex is IOException io ? $"io-{io.HResult:X8}" : ex.GetType().Name);
+                File.WriteAllText(Path.Combine(directory, "failure-kind"), phase + ":" + (ex is System.ComponentModel.Win32Exception native
+                    ? $"win32-{native.NativeErrorCode}" : $"{ex.HResult:X8}"));
             if (replacement is { HasExited: false }) { replacement.Kill(entireProcessTree: true); await replacement.WaitForExitAsync(); }
             if (File.Exists(Path.Combine(directory, "transaction.json")))
             {
