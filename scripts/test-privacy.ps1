@@ -12,7 +12,7 @@ try {
     $env:GIT_AUTHOR_EMAIL = '1+fixture@users.noreply.github.com'
     $env:GIT_COMMITTER_EMAIL = '1+fixture@users.noreply.github.com'
     $fixture = Join-Path $testRoot 'fixture.txt'
-    foreach ($mode in @('clean', 'culture', 'path', 'token', 'author', 'committer', 'encrypted-key', 'pfx', 'p12', 'p8', 'pvk', 'snk', 'key', 'jks', 'keystore')) {
+    foreach ($mode in @('clean', 'culture', 'path', 'token', 'author', 'committer', 'encrypted-key', 'pfx', 'p12', 'p8', 'pvk', 'snk', 'key', 'jks', 'keystore', 'private-backup')) {
         git read-tree --empty
         if ($LASTEXITCODE -ne 0) { throw 'Cannot create isolated test index.' }
         $value = switch ($mode) {
@@ -22,8 +22,11 @@ try {
             'encrypted-key' { ('-----BEGIN ' + 'ENCRYPTED PRIVATE KEY-----') }
             default { 'No private data.' }
         }
-        $candidate = if ($mode -in @('pfx', 'p12', 'p8', 'pvk', 'snk', 'key', 'jks', 'keystore')) { Join-Path $testRoot "signing.$mode" } else { $fixture }
-        [IO.File]::WriteAllText($candidate, $value)
+        $candidate = if ($mode -eq 'private-backup') { Join-Path $testRoot 'renamed-profile.zip' } elseif ($mode -in @('pfx', 'p12', 'p8', 'pvk', 'snk', 'key', 'jks', 'keystore')) { Join-Path $testRoot "signing.$mode" } else { $fixture }
+        if ($mode -eq 'private-backup') {
+            $privateZip = [IO.Compression.ZipFile]::Open($candidate, [IO.Compression.ZipArchiveMode]::Create)
+            try { $null = $privateZip.CreateEntry('ReStart-backup.json') } finally { $privateZip.Dispose() }
+        } else { [IO.File]::WriteAllText($candidate, $value) }
         git add --force -- $candidate
         if ($LASTEXITCODE -ne 0) { throw 'Cannot stage privacy fixture.' }
         $env:GIT_AUTHOR_EMAIL = if ($mode -eq 'author') { 'fixture@example.invalid' } else { '1+fixture@users.noreply.github.com' }

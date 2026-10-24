@@ -9,6 +9,7 @@ TestResults/
 artifacts/
 .local/
 *.log
+ReStart-backup*.zip
 *.pfx
 *.p12
 *.p8

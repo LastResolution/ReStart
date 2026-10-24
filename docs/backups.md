@@ -4,6 +4,8 @@
 
 This is a **private backup**, not a public layout-sharing format. It contains application names, launch targets and arguments, and any information written into your custom tile source or assets. Do not publish it without reviewing its contents. Saved data connections and credentials are excluded; this does not remove secrets you manually put in source code.
 
+The repository ignores the default backup filename and its privacy guard rejects profile ZIPs even when renamed. These checks help prevent accidental commits; they do not make an archive suitable for public sharing.
+
 ## Excluded resources
 
 - Encrypted data connections and credential headers (`data-bindings.dat`).

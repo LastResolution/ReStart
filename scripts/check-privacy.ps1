@@ -45,6 +45,18 @@ $patterns = [ordered]@{
 }
 $findings = [Collections.Generic.List[string]]::new()
 function Test-PrivateBytes([byte[]]$Bytes, [string]$DisplayPath) {
+    if ($DisplayPath -match '(?i)\.zip$') {
+        $memory = [IO.MemoryStream]::new($Bytes, $false)
+        try {
+            $profileArchive = [IO.Compression.ZipArchive]::new($memory, [IO.Compression.ZipArchiveMode]::Read)
+            try {
+                if (@($profileArchive.Entries | Where-Object { $_.FullName -ieq 'ReStart-backup.json' }).Count) {
+                    $findings.Add("$DisplayPath — private profile backup archive")
+                }
+            } finally { $profileArchive.Dispose() }
+        } catch [IO.InvalidDataException] { }
+        finally { $memory.Dispose() }
+    }
     if ($DisplayPath -match '(?i)\.(?:pfx|p12|p8|pvk|snk|key|jks|keystore)$') {
         $findings.Add("$DisplayPath — private signing container")
     }
