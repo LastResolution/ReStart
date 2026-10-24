@@ -3,6 +3,28 @@ namespace ReStart.Core;
 /// <summary>Stable, language-independent identifiers for all application-owned UI text.</summary>
 public enum TextKey
 {
+    /// <summary>Create full backup</summary>
+    BackupCreate,
+    /// <summary>Restore full backup</summary>
+    BackupRestore,
+    /// <summary>Includes layout, appearance, installed tiles, library drafts and background images. Connections, credentials, photo-folder paths, history and caches are excluded.</summary>
+    BackupHelp,
+    /// <summary>This private backup contains app names, launch paths and your custom tile source/assets. Keep it private. Saved data connections and credentials are excluded. Continue?</summary>
+    BackupPrivacy,
+    /// <summary>Backup created.</summary>
+    BackupCreated,
+    /// <summary>Backup restored. Reconfigure tile data connections and permissions as needed.</summary>
+    BackupRestored,
+    /// <summary>Restore {0} groups and {1} root tiles? This replaces your layout and appearance. Shell integration settings stay local. Data connections and web network permissions require configuration again.</summary>
+    BackupConfirm,
+    /// <summary>Backup operation failed: {0}</summary>
+    BackupFailed,
+    /// <summary>Pause live tiles outside the visible area</summary>
+    PauseOffscreenLiveTiles,
+    /// <summary>Automatically recover failed live tiles</summary>
+    AutoRecoverLiveTiles,
+    /// <summary>This tile was paused after repeated failures. Choose Reload to retry.</summary>
+    TileRecoveryPaused,
     /// <summary>Opens the local data-source connection editor.</summary>
     ConfigureTileData,
     /// <summary>Requests an explicit data refresh.</summary>

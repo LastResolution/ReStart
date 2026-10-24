@@ -20,8 +20,13 @@ internal sealed class HtmlTileView : Grid, IDisposable
     private readonly string _dataDirectory, _host;
     private string _html = "", _css = "", _source = "", _signature = "";
     private bool _network, _disposed;
+    private bool _viewportPaused;
+    internal bool NeedsRecreation { get; private set; }
+    internal event Action? RecoveryRequired;
+    internal bool ViewportPaused => _viewportPaused;
     private long _sequence;
     private Task? _initialization;
+    private CoreWebView2Environment? _environment;
     private TaskCompletionSource<ScriptTileFrame>? _reply;
     private BitmapSource? _image;
     private byte[]? _imageBytes;
@@ -33,7 +38,7 @@ internal sealed class HtmlTileView : Grid, IDisposable
     private HwndSource? _offscreenHost;
     private readonly bool _offscreenOnly;
     private CoreWebView2Controller? _headlessController;
-    private CoreWebView2? Core => _disposed ? null : _headlessController?.CoreWebView2 ?? _browser.CoreWebView2;
+    private CoreWebView2? Core => _disposed || NeedsRecreation ? null : _headlessController?.CoreWebView2 ?? _browser.CoreWebView2;
     internal bool BrowserReady => Core != null;
     internal bool OffscreenOnly => _offscreenOnly;
     internal bool HostObjectsDisabled => Core?.Settings.AreHostObjectsAllowed == false;
@@ -55,7 +60,7 @@ internal sealed class HtmlTileView : Grid, IDisposable
 
     private void ResumePresentation()
     {
-        if (_disposed) return;
+        if (_disposed || _viewportPaused || NeedsRecreation) return;
         _visibilityGeneration++;
         _browser.Visibility = Visibility.Visible;
         if (_headlessController != null) _headlessController.IsVisible = true;
@@ -94,6 +99,7 @@ internal sealed class HtmlTileView : Grid, IDisposable
         if (!Environments.TryGetValue(_dataDirectory, out var environment))
             Environments[_dataDirectory] = environment = CoreWebView2Environment.CreateAsync(userDataFolder: _dataDirectory);
         var env = await environment;
+        _environment = env;
         if (_disposed) return;
         var options = env.CreateCoreWebView2ControllerOptions(); options.IsInPrivateModeEnabled = true;
         if (_offscreenOnly)
@@ -119,7 +125,15 @@ internal sealed class HtmlTileView : Grid, IDisposable
         core.LaunchingExternalUriScheme += (_, e) => e.Cancel = true;
         core.DownloadStarting += (_, e) => e.Cancel = true;
         core.PermissionRequested += (_, e) => e.State = CoreWebView2PermissionState.Deny;
-        core.ProcessFailed += (_, _) => { _signature = ""; _reply?.TrySetException(new InvalidOperationException(TextCatalog.T(K.ErrorWebTileProcess))); };
+        core.ProcessFailed += (_, e) =>
+        {
+            if (e.ProcessFailedKind is CoreWebView2ProcessFailedKind.BrowserProcessExited or CoreWebView2ProcessFailedKind.RenderProcessExited or CoreWebView2ProcessFailedKind.RenderProcessUnresponsive)
+            {
+                if (e.ProcessFailedKind == CoreWebView2ProcessFailedKind.BrowserProcessExited && Environments.TryGetValue(_dataDirectory, out var cached) && cached.IsCompletedSuccessfully && ReferenceEquals(cached.Result, env))
+                    Environments.Remove(_dataDirectory);
+                RequireRecovery();
+            }
+        };
         core.WebMessageReceived += Receive;
         core.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All, CoreWebView2WebResourceRequestSourceKinds.All);
         core.WebResourceRequested += (_, e) =>
@@ -142,6 +156,14 @@ internal sealed class HtmlTileView : Grid, IDisposable
                 e.Response = env.CreateWebResourceResponse(new MemoryStream(), 403, "Blocked", "Content-Type: text/plain");
         };
         await core.AddScriptToExecuteOnDocumentCreatedAsync(Bootstrap);
+    }
+
+    private void RequireRecovery()
+    {
+        if (_disposed || NeedsRecreation) return;
+        NeedsRecreation = true; _signature = "";
+        _reply?.TrySetException(new InvalidOperationException(TextCatalog.T(K.ErrorWebTileProcess)));
+        RecoveryRequired?.Invoke();
     }
 
     private bool Own(string uri) => Uri.TryCreate(uri, UriKind.Absolute, out var value) && value.Scheme == "https" && value.Host == _host && value.IsDefaultPort;
@@ -174,7 +196,8 @@ internal sealed class HtmlTileView : Grid, IDisposable
         var stage = "initialization";
         try
         {
-            if (_disposed) return (null, null);
+            if (_disposed || _viewportPaused) return (null, null);
+            if (NeedsRecreation) return (null, TextCatalog.T(K.ErrorWebTileProcess));
             _html = html; _css = css; _source = source; _network = network;
             if (_initialization == null && (_offscreenOnly || PresentationSource.FromVisual(_browser) == null))
             {
@@ -251,7 +274,10 @@ internal sealed class HtmlTileView : Grid, IDisposable
             return (frame, null);
         }
         catch (Exception ex) when (ex is InvalidOperationException or IOException or UnauthorizedAccessException or InvalidDataException or TimeoutException or System.Runtime.InteropServices.COMException or WebView2RuntimeNotFoundException)
-        { return (null, ex is WebView2RuntimeNotFoundException ? TextCatalog.T(K.ErrorWebTileRuntime) : ex.Message + " (" + stage + ")"); }
+        {
+            if (ex is TimeoutException or System.Runtime.InteropServices.COMException || _initialization?.IsFaulted == true) RequireRecovery();
+            return (null, ex is WebView2RuntimeNotFoundException ? TextCatalog.T(K.ErrorWebTileRuntime) : ex.Message + " (" + stage + ")");
+        }
     }
 
     internal void SetImage(BitmapSource? image)
@@ -315,7 +341,14 @@ internal sealed class HtmlTileView : Grid, IDisposable
         if (_headlessController != null) _headlessController.IsVisible = false;
         try { await Core.TrySuspendAsync(); }
         catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException) { }
-        if (!_disposed && IsVisible) ResumePresentation();
+        if (!_disposed && IsVisible && !_viewportPaused) ResumePresentation();
+    }
+
+    internal async Task SetViewportPausedAsync(bool paused)
+    {
+        if (_disposed || _viewportPaused == paused) return;
+        _viewportPaused = paused;
+        if (paused) await SuspendAsync(); else ResumePresentation();
     }
 
     internal async Task CaptureAsync(Stream stream)
@@ -327,6 +360,13 @@ internal sealed class HtmlTileView : Grid, IDisposable
         await stream.WriteAsync(bytes);
     }
     internal Task<string> InspectAsync(string script) => Core!.ExecuteScriptAsync(script);
+    internal uint BrowserProcessId => Core?.BrowserProcessId ?? 0;
+    internal IReadOnlyList<int> OwnedProcessIds => _environment?.GetProcessInfos().Select(p => p.ProcessId).ToArray() ?? [];
+    internal async Task CrashRendererForVerificationAsync()
+    {
+        try { await Core!.CallDevToolsProtocolMethodAsync("Page.crash", "{}").WaitAsync(TimeSpan.FromSeconds(4)); }
+        catch (Exception ex) when (ex is InvalidOperationException or TimeoutException or System.Runtime.InteropServices.COMException) { }
+    }
     internal async Task FreezeForDocumentationAsync()
     {
         if (_disposed || Core == null) return;
@@ -346,8 +386,10 @@ internal sealed class HtmlTileView : Grid, IDisposable
     public void Dispose()
     {
         if (_disposed) return;
-        _disposed = true; _reply?.TrySetException(new InvalidOperationException("Tile view was disposed."));
-        _browser.Dispose(); _headlessController?.Close(); _headlessController = null; _offscreenHost?.Dispose(); _offscreenHost = null; _image = null; _imageBytes = null;
+        _disposed = true; RecoveryRequired = null; _reply?.TrySetException(new InvalidOperationException("Tile view was disposed."));
+        try { _browser.Dispose(); } catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException) { }
+        try { _headlessController?.Close(); } catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException) { }
+        _headlessController = null; _offscreenHost?.Dispose(); _offscreenHost = null; _image = null; _imageBytes = null;
     }
 
     private const string Bootstrap = """

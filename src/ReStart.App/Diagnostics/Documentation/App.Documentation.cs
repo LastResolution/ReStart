@@ -23,7 +23,10 @@ public partial class App
             var store = new LayoutStore(Path.Combine(directory, "fixture-data", "layout.json"));
             store.Save(new() { Preferences = new() { Language = "en", Animate = false, ShowWallpaper = false } });
             renderer = new(store, true);
-            if (platform) await renderer.VerifyPlatformAsync(directory, arguments.Contains("--visible") || arguments.Contains("--interactive"), arguments.Contains("--interactive"));
+            var soakIndex = Array.IndexOf(arguments, "--soak-seconds");
+            if (soakIndex >= 0 && soakIndex + 1 < arguments.Length && int.TryParse(arguments[soakIndex + 1], out var soak)) renderer.ReliabilitySoakSeconds = Math.Clamp(soak, 3, 1800);
+            if (arguments.Contains("--reliability-only")) await renderer.VerifyTileReliabilityAsync(directory);
+            else if (platform) await renderer.VerifyPlatformAsync(directory, arguments.Contains("--visible") || arguments.Contains("--interactive"), arguments.Contains("--interactive"));
             else if (studio && arguments.Contains("--recovery-only")) await renderer.VerifyWebTileRecoveryAsync(directory);
             else if (studio) await renderer.RenderStudioDocumentationAsync(directory);
             else if (promo)

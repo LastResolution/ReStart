@@ -471,5 +471,16 @@
   "ShortcutSize": "Taille : petite / moyenne / large / grande",
   "ShortcutNewGroup": "Créer un groupe à partir de la sélection",
   "ShortcutTileMenu": "Ouvrir le menu de la tuile active",
-  "ShortcutClearSelection": "Effacer la sélection, puis quitter le mode de sélection"
+  "ShortcutClearSelection": "Effacer la sélection, puis quitter le mode de sélection",
+  "PauseOffscreenLiveTiles": "Suspendre les tuiles hors de la zone visible",
+  "AutoRecoverLiveTiles": "Rétablir automatiquement les tuiles en erreur",
+  "TileRecoveryPaused": "Cette tuile a été suspendue après plusieurs erreurs. Rechargez-la pour réessayer.",
+  "BackupCreate": "Créer une sauvegarde complète",
+  "BackupRestore": "Restaurer une sauvegarde complète",
+  "BackupHelp": "Comprend la disposition, les couleurs, les tuiles, les brouillons et les fonds. Exclut connexions, identifiants, chemins des photos, historique et caches.",
+  "BackupPrivacy": "Cette sauvegarde privée contient noms des applications, chemins de lancement, code et ressources personnels. Ne la publiez pas. Les connexions enregistrées et identifiants sont exclus. Continuer ?",
+  "BackupCreated": "Sauvegarde créée.",
+  "BackupRestored": "Sauvegarde restaurée. Reconfigurez les connexions et autorisations si nécessaire.",
+  "BackupConfirm": "Restaurer {0} groupes et {1} tuiles principales ? Cela remplace disposition et apparence. Les réglages système restent locaux. Reconfigurez connexions et autorisations réseau.",
+  "BackupFailed": "Échec de sauvegarde : {0}"
 }

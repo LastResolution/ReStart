@@ -471,5 +471,16 @@
   "ShortcutSize": "調整大小：小／中／寬／大",
   "ShortcutNewGroup": "以選取的磚塊建立群組",
   "ShortcutTileMenu": "開啟焦點磚塊的功能表",
-  "ShortcutClearSelection": "清除選取，然後結束選取模式"
+  "ShortcutClearSelection": "清除選取，然後結束選取模式",
+  "PauseOffscreenLiveTiles": "暫停可見區域外的動態磚",
+  "AutoRecoverLiveTiles": "自動復原出錯的動態磚",
+  "TileRecoveryPaused": "此動態磚因反覆出錯而暫停。請選擇重新載入以重試。",
+  "BackupCreate": "建立完整備份",
+  "BackupRestore": "還原完整備份",
+  "BackupHelp": "包括配置、外觀、已安裝動態磚、草稿與背景圖片。不含連線設定、認證資訊、照片資料夾路徑、歷程記錄與快取。",
+  "BackupPrivacy": "此私人備份包含應用程式名稱、啟動路徑及自訂動態磚原始碼與素材。請勿公開。不含已儲存的資料連線與認證資訊。繼續？",
+  "BackupCreated": "已建立備份。",
+  "BackupRestored": "已還原備份。請視需要重新設定資料連線與權限。",
+  "BackupConfirm": "還原{0}個群組與{1}個頂層動態磚？這會取代配置與外觀。系統整合設定保持不變。請重新設定資料連線與網路權限。",
+  "BackupFailed": "備份操作失敗：{0}"
 }

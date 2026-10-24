@@ -471,5 +471,16 @@
   "ShortcutSize": "Resize: small / medium / wide / large",
   "ShortcutNewGroup": "Create a group from the selection",
   "ShortcutTileMenu": "Open the focused tile’s menu",
-  "ShortcutClearSelection": "Clear selection, then finish selecting"
+  "ShortcutClearSelection": "Clear selection, then finish selecting",
+  "PauseOffscreenLiveTiles": "Pause live tiles outside the visible area",
+  "AutoRecoverLiveTiles": "Automatically recover failed live tiles",
+  "TileRecoveryPaused": "This tile was paused after repeated failures. Choose Reload to retry.",
+  "BackupCreate": "Create full backup",
+  "BackupRestore": "Restore full backup",
+  "BackupHelp": "Includes layout, appearance, installed tiles, library drafts and background images. Connections, credentials, photo-folder paths, history and caches are excluded.",
+  "BackupPrivacy": "This private backup contains app names, launch paths and your custom tile source/assets. Keep it private. Saved data connections and credentials are excluded. Continue?",
+  "BackupCreated": "Backup created.",
+  "BackupRestored": "Backup restored. Reconfigure tile data connections and permissions as needed.",
+  "BackupConfirm": "Restore {0} groups and {1} root tiles? This replaces layout and appearance. Shell integration stays local. Reconfigure data connections and web network permissions.",
+  "BackupFailed": "Backup operation failed: {0}"
 }
