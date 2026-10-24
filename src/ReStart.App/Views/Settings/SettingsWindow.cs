@@ -108,11 +108,18 @@ internal sealed partial class SettingsWindow : Window
         DataButton(dataButtons, L.T(K.CommonImport), Import);
         DataButton(dataButtons, L.T(K.ResetLayout), Reset);
         content.Children.Add(dataButtons);
+        var backups = new WrapPanel { Margin = new(0, 10, 0, 4) };
+        var createBackup = DataButton(backups, L.T(K.BackupCreate), ExportBackup); createBackup.IsEnabled = !_store.IsReadOnly;
+        var restoreBackup = DataButton(backups, L.T(K.BackupRestore), RestoreBackup);
+        restoreBackup.IsEnabled = !_store.IsReadOnly && !_main.Document.Preferences.LayoutLocked && _main.Document.Preferences.LockedGroupIds.Count == 0;
+        content.Children.Add(backups); Note(content, L.T(K.BackupHelp));
         Note(content, L.T(K.StoragePrefix) + _store.FilePath);
         Note(content, L.T(K.SettingsPrivacy));
         BuildMigrationInfo(content);
         content = Section(K.SettingsScriptTiles);
         Check(content, L.T(K.ShowLiveTileNames), _draft.ShowLiveTileNames, v => _draft.ShowLiveTileNames = v);
+        Check(content, L.T(K.PauseOffscreenLiveTiles), _draft.PauseOffscreenLiveTiles, v => _draft.PauseOffscreenLiveTiles = v);
+        Check(content, L.T(K.AutoRecoverLiveTiles), _draft.AutoRecoverLiveTiles, v => _draft.AutoRecoverLiveTiles = v);
         Heading(content, L.T(K.BundledTiles));
         var bundled = new WrapPanel { Margin = new(0, 0, 0, 16) };
         foreach (var id in ScriptTilePackages.BundledIds)
