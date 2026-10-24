@@ -471,5 +471,16 @@
   "ShortcutSize": "Größe: klein / mittel / breit / groß",
   "ShortcutNewGroup": "Gruppe aus der Auswahl erstellen",
   "ShortcutTileMenu": "Menü der fokussierten Kachel öffnen",
-  "ShortcutClearSelection": "Auswahl aufheben, danach Auswahlmodus beenden"
+  "ShortcutClearSelection": "Auswahl aufheben, danach Auswahlmodus beenden",
+  "PauseOffscreenLiveTiles": "Live-Kacheln außerhalb des sichtbaren Bereichs pausieren",
+  "AutoRecoverLiveTiles": "Fehlerhafte Live-Kacheln automatisch wiederherstellen",
+  "TileRecoveryPaused": "Diese Kachel wurde nach wiederholten Fehlern pausiert. Zum erneuten Versuch neu laden.",
+  "BackupCreate": "Vollständige Sicherung erstellen",
+  "BackupRestore": "Vollständige Sicherung wiederherstellen",
+  "BackupHelp": "Enthält Layout, Darstellung, installierte Kacheln, Entwürfe und Hintergründe. Verbindungen, Zugangsdaten, Fotoordnerpfade, Verlauf und Cache sind ausgeschlossen.",
+  "BackupPrivacy": "Diese private Sicherung enthält App-Namen, Startpfade und eigenen Kachelcode samt Dateien. Nicht veröffentlichen. Gespeicherte Verbindungen und Zugangsdaten sind ausgeschlossen. Fortfahren?",
+  "BackupCreated": "Sicherung erstellt.",
+  "BackupRestored": "Sicherung wiederhergestellt. Datenverbindungen und Berechtigungen bei Bedarf neu einrichten.",
+  "BackupConfirm": "{0} Gruppen und {1} Hauptkacheln wiederherstellen? Layout und Darstellung werden ersetzt. Shell-Einstellungen bleiben lokal. Verbindungen und Web-Zugriff erneut einrichten.",
+  "BackupFailed": "Sicherung fehlgeschlagen: {0}"
 }

@@ -3,6 +3,10 @@ namespace ReStart.Core;
 /// <summary>Stores local UI and integration choices; imported layouts do not replace these settings.</summary>
 public sealed class Preferences
 {
+    /// <summary>Gets or sets whether live tiles outside the scrolled viewport are suspended; defaults to true.</summary>
+    public bool PauseOffscreenLiveTiles { get; set; } = true;
+    /// <summary>Gets or sets whether failed live tiles receive bounded automatic recovery attempts; defaults to true.</summary>
+    public bool AutoRecoverLiveTiles { get; set; } = true;
     /// <summary>Gets or sets whether tile/group positions, sizes and membership are protected from editing; launch and appearance remain available.</summary>
     public bool LayoutLocked { get; set; }
     /// <summary>Gets or sets whether live tiles show their bottom name; defaults to true. Browser packages receive the preference and a title marker contract.</summary>

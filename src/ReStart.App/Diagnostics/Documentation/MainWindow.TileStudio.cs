@@ -74,6 +74,7 @@ public partial class MainWindow
         checks += await VerifyWebScrollingAsync();
         checks += await VerifyFolderPreviewsAsync(directory);
         checks += await VerifyWebTileRecoveryAsync(directory);
+        checks += await VerifyTileReliabilityAsync(directory);
         checks += await VerifyWebLayoutMatrixAsync(directory);
         await RenderTileGalleryAsync(directory);
         _documentationHtmlRendering = true; _startupPreparing = true; Root.Width = 1920; Root.Height = 900;

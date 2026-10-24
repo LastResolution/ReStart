@@ -471,5 +471,16 @@
   "ShortcutSize": "Tamaño: pequeño / mediano / ancho / grande",
   "ShortcutNewGroup": "Crear un grupo con la selección",
   "ShortcutTileMenu": "Abrir el menú de la ficha enfocada",
-  "ShortcutClearSelection": "Borrar la selección y después salir del modo de selección"
+  "ShortcutClearSelection": "Borrar la selección y después salir del modo de selección",
+  "PauseOffscreenLiveTiles": "Pausar los mosaicos fuera del área visible",
+  "AutoRecoverLiveTiles": "Recuperar automáticamente los mosaicos con errores",
+  "TileRecoveryPaused": "Este mosaico se ha pausado tras varios errores. Recárgalo para reintentar.",
+  "BackupCreate": "Crear copia completa",
+  "BackupRestore": "Restaurar copia completa",
+  "BackupHelp": "Incluye distribución, apariencia, mosaicos, borradores y fondos. Excluye conexiones, credenciales, rutas de fotos, historial y caché.",
+  "BackupPrivacy": "Esta copia privada contiene nombres de aplicaciones, rutas y código y recursos propios. No la publiques. Excluye conexiones guardadas y credenciales. ¿Continuar?",
+  "BackupCreated": "Copia creada.",
+  "BackupRestored": "Copia restaurada. Vuelve a configurar conexiones y permisos si es necesario.",
+  "BackupConfirm": "¿Restaurar {0} grupos y {1} mosaicos principales? Sustituye distribución y apariencia. Conserva la integración local. Configura de nuevo conexiones y permisos de red.",
+  "BackupFailed": "Error de copia: {0}"
 }

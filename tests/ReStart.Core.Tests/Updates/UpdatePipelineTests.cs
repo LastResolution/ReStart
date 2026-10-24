@@ -123,6 +123,27 @@ public sealed class UpdatePipelineTests : IDisposable
         Assert.Equal("1.0.0", UpdatePackage.ReadManifest(install).Version);
         Assert.False(File.Exists(Path.Combine(install, "new.txt")));
     }
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task BriefWindowsLocksCanRecoverWhilePersistentLocksRollBack(bool release)
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        var (install, _, transaction) = Transaction();
+        using var held = new FileStream(Path.Combine(install, "ReStart.exe"), FileMode.Open, FileAccess.Read, FileShare.Read);
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        var apply = Task.Run(() => Record.Exception(() => transaction.Apply()));
+        await Task.WhenAny(apply, Task.Delay(250));
+        Assert.False(apply.IsCompleted, "Replacement did not wait for the actual Windows sharing lock.");
+        if (release) held.Dispose();
+        var error = await apply.WaitAsync(TimeSpan.FromSeconds(10));
+        if (release) { Assert.Null(error); transaction.Complete(); }
+        else Assert.True(error is IOException or UnauthorizedAccessException);
+        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(10));
+        Assert.Equal(release ? "1.1.0" : "1.0.0", UpdatePackage.ReadManifest(install).Version);
+        UpdatePackage.VerifyFiles(install, UpdatePackage.ReadManifest(install));
+        Assert.False(File.Exists(Path.Combine(install, UpdateTransaction.PendingName)));
+    }
     [Fact]
     public void ModifiedDistributionAndNewLocalFileCollisionFailBeforeMutation()
     {

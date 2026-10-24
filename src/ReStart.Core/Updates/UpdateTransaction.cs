@@ -147,7 +147,14 @@ public sealed class UpdateTransaction(string installation, string workspace)
         {
             using (var output = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))
             using (var input = File.OpenRead(source)) { input.CopyTo(output); output.Flush(flushToDisk: true); }
-            File.Move(temporary, target, overwrite: true);
+            // Windows can retain an image/scan handle briefly after process exit.
+            // Keep the atomic source intact while retrying only access/share locks;
+            // persistent failures still take the ordinary rollback path.
+            for (var attempt = 0; ; attempt++)
+                try { File.Move(temporary, target, overwrite: true); break; }
+                catch (Exception ex) when (OperatingSystem.IsWindows() && attempt < 20 && ex is IOException or UnauthorizedAccessException
+                    && (ex.HResult & 0xFFFF) is 5 or 32 or 33)
+                { Thread.Sleep(100); }
         }
         finally { if (File.Exists(temporary)) File.Delete(temporary); }
     }

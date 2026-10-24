@@ -64,6 +64,7 @@ public partial class App : Application
         }
         var data = preview ? Path.Combine(AppContext.BaseDirectory, "preview-data") : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ReStart");
         var store = new LayoutStore(Path.Combine(data, "layout.json"), AppBuildInfo.Version);
+        if (!preview) SafeErrorLog.Prepare(data);
         _window = new MainWindow(store, preview);
         _window.DeferLayoutSaves = e.Args.Contains("--complete-update");
         MainWindow = _window;
@@ -126,7 +127,7 @@ public partial class App : Application
             args.Handled = true;
             PortableUpdates.Record(DiagnosticCode.UnhandledError);
             var directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ReStart");
-            try { Directory.CreateDirectory(directory); File.AppendAllText(Path.Combine(directory, "error.log"), $"{DateTimeOffset.Now:O} {args.Exception}\n"); } catch (IOException) { }
+            SafeErrorLog.Write(directory, args.Exception);
             MessageBox.Show(L.T(K.ErrorUnhandled), "ReStart", MessageBoxButton.OK, MessageBoxImage.Error);
             ExitApplication();
         };

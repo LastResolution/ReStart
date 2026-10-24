@@ -62,7 +62,7 @@ The App-to-TileHost project reference is a **build dependency only** (`Reference
 
 1. Move catalog/startup orchestration into a lifetime-owned coordinator once its cancellation and typeahead contracts can move together; retain native focus at the window boundary.
 2. Extract a search session with immutable categorized results and injectable providers, keeping WPF row focus/selection rendering in the view. Preserve identity across late results.
-3. Extract the script/data session registry as one disposable owner, then narrow the window to applying returned frames. Preserve hide/startup/exit cancellation semantics.
+3. `LiveTileSessions` now owns runtime state, retry budgets, frames, data readers, slideshow snapshots and worker disposal. The window still applies WPF frames and routes visibility/input; extracting those remaining presentation concerns is separate work.
 4. Split native services into a Windows adapter project when another frontend or independent integration tests justify it; do not move Shell dependencies into Core.
 
 Each extraction must retain the existing native startup, focus, drag, folder, history and script regression checks. A complete MVVM rewrite or a new plugin system is not part of this change. This is a migration plan grounded in the present code, not a claim that those extractions are already complete. Project dependency checks enforce the current direction in CI.
@@ -163,3 +163,11 @@ Global/group placement locks are preferences outside undo history. Core planning
 `SettingsWindow.Preview` owns a detached preferences draft, preview debounce, close decisions and per-content listener cleanup. `MainWindow.SettingsPreview` exposes those values only through `DisplayPreferences` to visual consumers. The committed `Document.Preferences` remains the source for persistence, shell integration and startup behavior. Saving clones the draft; discarding removes the overlay, so later layout saves cannot capture abandoned appearance or language changes. Language rebuilds dispose old library watchers and update subscriptions before replacing controls.
 
 `PortableUpdates.Prepared` keeps a bounded installation-specific index of an explicitly downloaded workspace. It restores readiness only after revalidating both inventories, payload/helper hashes, version, architecture and workspace ancestry. The handoff refreshes the current PID/creation time and still requires explicit restart consent. A persistent nonmodal reminder represents readiness; ordinary process startup does not apply a staged update.
+
+## Profile archives and tile resilience
+
+`ProfileBackup` is a UI-independent, allowlisted archive service. `ProfileRestore` owns newly staged resource IDs until an atomic writer commits its detached layout. Settings resolves drafts, confirms restore and preserves local shell integration before writing; the window adopts the persisted profile afterward. Original resource files are never replaced.
+
+`LiveTileSessions` is the dispatcher-bound disposable owner for script/data lifetime. `LiveTileRecovery` uses monotonic retry deadlines and a per-tile failure budget. `HtmlTileView` classifies fatal renderer/browser events; the launcher replaces failed presentations without discarding host JSON state or queued input. Browser environment caches are invalidated for browser-process exit. Automatic recovery can be disabled; repeated failures pause only the affected tile until Reload.
+
+Production scheduling intersects tile bounds with the scrolled viewport plus a 24-DIP warmup margin. Offscreen browser presentations and data reads pause; on return they resume from retained host state. The pause switch is independent of recovery. Headless documentation bypasses viewport filtering unless the dedicated scheduling fixture opts in.

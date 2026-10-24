@@ -471,5 +471,16 @@
   "ShortcutSize": "크기: 작게 / 보통 / 넓게 / 크게",
   "ShortcutNewGroup": "선택한 타일로 그룹 만들기",
   "ShortcutTileMenu": "포커스된 타일의 메뉴 열기",
-  "ShortcutClearSelection": "선택 해제 후 선택 모드 종료"
+  "ShortcutClearSelection": "선택 해제 후 선택 모드 종료",
+  "PauseOffscreenLiveTiles": "표시 영역 밖의 라이브 타일 일시 중지",
+  "AutoRecoverLiveTiles": "오류가 발생한 라이브 타일 자동 복구",
+  "TileRecoveryPaused": "오류가 반복되어 이 타일이 일시 중지되었습니다. 다시 로드하여 재시도하세요.",
+  "BackupCreate": "전체 백업 만들기",
+  "BackupRestore": "전체 백업 복원",
+  "BackupHelp": "배치, 모양, 설치된 타일, 초안과 배경 이미지를 포함합니다. 연결 설정, 인증 정보, 사진 폴더 경로, 기록과 캐시는 제외됩니다.",
+  "BackupPrivacy": "앱 이름, 실행 경로, 사용자 타일 소스와 자료가 포함된 개인 백업입니다. 공개하지 마세요. 저장된 데이터 연결과 인증 정보는 제외됩니다. 계속할까요?",
+  "BackupCreated": "백업을 만들었습니다.",
+  "BackupRestored": "백업을 복원했습니다. 필요한 데이터 연결과 권한을 다시 설정하세요.",
+  "BackupConfirm": "그룹 {0}개와 최상위 타일 {1}개를 복원할까요? 배치와 모양을 바꿉니다. 셸 연동 설정은 유지됩니다. 데이터 연결과 웹 통신 권한을 다시 설정하세요.",
+  "BackupFailed": "백업 작업 실패: {0}"
 }

@@ -24,4 +24,8 @@ Configured providers receive the request, its connection metadata and any explic
 
 Explorer pin requests use bounded current-user-only IPC, validate filesystem targets and acknowledge after saving. Integration is per-user and reversible; Explorer is not patched and no DLL is injected. Startup is opt-in.
 
-Local error logs, exports and screenshots may contain paths or app names. Review before sharing. Never commit credentials, signing keys, personal layouts or logs. Report bypasses of package/path/IPC bounds and unintended code execution privately.
+Local error logs contain only UTC time, a fixed error category and a numeric HRESULT. Exception messages, type names and stack traces are not recorded. Three generations of at most 64 KiB each are retained; writable legacy unstructured logs are removed on normal startup. Logging failures do not interrupt error handling. Logs are not uploaded automatically.
+
+Private profile backups include app names, launch paths and custom source/assets. Saved connection credentials, photo-folder bindings, caches, logs and activity history are excluded. Browser networking permissions are revoked on restore, shell integration remains local, and fresh resource IDs prevent adoption of existing credentials. Archives have entry/size/path/hash checks and staged rollback. Review custom code/assets for embedded secrets before sharing any export. See [backups](docs/backups.md).
+
+Browser-process/renderer failures recreate affected tile controls with retained host state and queued input. Automatic recovery backs off and pauses a tile after three failures within two minutes; it is configurable, and Reload resets the budget. This limits repeated recovery, not arbitrary browser script CPU/memory use. Report bypasses of package/path/IPC bounds and unintended code execution privately.

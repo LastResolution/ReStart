@@ -135,6 +135,7 @@ public partial class MainWindow
             });
             failed.ShowDialog(); if (failure != null) throw failure;
             checks += VerifyAvailableUpdateNavigation(fixture, store, directory);
+            checks += VerifyProfileBackupSettings(fixture, store, directory);
             var readyEvents = 0; fixture.PreparedUpdateAvailable += () => readyEvents++;
             fixture.PreparedUpdate = new(Guid.NewGuid().ToString("N"), directory, "9.0.0"); fixture.UpdatePreparation = PreparationState.Ready; fixture.PresentPreparedUpdate();
             Check(readyEvents == 1 && fixture._updateNotice != null, "Finishing preparation did not announce a persistent ready notice.");

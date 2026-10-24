@@ -102,8 +102,8 @@ public partial class MainWindow
                 "Startup did not exchange the splash for a fully prepared main window.");
             Check(fixture.ScriptFrameCount == ScriptTilePackages.BundledIds.Count && fixture._scriptAttempts.Contains(broken.Id) && fixture._scriptViews.Single(v => v.Tile.Id == broken.Id).Body.Children.Count > 0,
                 "Initial live tiles or a broken tile's error were missing at presentation.");
-            Check(fixture._scriptSessions[broken.Id].Attempts is >= 3 and <= 5,
-                "A failed initial frame was not retried within a bounded attempt budget.");
+            Check(fixture._scriptSessions[broken.Id].Attempts is >= 1 and <= 3 && !fixture._liveSessions.Budget(broken.Id).CanRun(Environment.TickCount64),
+                "A failed initial frame bypassed the recovery backoff or exceeded its attempt budget.");
             Check(fixture._slideshowImages.ContainsKey(photo.Id) && fixture._scriptViews.All(v => v.Button.ActualWidth > 0),
                 "Startup frames were rendered before photo decoding or tile layout.");
             Check(fixture.SearchBox.Text == "Edge" && fixture.SearchBox.IsKeyboardFocused && fixture.SearchResults.SelectedItem is Button && launched.SequenceEqual(new[] { "sample-edge" }),

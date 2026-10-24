@@ -14,32 +14,24 @@ public partial class MainWindow
 {
     private readonly List<(Tile Tile, StackPanel Body, Button Button)> _scriptViews = [];
     private int _scriptPresentationGeneration;
-    private sealed class ScriptRuntime
-    {
-        internal int Attempts;
-        internal bool Rendering;
-        internal DateTimeOffset NextUpdate;
-        internal System.Text.Json.JsonElement State = System.Text.Json.JsonSerializer.SerializeToElement(new { });
-        internal Queue<ScriptInput> Inputs = new();
-    }
-    private sealed record ScriptInput(string Type, long UnixMs, double? X = null, double? Y = null);
-    private readonly Dictionary<string, ScriptRuntime> _scriptSessions = [];
-    private ScriptTileWorkerPool? _scriptWorkerPool;
-    private readonly Dictionary<string, ScriptTileFrame> _scriptFrames = [];
+    private LiveTileSessions _liveSessions = new();
+    private Dictionary<string, LiveTileSessions.Runtime> _scriptSessions => _liveSessions.Sessions;
+    private ScriptTileWorkerPool? _scriptWorkerPool { get => _liveSessions.Workers; set => _liveSessions.Workers = value; }
+    private Dictionary<string, ScriptTileFrame> _scriptFrames => _liveSessions.Frames;
     private ScriptTilePackages _scriptPackages = null!;
     internal ScriptTilePackages ScriptPackages => _scriptPackages;
     private string? _scriptLanguage;
-    private SystemMetricsSampler? _systemMetrics;
-    private TileDataTransport? _tileDataTransport;
-    private readonly Dictionary<string, (string Package, ScriptDataRuntime Runtime)> _tileData = [];
-    private readonly Dictionary<string, (string Package, SlideshowSource Source)> _slideshowSources = [];
-    private readonly Dictionary<string, BitmapSource> _slideshowImages = [];
+    private SystemMetricsSampler? _systemMetrics { get => _liveSessions.Metrics; set => _liveSessions.Metrics = value; }
+    private TileDataTransport? _tileDataTransport { get => _liveSessions.Transport; set => _liveSessions.Transport = value; }
+    private Dictionary<string, (string Package, ScriptDataRuntime Runtime)> _tileData => _liveSessions.Data;
+    private Dictionary<string, (string Package, SlideshowSource Source)> _slideshowSources => _liveSessions.Slideshows;
+    private Dictionary<string, BitmapSource> _slideshowImages => _liveSessions.Images;
     /// <summary>Gets the number of currently presented JavaScript tiles, including visible folder miniatures and expanded children.</summary>
     public int ScriptTileCount => _scriptViews.Count(v => v.Tile.Live);
     /// <summary>Gets the number of cached successful JavaScript frames.</summary>
     public int ScriptFrameCount => _scriptFrames.Count;
     /// <summary>Gets whether every currently presented JavaScript tile has produced a successful frame.</summary>
-    public bool ScriptsReady => _scriptViews.All(v => _scriptFrames.ContainsKey(v.Tile.Id));
+    public bool ScriptsReady => _scriptViews.Where(v => v.Tile.Live && TileInViewport(v.Button)).All(v => _scriptFrames.ContainsKey(v.Tile.Id));
 
     /// <summary>Opens a new local tile draft in Tile Studio; saving and pinning remain explicit actions.</summary>
     public void CreateScriptTile() => OpenTileStudio();
@@ -98,7 +90,7 @@ public partial class MainWindow
         {
             if (_htmlTiles.Remove(tile.Id, out var htmlView)) htmlView.Dispose();
             RetireTileData(tile.Id);
-            _scriptSessions.Remove(tile.Id);
+            _scriptSessions.Remove(tile.Id); _liveSessions.Recovery.Remove(tile.Id);
             _scriptFrames.Remove(tile.Id);
             _scriptPackages.InvalidateTitle(tile.ScriptId);
             CommitLayout();
@@ -140,11 +132,15 @@ public partial class MainWindow
     {
         if (!IsVisible && !_startupPreparing) return;
         {
-            var current = _scriptViews.Where(v => v.Body.IsVisible || _startupPreparing).ToArray();
+            RecoverHtmlTiles();
+            var current = _scriptViews.Where(v => v.Tile.Live && (v.Body.IsVisible || _startupPreparing) && TileInViewport(v.Button)).ToArray();
+            var running = current.Where(v => _liveSessions.Budget(v.Tile.Id).CanRun(Environment.TickCount64)).Select(v => v.Tile.Id).ToHashSet();
+            _systemMetrics?.SetEnabled(_liveSessions.MetricTiles.Any(running.Contains));
+            foreach (var (id, html) in _htmlTiles.ToArray()) await html.SetViewportPausedAsync(!running.Contains(id));
             var pinnedIds = Document.Groups.SelectMany(g => g.Tiles).SelectMany(t => new[] { t }.Concat(t.Children)).Select(t => t.Id).ToHashSet();
-            foreach (var id in _tileData.Keys.Where(id => !pinnedIds.Contains(id)).ToArray()) RetireTileData(id);
+            _liveSessions.Prune(pinnedIds);
             foreach (var data in _tileData)
-                if (current.Any(v => v.Tile.Id == data.Key)) data.Value.Runtime.Refresh(DateTimeOffset.Now);
+                if (running.Contains(data.Key)) data.Value.Runtime.Refresh(DateTimeOffset.Now);
                 else data.Value.Runtime.Stop();
             if (current.Length == 0) { PauseScripts(); return; }
             var pool = _scriptWorkerPool ??= new();
@@ -152,6 +148,7 @@ public partial class MainWindow
             await Task.WhenAll(current.Select(async view =>
             {
                 if (!_scriptSessions.TryGetValue(view.Tile.Id, out var session)) _scriptSessions[view.Tile.Id] = session = new();
+                if (!_liveSessions.Budget(view.Tile.Id).CanRun(Environment.TickCount64)) return;
                 if (session.Rendering || session.NextUpdate > DateTimeOffset.Now.AddMilliseconds(15)) return;
                 session.Rendering = true;
                 session.NextUpdate = DateTimeOffset.Now.AddSeconds(5);
@@ -165,10 +162,12 @@ public partial class MainWindow
                     SystemMetricsSnapshot? metrics = null;
                     if (manifest.Capabilities.Contains("system.metrics"))
                     {
+                        _liveSessions.MetricTiles.Add(view.Tile.Id);
                         if (_preview && !_verifyHostMetrics) metrics = _documentationMetrics ?? new(now, 37.2, 16, 32UL * 1024 * 1024 * 1024, 12UL * 1024 * 1024 * 1024, 62.5, 91800,
                             [new("C:\\", 512L * 1024 * 1024 * 1024, 214L * 1024 * 1024 * 1024, 58.2)], 425984, 65536, 74, false);
                         else { _systemMetrics ??= new(); _systemMetrics.SetEnabled(true); metrics = _systemMetrics.Latest; }
                     }
+                    else _liveSessions.MetricTiles.Remove(view.Tile.Id);
                     SlideshowSource.Snapshot? slideshow = null;
                     if (manifest.Capabilities.Contains("images.slideshow"))
                     {
@@ -232,8 +231,16 @@ public partial class MainWindow
                     var (frame, error) = manifest.Renderer == "web" ? await RenderHtmlTileAsync(view.Tile, context, source, manifest) : await pool.RenderAsync(source, context);
                     if (!_scriptSessions.TryGetValue(view.Tile.Id, out var latest) || latest != session || !IsVisible && !_startupPreparing || _scriptWorkerPool != pool) return;
                     if (generation != _scriptPresentationGeneration) { session.NextUpdate = DateTimeOffset.MinValue; return; }
+                    if (frame == null && error != null)
+                    {
+                        var budget = _liveSessions.Budget(view.Tile.Id);
+                        if (!_htmlTiles.TryGetValue(view.Tile.Id, out var failedView) || !failedView.NeedsRecreation)
+                            budget.Fail(Environment.TickCount64, Document.Preferences.AutoRecoverLiveTiles);
+                        if (budget.Paused) error = L.T(K.TileRecoveryPaused);
+                        session.NextUpdate = DateTimeOffset.MinValue;
+                    }
                     _scriptAttempts.Add(view.Tile.Id);
-                    if (input != null && session.Inputs.TryPeek(out var queued) && queued == input) session.Inputs.Dequeue();
+                    if (frame != null && input != null && session.Inputs.TryPeek(out var queued) && queued == input) session.Inputs.Dequeue();
                     if (session.Inputs.Count > 0) session.NextUpdate = DateTimeOffset.MinValue;
                     if (frame != null) { _scriptFrames[view.Tile.Id] = frame; session.State = frame.State; if (ScriptsReady) MarkStartup("tiles"); }
                     foreach (var target in _scriptViews.Where(target => target.Tile.Id == view.Tile.Id))
@@ -255,7 +262,9 @@ public partial class MainWindow
                 catch (Exception ex) when (ex is IOException or InvalidDataException or InvalidOperationException or System.Text.Json.JsonException)
                 {
                     if (generation != _scriptPresentationGeneration) { session.NextUpdate = DateTimeOffset.MinValue; return; }
-                    _scriptAttempts.Add(view.Tile.Id); view.Button.ToolTip = L.T(K.ErrorScriptPrefix) + ex.Message;
+                    var budget = _liveSessions.Budget(view.Tile.Id); budget.Fail(Environment.TickCount64, Document.Preferences.AutoRecoverLiveTiles);
+                    session.NextUpdate = DateTimeOffset.MinValue;
+                    _scriptAttempts.Add(view.Tile.Id); view.Button.ToolTip = L.T(K.ErrorScriptPrefix) + (budget.Paused ? L.T(K.TileRecoveryPaused) : ex.Message);
                     if (_htmlTiles.ContainsKey(view.Tile.Id)) SetWebTileFeedback(view.Body, true);
                     view.Body.Children.Clear(); view.Body.Children.Add(new TextBlock { Text = L.T(K.ErrorScript), TextWrapping = TextWrapping.Wrap });
                 }
@@ -352,9 +361,7 @@ public partial class MainWindow
     private void PauseScripts()
     {
         foreach (var html in _htmlTiles.Values) _ = html.SuspendAsync();
-        _scriptWorkerPool?.Dispose(); _scriptWorkerPool = null; _systemMetrics?.SetEnabled(false);
-        foreach (var data in _tileData.Values) data.Runtime.Stop();
-        foreach (var session in _scriptSessions.Values) session.NextUpdate = DateTimeOffset.MinValue;
+        _liveSessions.Pause();
     }
 
     private Dictionary<string, TileDataSnapshot> ReadTileData(Tile tile, ScriptTileManifest manifest, DateTimeOffset now)

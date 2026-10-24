@@ -471,5 +471,16 @@
   "ShortcutSize": "调整大小：小／中／宽／大",
   "ShortcutNewGroup": "将选中的磁贴创建为分组",
   "ShortcutTileMenu": "打开焦点磁贴的菜单",
-  "ShortcutClearSelection": "清除选择，然后退出选择模式"
+  "ShortcutClearSelection": "清除选择，然后退出选择模式",
+  "PauseOffscreenLiveTiles": "暂停可见区域外的动态磁贴",
+  "AutoRecoverLiveTiles": "自动恢复出错的动态磁贴",
+  "TileRecoveryPaused": "此磁贴因反复出错而暂停。请选择重新加载以重试。",
+  "BackupCreate": "创建完整备份",
+  "BackupRestore": "恢复完整备份",
+  "BackupHelp": "包括布局、外观、已安装磁贴、草稿和背景图像。不包括连接设置、凭据、照片文件夹路径、历史记录和缓存。",
+  "BackupPrivacy": "此私人备份包含应用名称、启动路径及自定义磁贴源代码和资源。请勿公开。保存的数据连接和凭据不包含在内。继续？",
+  "BackupCreated": "备份已创建。",
+  "BackupRestored": "备份已恢复。请按需重新配置数据连接和权限。",
+  "BackupConfirm": "恢复{0}个分组和{1}个顶层磁贴？这将替换布局和外观。系统集成设置保持不变。请重新配置数据连接和网络权限。",
+  "BackupFailed": "备份操作失败：{0}"
 }

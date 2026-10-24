@@ -75,6 +75,13 @@ public partial class MainWindow
         {
             _scriptFrames.Remove(tile.Id);
             _htmlTiles[tile.Id] = view = new(_scriptPackages.BrowserDataRoot, tile.Id, offscreen);
+            var ownedView = view;
+            view.RecoveryRequired += () =>
+            {
+                if (_exit || !_htmlTiles.TryGetValue(tile.Id, out var active) || active != ownedView) return;
+                _liveSessions.Budget(tile.Id).Fail(Environment.TickCount64, Document.Preferences.AutoRecoverLiveTiles);
+                if (_scriptSessions.TryGetValue(tile.Id, out var runtime)) runtime.NextUpdate = DateTimeOffset.MinValue;
+            };
             view.ShowTransitionPreview(retained);
             if (_scriptSessions.TryGetValue(tile.Id, out var session)) session.NextUpdate = DateTimeOffset.MinValue;
         }

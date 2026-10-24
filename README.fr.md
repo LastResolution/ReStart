@@ -20,6 +20,10 @@ Le menu Démarrer plein écran de Windows 10 vous manque ? ReStart offre un espa
 
 **Portable · Vignettes JavaScript · x64 et ARM64 · Huit langues · Aucune installation séparée de .NET**
 
+## Fiabilité et sauvegardes privées
+
+Les tuiles hors de la zone visible sont suspendues et les erreurs du navigateur déclenchent des tentatives limitées de récupération. Ces options sont indépendantes. **Paramètres → Disposition et données** sauvegarde et restaure disposition, apparence, tuiles, brouillons et fonds. Connexions, identifiants, chemins des photos et caches sont exclus. La sauvegarde contient toujours des noms, chemins et sources personnels : gardez-la privée. [Guide en anglais](docs/backups.md).
+
 ## Plus de contrôle, plus de place pour créer
 
 Verrouillez tout le placement ou certains groupes. Ctrl+Maj+L bascule le verrouillage global. Ctrl+E sélectionne, Ctrl+flèche déplace les tuiles, Ctrl+Maj+flèche leur groupe et Alt+1–4 change la taille. Ctrl+G regroupe la sélection ; Maj+F10 ouvre son menu. Annuler/Rétablir reste disponible. Un fond propre à ReStart peut être enregistré indépendamment du bureau.
