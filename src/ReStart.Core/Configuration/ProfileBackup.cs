@@ -196,7 +196,8 @@ public static class ProfileBackup
         if (parts.Length == 2 && parts[0] == "Backgrounds") return Path.GetExtension(parts[1]) == ".png" && Guid.TryParseExact(Path.GetFileNameWithoutExtension(parts[1]), "N", out _);
         if (parts.Length < 3 || parts[0] is not ("tiles" or "TileLibrary") || parts[0] == "tiles" && !Guid.TryParseExact(parts[1], "N", out _)) return false;
         if (parts.Length == 3) return parts[2] is "manifest.json" or "tile.js" or "index.html" or "tile.css";
-        return parts[2] == "assets" && parts[^1] is not ("host-bindings.json" or "data-bindings.dat") && Path.GetExtension(relative).ToLowerInvariant() is ".js" or ".mjs" or ".css" or ".json" or ".svg" or ".png" or ".jpg" or ".jpeg" or ".gif" or ".webp" or ".woff" or ".woff2" or ".ttf" or ".otf";
+        return parts[2] == "assets" && !parts[^1].Equals("host-bindings.json", StringComparison.OrdinalIgnoreCase) && !parts[^1].Equals("data-bindings.dat", StringComparison.OrdinalIgnoreCase)
+            && Path.GetExtension(relative).ToLowerInvariant() is ".js" or ".mjs" or ".css" or ".json" or ".svg" or ".png" or ".jpg" or ".jpeg" or ".gif" or ".webp" or ".woff" or ".woff2" or ".ttf" or ".otf";
     }
     private static bool ValidPath(string relative) => relative.Length is > 0 and <= 240 && !relative.Contains('\\') && relative.Split('/').All(p => p.Length > 0 && p is not ("." or "..") && !p.EndsWith('.') && !p.EndsWith(' ') && !p.Any(c => c < 32 || ":<>\"|?*".Contains(c))
         && !System.Text.RegularExpressions.Regex.IsMatch(p, @"\A(CON|PRN|AUX|NUL|COM[0-9]|LPT[0-9])(?:\.|\z)", System.Text.RegularExpressions.RegexOptions.IgnoreCase));

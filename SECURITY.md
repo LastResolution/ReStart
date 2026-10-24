@@ -24,7 +24,7 @@ Configured providers receive the request, its connection metadata and any explic
 
 Explorer pin requests use bounded current-user-only IPC, validate filesystem targets and acknowledge after saving. Integration is per-user and reversible; Explorer is not patched and no DLL is injected. Startup is opt-in.
 
-Local error logs contain only UTC time, a fixed error category and a numeric HRESULT. Exception messages, type names and stack traces are not recorded. Three generations of at most 64 KiB each are retained; legacy unstructured logs are removed on normal startup. Logging failures do not interrupt error handling. Logs are not uploaded automatically.
+Local error logs contain only UTC time, a fixed error category and a numeric HRESULT. Exception messages, type names and stack traces are not recorded. Three generations of at most 64 KiB each are retained; writable legacy unstructured logs are removed on normal startup. Logging failures do not interrupt error handling. Logs are not uploaded automatically.
 
 Private profile backups include app names, launch paths and custom source/assets. Saved connection credentials, photo-folder bindings, caches, logs and activity history are excluded. Browser networking permissions are revoked on restore, shell integration remains local, and fresh resource IDs prevent adoption of existing credentials. Archives have entry/size/path/hash checks and staged rollback. Review custom code/assets for embedded secrets before sharing any export. See [backups](docs/backups.md).
 

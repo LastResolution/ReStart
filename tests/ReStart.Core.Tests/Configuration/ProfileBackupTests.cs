@@ -95,5 +95,28 @@ public sealed class ProfileBackupTests : IDisposable
         { zip.GetEntry("layout.json")!.Delete(); using var writer = new StreamWriter(zip.CreateEntry("layout.json").Open()); writer.Write("{}"); }
         Assert.Throws<InvalidDataException>(() => ProfileBackup.PrepareRestore(Archive, Destination));
     }
+    [Fact]
+    public void RealAtomicWriteFailureRetainsTheOriginalLayoutAndResources()
+    {
+        ProfileBackup.Export(Archive, Source, Seed()); Directory.CreateDirectory(Destination);
+        var path = Path.Combine(Destination, "layout.json"); var store = new LayoutStore(path); store.Save(new() { Groups = [new() { Name = "Original" }] }); store.Load();
+        var original = File.ReadAllBytes(path);
+        using (var pending = ProfileBackup.PrepareRestore(Archive, Destination))
+        {
+            using var locked = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            Assert.ThrowsAny<IOException>(() => pending.Commit(store.Save));
+        }
+        Assert.Equal(original, File.ReadAllBytes(path));
+        Assert.Empty(Directory.GetDirectories(Destination, ".restore-*"));
+        Assert.False(Directory.Exists(Path.Combine(Destination, "tiles")) && Directory.GetDirectories(Path.Combine(Destination, "tiles")).Length > 0);
+    }
+    [Fact]
+    public void RejectsCaseVariantBindingsInAssets()
+    {
+        var doc = Seed(); var package = Path.Combine(Source, "tiles", doc.Groups[0].Tiles[0].ScriptId, "assets");
+        File.WriteAllText(Path.Combine(package, "HOST-BINDINGS.JSON"), "private-sentinel");
+        Assert.Throws<InvalidDataException>(() => ProfileBackup.Export(Archive, Source, doc));
+        Assert.False(File.Exists(Archive));
+    }
     public void Dispose() { if (Directory.Exists(_root)) Directory.Delete(_root, true); }
 }
