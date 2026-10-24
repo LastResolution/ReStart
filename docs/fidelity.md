@@ -80,3 +80,7 @@ Placement locks, full keyboard placement editing, Tile Studio, separate owned ba
 ## Additional settings workflow
 
 ReStart previews appearance, geometry and language without saving them, and offers save/discard/continue on closing a changed settings editor. It also retains a downloaded update across ordinary launches with a persistent restart reminder. These are ReStart conveniences, rather than claims about a native Windows 10 settings or update interface.
+
+## Reliability extensions
+
+Private profile backups, privacy-minimized bounded logs, viewport suspension and bounded browser recovery are ReStart additions. Browser/renderer crash recovery and 50/100-tile scheduling have isolated native checks. Physical hardware coverage remains as recorded above; no new Windows 10, ARM64 or touch-device verification is implied.

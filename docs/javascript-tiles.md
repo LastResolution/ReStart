@@ -282,3 +282,11 @@ Normal data: %LOCALAPPDATA%\ReStart\tiles\<id>. Preview data is isolated beside 
 ## My tile library
 
 Open library folder in Settings opens %LOCALAPPDATA%\ReStart\TileLibrary. Place one package directory per tile, each containing its manifest and required source files (plus HTML/CSS and optional assets for web packages). The settings gallery watches for changes and discovers packages automatically; click to add without a file picker. Refresh tiles is also available. At most 128 immediate directories are inspected, symlink directories are skipped and invalid packages are disabled without executing them. Adding installs a separate copy in unoccupied space, preserving existing group rectangles and child cells. The new tile receives an unnamed group by default, or an independent entry when free placement is enabled.
+
+## Visibility and recovery
+
+Settings → JavaScript tiles has independent **Pause live tiles outside the visible area** and **Automatically recover failed live tiles** switches, both enabled by default. Scrolling suspends browser presentation and host data reads outside the viewport, with a small warmup margin. Visible frames resume automatically. Only the currently visible initial frames are required before presenting Start.
+
+A failed renderer/browser is recreated while host-managed JSON state and queued input survive. Failed input may be retried after recovery; use the event timestamp to deduplicate any external side effects. Browser globals and DOM state are recreated. Recovery waits for active dragging and inline naming to finish. Retries back off by two and ten seconds; three failures within two minutes pause that tile. Choose **Reload** to retry explicitly. Disabling automatic recovery pauses after the first failure. GPU/utility process events that the browser can recover itself do not trigger unnecessary control replacement. This is recovery behavior, not a browser resource quota.
+
+[Full profile backups](backups.md) include installed packages, library drafts and local assets, with fresh IDs on restore. Connections, credentials, photo-folder bindings and web-network grants are not restored.

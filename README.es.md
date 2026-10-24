@@ -20,6 +20,10 @@ https://github.com/user-attachments/assets/a893cd20-8c82-4c47-b5fb-bf22743f67e1
 
 **Portátil · Mosaicos JavaScript · x64 y ARM64 · Ocho idiomas · Sin instalar .NET por separado**
 
+## Fiabilidad y copias privadas
+
+Los mosaicos fuera del área visible se pausan y los fallos del navegador se recuperan con reintentos limitados. Ambas opciones se pueden desactivar por separado. En **Configuración → Distribución y datos** puedes respaldar y restaurar distribución, apariencia, mosaicos, borradores y fondos. Excluye conexiones, credenciales, rutas de fotos y cachés. La copia sigue siendo privada: contiene nombres, rutas y código propio. [Guía en inglés](docs/backups.md).
+
 ## Más control y espacio para crear
 
 Bloquea todo el diseño o grupos individuales. Ctrl+Mayús+L cambia el bloqueo global. Ctrl+E selecciona; Ctrl+flecha mueve mosaicos, Ctrl+Mayús+flecha mueve el grupo y Alt+1–4 cambia el tamaño. Ctrl+G agrupa la selección; Mayús+F10 abre su menú. Se mantiene Deshacer/Rehacer. Puedes guardar un fondo propio, independiente del escritorio.

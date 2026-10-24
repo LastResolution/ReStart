@@ -20,6 +20,10 @@ Vermisst du das Vollbild-Startmenü von Windows 10? ReStart gibt deinen Apps unt
 
 **Portabel · JavaScript-Live-Kacheln · x64 und ARM64 · Acht Sprachen · Keine separate .NET-Installation**
 
+## Zuverlässigkeit und private Sicherungen
+
+Live-Kacheln außerhalb des sichtbaren Bereichs pausieren; Browserfehler werden mit begrenzten Wiederholungen behandelt. Beide Funktionen sind einzeln abschaltbar. Unter **Einstellungen → Layout und Daten** sichern und restaurieren Sie Layout, Darstellung, installierte Kacheln, Entwürfe und Hintergründe zusammen. Verbindungen, Zugangsdaten, Fotoordnerpfade und Caches sind ausgeschlossen. App-Namen, Startpfade und eigener Code bleiben private Daten. [Anleitung auf Englisch](docs/backups.md).
+
 ## Mehr Kontrolle. Mehr Raum zum Gestalten.
 
 Sperre das gesamte Layout oder einzelne Gruppen. Strg+Umschalt+L schaltet die globale Sperre um. Strg+E wählt Kacheln; Strg+Pfeil verschiebt sie, Strg+Umschalt+Pfeil die Gruppe und Alt+1–4 ändert die Größe. Strg+G gruppiert eine Auswahl; Umschalt+F10 öffnet ihr Menü. Rückgängig/Wiederholen bleibt verfügbar. Ein eigenes Hintergrundbild kann unabhängig vom Desktop gespeichert werden.

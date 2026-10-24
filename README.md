@@ -32,6 +32,10 @@ https://github.com/user-attachments/assets/a893cd20-8c82-4c47-b5fb-bf22743f67e1
 
 [Explore the tiles](#give-your-tiles-something-to-say) · [Connect your data](#connect-weather-headlines-and-app-data) · [Write a tile](#write-your-own) · [Build from source](#build-it-yourself)
 
+## Reliability and private backups
+
+Live tiles pause outside the visible area and recover from browser failures with bounded retries. Both behaviors have independent switches in JavaScript tile settings. **Settings → Layout and data** can back up and restore layout, appearance, installed tiles, library drafts and backgrounds together. Saved data connections, credentials, photo-folder paths and caches are excluded; backups still contain private app names, launch paths and your custom source/assets. [Backup and recovery guide](docs/backups.md).
+
 ## Start in a minute
 
 1. Download the **[x64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-x64.zip)** for an Intel/AMD PC, or the **[ARM64 ZIP](https://github.com/LastResolution/ReStart/releases/latest/download/ReStart-win-arm64.zip)** for Windows on ARM.
