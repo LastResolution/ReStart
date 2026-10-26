@@ -278,7 +278,7 @@ public partial class MainWindow
         var (column, row, x) = BoardAnchor(point, group.IsStandalone);
         x = GroupDropX(group, x, row);
         row = GroupDropRow(group, x, row);
-        GroupLayout.Move(Document, group, column, row, GroupsPanel.Columns, Cell, x, reorderVertical: true);
+        GroupLayout.Move(Document, group, column, row, GroupsPanel.Columns, Cell, x, reorderOnDrag: true);
         CommitLayout();
     }
 
@@ -291,9 +291,9 @@ public partial class MainWindow
         x = GroupDropX(group, x, row);
         row = GroupDropRow(group, x, row);
         var candidate = new LayoutDocument { Preferences = Document.Preferences, Groups = LayoutHistory.CopyGroups(Document.Groups) };
-        GroupLayout.Move(candidate, candidate.Groups.Single(g => g.Id == group.Id), column, row, GroupsPanel.Columns, Cell, x, reorderVertical: true);
+        GroupLayout.Move(candidate, candidate.Groups.Single(g => g.Id == group.Id), column, row, GroupsPanel.Columns, Cell, x, reorderOnDrag: true);
         if (!PlacementAllowed(candidate.Groups)) { ClearDropPreview(); return; }
-        var placements = GroupLayout.PreviewMove(Document, group, column, row, GroupsPanel.Columns, Cell, x, reorderVertical: true);
+        var placements = GroupLayout.PreviewMove(Document, group, column, row, GroupsPanel.Columns, Cell, x, reorderOnDrag: true);
         if (GroupsPanel.DragPlacements is { } previous && placements.SequenceEqual(previous)) { _groupPreviewKey = key; return; }
         var target = placements.Single(p => p.Group == group);
         ShowBoardPreview(new(target.Left, target.Top, target.Width, target.Height));

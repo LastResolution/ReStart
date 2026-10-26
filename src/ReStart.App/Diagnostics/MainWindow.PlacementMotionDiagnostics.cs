@@ -97,6 +97,22 @@ public partial class MainWindow
         await Task.Delay(250);
         Check((recipientView.TranslatePoint(new(), GroupsPanel) - recipientStart).Length < 1 && _groupTransitions.Count == 0, "A cancelled group reorder did not settle back at its original slot.");
         _dragging = false;
+
+        firstGroup.X = 8; firstGroup.Row = 0; nextGroup.X = 0; nextGroup.Row = 0;
+        RenderGroups(); UpdateLayout(); _dragging = true;
+        recipientView = GroupsPanel.Children.OfType<StackPanel>().Single(s => s.Tag == nextGroup);
+        recipientStart = recipientView.TranslatePoint(new(), GroupsPanel);
+        PreviewGroupOnBoard(firstGroup, new(5, 5)); UpdateLayout();
+        Check(GroupsPanel.Placements.Single(p => p.Group == nextGroup).Left == 8 * Cell, "An arrival from the right did not reuse its vacated horizontal slot.");
+        Check((recipientView.TranslatePoint(new(), GroupsPanel) - recipientStart).Length < 1, "Horizontal group displacement jumped directly to its destination.");
+        await Task.Delay(70);
+        recipientMiddle = recipientView.TranslatePoint(new(), GroupsPanel);
+        Check(recipientMiddle.X > recipientStart.X + 1 && recipientMiddle.X < 8 * Cell - 1, "Horizontal group displacement has no intermediate frame.");
+        ClearDropPreview(); UpdateLayout();
+        Check((recipientView.TranslatePoint(new(), GroupsPanel) - recipientMiddle).Length < 1, "Cancelling horizontal group displacement introduced a jump.");
+        await Task.Delay(250);
+        Check((recipientView.TranslatePoint(new(), GroupsPanel) - recipientStart).Length < 1 && _groupTransitions.Count == 0, "Cancelled horizontal group displacement did not return to its original slot.");
+        _dragging = false;
         // Offline video encoding must not speed up, slow down or skip the real
         // placement curve merely because a frame takes longer to render.
         var captured = new Button(); Root.Children.Add(captured);
