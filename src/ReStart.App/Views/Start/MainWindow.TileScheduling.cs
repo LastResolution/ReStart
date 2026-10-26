@@ -7,6 +7,23 @@ namespace ReStart.App;
 public partial class MainWindow
 {
     private bool _verifyViewportScheduling = false;
+    private int _tileResumeGeneration;
+    private long _metricsResumeDeadline;
+
+    private void QueueTileResume()
+    {
+        var generation = ++_tileResumeGeneration;
+        _metricsResumeDeadline = Environment.TickCount64 + 1500;
+        // Present resets the scroll position and may close an inline folder.
+        // Resolve that layout before selecting the browsers to resume, without
+        // waiting for the next 250 ms background clock tick.
+        Dispatcher.BeginInvoke(async () =>
+        {
+            if (_exit || !IsVisible || generation != _tileResumeGeneration) return;
+            UpdateLiveTiles();
+            await UpdateScriptTilesAsync();
+        }, System.Windows.Threading.DispatcherPriority.Loaded);
+    }
 
     private bool TileInViewport(FrameworkElement element)
     {

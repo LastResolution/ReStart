@@ -8,6 +8,7 @@ internal sealed class ScriptTilePackages(string dataDirectory)
 {
     private readonly Dictionary<string, ScriptTileManifest> _titleManifests = [];
     private readonly Dictionary<string, IReadOnlyDictionary<string, WebAsset>> _webAssets = [];
+    private int _sourceRevision;
     internal sealed record WebAsset(byte[] Bytes, string ContentType);
     internal static IReadOnlyList<string> BundledIds { get; } = Array.AsReadOnly(new[] { "orbit", "calendar", "cpu", "memory", "focus", "year", "clock", "countdown", "network", "battery", "storage", "slideshow", "weather", "feed", "json-monitor", "weather-scene", "system-dashboard", "news-board", "canvas-garden" });
     internal static string BundledManifestPath(string id) => BundledIds.Contains(id, StringComparer.Ordinal)
@@ -42,7 +43,31 @@ internal sealed class ScriptTilePackages(string dataDirectory)
     {
         var package = ReadFolder(Folder(id)); _titleManifests[id] = package.Manifest; return package;
     }
-    internal void InvalidateTitle(string id) { _titleManifests.Remove(id); _webAssets.Remove(id); }
+    internal sealed record RenderSource(ScriptTileManifest Manifest, string Script, string Html, string Css, IReadOnlyDictionary<string, WebAsset> Assets);
+
+    /// <summary>Reads bounded package files away from the dispatcher; callers resume on their owning context before changing presentation state.</summary>
+    /// <param name="id">Installed package identity; never an arbitrary directory.</param>
+    /// <returns>A detached source snapshot with the existing cached assets, or freshly read assets for its first web render.</returns>
+    internal async Task<RenderSource> ReadForRenderAsync(string id)
+    {
+        var folder = Folder(id);
+        var revision = _sourceRevision;
+        _webAssets.TryGetValue(id, out var assets);
+        var snapshot = await Task.Run(() =>
+        {
+            var (manifest, source) = ReadFolder(folder);
+            var web = manifest.Renderer == "web" ? ReadWebFolder(folder) : default;
+            return new RenderSource(manifest, source, web.Html ?? "", web.Css ?? "",
+                manifest.Renderer == "web" ? assets ?? ReadAssets(folder) : new Dictionary<string, WebAsset>());
+        });
+        if (revision == _sourceRevision)
+        {
+            _titleManifests[id] = snapshot.Manifest;
+            if (snapshot.Manifest.Renderer == "web") _webAssets.TryAdd(id, snapshot.Assets);
+        }
+        return snapshot;
+    }
+    internal void InvalidateTitle(string id) { _sourceRevision++; _titleManifests.Remove(id); _webAssets.Remove(id); }
     internal bool IsWeb(string id)
     {
         try { return (_titleManifests.TryGetValue(id, out var manifest) ? manifest : Read(id).Manifest).Renderer == "web"; }

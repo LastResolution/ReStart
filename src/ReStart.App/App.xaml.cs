@@ -191,6 +191,7 @@ public partial class App : Application
             TileDataSmokeResult? tileData = null;
             SearchSelectionSmokeResult? searchSelection = null;
             StartupSmokeResult? startupPreparation = null;
+            WarmResumeSmokeResult? warmResume = null;
             AppearanceSmokeResult? appearance = null;
             SettingsPreviewSmokeResult? settingsPreview = null;
             FidelitySmokeResult? fidelity = null;
@@ -212,6 +213,12 @@ public partial class App : Application
                 if (args.Contains("--tile-data-test")) tileData = await _window.VerifyTileDataAsync(path);
                 if (args.Contains("--search-selection-test")) searchSelection = await _window.VerifySearchSelectionAsync(path);
                 if (args.Contains("--startup-test")) startupPreparation = await _window.VerifyStartupAsync(path);
+                if (args.Contains("--warm-resume-test"))
+                {
+                    var idleIndex = Array.IndexOf(args, "--resume-idle-seconds");
+                    var idleSeconds = idleIndex >= 0 && int.TryParse(args.ElementAtOrDefault(idleIndex + 1), out var seconds) ? seconds : 3;
+                    warmResume = await _window.VerifyWarmResumeAsync(path, idleSeconds);
+                }
                 if (args.Contains("--settings-preview-test")) settingsPreview = await _window.VerifySettingsPreviewAsync(path);
                 if (args.Contains("--appearance-test")) appearance = await _window.VerifyAppearanceAsync(path);
                 if (args.Contains("--fidelity-test")) fidelity = await _window.VerifyFidelityAsync(path);
@@ -220,7 +227,7 @@ public partial class App : Application
             catch (Exception ex) { success = false; error = ex.ToString(); Console.Error.WriteLine(ex); }
             try
             {
-                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, catalogFolders = _window.CatalogFolderCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, navigation, placement, appFolders, firstInput, appMenus, releaseInfo, scrolling, bundledTiles, pinIcons, motion, editing, folderDrops, tileData, searchSelection, startupPreparation, appearance, settingsPreview, fidelity, startup = _window.StartupMetrics, error, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
+                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, catalogFolders = _window.CatalogFolderCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, navigation, placement, appFolders, firstInput, appMenus, releaseInfo, scrolling, bundledTiles, pinIcons, motion, editing, folderDrops, tileData, searchSelection, startupPreparation, warmResume, appearance, settingsPreview, fidelity, startup = _window.StartupMetrics, error, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
             }
             catch (IOException) { success = false; }
             _window.Exit(); Shutdown(success ? 0 : 1);

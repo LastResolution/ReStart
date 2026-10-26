@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using ReStart.App.Controls;
+using ReStart.App.Services;
 using ReStart.Core;
 
 namespace ReStart.App;
@@ -125,13 +126,12 @@ public partial class MainWindow
         RetireHtmlTiles(all: true);
     }
 
-    private async Task<(ScriptTileFrame? Frame, string? Error)> RenderHtmlTileAsync(Tile tile, object context, string source, ScriptTileManifest manifest)
+    private async Task<(ScriptTileFrame? Frame, string? Error)> RenderHtmlTileAsync(Tile tile, object context, ScriptTilePackages.RenderSource package)
     {
         if (!_htmlTiles.TryGetValue(tile.Id, out var view)) return (null, null);
-        var files = _scriptPackages.ReadWeb(tile.ScriptId);
         view.SetImage(_slideshowImages.GetValueOrDefault(tile.Id));
-        view.SetAssets(_scriptPackages.WebAssets(tile.ScriptId));
-        var result = await view.RenderAsync(files.Html, files.Css, source, tile.AllowWebNetwork && manifest.Capabilities.Contains("web.network"), context);
+        view.SetAssets(package.Assets);
+        var result = await view.RenderAsync(package.Html, package.Css, package.Script, tile.AllowWebNetwork && package.Manifest.Capabilities.Contains("web.network"), context);
         if (result.Frame != null && _folderThumbnailIds.Contains(tile.Id)) await view.FreezeForDocumentationAsync();
         return result;
     }

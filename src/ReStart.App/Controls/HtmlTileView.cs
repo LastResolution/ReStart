@@ -21,6 +21,11 @@ internal sealed class HtmlTileView : Grid, IDisposable
     private string _html = "", _css = "", _source = "", _signature = "";
     private bool _network, _disposed;
     private bool _viewportPaused;
+    private bool _suspending, _presentationSuspended;
+    private bool _capturingPresentation;
+    private long _presentationCapturedAt;
+    private int _presentationRevision;
+    private int _renderedPresentationRevision = -1;
     internal bool NeedsRecreation { get; private set; }
     internal event Action? RecoveryRequired;
     internal bool ViewportPaused => _viewportPaused;
@@ -62,9 +67,15 @@ internal sealed class HtmlTileView : Grid, IDisposable
     {
         if (_disposed || _viewportPaused || NeedsRecreation) return;
         _visibilityGeneration++;
+        if (_presentationSuspended)
+        {
+            _presentationSuspended = false;
+            if (_transitionImage == null) ShowTransitionPreview(_retainedPresentation);
+        }
         _browser.Visibility = Visibility.Visible;
         if (_headlessController != null) _headlessController.IsVisible = true;
         Core?.Resume();
+        QueueRetainedCapture();
     }
 
     private async Task PauseWhenStillHiddenAsync()
@@ -86,6 +97,13 @@ internal sealed class HtmlTileView : Grid, IDisposable
 
     internal ImageSource? RetainedPresentation => _retainedPresentation ?? _documentationImage?.Source ?? _transitionImage?.Source;
     internal bool HasTransitionPreview => _transitionImage != null;
+
+    internal void InvalidateRetainedPresentation()
+    {
+        _presentationRevision++;
+        _retainedPresentation = null; _presentationCapturedAt = 0;
+        if (_transitionImage != null) { Children.Remove(_transitionImage); _transitionImage = null; }
+    }
 
     internal void ShowTransitionPreview(ImageSource? source)
     {
@@ -195,6 +213,7 @@ internal sealed class HtmlTileView : Grid, IDisposable
     internal async Task<(ScriptTileFrame? Frame, string? Error)> RenderAsync(string html, string css, string source, bool network, object context)
     {
         var stage = "initialization";
+        var presentationRevision = _presentationRevision;
         try
         {
             if (_disposed || _viewportPaused) return (null, null);
@@ -266,6 +285,8 @@ internal sealed class HtmlTileView : Grid, IDisposable
             stage = "render";
             core.PostWebMessageAsJson(JsonSerializer.Serialize(new { sequence = _sequence, context }, ScriptTileProtocol.Json));
             var frame = await _reply.Task.WaitAsync(TimeSpan.FromSeconds(3));
+            if (presentationRevision == _presentationRevision)
+            { _renderedPresentationRevision = presentationRevision; QueueRetainedCapture(); }
             if (!_offscreenOnly && _transitionImage is { } transition)
             {
                 await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Render);
@@ -337,12 +358,62 @@ internal sealed class HtmlTileView : Grid, IDisposable
 
     internal async Task SuspendAsync()
     {
-        if (_disposed || Core == null) return;
-        _browser.Visibility = Visibility.Collapsed;
-        if (_headlessController != null) _headlessController.IsVisible = false;
-        try { await Core.TrySuspendAsync(); }
-        catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException) { }
-        if (!_disposed && IsVisible && !_viewportPaused) ResumePresentation();
+        if (_disposed || Core == null || _suspending) return;
+        _suspending = true;
+        try
+        {
+            if (_disposed || IsVisible && !_viewportPaused) return;
+            var core = Core;
+            if (core == null) return;
+            _presentationSuspended = true;
+            _browser.Visibility = Visibility.Collapsed;
+            if (_headlessController != null) _headlessController.IsVisible = false;
+            try { await core.TrySuspendAsync(); }
+            catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException) { }
+            if (!_disposed && IsVisible && !_viewportPaused) ResumePresentation();
+        }
+        finally { _suspending = false; }
+    }
+
+    private void QueueRetainedCapture()
+    {
+        if (_disposed || _offscreenOnly || !IsVisible || _viewportPaused || _capturingPresentation || Core == null || _signature.Length == 0 || _renderedPresentationRevision != _presentationRevision
+            || _retainedPresentation != null && Environment.TickCount64 - _presentationCapturedAt < 5000) return;
+        _capturingPresentation = true;
+        _ = RetainPresentationAsync();
+    }
+
+    private async Task RetainPresentationAsync()
+    {
+        var revision = _presentationRevision;
+        try
+        {
+            await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Render);
+            await Task.Delay(60);
+            if (_disposed || !IsVisible || _viewportPaused) return;
+            // Capture while composition is visible: after Hide, Chromium may
+            // already have discarded the surface. Retain one image, at most
+            // once per five seconds, without delaying render replies or input.
+            var image = await CapturePresentationAsync().WaitAsync(TimeSpan.FromMilliseconds(500));
+            if (!_disposed && revision == _presentationRevision) { _retainedPresentation = image; _presentationCapturedAt = Environment.TickCount64; }
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or TimeoutException or System.Runtime.InteropServices.COMException or IOException or NotSupportedException) { }
+        finally
+        {
+            _capturingPresentation = false;
+            if (!_disposed && revision != _presentationRevision) QueueRetainedCapture();
+        }
+    }
+
+    private async Task<BitmapSource> CapturePresentationAsync()
+    {
+        // Own the stream until the browser finishes, even when a caller stops
+        // waiting because a slow renderer exceeded its capture budget.
+        using var memory = new MemoryStream();
+        await CaptureAsync(memory);
+        memory.Position = 0;
+        var image = new BitmapImage(); image.BeginInit(); image.CacheOption = BitmapCacheOption.OnLoad;
+        image.StreamSource = memory; image.EndInit(); image.Freeze(); return image;
     }
 
     internal async Task SetViewportPausedAsync(bool paused)

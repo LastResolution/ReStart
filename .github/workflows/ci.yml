@@ -53,6 +53,8 @@ jobs:
         run: ./scripts/test-fidelity.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
       - name: Verify prepared startup, typeahead, cancellation and icon caching
         run: ./scripts/test-startup.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+      - name: Verify warm reopening, retained tiles and nonblocking wallpaper refresh
+        run: ./scripts/test-warm-resume.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
       - name: Verify custom themes, settings colors and expanded navigation glyphs
         run: ./scripts/test-appearance.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
       - name: Verify live settings preview, close decisions and prepared update reminders
@@ -100,6 +102,8 @@ jobs:
             artifacts/fidelity/*/fixture-*/*.png
             artifacts/startup/*/*.png
             artifacts/startup/*/start.json
+            artifacts/warm-resume/*/*.png
+            artifacts/warm-resume/*/start.json
             artifacts/appearance/*/*.png
             artifacts/appearance/*/fixture-*/*.png
             artifacts/settings-preview/check-*/start.json
