@@ -79,6 +79,24 @@ public partial class MainWindow
         Document.Preferences.Animate = false; RespectMotionPreference(); UpdateLayout();
         Check(_groupTransitions.Count == 0 && (movingView.TranslatePoint(new(), GroupsPanel) - final).Length < 1, "Disabling animation did not settle group motion.");
         ClearDropPreview(); _dragging = false;
+
+        var firstGroup = new TileGroup { Name = "First group", X = 0, Column = 0, Row = 0, Tiles = [new() { Label = "Moving app" }] };
+        var nextGroup = new TileGroup { Name = "Next group", X = 0, Column = 0, Row = 8, Tiles = [new() { Label = "Recipient app" }] };
+        Document = new() { Preferences = new() { Language = "en", Animate = true, ShowWallpaper = false }, Groups = [firstGroup, nextGroup] };
+        RenderGroups(); UpdateLayout(); _dragging = true; _dragOffset = new(5, 5);
+        var recipientView = GroupsPanel.Children.OfType<StackPanel>().Single(s => s.Tag == nextGroup);
+        var recipientStart = recipientView.TranslatePoint(new(), GroupsPanel);
+        PreviewGroupOnBoard(firstGroup, new(5, 6 * Cell / 2 + 5)); UpdateLayout();
+        Check(GroupsPanel.Placements.Single(p => p.Group == nextGroup).Row == 0, "A downward group drag did not start moving its recipient upward at half-overlap.");
+        Check((recipientView.TranslatePoint(new(), GroupsPanel) - recipientStart).Length < 1, "An early group reorder jumped directly upward.");
+        await Task.Delay(70);
+        var recipientMiddle = recipientView.TranslatePoint(new(), GroupsPanel);
+        Check(recipientMiddle.Y > 1 && recipientMiddle.Y < recipientStart.Y - 1, "An early group reorder has no upward intermediate frame.");
+        ClearDropPreview(); UpdateLayout();
+        Check((recipientView.TranslatePoint(new(), GroupsPanel) - recipientMiddle).Length < 1, "Cancelling a moving group reorder introduced a jump.");
+        await Task.Delay(250);
+        Check((recipientView.TranslatePoint(new(), GroupsPanel) - recipientStart).Length < 1 && _groupTransitions.Count == 0, "A cancelled group reorder did not settle back at its original slot.");
+        _dragging = false;
         // Offline video encoding must not speed up, slow down or skip the real
         // placement curve merely because a frame takes longer to render.
         var captured = new Button(); Root.Children.Add(captured);

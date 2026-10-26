@@ -233,7 +233,8 @@ public partial class MainWindow
             VerifyDetachedBaseline(snapshotPath);
             VerifyAdjacentDrop(snapshotPath);
             VerifyRectangularGroupsAndFolderExpansion(snapshotPath);
-            return new(23, 6, 29, 6, saved.Version, Document.Groups.Count);
+            var groupReorderChecks = VerifyGroupDragReordering(snapshotPath);
+            return new(23 + groupReorderChecks, 6, 29, 6, saved.Version, Document.Groups.Count);
         }
         finally
         {
