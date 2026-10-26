@@ -31,9 +31,10 @@ internal sealed class LiveTileSessions : IDisposable
         if (!Recovery.TryGetValue(id, out var budget)) Recovery[id] = budget = new();
         return budget;
     }
-    internal void Pause()
+    internal void Pause(bool keepWorkers = false)
     {
-        Workers?.Dispose(); Workers = null; Metrics?.SetEnabled(false);
+        if (!keepWorkers) { Workers?.Dispose(); Workers = null; }
+        Metrics?.SetEnabled(false);
         foreach (var data in Data.Values) data.Runtime.Stop();
         foreach (var session in Sessions.Values) session.NextUpdate = DateTimeOffset.MinValue;
     }

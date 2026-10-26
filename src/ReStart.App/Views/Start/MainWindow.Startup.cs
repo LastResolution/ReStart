@@ -175,17 +175,23 @@ public partial class MainWindow
     private void StartStartupTileWarmup()
     {
         if (!_startupWanted || ScriptTileCount == 0) return;
-        foreach (var tile in Document.Groups.SelectMany(g => g.Tiles).Where(t => t.Widget == "script" && t.Live))
+        var nativeCount = 0;
+        foreach (var tile in Document.Groups.SelectMany(g => g.Tiles).SelectMany(t => new[] { t }.Concat(t.Children)).Where(t => t.Widget == "script" && t.Live))
         {
             try
             {
-                if (_scriptPackages.Read(tile.ScriptId).Manifest.Capabilities.Contains("system.metrics") && (!_preview || _verifyHostMetrics))
+                var manifest = _scriptPackages.Read(tile.ScriptId).Manifest;
+                if (manifest.Renderer == "native") nativeCount++;
+                if (manifest.Capabilities.Contains("system.metrics") && (!_preview || _verifyHostMetrics))
                     _systemMetrics ??= new();
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or System.Text.Json.JsonException) { }
         }
+        // HTML tiles run in WebView2. Do not start four otherwise unused Jint
+        // processes merely to display an entirely browser-based home layout.
+        if (nativeCount == 0) { _startupWorkerWarmup = Task.CompletedTask; return; }
         var pool = _scriptWorkerPool ??= new();
-        _startupWorkerWarmup = Task.Run(() => Task.WhenAll(Enumerable.Range(0, Math.Min(4, ScriptTileCount))
+        _startupWorkerWarmup = Task.Run(() => Task.WhenAll(Enumerable.Range(0, Math.Min(4, nativeCount))
             .Select(_ => pool.RenderAsync("function render() { return { text: 'Ready' }; }", new { }))));
     }
 }

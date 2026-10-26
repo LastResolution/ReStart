@@ -151,8 +151,8 @@ public partial class MainWindow
                 expectUpdates = true;
                 cold.LastUpdateCheck = new(UpdateCheckStatus.Available, new("v9.0.0", ReleaseVersion.Parse("9.0.0")!, "Fictional cold-start update notes."));
                 cold.ReviewAvailableUpdate();
-                Check(cold._scriptWorkerPool != null && cold._startupWorkerWarmup != Task.CompletedTask && !cold.IsVisible,
-                    "Foreground initialization did not warm isolated workers before revealing the main window.");
+                Check(cold._scriptWorkerPool == null && cold._startupWorkerWarmup == Task.CompletedTask && !cold.IsVisible,
+                    "Web-only startup unnecessarily created a native worker warmup or exposed an unprepared window.");
                 await cold._startupPresentation!;
                 Check(cold.IsVisible && cold.ScriptFrameCount == ScriptTilePackages.BundledIds.Count && cold._startupWindow == null && settingsClosed == 2 && !cold._startupSettings,
                     $"Parallel worker warmup did not produce all frames or open pending settings: visible={cold.IsVisible}, frames={cold.ScriptFrameCount}, settings={settingsClosed}, pending={cold._startupSettings}.");

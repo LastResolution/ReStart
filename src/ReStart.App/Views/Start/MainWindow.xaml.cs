@@ -81,7 +81,7 @@ public partial class MainWindow : Window
         _activationFixture = activation;
         _loadCatalog = catalogLoader ?? _catalog.LoadAsync;
         _scriptPackages = new(Path.GetDirectoryName(store.FilePath)!);
-        IsVisibleChanged += (_, _) => { if (!IsVisible) PauseScripts(); };
+        IsVisibleChanged += (_, _) => { if (!IsVisible) PauseScripts(keepWorkers: true); };
         InitializeComponent();
         InstallGroupBoundaries();
         InstallPlacementMotion();
@@ -253,16 +253,16 @@ public partial class MainWindow : Window
             var screen = System.Windows.Forms.Screen.FromPoint(_startButtonPoint ?? System.Windows.Forms.Cursor.Position);
             var area = screen.WorkingArea;
             _wallpaperMonitor = screen.Bounds;
-            RefreshWallpaper();
-            RefreshNavigationShortcuts();
             MonitorPlacement.FitWorkingArea(handle, new nint(-1), area, 0x0040);
         }
+        if (!_preview || _openingWallpaperFixture != null) QueueOpeningWallpaperRefresh();
         if (!_preview || _verifyNativeActivation) ForegroundActivation.Request(handle);
         Activate();
         ExpandedRail.Visibility = Visibility.Collapsed;
         if (wasHidden || wasDismissing)
             BeginMotion(false, wasHidden ? EntranceOpacity : previousOpacity, wasHidden ? 0.9 : previousScale);
         FocusSearchInput();
+        QueueTileResume();
         RequestCatalogRefresh(opening: true);
         Dispatcher.BeginInvoke(() =>
         {
@@ -289,6 +289,7 @@ public partial class MainWindow : Window
     /// <summary>Applies language, theme, contrast, wallpaper, and shared control resources from local preferences.</summary>
     public void ApplyAppearance()
     {
+        foreach (var view in _htmlTiles.Values) view.InvalidateRetainedPresentation();
         var p = DisplayPreferences;
         RespectMotionPreference();
         LocalizationResources.Apply(p.Language);

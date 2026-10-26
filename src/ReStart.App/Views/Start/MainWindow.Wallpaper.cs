@@ -7,9 +7,11 @@ namespace ReStart.App;
 
 public partial class MainWindow
 {
-    private string? _wallpaperPath;
-    private DateTime _wallpaperWriteTime;
-    private long _wallpaperLength;
+    private DesktopWallpaperSource.Snapshot _wallpaperSnapshot = DesktopWallpaperSource.Empty;
+    private int _wallpaperRevision;
+    private Task? _openingWallpaperRefresh;
+    private bool _openingWallpaperRequested;
+    private Func<bool, DesktopWallpaperSource.Snapshot>? _openingWallpaperFixture;
     private System.Drawing.Rectangle? _wallpaperMonitor;
     private DispatcherTimer? _appearanceRefresh;
     private bool _refreshWebPresentations;
@@ -47,7 +49,7 @@ public partial class MainWindow
             _appearanceRefresh.Stop();
             if (_exit) return;
             if (_refreshWebPresentations) { _refreshWebPresentations = false; ResetHtmlPresentations(); }
-            _wallpaperPath = null; RefreshLayout();
+            _wallpaperSnapshot = DesktopWallpaperSource.Empty; RefreshLayout();
         };
     }
     private void OnSystemTimeChanged(object? sender, EventArgs args) => Dispatcher.BeginInvoke(async () =>
@@ -77,20 +79,47 @@ public partial class MainWindow
 
     private void RefreshWallpaper(string? fixturePath = null)
     {
-        if (!DisplayPreferences.ShowWallpaper || SystemParameters.HighContrast || _preview && fixturePath == null && !DisplayPreferences.UseCustomBackground)
-        { Wallpaper.Source = null; _wallpaperPath = null; return; }
+        _wallpaperRevision++;
+        var read = WallpaperRead(fixturePath);
+        ApplyWallpaper(DesktopWallpaperSource.Read(read.Enabled, read.Path, read.Monitor, _wallpaperSnapshot));
+    }
+
+    private (bool Enabled, string? Path, System.Drawing.Rectangle Monitor) WallpaperRead(string? fixturePath = null)
+    {
+        var selected = fixturePath ?? (DisplayPreferences.UseCustomBackground ? new BackgroundImageStore(Path.GetDirectoryName(_store.FilePath)!).Resolve(DisplayPreferences.CustomBackgroundId) : null);
+        return (DisplayPreferences.ShowWallpaper && !SystemParameters.HighContrast && (!_preview || _openingWallpaperFixture != null || fixturePath != null || DisplayPreferences.UseCustomBackground)
+            && (!DisplayPreferences.UseCustomBackground || selected != null), selected, _wallpaperMonitor ?? System.Windows.Forms.Screen.PrimaryScreen!.Bounds);
+    }
+
+    private void ApplyWallpaper(DesktopWallpaperSource.Snapshot snapshot)
+    {
+        _wallpaperSnapshot = snapshot; Wallpaper.Source = snapshot.Image;
+    }
+
+    private void QueueOpeningWallpaperRefresh()
+    {
+        _wallpaperRevision++;
+        _openingWallpaperRequested = true;
+        _openingWallpaperRefresh ??= RefreshOpeningWallpaperAsync();
+    }
+
+    private async Task RefreshOpeningWallpaperAsync()
+    {
+        await Dispatcher.Yield(DispatcherPriority.Background);
         try
         {
-            var path = fixturePath ?? (DisplayPreferences.UseCustomBackground
-                ? new BackgroundImageStore(Path.GetDirectoryName(_store.FilePath)!).Resolve(DisplayPreferences.CustomBackgroundId)
-                : DesktopWallpaperSource.CurrentPath(_wallpaperMonitor ?? System.Windows.Forms.Screen.PrimaryScreen!.Bounds));
-            var file = path == null ? null : new FileInfo(path);
-            if (file?.Exists != true) { Wallpaper.Source = null; _wallpaperPath = null; return; }
-            if (_wallpaperPath == path && Wallpaper.Source != null && _wallpaperWriteTime == file.LastWriteTimeUtc && _wallpaperLength == file.Length) return;
-            Wallpaper.Source = DesktopWallpaperSource.Load(path!);
-            _wallpaperPath = path; _wallpaperWriteTime = file.LastWriteTimeUtc; _wallpaperLength = file.Length;
+            while (_openingWallpaperRequested && !_exit)
+            {
+                _openingWallpaperRequested = false;
+                var revision = _wallpaperRevision;
+                var read = WallpaperRead(); var previous = _wallpaperSnapshot; var fixture = _openingWallpaperFixture;
+                // Shell COM, file metadata and image decoding can stall after a
+                // long idle period. Keep the previous image and accept input
+                // while one coalesced background read refreshes it.
+                var snapshot = await Task.Run(() => fixture != null ? fixture(read.Enabled) : DesktopWallpaperSource.Read(read.Enabled, read.Path, read.Monitor, previous));
+                if (!_exit && revision == _wallpaperRevision) ApplyWallpaper(snapshot);
+            }
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or ArgumentException)
-        { Wallpaper.Source = null; _wallpaperPath = null; }
+        finally { _openingWallpaperRefresh = null; }
     }
 }

@@ -7,6 +7,24 @@ namespace ReStart.App.Services;
 /// <summary>Reads the current monitor's desktop image and decodes it without retaining file locks or URI-cache entries.</summary>
 internal static class DesktopWallpaperSource
 {
+    internal sealed record Snapshot(string? Path, DateTime Written, long Length, BitmapSource? Image);
+    internal static readonly Snapshot Empty = new(null, default, 0, null);
+
+    internal static Snapshot Read(bool enabled, string? selectedPath, System.Drawing.Rectangle monitor, Snapshot previous)
+    {
+        if (!enabled) return Empty;
+        try
+        {
+            var path = selectedPath ?? CurrentPath(monitor);
+            var file = path == null ? null : new FileInfo(path);
+            if (file?.Exists != true) return Empty;
+            if (previous.Path == path && previous.Image != null && previous.Written == file.LastWriteTimeUtc && previous.Length == file.Length) return previous;
+            return new(path, file.LastWriteTimeUtc, file.Length, Load(path!));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or ArgumentException or System.Security.SecurityException)
+        { return Empty; }
+    }
+
     internal static string? CurrentPath(System.Drawing.Rectangle monitor)
     {
         object? instance = null;
