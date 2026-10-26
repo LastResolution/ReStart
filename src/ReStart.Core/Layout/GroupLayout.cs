@@ -252,23 +252,26 @@ public static class GroupLayout
         var movingIndex = Array.FindIndex(current.ToArray(), p => p.Group == group);
         var priority = shadows[movingIndex];
         var left = priority.X * cell ?? priority.Column!.Value * (document.Preferences.Columns * cell + Gap);
-        if (reorderOnDrag && GroupReorder.Plan(current, movingIndex, left, priority.Row!.Value, document.Preferences.Columns, cell) is { } plan)
+        IReadOnlyList<GroupPlacement>? TryPlan(IReadOnlyList<GroupPlacement> plan)
         {
             var requested = shadows.Select(g => (g.Column, g.Row, g.X)).ToArray();
             for (var i = 0; i < shadows.Length; i++)
             {
                 shadows[i].Column = plan[i].Column; shadows[i].Row = plan[i].Row;
-                if (!shadows[i].IsStandalone) shadows[i].X = plan[i].Left / cell;
+                if (!shadows[i].IsStandalone) shadows[i].X = Math.Abs(plan[i].Left - current[i].Left) < .001 ? current[i].Group.X : plan[i].Left / cell;
             }
             var reordered = Pack(shadows, availableColumns, document.Preferences.Columns, cell, priority, preserveColumns: true);
-            // Larger recipients may not fit beside an unrelated group.
-            // Reject that rotation rather than moving entries outside its span.
-            if (reordered.Zip(plan).All(p => p.First.Row == p.Second.Row && Math.Abs(p.First.Left - p.Second.Left) < .001))
-                return reordered.Select(p => p with { Group = originals[p.Group] }).ToArray();
+            // Validate both strategies with the commit packer, including exact
+            // edge contacts and fractional gutter anchors at different scales.
+            var result = reordered.Zip(plan).All(p => p.First.Row == p.Second.Row && Math.Abs(p.First.Left - p.Second.Left) < .001)
+                ? reordered.Select(p => p with { Group = originals[p.Group] }).ToArray() : null;
             for (var i = 0; i < shadows.Length; i++) (shadows[i].Column, shadows[i].Row, shadows[i].X) = requested[i];
+            return result;
         }
+        if (reorderOnDrag && GroupReorder.Plan(current, movingIndex, left, priority.Row!.Value, document.Preferences.Columns, cell) is { } plan
+                && TryPlan(plan) is { } reordered) return reordered;
         if (reorderOnDrag && GroupDisplacement.Plan(current, movingIndex, priority.Column!.Value, priority.Row!.Value, left,
-                availableColumns, document.Preferences.Columns, cell) is { } directional) return directional;
+                availableColumns, document.Preferences.Columns, cell) is { } directional && TryPlan(directional) is { } displaced) return displaced;
         return Pack(shadows, availableColumns, document.Preferences.Columns, cell, priority, preserveColumns: true)
             .Select(p => p with { Group = originals[p.Group] }).ToArray();
     }

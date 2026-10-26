@@ -146,6 +146,35 @@ public sealed class GroupDisplacementTests
     }
 
     [Theory]
+    [InlineData(.7, true)]
+    [InlineData(.85, true)]
+    [InlineData(1.0, true)]
+    [InlineData(1.1, true)]
+    [InlineData(1.5, true)]
+    [InlineData(.7, false)]
+    [InlineData(.85, false)]
+    [InlineData(1.0, false)]
+    [InlineData(1.1, false)]
+    [InlineData(1.5, false)]
+    public void TouchingAFixedEdgeKeepsPreviewAndCommittedPackingConsistent(double scale, bool fromRight)
+    {
+        var cell = 52 * scale;
+        var moving = Group("Moving", fromRight ? 12 : 0, 2);
+        var target = Group("Recipient", fromRight ? 2 : 12, 0);
+        var edge = fromRight ? target.X!.Value + 4 + GroupLayout.Gap / cell : target.X!.Value - 4 - GroupLayout.Gap / cell;
+        var fixedGroup = Group("Touching neighbor", edge, 0);
+        var document = new LayoutDocument { Groups = [fixedGroup, moving, target] };
+        var before = Pack(document, cell).Single(p => p.Group == fixedGroup);
+
+        var preview = GroupLayout.PreviewMove(document, moving, 0, 0, 4, cell, target.X, reorderOnDrag: true);
+        GroupLayout.Move(document, moving, 0, 0, 4, cell, target.X, reorderOnDrag: true);
+
+        Assert.Equal(preview, Pack(document, cell));
+        Assert.Equal(before, Pack(document, cell).Single(p => p.Group == fixedGroup));
+        AssertDisjoint(preview);
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public void InsufficientSpaceAtTheBoardEdgeFallsBackWithoutInvalidAnchors(bool rightEdge)
