@@ -60,8 +60,8 @@ public partial class MainWindow
             var localBefore = RootPanelFor(moving).Children.OfType<Button>().Single().TranslatePoint(new Point(), RootPanelFor(moving));
             PreviewGroupOnBoard(moving, new(pitch + _dragOffset.X, 8 * Cell / 2 + _dragOffset.Y));
             UpdateLayout();
-            Require(GroupsPanel.Placements.Single(p => p.Group == right).Row > 8
-                && JsonSerializer.Serialize(Document, LayoutStore.JsonOptions) == beforePreview, "Group preview did not show the displaced group or mutated the document.");
+            Require(GroupsPanel.Placements.Single(p => p.Group == right).Row < 8
+                && JsonSerializer.Serialize(Document, LayoutStore.JsonOptions) == beforePreview, "Group preview did not displace its recipient toward the dominant upper source side or mutated the document.");
             var localPreview = RootPanelFor(moving).Children.OfType<Button>().Single().TranslatePoint(new Point(), RootPanelFor(moving));
             Require(localPreview == localBefore && single.Column == 4 && single.Row == 0, "Moving a one-tile group changed the child's local cell.");
             SaveScreenshot(Path.Combine(Path.GetDirectoryName(snapshotPath)!, Path.GetFileNameWithoutExtension(snapshotPath) + "-group-preview.png"));
@@ -234,7 +234,8 @@ public partial class MainWindow
             VerifyAdjacentDrop(snapshotPath);
             VerifyRectangularGroupsAndFolderExpansion(snapshotPath);
             var groupReorderChecks = VerifyGroupDragReordering(snapshotPath);
-            return new(23 + groupReorderChecks, 6, 29, 6, saved.Version, Document.Groups.Count);
+            var directionalChecks = VerifyDirectionalGroupDisplacement(snapshotPath);
+            return new(23 + groupReorderChecks + directionalChecks, 6, 29, 6, saved.Version, Document.Groups.Count);
         }
         finally
         {

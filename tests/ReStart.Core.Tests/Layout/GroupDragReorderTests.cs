@@ -92,7 +92,7 @@ public sealed class GroupDragReorderTests
         Assert.Equal(baseline[1].Top - baseline[0].Height, ordered[1].Top - ordered[0].Height, 6);
         Assert.Equal(before, JsonSerializer.Serialize(document, LayoutStore.JsonOptions));
 
-        GroupLayout.Move(document, moving, 0, row, 3, cell, 0, reorderVertical: true);
+        GroupLayout.Move(document, moving, 0, row, 3, cell, 0, reorderOnDrag: true);
         var committed = GroupLayout.Pack(document.Groups, 3, document.Preferences.Columns, cell, preserveColumns: true);
         Assert.Equal(preview, committed);
         Assert.Single(target.Tiles[0].Children);
@@ -179,7 +179,7 @@ public sealed class GroupDragReorderTests
         var target = Group("Target", 8);
         var document = new LayoutDocument { Groups = [moving, target] };
 
-        var crossColumn = GroupLayout.PreviewMove(document, moving, 1, 6, 3, 52, 8, reorderVertical: true);
+        var crossColumn = GroupLayout.PreviewMove(document, moving, 1, 6, 3, 52, 8, reorderOnDrag: true);
         Assert.Equal(6, crossColumn.Single(p => p.Group == moving).Row);
         Assert.Equal(8, crossColumn.Single(p => p.Group == target).Row);
         var discrete = GroupLayout.PreviewMove(document, moving, 0, 1, 3, 52, 0);
@@ -197,7 +197,7 @@ public sealed class GroupDragReorderTests
         var before = LayoutHistory.CopyGroups(document.Groups);
         document.Preferences.LockedGroupIds.Add(target.Id);
 
-        GroupLayout.Move(document, moving, 0, 6, 3, 52, 0, reorderVertical: true);
+        GroupLayout.Move(document, moving, 0, 6, 3, 52, 0, reorderOnDrag: true);
 
         Assert.False(LayoutLocks.AllowsChange(before, document.Groups, document.Preferences, 3));
         document.Preferences.LockedGroupIds.Clear();
@@ -227,5 +227,5 @@ public sealed class GroupDragReorderTests
     };
 
     private static IReadOnlyList<GroupPlacement> Drag(LayoutDocument document, TileGroup group, int row, double cell = 52)
-        => GroupLayout.PreviewMove(document, group, 0, row, 3, cell, 0, reorderVertical: true);
+        => GroupLayout.PreviewMove(document, group, 0, row, 3, cell, 0, reorderOnDrag: true);
 }

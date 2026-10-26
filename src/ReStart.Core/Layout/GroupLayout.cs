@@ -231,11 +231,11 @@ public static class GroupLayout
     /// <param name="availableColumns">Number of available board lanes, from 1 through 64.</param>
     /// <param name="cell">Size of one small tile cell in device-independent pixels (DIPs).</param>
     /// <param name="x">Optional precise horizontal group origin in small-cell units; null uses the lane anchor.</param>
-    /// <param name="reorderVertical">Whether a vertical group drag along its original X reuses vacated space at half-overlap, retaining slot gaps; false retains exact-anchor displacement for discrete edits.</param>
+    /// <param name="reorderOnDrag">Whether pointer dragging reuses aligned slots and prefers free space toward the source side at half-overlap; false retains exact-anchor downward displacement for discrete edits.</param>
     /// <returns>Proposed placements without changing the source document.</returns>
     /// <exception cref="ArgumentException">The moving group is not in the source document.</exception>
     /// <exception cref="ArgumentOutOfRangeException">An explicit X origin is nonfinite or outside 0 through 10000 cells, or packing dimensions are invalid.</exception>
-    public static IReadOnlyList<GroupPlacement> PreviewMove(LayoutDocument document, TileGroup group, int column, int row, int availableColumns, double cell, double? x = null, bool reorderVertical = false)
+    public static IReadOnlyList<GroupPlacement> PreviewMove(LayoutDocument document, TileGroup group, int column, int row, int availableColumns, double cell, double? x = null, bool reorderOnDrag = false)
     {
         if (!document.Groups.Contains(group)) throw new ArgumentException("Unknown group.", nameof(group));
         if (x.HasValue && (!double.IsFinite(x.Value) || x is < 0 or > 10000)) throw new ArgumentOutOfRangeException(nameof(x));
@@ -252,75 +252,28 @@ public static class GroupLayout
         var movingIndex = Array.FindIndex(current.ToArray(), p => p.Group == group);
         var priority = shadows[movingIndex];
         var left = priority.X * cell ?? priority.Column!.Value * (document.Preferences.Columns * cell + Gap);
-        if (reorderVertical && VerticalReorderRows(current, movingIndex, left, priority.Row!.Value, cell) is { } rows)
+        IReadOnlyList<GroupPlacement>? TryPlan(IReadOnlyList<GroupPlacement> plan)
         {
-            var requestedRows = shadows.Select(g => g.Row).ToArray();
-            for (var i = 0; i < shadows.Length; i++) shadows[i].Row = rows[i];
+            var requested = shadows.Select(g => (g.Column, g.Row, g.X)).ToArray();
+            for (var i = 0; i < shadows.Length; i++)
+            {
+                shadows[i].Column = plan[i].Column; shadows[i].Row = plan[i].Row;
+                if (!shadows[i].IsStandalone) shadows[i].X = Math.Abs(plan[i].Left - current[i].Left) < .001 ? current[i].Group.X : plan[i].Left / cell;
+            }
             var reordered = Pack(shadows, availableColumns, document.Preferences.Columns, cell, priority, preserveColumns: true);
-            // Wider recipients may not fit beside an unrelated lateral group.
-            // Reject that rotation rather than moving entries outside its span.
-            if (reordered.Select(p => p.Row).SequenceEqual(rows))
-                return reordered.Select(p => p with { Group = originals[p.Group] }).ToArray();
-            for (var i = 0; i < shadows.Length; i++) shadows[i].Row = requestedRows[i];
+            // Validate both strategies with the commit packer, including exact
+            // edge contacts and fractional gutter anchors at different scales.
+            var result = reordered.Zip(plan).All(p => p.First.Row == p.Second.Row && Math.Abs(p.First.Left - p.Second.Left) < .001)
+                ? reordered.Select(p => p with { Group = originals[p.Group] }).ToArray() : null;
+            for (var i = 0; i < shadows.Length; i++) (shadows[i].Column, shadows[i].Row, shadows[i].X) = requested[i];
+            return result;
         }
+        if (reorderOnDrag && GroupReorder.Plan(current, movingIndex, left, priority.Row!.Value, document.Preferences.Columns, cell) is { } plan
+                && TryPlan(plan) is { } reordered) return reordered;
+        if (reorderOnDrag && GroupDisplacement.Plan(current, movingIndex, priority.Column!.Value, priority.Row!.Value, left,
+                availableColumns, document.Preferences.Columns, cell) is { } directional && TryPlan(directional) is { } displaced) return displaced;
         return Pack(shadows, availableColumns, document.Preferences.Columns, cell, priority, preserveColumns: true)
             .Select(p => p with { Group = originals[p.Group] }).ToArray();
-    }
-
-    private static int[]? VerticalReorderRows(IReadOnlyList<GroupPlacement> current, int movingIndex, double left, int row, double cell)
-    {
-        const double epsilon = .001;
-        var moving = current[movingIndex];
-        var top = row * cell / 2;
-        if (moving.Group.IsStandalone || Math.Abs(left - moving.Left) > epsilon || Math.Abs(top - moving.Top) < epsilon) return null;
-        var lane = current.Select((placement, index) => (Placement: placement, Index: index))
-            .Where(p => !p.Placement.Group.IsStandalone && p.Placement.Left < moving.Left + moving.Width - epsilon && p.Placement.Left + p.Placement.Width > moving.Left + epsilon)
-            .OrderBy(p => p.Placement.Top).ThenBy(p => p.Index).ToArray();
-        var overlapping = lane.Any(p => p.Index != movingIndex && top < p.Placement.Top + p.Placement.Height && top + moving.Height > p.Placement.Top);
-        var source = Array.FindIndex(lane, p => p.Index == movingIndex);
-        var destination = source;
-        if (top > moving.Top)
-        {
-            for (var i = source + 1; i < lane.Length; i++)
-            {
-                var target = lane[i].Placement;
-                if (top + moving.Height < target.Top + Math.Min(moving.Height, target.Height) / 2 - epsilon) break;
-                destination = i;
-            }
-        }
-        else
-        {
-            for (var i = source - 1; i >= 0; i--)
-            {
-                var target = lane[i].Placement;
-                if (top > target.Top + target.Height - Math.Min(moving.Height, target.Height) / 2 + epsilon) break;
-                destination = i;
-            }
-        }
-        var rows = current.Select(p => p.Row).ToArray();
-        // Until intent is clear, keep the recipient stationary instead of
-        // continually pushing it away from the pointer's approach.
-        if (source == destination) return overlapping ? rows : null;
-        var run = lane.Skip(Math.Min(source, destination)).Take(Math.Abs(source - destination) + 1).ToArray();
-        // A wide group can cover multiple parallel stacks. They do not form
-        // one reorderable sequence, so keep ordinary collision handling.
-        for (var i = 1; i < run.Length; i++)
-            if (run[i].Placement.Top < run[i - 1].Placement.Top + run[i - 1].Placement.Height - epsilon) return null;
-        var reordered = run.Where(p => p.Index != movingIndex).ToList();
-        reordered.Insert(destination > source ? reordered.Count : 0, lane[source]);
-        var nextTop = run[0].Placement.Top;
-        for (var i = 0; i < reordered.Count; i++)
-        {
-            var nextRow = (int)Math.Round(nextTop / (cell / 2), MidpointRounding.AwayFromZero);
-            if (nextRow is < 0 or > 20000) return null;
-            rows[reordered[i].Index] = nextRow;
-            if (i < run.Length - 1)
-                nextTop += reordered[i].Placement.Height + Math.Max(0, run[i + 1].Placement.Top - run[i].Placement.Top - run[i].Placement.Height);
-        }
-        // Passing the last recipient must not send it back down again. Once
-        // clear of other groups, let the dragged group follow the empty space.
-        if (!overlapping && (top > moving.Top ? row > rows[movingIndex] : row < rows[movingIndex])) rows[movingIndex] = row;
-        return rows;
     }
 
     /// <summary>Commits the proposed group layout while preserving every tile's identity, size and local cell coordinates.</summary>
@@ -331,14 +284,22 @@ public static class GroupLayout
     /// <param name="availableColumns">Number of available board lanes, from 1 through 64.</param>
     /// <param name="cell">Size of one small tile cell in device-independent pixels (DIPs).</param>
     /// <param name="x">Optional precise horizontal group origin in small-cell units; null uses the lane anchor.</param>
-    /// <param name="reorderVertical">Whether a vertical group drag along its original X reuses vacated space at half-overlap while retaining slot gaps; false keeps exact-anchor displacement.</param>
+    /// <param name="reorderOnDrag">Whether pointer dragging reuses aligned slots and prefers the source side for collision recipients at half-overlap; false keeps exact-anchor downward displacement.</param>
     /// <exception cref="ArgumentException">The moving group is not in the source document.</exception>
     /// <exception cref="ArgumentOutOfRangeException">The requested X origin or packing dimensions are invalid.</exception>
-    public static void Move(LayoutDocument document, TileGroup group, int column, int row, int availableColumns, double cell, double? x = null, bool reorderVertical = false)
+    public static void Move(LayoutDocument document, TileGroup group, int column, int row, int availableColumns, double cell, double? x = null, bool reorderOnDrag = false)
     {
-        foreach (var p in PreviewMove(document, group, column, row, availableColumns, cell, x, reorderVertical))
-        { p.Group.Column = p.Column; p.Group.Row = p.Row; }
-        group.X = x;
+        var pitch = document.Preferences.Columns * cell + Gap;
+        foreach (var p in PreviewMove(document, group, column, row, availableColumns, cell, x, reorderOnDrag))
+        {
+            if (!p.Group.IsStandalone)
+            {
+                var anchor = p.Group == group ? x : p.Group.X;
+                p.Group.X = Math.Abs(p.Left - (anchor * cell ?? p.Column * pitch)) < .001 ? anchor : p.Left / cell;
+            }
+            p.Group.Column = p.Column; p.Group.Row = p.Row;
+        }
+        if (group.IsStandalone) group.X = x;
     }
 }
 
