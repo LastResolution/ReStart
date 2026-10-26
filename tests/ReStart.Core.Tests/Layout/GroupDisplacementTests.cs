@@ -9,17 +9,18 @@ public sealed class GroupDisplacementTests
     {
         foreach (var scale in new[] { .7, 1.0, 1.5 })
             foreach (var fromRight in new[] { false, true })
-                foreach (var movingSize in Enum.GetValues<TileSize>())
-                    foreach (var targetSize in Enum.GetValues<TileSize>())
-                        yield return [scale, fromRight, movingSize, targetSize];
+                foreach (var sourceRow in new[] { 0, 2 })
+                    foreach (var movingSize in Enum.GetValues<TileSize>())
+                        foreach (var targetSize in Enum.GetValues<TileSize>())
+                            yield return [scale, fromRight, sourceRow, movingSize, targetSize];
     }
 
     [Theory]
     [MemberData(nameof(HorizontalCases))]
-    public void HorizontalArrivalUsesTheSourceSideWithoutGrowingRows(double scale, bool fromRight, TileSize movingSize, TileSize targetSize)
+    public void HorizontalArrivalUsesTheSourceSideWithoutGrowingRows(double scale, bool fromRight, int sourceRow, TileSize movingSize, TileSize targetSize)
     {
         var cell = 52 * scale;
-        var moving = Group("Moving", fromRight ? 12 : 0, 0, movingSize);
+        var moving = Group("Moving", fromRight ? 12 : 0, sourceRow, movingSize);
         var target = Group("Recipient", fromRight ? 2 : 12, 0, targetSize);
         target.Tiles[0].Children = [new() { Label = "Nested app" }];
         var unrelated = Group("Unrelated", 20, 8);
@@ -60,6 +61,26 @@ public sealed class GroupDisplacementTests
         Assert.Equal(displaced, preview.Single(p => p.Group == target).Left > 0);
         Assert.Equal(before, JsonSerializer.Serialize(document, LayoutStore.JsonOptions));
         GroupLayout.Move(document, moving, 0, 0, 4, 52, x, reorderOnDrag: true);
+        Assert.Equal(preview, Pack(document, 52));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(8)]
+    public void LegacyLaneAnchorsAndNullXSurviveHorizontalAndDiagonalDrops(int row)
+    {
+        var moving = Group("Moving", 0, 0); moving.X = null; moving.Column = 2;
+        var target = Group("Recipient", 0, row); target.X = null; target.Column = 1;
+        var document = new LayoutDocument { Groups = [moving, target] };
+        var before = JsonSerializer.Serialize(document, LayoutStore.JsonOptions);
+
+        var preview = GroupLayout.PreviewMove(document, moving, 1, row, 4, 52, reorderOnDrag: true);
+
+        Assert.True(preview.Single(p => p.Group == target).Left > preview.Single(p => p.Group == moving).Left);
+        Assert.Equal(row, preview.Single(p => p.Group == target).Row);
+        Assert.Equal(before, JsonSerializer.Serialize(document, LayoutStore.JsonOptions));
+        GroupLayout.Move(document, moving, 1, row, 4, 52, reorderOnDrag: true);
+        Assert.Null(moving.X);
         Assert.Equal(preview, Pack(document, 52));
     }
 
