@@ -19,6 +19,9 @@
     <ProjectReference Include="../ReStart.Core/ReStart.Core.csproj" />
     <ProjectReference Include="../ReStart.TileHost/ReStart.TileHost.csproj" ReferenceOutputAssembly="false" />
     <Content Include="../../examples/tiles/**/*" Link="Examples/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Tablet edition: dashboard tile packages imported by the Home layout. -->
+    <None Remove="Tablet/Home/Tiles/**/*" />
+    <Content Include="Tablet/Home/Tiles/**/*" Link="TabletTiles/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Resource Include="../../assets/ReStart.png" Link="Assets/ReStart.png" />
     <EmbeddedResource Include="../../LICENSE" LogicalName="ReStart.Licenses.ReStart (MIT)" />
     <EmbeddedResource Include="../../third-party/*.txt" LogicalName="ReStart.Licenses.%(Filename)%(Extension)" />
@@ -31,7 +34,8 @@
     <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
   </ItemGroup>
-  <Target Name="CopyTileHost" AfterTargets="Build">
+  <!-- Linux cross-builds publish the tile host separately (tools/tablet/build.sh). -->
+  <Target Name="CopyTileHost" AfterTargets="Build" Condition="'$(SkipTileHostCopy)' != 'true'">
     <MSBuild Projects="../ReStart.TileHost/ReStart.TileHost.csproj" Targets="GetTargetPath" Properties="Configuration=$(Configuration)">
       <Output TaskParameter="TargetOutputs" ItemName="_WorkerOutput" />
     </MSBuild>

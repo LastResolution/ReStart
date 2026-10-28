@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Now playing</title><link rel="stylesheet" href="/tile.css"></head>
+<body>
+  <main id="card" class="card idle">
+    <img id="backdrop" class="backdrop" alt="">
+    <button id="art" class="art" data-action="media.open" aria-label="Open the playing app"><img id="cover" alt=""><span class="note" aria-hidden="true">&#xE8D6;</span></button>
+    <section class="info">
+      <button class="meta" data-action="media.open" aria-label="Open the playing app">
+        <div id="app" class="app"></div>
+        <div id="title" class="title"></div>
+        <div id="artist" class="artist"></div>
+      </button>
+      <div class="progress"><div id="bar"></div></div>
+      <div class="controls">
+        <button data-action="media.previous" aria-label="Previous">&#xE892;</button>
+        <button id="toggle" class="play" data-action="media.toggle" aria-label="Play or pause">&#xE768;</button>
+        <button data-action="media.next" aria-label="Next">&#xE893;</button>
+      </div>
+    </section>
+  </main>
+  <script src="/tile.js"></script>
+</body>
+</html>

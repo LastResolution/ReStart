@@ -1,0 +1,48 @@
+/* Sky-tinted weather card: the gradient follows the current conditions and day/night. */
+:root { --s: var(--tile-scale, 1); --top: #3d8fd6; --bottom: #6cb6ef; }
+* { box-sizing: border-box; }
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: transparent; }
+body { font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif; color: #fff; user-select: none; }
+.sky { position: relative; width: 100%; height: 100%; padding: calc(9px * var(--s)) calc(10px * var(--s)); background: linear-gradient(170deg, var(--top), var(--bottom)); transition: background .6s; }
+.sky::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(0,0,0,.12)); pointer-events: none; }
+.content { position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column; min-width: 0; }
+.place { font-size: calc(11.5px * var(--s)); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: .3em; }
+.place svg { width: .9em; height: .9em; flex: none; opacity: .9; }
+.temp { font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; font-size: calc(36px * var(--s)); font-weight: 300; line-height: 1; letter-spacing: -.03em; margin-top: calc(1px * var(--s)); }
+.grow { flex: 1; min-height: 0; }
+.icon { width: calc(26px * var(--s)); height: calc(26px * var(--s)); flex: none; filter: drop-shadow(0 1px 2px rgba(0,0,0,.18)); }
+.condition { font-size: calc(11.5px * var(--s)); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.range { font-size: calc(11.5px * var(--s)); opacity: .9; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.head { display: flex; justify-content: space-between; align-items: flex-start; gap: calc(4px * var(--s)); }
+.head > .icon { position: absolute; top: calc(-2px * var(--s)); right: calc(-3px * var(--s)); width: calc(24px * var(--s)); height: calc(24px * var(--s)); }
+.muted { opacity: .78; }
+.credit { font-size: calc(7px * var(--s)); font-weight: 400; opacity: .6; }
+.title { display: flex; justify-content: space-between; align-items: baseline; white-space: nowrap; gap: .25em; overflow: hidden; margin-right: calc(-4px * var(--s)); }
+.footer { position: absolute; right: 0; bottom: calc(-4px * var(--s)); }
+.message { margin: auto 0; font-size: calc(12px * var(--s)); line-height: 1.3; }
+.message b { display: block; font-size: calc(14px * var(--s)); margin-bottom: .2em; }
+.badge { font-size: calc(9px * var(--s)); padding: 0 .45em; border-radius: 1em; background: rgba(0,0,0,.22); margin-left: .4em; font-weight: 600; }
+/* Day rows (forecast view, large size). */
+.days { display: grid; gap: calc(1px * var(--s)); margin-top: calc(4px * var(--s)); }
+.day { display: grid; grid-template-columns: 2.3em calc(18px * var(--s)) 1fr auto; align-items: center; gap: calc(4px * var(--s)); font-size: calc(11px * var(--s)); font-variant-numeric: tabular-nums; min-height: calc(22px * var(--s)); }
+.day .icon { width: calc(18px * var(--s)); height: calc(18px * var(--s)); }
+.compact .day { grid-template-columns: 2.1em calc(17px * var(--s)) 1fr; gap: calc(3px * var(--s)); min-height: calc(21px * var(--s)); }
+.compact .day .rain { display: none; }
+.day .rain { color: #b9e3ff; font-size: .85em; font-weight: 600; }
+.day .hilo { text-align: right; white-space: nowrap; }
+.day .lo { opacity: .7; margin-left: .35em; }
+.title { font-size: calc(11.5px * var(--s)); font-weight: 600; }
+/* Wide: current on the left, five day columns on the right. */
+.wide { flex-direction: row; gap: calc(10px * var(--s)); }
+.wide .now { width: 40%; display: flex; flex-direction: column; min-width: 0; }
+.strip { flex: 1; display: grid; grid-template-columns: repeat(5, 1fr); align-items: center; text-align: center; font-size: calc(11px * var(--s)); font-variant-numeric: tabular-nums; border-left: 1px solid rgba(255,255,255,.22); padding-left: calc(6px * var(--s)); }
+.strip > div { display: grid; justify-items: center; gap: calc(3px * var(--s)); }
+.strip .icon { width: calc(22px * var(--s)); height: calc(22px * var(--s)); }
+.strip .lo { opacity: .7; }
+/* Large: hourly row between the current conditions and the days. */
+.hours { display: grid; grid-template-columns: repeat(6, 1fr); text-align: center; font-size: calc(10.5px * var(--s)); padding: calc(6px * var(--s)) 0; margin: calc(6px * var(--s)) 0 calc(2px * var(--s)); border-top: 1px solid rgba(255,255,255,.22); border-bottom: 1px solid rgba(255,255,255,.22); font-variant-numeric: tabular-nums; }
+.hours > div { display: grid; justify-items: center; gap: calc(3px * var(--s)); }
+.hours .icon { width: calc(20px * var(--s)); height: calc(20px * var(--s)); }
+[data-size="small"] .sky { padding: calc(4px * var(--s)); display: grid; place-items: center; }
+[data-size="small"] .temp { font-size: calc(18px * var(--s)); text-align: center; }
+@media (forced-colors: active) { .sky { background: Canvas; color: CanvasText; } }

@@ -24,7 +24,28 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        // Tablet edition: taskbar watchdog and manual taskbar recovery run before anything else.
+        var watchdogIndex = Array.IndexOf(e.Args, Tablet.Core.TaskbarControl.WatchdogArgument);
+        if (watchdogIndex >= 0)
+        {
+            if (int.TryParse(e.Args.ElementAtOrDefault(watchdogIndex + 1), out var parent)) await Tablet.Core.TaskbarControl.RunWatchdogAsync(parent);
+            Shutdown(0); return;
+        }
+        if (e.Args.Contains(Tablet.Core.TaskbarControl.RestoreArgument)) { Tablet.Core.TaskbarControl.RestoreFromMarker("command line"); Shutdown(0); return; }
         if (await HandleUpdateEntryAsync(e.Args)) return;
+        // Tablet edition: `--tablet on|off|auto` sets the posture override read by the running instance.
+        var commandIndex = Array.IndexOf(e.Args, "--tablet-command");
+        if (commandIndex >= 0)
+        {
+            var line = string.Join(' ', e.Args.Skip(commandIndex + 1));
+            Shutdown(Tablet.TabletCommands.Send(line) ? 0 : 3); return;
+        }
+        var tabletIndex = Array.IndexOf(e.Args, "--tablet");
+        if (tabletIndex >= 0)
+        {
+            Tablet.TabletMode.WriteOverride(tabletIndex + 1 < e.Args.Length ? e.Args[tabletIndex + 1] : "auto");
+            Shutdown(0); return;
+        }
         if (e.Args.Contains("--render-docs") || e.Args.Contains("--render-promo") || e.Args.Contains("--render-studio") || e.Args.Contains("--verify-platform")) { await RenderDocumentationAsync(e.Args); return; }
         var preview = e.Args.Contains("--preview") || e.Args.Contains("--smoke-test");
         var smoke = e.Args.Contains("--smoke-test");
@@ -83,6 +104,10 @@ public partial class App : Application
             return;
         }
         var handle = new WindowInteropHelper(_window).EnsureHandle();
+        Tablet.TabletShell.Initialize(Dispatcher);
+        Tablet.ControlCenter.ControlCenterFeature.Initialize(Dispatcher); // Tablet edition: Control Center + side button
+        _window.InitializeTabletHome(); // Tablet edition: Home layout commands, dashboard bridges and touch chrome.
+        Tablet.Gestures.TabletNavigation.Install(); // Tablet edition: home bar, switcher, dock, Split View
         LegacySettingsCleanup.Run();
         _integration = new StartIntegration(handle, Dispatcher, _window.Toggle, _window.DismissFromTaskbar, _window.ToggleFromStartButton);
         _window.IsVisibleChanged += (_, _) => _integration.SetMenuOpen(_window.IsPresenting);
@@ -109,6 +134,9 @@ public partial class App : Application
             _updateNotificationRelease = null;
             _tray.ShowBalloonTip(10000, "ReStart", L.F(K.UpdateReadyBody, _window.PreparedUpdate!.Version), System.Windows.Forms.ToolTipIcon.Info);
         };
+        // Tablet edition: shell core (Start capture by posture, Home, window manager, taskbar).
+        Tablet.Core.ShellCore.Initialize(_window, _integration, e.Args);
+        SessionEnding += (_, _) => Tablet.Core.ShellCore.Shutdown();
         if (e.Args.Contains("--complete-update"))
         {
             if (!await FinishUpdatedStartupAsync(e.Args, _window)) return;
@@ -240,6 +268,8 @@ public partial class App : Application
     /// <summary>Releases hooks, tray resources, activation waits, and the instance lease.</summary>
     protected override void OnExit(ExitEventArgs e)
     {
+        Tablet.Core.ShellCore.Shutdown();
+        Tablet.TabletShell.Shutdown();
         _integration?.Dispose();
         _pinRequests?.Dispose();
         _tray?.Dispose();

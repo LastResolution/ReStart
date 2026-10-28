@@ -30,7 +30,10 @@ public sealed class ScriptTileManifest
             Settings.ValueKind != JsonValueKind.Object || Settings.GetRawText().Length > 8192 || LocalizedTitles == null || LocalizedTitles.Count > 16
             || LocalizedTitles.Any(p => !TextCatalog.SupportedLanguages.Contains(p.Key) || string.IsNullOrWhiteSpace(p.Value) || p.Value.Length > 80)
             || Capabilities == null || Capabilities.Length > 4 || Capabilities.Distinct(StringComparer.Ordinal).Count() != Capabilities.Length
-            || Capabilities.Any(c => c is not ("system.metrics" or "images.slideshow" or "data.sources" or "web.network"))
+            || Capabilities.Any(c => c is not ("system.metrics" or "images.slideshow" or "data.sources" or "web.network"
+                // Tablet edition: host bridges for now playing, Home Assistant and battery/performance (web tiles only).
+                or "tablet.media" or "tablet.home" or "tablet.system"))
+            || Capabilities.Any(c => c.StartsWith("tablet.", StringComparison.Ordinal)) && Renderer != "web"
             || Capabilities.Contains("web.network") && Renderer != "web"
             || DataSources == null || DataSources.Count > 4 || DataSources.Any(p => !Regex.IsMatch(p.Key, "^[a-z][a-z0-9_-]{0,31}$", RegexOptions.CultureInvariant) || p.Value == null || !p.Value.IsValid())
             || DataSources.Count > 0 && !Capabilities.Contains("data.sources"))

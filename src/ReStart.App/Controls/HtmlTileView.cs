@@ -28,6 +28,8 @@ internal sealed class HtmlTileView : Grid, IDisposable
     private int _renderedPresentationRevision = -1;
     internal bool NeedsRecreation { get; private set; }
     internal event Action? RecoveryRequired;
+    /// <summary>Tablet edition: a tile asked the host for a named action (<c>ReStart.action(name, value)</c>); the host validates and may ignore it.</summary>
+    internal event Action<string, JsonElement>? ActionRequested;
     internal bool ViewportPaused => _viewportPaused;
     private long _sequence;
     private Task? _initialization;
@@ -193,6 +195,13 @@ internal sealed class HtmlTileView : Grid, IDisposable
         try
         {
             var message = JsonSerializer.Deserialize<JsonElement>(e.WebMessageAsJson, ScriptTileProtocol.Json);
+            // Tablet edition: action requests are separate messages, never render replies.
+            if (message.ValueKind == JsonValueKind.Object && message.TryGetProperty("action", out var action) && action.ValueKind == JsonValueKind.String)
+            {
+                var name = action.GetString()!;
+                if (name.Length is > 0 and <= 64) ActionRequested?.Invoke(name, message.TryGetProperty("value", out var argument) ? argument.Clone() : default);
+                return;
+            }
             if (!message.TryGetProperty("sequence", out var sequence) || !sequence.TryGetInt64(out var number) || number != _sequence) return;
             if (message.TryGetProperty("error", out var error)) { _reply?.TrySetException(new InvalidDataException(error.GetString())); return; }
             var state = message.GetProperty("state");
@@ -458,7 +467,7 @@ internal sealed class HtmlTileView : Grid, IDisposable
     public void Dispose()
     {
         if (_disposed) return;
-        _disposed = true; RecoveryRequired = null; _reply?.TrySetException(new InvalidOperationException("Tile view was disposed."));
+        _disposed = true; RecoveryRequired = null; ActionRequested = null; _reply?.TrySetException(new InvalidOperationException("Tile view was disposed."));
         try { _browser.Dispose(); } catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException) { }
         try { _headlessController?.Close(); } catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException) { }
         _headlessController = null; _offscreenHost?.Dispose(); _offscreenHost = null; _image = null; _imageBytes = null;
@@ -473,7 +482,8 @@ internal sealed class HtmlTileView : Grid, IDisposable
             get context() { return current; },
             get imageUrl() { return current.slideshow?.available ? '/slideshow.png?v=' + sequence : null; },
             onUpdate(fn) { callbacks.add(fn); return () => callbacks.delete(fn); },
-            setState(value) { state = JSON.parse(JSON.stringify(value)); }
+            setState(value) { state = JSON.parse(JSON.stringify(value)); },
+            action(name, value) { send({action: String(name).slice(0,64), value: value === undefined ? null : JSON.parse(JSON.stringify(value))}); }
           })});
           chrome.webview.addEventListener('message', async event => {
             const input = event.data; sequence = input.sequence; current = input.context; state = current.state;

@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "renderer": "web",
+  "title": "Battery",
+  "refreshSeconds": 10,
+  "capabilities": [
+    "tablet.system"
+  ],
+  "settings": {
+    "tabletPackage": "battery",
+    "tabletVersion": 2
+  }
+}

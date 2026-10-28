@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "renderer": "web",
+  "title": "Now playing",
+  "refreshSeconds": 10,
+  "capabilities": [
+    "tablet.media"
+  ],
+  "settings": {
+    "tabletPackage": "now-playing",
+    "tabletVersion": 2
+  }
+}

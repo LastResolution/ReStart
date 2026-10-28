@@ -30,6 +30,7 @@ public partial class MainWindow
     /// <param name="immediately">Whether to bypass animation, for example before a session or power action.</param>
     public void Dismiss(bool immediately = false)
     {
+        if (_tabletHome) return; // Tablet edition: Home is the desktop layer; apps cover it instead of it hiding.
         if (_startupWindow != null) { CancelStartupPresentation(); return; }
         if (!IsVisible || _dismissing && !immediately) return;
         if (immediately || !MotionEnabled)

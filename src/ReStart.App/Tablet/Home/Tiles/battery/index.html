@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Battery</title><link rel="stylesheet" href="/tile.css"></head>
+<body>
+  <main id="card" class="card" data-action="system.battery">
+    <div class="ring">
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <circle class="track" cx="50" cy="50" r="42"/>
+        <circle id="arc" class="arc" cx="50" cy="50" r="42" transform="rotate(-90 50 50)"/>
+      </svg>
+      <div class="value"><span id="bolt" class="bolt" aria-hidden="true">&#xE945;</span><span id="percent"></span></div>
+    </div>
+    <div class="text"><div id="label" class="label">Battery</div><div id="detail" class="detail"></div></div>
+  </main>
+  <script src="/tile.js"></script>
+</body>
+</html>

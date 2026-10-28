@@ -77,6 +77,7 @@ public partial class MainWindow
             }
         }
         catch (Exception ex) when (ex is IOException or InvalidDataException or System.Text.Json.JsonException) { }
+        AddTabletTileMenu(menu, tile); // Tablet edition: Home Assistant connection.
         Add(menu, L.T(K.StudioTitle), () => OpenTileStudio(tile));
         AddWebTileMenu(menu, tile);
         Add(menu, L.T(K.EditScript), () => EditScript(tile));
@@ -130,7 +131,7 @@ public partial class MainWindow
 
     private async Task UpdateScriptTilesAsync()
     {
-        if (!IsVisible && !_startupPreparing) return;
+        if (!BoardVisible && !_startupPreparing) return; // Tablet edition: BoardVisible (Home covered by an app)
         {
             RecoverHtmlTiles();
             var current = _scriptViews.Where(v => v.Tile.Live && (v.Body.IsVisible || _startupPreparing) && TileInViewport(v.Button)).ToArray();
@@ -217,6 +218,7 @@ public partial class MainWindow
                         { data = manifest.DataSources.ToDictionary(p => p.Key, _ => new TileDataSnapshot("error", System.Text.Json.JsonSerializer.SerializeToElement<object?>(null), null, null, false, new("configuration"))); }
                     }
                     else RetireTileData(view.Tile.Id);
+                    var tablet = TabletTileContext(view.Tile, manifest); // Tablet edition: ctx.tablet host bridges.
                     var context = new
                     {
                         now = now.ToString("O"),
@@ -241,7 +243,8 @@ public partial class MainWindow
                             customColor = view.Tile.UseCustomColor ? view.Tile.Color : null
                         },
                         appearance = new { showTitle = DisplayPreferences.ShowLiveTileNames },
-                        title = TileDisplayName(view.Tile)
+                        title = TileDisplayName(view.Tile),
+                        tablet
                     };
                     var (frame, error) = manifest.Renderer == "web" ? await RenderHtmlTileAsync(view.Tile, context, package) : await pool.RenderAsync(source, context);
                     if (!_scriptSessions.TryGetValue(view.Tile.Id, out var latest) || latest != session || !IsVisible && !_startupPreparing || _scriptWorkerPool != pool) return;

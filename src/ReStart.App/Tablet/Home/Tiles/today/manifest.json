@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "renderer": "web",
+  "title": "Today",
+  "refreshSeconds": 30,
+  "capabilities": [],
+  "settings": {
+    "tabletPackage": "today",
+    "tabletVersion": 2
+  }
+}

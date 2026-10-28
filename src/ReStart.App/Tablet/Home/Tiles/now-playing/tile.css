@@ -1,0 +1,49 @@
+/* Now playing: cover art over its own blurred backdrop, with touch-sized transport buttons. */
+:root { --s: var(--tile-scale, 1); --ink: #fff; --muted: rgba(255,255,255,.74); --plate: rgba(255,255,255,.125); --accent: #1ed760; }
+:root[data-theme="light"] { --plate: rgba(0,0,0,.078); }
+:root[data-theme="light"] .idle { --ink: #111; --muted: rgba(0,0,0,.6); }
+* { box-sizing: border-box; }
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: transparent; }
+body { font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif; color: var(--ink); user-select: none; }
+button { all: unset; cursor: default; }
+.card { position: relative; width: 100%; height: 100%; display: flex; gap: calc(10px * var(--s)); padding: calc(8px * var(--s)); background: var(--plate); overflow: hidden; color: var(--ink); }
+.backdrop { position: absolute; inset: -30%; width: 160%; height: 160%; object-fit: cover; filter: blur(calc(22px * var(--s))) saturate(1.5) brightness(.55); opacity: 0; transition: opacity .5s; }
+.has-art .backdrop { opacity: 1; }
+.has-art { background: #1a1a1a; }
+.art { position: relative; z-index: 1; flex: none; height: 100%; aspect-ratio: 1; background: rgba(255,255,255,.12); display: grid; place-items: center; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,.3); }
+.art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
+.has-art .art img { display: block; }
+.note { font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; font-size: calc(28px * var(--s)); opacity: .55; }
+.info { position: relative; z-index: 1; flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.meta { display: block; min-width: 0; flex: 1; }
+.app { font-size: calc(9.5px * var(--s)); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: .4em; }
+.app::before { content: ""; width: .6em; height: .6em; border-radius: 50%; background: var(--accent); flex: none; }
+.paused .app::before, .idle .app::before { background: var(--muted); }
+.title { font-size: calc(13px * var(--s)); font-weight: 600; line-height: 1.22; margin-top: calc(2px * var(--s)); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+.artist { font-size: calc(11.5px * var(--s)); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: calc(1px * var(--s)); }
+.progress { height: calc(3px * var(--s)); border-radius: 2px; background: rgba(255,255,255,.22); overflow: hidden; margin: calc(4px * var(--s)) 0 calc(2px * var(--s)); visibility: hidden; }
+.timed .progress { visibility: visible; }
+.progress div { height: 100%; width: 0; background: var(--ink); border-radius: 2px; }
+.controls { display: flex; justify-content: space-between; align-items: center; margin: 0 calc(-4px * var(--s)); }
+.controls button { font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; font-size: calc(15px * var(--s)); width: calc(34px * var(--s)); height: calc(30px * var(--s)); display: grid; place-items: center; border-radius: calc(15px * var(--s)); }
+.controls button:active { background: rgba(255,255,255,.18); }
+.controls .play { font-size: calc(19px * var(--s)); }
+.idle .controls, .idle .progress { display: none; }
+.idle .title { font-weight: 500; }
+/* Medium: cover fills the tile, one play/pause button. */
+[data-size="medium"] .card { padding: 0; }
+[data-size="medium"] .art { position: absolute; inset: 0; height: 100%; width: 100%; box-shadow: none; }
+[data-size="medium"] .info { justify-content: flex-end; padding: calc(7px * var(--s)); background: linear-gradient(transparent 35%, rgba(0,0,0,.6)); }
+[data-size="medium"] .app, [data-size="medium"] .progress, [data-size="medium"] .controls button:not(.play) { display: none; }
+[data-size="medium"] .meta { flex: 0 1 auto; }
+[data-size="medium"] .title { -webkit-line-clamp: 1; font-size: calc(11.5px * var(--s)); }
+[data-size="medium"] .artist { font-size: calc(10px * var(--s)); }
+[data-size="medium"] .controls { position: absolute; top: calc(4px * var(--s)); right: calc(4px * var(--s)); margin: 0; }
+[data-size="medium"] .controls .play { background: rgba(0,0,0,.35); }
+/* Large: big cover on top. */
+[data-size="large"] .card { flex-direction: column; }
+[data-size="large"] .art { height: 52%; align-self: flex-start; }
+[data-size="small"] .info { display: none; }
+[data-size="small"] .card { padding: 0; }
+[data-size="small"] .art { width: 100%; }
+@media (forced-colors: active) { .card { background: Canvas; color: CanvasText; } .backdrop { display: none; } }

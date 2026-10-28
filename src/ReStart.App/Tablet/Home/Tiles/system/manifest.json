@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "renderer": "web",
+  "title": "System",
+  "refreshSeconds": 3,
+  "capabilities": [
+    "tablet.system"
+  ],
+  "settings": {
+    "tabletPackage": "system",
+    "tabletVersion": 2
+  }
+}

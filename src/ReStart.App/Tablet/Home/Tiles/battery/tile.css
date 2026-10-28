@@ -1,0 +1,31 @@
+/* Battery ring like the iPad batteries widget; tap opens Windows battery settings. */
+:root { --s: var(--tile-scale, 1); --ink: #fff; --muted: rgba(255,255,255,.72); --plate: rgba(255,255,255,.125); --track: rgba(255,255,255,.16); --level: #34c759; }
+:root[data-theme="light"] { --ink: #111; --muted: rgba(0,0,0,.6); --plate: rgba(0,0,0,.078); --track: rgba(0,0,0,.1); }
+* { box-sizing: border-box; }
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: transparent; }
+body { font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif; color: var(--ink); user-select: none; }
+.card { width: 100%; height: 100%; padding: calc(8px * var(--s)); background: var(--plate); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(5px * var(--s)); }
+.ring { position: relative; width: calc(62px * var(--s)); height: calc(62px * var(--s)); flex: none; }
+.ring svg { width: 100%; height: 100%; }
+.track, .arc { fill: none; stroke-width: 9; }
+.track { stroke: var(--track); }
+.arc { stroke: var(--level); stroke-linecap: round; stroke-dasharray: 263.9; stroke-dashoffset: 263.9; transition: stroke-dashoffset .6s, stroke .4s; }
+.value { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; font-size: calc(17px * var(--s)); font-weight: 600; font-variant-numeric: tabular-nums; }
+.bolt { display: none; font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; font-size: .7em; color: var(--level); margin-right: .1em; }
+.charging .bolt { display: inline; }
+.text { text-align: center; min-width: 0; max-width: 100%; }
+.label { display: none; font-size: calc(10px * var(--s)); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.detail { font-size: calc(10.5px * var(--s)); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.low { --level: #ff9f0a; }
+.critical { --level: #ff453a; }
+.saver { --level: #ffd60a; }
+/* Wide/large: ring left, words right. */
+[data-size="wide"] .card, [data-size="large"] .card { flex-direction: row; justify-content: flex-start; gap: calc(14px * var(--s)); padding-left: calc(16px * var(--s)); }
+[data-size="wide"] .text, [data-size="large"] .text { text-align: left; }
+[data-size="wide"] .label, [data-size="large"] .label { display: block; }
+[data-size="wide"] .detail, [data-size="large"] .detail { font-size: calc(12px * var(--s)); white-space: normal; line-height: 1.35; }
+[data-size="small"] .card { padding: calc(3px * var(--s)); }
+[data-size="small"] .ring { width: 100%; height: 100%; }
+[data-size="small"] .text { display: none; }
+[data-size="small"] .value { font-size: calc(11px * var(--s)); }
+@media (forced-colors: active) { .card { background: Canvas; color: CanvasText; } .arc { stroke: Highlight; } }

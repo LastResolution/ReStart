@@ -70,12 +70,19 @@ internal sealed class StartIntegration : IDisposable
             Status = L.T(K.ErrorHotkeyInUse);
     }
 
+    // Tablet edition: Start capture only in tablet mode (laptop mode keeps the normal Windows
+    // Start), and Home, which never dismisses, needs no taskbar-dismiss hooks.
+    private Preferences? _preferences;
+    private bool _tablet;
+    internal void SetTablet(bool tablet) { _tablet = tablet; if (_preferences != null) Apply(_preferences); }
+
     public void Apply(Preferences preferences)
     {
-        _captureWindows = preferences.CaptureWindowsKey;
-        _captureStart = preferences.CaptureStartButton;
+        _preferences = preferences;
+        _captureWindows = _tablet && preferences.CaptureWindowsKey;
+        _captureStart = _tablet && preferences.CaptureStartButton;
         _startButtons.SetEnabled(_captureStart);
-        _dismissOnTaskbar = preferences.CloseOnDeactivate;
+        _dismissOnTaskbar = !_tablet && preferences.CloseOnDeactivate;
         Native.PostThreadMessage(_hookThreadId, 0x8001, 0, 0);
     }
 

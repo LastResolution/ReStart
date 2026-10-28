@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "renderer": "web",
+  "title": "Home",
+  "refreshSeconds": 5,
+  "capabilities": [
+    "tablet.home"
+  ],
+  "settings": {
+    "lights": [],
+    "scenesTitle": "Scenes",
+    "scenes": [],
+    "tabletPackage": "home",
+    "tabletVersion": 2
+  }
+}

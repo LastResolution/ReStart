@@ -237,6 +237,10 @@ public sealed class AppCatalog
     internal static ImageSource? GetIcon(string path)
         => GetFactoryIcon(path) ?? GetFileIcon(path);
 
+    // Tablet edition: the dock and app switcher draw icons larger than tiles do.
+    internal static ImageSource? GetIcon(string path, int size)
+        => GetFactoryIcon(path, size) ?? GetFileIcon(path);
+
     /// <summary>Uses the legacy full-icon path when an image factory cannot supply a filesystem icon.</summary>
     internal static ImageSource? GetFileIcon(string path)
     {
@@ -251,7 +255,7 @@ public sealed class AppCatalog
         finally { DestroyIcon(info.Icon); }
     }
 
-    private static ImageSource? GetFactoryIcon(string path)
+    private static ImageSource? GetFactoryIcon(string path, int size = 64)
     {
         IShellItemImageFactory? factory = null;
         nint bitmap = 0;
@@ -262,7 +266,7 @@ public sealed class AppCatalog
             // ICONONLY avoids folder/document thumbnail canvases whose actual
             // icon can occupy only a few pixels. SCALEUP keeps legacy icons usable.
             const uint iconOnly = 0x4, scaleUp = 0x100;
-            if (factory.GetImage(new Size { Width = 64, Height = 64 }, iconOnly | scaleUp, out bitmap) != 0) return null;
+            if (factory.GetImage(new Size { Width = size, Height = size }, iconOnly | scaleUp, out bitmap) != 0) return null;
             var image = Imaging.CreateBitmapSourceFromHBitmap(bitmap, 0, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
             image.Freeze();
             return image;

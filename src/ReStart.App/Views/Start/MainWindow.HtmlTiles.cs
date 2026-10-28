@@ -84,6 +84,7 @@ public partial class MainWindow
                 if (_scriptSessions.TryGetValue(tile.Id, out var runtime)) runtime.NextUpdate = DateTimeOffset.MinValue;
             };
             view.ShowTransitionPreview(retained);
+            view.ActionRequested += (name, value) => OnTabletTileAction(tile, name, value); // Tablet edition: dashboard tile actions.
             if (_scriptSessions.TryGetValue(tile.Id, out var session)) session.NextUpdate = DateTimeOffset.MinValue;
         }
         if (view.Parent is Panel panel) panel.Children.Remove(view);

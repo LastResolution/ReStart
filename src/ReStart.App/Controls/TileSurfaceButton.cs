@@ -12,9 +12,11 @@ internal sealed class TileSurfaceButton : Button
     public static readonly DependencyProperty HoverHighlightEnabledProperty = DependencyProperty.Register(nameof(HoverHighlightEnabled), typeof(bool), typeof(TileSurfaceButton), new PropertyMetadata(true));
     public bool HoverHighlightEnabled { get => (bool)GetValue(HoverHighlightEnabledProperty); set => SetValue(HoverHighlightEnabledProperty, value); }
     private readonly ScaleTransform _press = new();
+    /// <summary>Tablet edition: the jiggle rotation of the touch edit mode, composed after the press scale.</summary>
+    internal RotateTransform Tilt { get; } = new();
     internal TileSurfaceButton()
     {
-        RenderTransform = _press; RenderTransformOrigin = new(.5, .5);
+        RenderTransform = new TransformGroup { Children = { _press, Tilt } }; RenderTransformOrigin = new(.5, .5); // Tablet edition: + Tilt
         SetResourceReference(StyleProperty, "TileSurfaceAction");
     }
     protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)

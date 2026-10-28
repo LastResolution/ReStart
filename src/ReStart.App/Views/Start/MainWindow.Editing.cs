@@ -100,6 +100,7 @@ public partial class MainWindow
             AutomationProperties.SetHelpText(view.Button, _layoutEditing ? L.T(K.LayoutEditingHint) : "");
         }
         UpdateEditingChrome();
+        SyncTabletEditing(); // Tablet edition: jiggle, badges and the Done bar of the touch edit mode.
     }
 
     private void UpdateEditingChrome()

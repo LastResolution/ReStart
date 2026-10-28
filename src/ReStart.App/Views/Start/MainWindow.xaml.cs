@@ -63,7 +63,8 @@ public partial class MainWindow : Window
     public int IconCount => _catalog.Icons.Count;
     /// <summary>Creates a localized default layout from the currently loaded app catalog.</summary>
     /// <returns>A new seed layout selected by installed app roles, with fresh offline bundled packages filling sparse groups; does not replace or save the current document.</returns>
-    public LayoutDocument CreateInitialLayout() => SeedLayout.Create(_apps, _scriptPackages);
+    public LayoutDocument CreateInitialLayout() => _preview ? SeedLayout.Create(_apps, _scriptPackages)
+        : Tablet.Home.TabletHomeLayout.Create(_apps, _scriptPackages); // Tablet edition: Z13 Home layout for real profiles.
 
     /// <summary>Hosts the full-screen launcher and coordinates local models, native input, and tile rendering.</summary>
     /// <param name="store">Local layout store used for loading, migration and subsequent saves.</param>
@@ -125,7 +126,8 @@ public partial class MainWindow : Window
         SizeChanged += (_, _) => FitPanels();
         ContentScroll.SizeChanged += (_, _) => FitPanels();
         _clock = new(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(250) };
-        _clock.Tick += async (_, _) => { UpdateLiveTiles(); if (IsVisible) RequestCatalogRefresh(); if (!_startupPreparing) await UpdateScriptTilesAsync(); };
+        // Tablet edition: BoardVisible, so Home covered by an app does not refresh the catalog.
+        _clock.Tick += async (_, _) => { UpdateLiveTiles(); if (BoardVisible) RequestCatalogRefresh(); if (!_startupPreparing) await UpdateScriptTilesAsync(); };
         _clock.Start();
     }
 
@@ -225,6 +227,8 @@ public partial class MainWindow : Window
     /// <summary>Hides the active launcher or presents the existing window.</summary>
     public void Toggle()
     {
+        if (_tabletHome) { ShowTabletHome(); return; } // Tablet edition: Start/Win = go Home; Home never toggles away.
+        if (Tablet.TabletShell.IsDesktopSession) { Tablet.TabletShell.ShowHome(); return; } // Tablet edition: Start ends a desktop session.
         if (_startupWindow != null) { CancelStartupPresentation(); return; }
         if (IsVisible && IsActive && _dialogDepth == 0 && !_dismissing) Dismiss();
         else Present();
@@ -236,8 +240,8 @@ public partial class MainWindow : Window
         if (!_startupComplete && _startupWindow == null && IsReady && IconsReady && ScriptTileCount == 0) _startupComplete = true;
         if (!_startupComplete) { RequestStartupPresentation(); return; }
         var dialog = OwnedWindows.Cast<Window>().LastOrDefault(w => w.IsVisible);
-        if (dialog != null) { dialog.Activate(); return; }
-        var wasHidden = !IsVisible;
+        if (dialog != null) { RaiseTabletHome(); dialog.Activate(); return; }
+        var wasHidden = !IsVisible || TabletHomeBehind; // Tablet edition: going home animates like opening.
         var wasDismissing = _dismissing;
         var previousOpacity = Opacity;
         var previousScale = ContentScale.ScaleX;
@@ -250,10 +254,11 @@ public partial class MainWindow : Window
         if (!IsVisible) Show();
         if (!_preview)
         {
-            var screen = System.Windows.Forms.Screen.FromPoint(_startButtonPoint ?? System.Windows.Forms.Cursor.Position);
-            var area = screen.WorkingArea;
+            // Tablet edition: Home covers the whole internal display and is topmost only while entering tablet mode.
+            var screen = TabletHomeScreen ?? System.Windows.Forms.Screen.FromPoint(_startButtonPoint ?? System.Windows.Forms.Cursor.Position);
+            var area = _tabletHome ? screen.Bounds : screen.WorkingArea;
             _wallpaperMonitor = screen.Bounds;
-            MonitorPlacement.FitWorkingArea(handle, new nint(-1), area, 0x0040);
+            MonitorPlacement.FitWorkingArea(handle, new nint(Topmost ? -1 : 0), area, 0x0040);
         }
         if (!_preview || _openingWallpaperFixture != null) QueueOpeningWallpaperRefresh();
         if (!_preview || _verifyNativeActivation) ForegroundActivation.Request(handle);
@@ -566,11 +571,12 @@ public partial class MainWindow : Window
         button.ContextMenu = TileMenu(tile);
         Point? clickPosition = null;
         button.PreviewMouseLeftButtonDown += (_, e) => clickPosition = e.GetPosition(button);
+        button.PreviewMouseLeftButtonUp += (_, e) => clickPosition = TabletClickPoint(e, button, clickPosition); // Tablet edition: exact touch tap point.
         button.PreviewKeyDown += (_, _) => clickPosition = null;
         button.Click += async (_, _) =>
         {
             if (_dragging || _dismissing) return;
-            if (_layoutEditing) { ToggleTileSelection(tile.Id); return; }
+            if (_layoutEditing) { if (!TabletEditTap(tile, button)) ToggleTileSelection(tile.Id); return; } // Tablet edition: touch taps in the edit mode.
             if (tile.Widget == "script") { InteractWithScriptTile(tile, clickPosition); clickPosition = null; }
             else if (tile.IsFolder) OpenFolder(tile);
             else await LaunchTileAsync(tile);
@@ -586,7 +592,7 @@ public partial class MainWindow : Window
             var image = new Image { Source = source, Width = size, Height = size, Stretch = Stretch.Uniform, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center, Margin = new(0, 0, 0, tile.Size == TileSize.Small ? 0 : 8) };
             RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.HighQuality); return image;
         }
-        var glyph = tile.Widget == "calendar" ? "\uE787" : tile.Widget == "clock" ? "\uE823" : tile.AppId == "restart:explorer" ? "\uE8B7" : tile.AppId == "restart:settings" || tile.Target.StartsWith("ms-settings:", StringComparison.OrdinalIgnoreCase) ? "\uE713" : "\uE71D";
+        var glyph = Tablet.Home.TabletHomeLayout.Glyph(tile) ?? (tile.Widget == "calendar" ? "\uE787" : tile.Widget == "clock" ? "\uE823" : tile.AppId == "restart:explorer" ? "\uE8B7" : tile.AppId == "restart:settings" || tile.Target.StartsWith("ms-settings:", StringComparison.OrdinalIgnoreCase) ? "\uE713" : "\uE71D"); // Tablet edition: glyph shortcuts.
         return new TextBlock { Text = glyph, FontFamily = new("Segoe MDL2 Assets"), FontSize = size * 0.8, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center, Margin = new(0, 0, 0, tile.Size == TileSize.Small ? 0 : 8) };
     }
 
@@ -683,6 +689,7 @@ public partial class MainWindow : Window
 
     private void BeginDrag(Button button, MouseEventArgs e, string format, string id)
     {
+        if (!TabletAllowsDrag(e)) return; // Tablet edition: touch drags need a press and hold.
         if (e.LeftButton != MouseButtonState.Pressed || _dragging || !CanEditLayout
             || format == "ReStart.Group" && Document.Groups.FirstOrDefault(g => g.Id == id) is { } dragGroup && !CanEditGroup(dragGroup)
             || format == "ReStart.Tile" && !CanEditTile(id)) return;
@@ -1084,6 +1091,7 @@ public partial class MainWindow : Window
 
     private void FocusSearchInput()
     {
+        if (SkipIdleSearchFocus()) return; // Tablet edition
         // Keep the native TextBox in the visible tree while its idle row is clipped to zero.
         // Native input handles IME composition, the first character, selection and backspace.
         FocusManager.SetFocusedElement(this, SearchBox);
@@ -1091,7 +1099,8 @@ public partial class MainWindow : Window
     }
     private void UpdateSearchChrome(bool visible)
     {
-        TopBar.Height = visible ? 52 : 0; TopBar.Opacity = visible ? 1 : 0; TopBar.IsHitTestVisible = visible;
+        visible |= _tabletHome; // Tablet edition: no keyboard to type-to-search, so Home always shows its search field.
+        TopBar.Height = visible ? (_tabletHome ? 64 : 52) : 0; TopBar.Opacity = visible ? 1 : 0; TopBar.IsHitTestVisible = visible;
     }
     /// <summary>Closes the menu after a taskbar click unless a dialog or drag currently owns the interaction.</summary>
     public void DismissFromTaskbar()

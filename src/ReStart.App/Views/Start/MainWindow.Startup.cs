@@ -31,12 +31,13 @@ public partial class MainWindow
     private void RequestStartupPresentation()
     {
         if (_startupWindow != null) { _startupWindow.Activate(); _startupWindow.Query.Focus(); return; }
+        _startupSilent = false; // Tablet edition: a background warm-up (WarmUpAsync) becomes this presentation.
         _startupWanted = true;
         _startupPoint = _startButtonPoint ?? System.Windows.Forms.Cursor.Position;
         // Loading preferences runs synchronously before the first catalog await,
         // so the splash and the Windows-key hook immediately use the saved theme.
         _ = InitializeAsync();
-        _startupWindow = new(() => Document.Preferences.CloseOnDeactivate);
+        _startupWindow = new(() => Document.Preferences.CloseOnDeactivate && !_tabletHome); // Tablet edition: Home's splash stays
         var created = _startupWindow;
         // WPF's Owner property requires an already shown owner. Native ownership
         // keeps foreground dismissal correct without flashing the hidden launcher.
@@ -117,6 +118,8 @@ public partial class MainWindow
             if (!_startupWanted || _exit) PauseScripts();
         }
         if (!_startupWanted || _exit) return;
+        // Tablet edition: a silent warm-up ends prepared but hidden.
+        if (_startupSilent) { _startupSilent = false; _startupWanted = false; if (!IsVisible) PauseScripts(keepWorkers: true); MarkStartup("warmed"); return; }
         var query = _startupWindow?.Query.Text ?? "";
         var launch = _startupWindow?.LaunchRequested == true;
         _startupWanted = false;

@@ -1,0 +1,20 @@
+/* iPad-style date and time header. Transparent: it sits on the wallpaper like a Home heading. */
+:root { --s: var(--tile-scale, 1); --ink: #fff; --muted: rgba(255,255,255,.8); --accent: #ff6b5e; --shadow: 0 1px 10px rgba(0,0,0,.35); }
+:root[data-theme="light"] { --ink: #101010; --muted: rgba(0,0,0,.66); --accent: #d93025; --shadow: 0 1px 8px rgba(255,255,255,.5); }
+* { box-sizing: border-box; }
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: transparent; }
+body { font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; color: var(--ink); user-select: none; text-shadow: var(--shadow); }
+.today { height: 100%; padding: calc(4px * var(--s)) calc(4px * var(--s)); display: flex; flex-direction: column; justify-content: center; }
+.date { display: flex; gap: .45em; align-items: baseline; font-size: calc(13px * var(--s)); font-weight: 600; white-space: nowrap; overflow: hidden; }
+#weekday { color: var(--accent); text-transform: uppercase; font-size: .9em; letter-spacing: .09em; }
+#day { color: var(--muted); font-weight: 500; }
+.time { font-size: calc(60px * var(--s)); font-weight: 300; line-height: .96; letter-spacing: -.025em; white-space: nowrap; font-variant-numeric: tabular-nums; margin-left: -.03em; }
+.time small { font-size: .28em; font-weight: 400; margin-left: .25em; letter-spacing: 0; color: var(--muted); }
+.line { font-size: calc(12px * var(--s)); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: calc(3px * var(--s)); }
+.line b { color: var(--ink); font-weight: 600; }
+[data-size="medium"] .time { font-size: calc(36px * var(--s)); }
+[data-size="medium"] .date { flex-direction: column; gap: 0; font-size: calc(12px * var(--s)); }
+[data-size="small"] .date, [data-size="small"] .line, [data-size="small"] small { display: none; }
+[data-size="small"] .time { font-size: calc(17px * var(--s)); text-align: center; }
+[data-size="large"] .time { font-size: calc(74px * var(--s)); }
+@media (forced-colors: active) { body { text-shadow: none; } #weekday { color: Highlight; } }
