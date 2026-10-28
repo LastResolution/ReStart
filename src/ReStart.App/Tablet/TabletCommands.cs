@@ -34,6 +34,7 @@ internal static class TabletCommands
         Register("control-center", _ => TabletShell.ShowControlCenter());
         Register("dock", _ => TabletShell.ShowDock());
         Register("close-overlays", _ => TabletShell.CloseOverlays());
+        UiProfiler.Register(dispatcher);
         _stop = new CancellationTokenSource();
         var token = _stop.Token;
         _ = Task.Run(async () =>

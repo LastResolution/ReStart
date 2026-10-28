@@ -39,9 +39,13 @@ internal sealed class SystemStatus : IDisposable
     /// <summary>Latest snapshot (null before the first sample); keeps sampling for ten more seconds.</summary>
     internal SystemStatusSnapshot? Snapshot()
     {
-        Volatile.Write(ref _wantedUntil, Environment.TickCount64 + 10000);
+        // Only wake an idle sampler. Waking it on every read made a loop: each sample raises Updated,
+        // the tiles re-render and read again, which cut the 2 s wait short (thousands of samples a second).
+        var now = Environment.TickCount64;
+        var idle = now > Volatile.Read(ref _wantedUntil);
+        Volatile.Write(ref _wantedUntil, now + 10000);
         if (_thread == null) { _thread = new Thread(Run) { IsBackground = true, Name = "ReStart tablet system status" }; _thread.Start(); }
-        else _wake.Set();
+        else if (idle) _wake.Set();
         return Volatile.Read(ref _latest);
     }
 
