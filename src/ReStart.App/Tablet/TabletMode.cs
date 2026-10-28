@@ -40,7 +40,37 @@ internal sealed class TabletMode : IDisposable
     }
 
     /// <summary>Physical posture, ignoring the override.</summary>
-    internal static bool IsSlate => GetSystemMetrics(SmConvertibleSlateMode) == 0;
+    internal static bool IsSlate => GetSystemMetrics(SmConvertibleSlateMode) == 0 && !(KeyboardMeansLaptop() && ExternalKeyboardAttached());
+
+    private static (DateTime Stamp, bool Value) _keyboardSetting;
+
+    // tablet-settings.json is re-read only when it changes (this runs every second).
+    private static bool KeyboardMeansLaptop()
+    {
+        var stamp = File.Exists(TabletSettings.FilePath) ? File.GetLastWriteTimeUtc(TabletSettings.FilePath) : default;
+        if (stamp != _keyboardSetting.Stamp) _keyboardSetting = (stamp, TabletSettings.Load().KeyboardMeansLaptop);
+        return _keyboardSetting.Value;
+    }
+
+    /// <summary>
+    /// Whether a real USB or Bluetooth keyboard is connected, from the keyboard HID driver's list of
+    /// active devices. Virtual keyboards (remote-desktop tools), button converters and integrated
+    /// PS/2 or I2C keyboards are not counted.
+    /// </summary>
+    internal static bool ExternalKeyboardAttached()
+    {
+        try
+        {
+            using var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Services\kbdhid\Enum");
+            if (key?.GetValue("Count") is not int count) return false;
+            for (var i = 0; i < Math.Min(count, 64); i++)
+                if (key.GetValue(i.ToString(System.Globalization.CultureInfo.InvariantCulture)) is string id
+                    && (id.StartsWith(@"HID\VID_", StringComparison.OrdinalIgnoreCase) || id.Contains("{00001124-", StringComparison.OrdinalIgnoreCase) || id.Contains("{00001812-", StringComparison.OrdinalIgnoreCase)))
+                    return true;
+        }
+        catch (Exception ex) when (ex is System.Security.SecurityException or UnauthorizedAccessException or IOException) { }
+        return false;
+    }
 
     /// <summary>How long a forced posture lasts. It is a test aid, so a run that dies mid-test must not leave the user stuck in tablet mode.</summary>
     private static readonly TimeSpan OverrideLifetime = TimeSpan.FromMinutes(20);

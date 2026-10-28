@@ -82,11 +82,49 @@ internal class TabletSurface : Window
     /// <summary>Re-asserts this window at the top of the topmost band.</summary>
     internal void Raise() => SetWindowPos(Handle, HwndTopmost, 0, 0, 0, 0, SwpNoActivate | SwpNoMove | SwpNoSize | SwpNoOwnerZOrder);
 
-    /// <summary>Shows without activation at <paramref name="bounds"/>.</summary>
+    /// <summary>Shows without activation at <paramref name="bounds"/> (also brings a parked surface back).</summary>
     internal void ShowAt(Rect bounds)
     {
         Place(bounds);
         if (!IsVisible) Show();
         Place(bounds);
+        Unpark();
     }
+
+    private bool _parked;
+
+    /// <summary>Visible to the user: shown and not parked.</summary>
+    internal bool IsShown => IsVisible && !_parked;
+
+    /// <summary>
+    /// Takes the surface away without hiding it: cloaked by DWM and moved off-screen. Hiding a
+    /// WPF window releases its swap chain, and the GPU driver (seen with AMD's) keeps a thread
+    /// for every one created afterwards, so surfaces that come and go often were leaking a
+    /// thread per appearance. Parked surfaces keep theirs and cost nothing while idle.
+    /// </summary>
+    internal void Park()
+    {
+        if (!IsVisible || _parked) return;
+        _parked = true;
+        Input.Abort();
+        SetCloak(true);
+        SetWindowPos(Handle, 0, -32000, -32000, 0, 0, SwpNoActivate | SwpNoZOrder | SwpNoSize | SwpNoOwnerZOrder);
+        Bounds = new Rect(-32000, -32000, Bounds.Width, Bounds.Height);
+    }
+
+    private void Unpark()
+    {
+        if (!_parked) return;
+        _parked = false;
+        SetCloak(false);
+    }
+
+    private void SetCloak(bool cloak)
+    {
+        var value = cloak ? 1 : 0;
+        DwmSetWindowAttribute(Handle, 13 /* DWMWA_CLOAK */, ref value, sizeof(int));
+    }
+
+    [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(nint window, int attribute, ref int value, int size);
 }

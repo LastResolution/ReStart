@@ -154,7 +154,7 @@ internal sealed class SwitcherOverlay : TabletSurface
         CancelPending();
         Measure();
         LoadBackdrop();
-        if (!IsVisible)
+        if (!IsShown)
         {
             var (monitor, _) = TabletNavigation.Screen();
             ShowAt(monitor);
@@ -198,7 +198,7 @@ internal sealed class SwitcherOverlay : TabletSurface
         ClearCards();
         _hintBox.Visibility = Visibility.Collapsed;
         _homeButton.Opacity = 0;
-        Hide();
+        Park();
         TabletNavigation.Dock.Refresh();
     }
 

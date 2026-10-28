@@ -204,6 +204,8 @@ internal sealed class ControlCenterWindow : Window
         if (!reopening)
         {
             TabletShell.CloseOverlays(); // dock / switcher go away first so they are not in the snapshot
+            var before = AppWindows.GetForegroundWindow();
+            if (before != new WindowInteropHelper(this).Handle) _returnTo = before;
             var screen = System.Windows.Forms.Screen.PrimaryScreen!;
             var bounds = screen.Bounds;
             var shot = Backdrop.Capture(bounds);
@@ -265,7 +267,7 @@ internal sealed class ControlCenterWindow : Window
         Run(_move, TranslateTransform.YProperty, Math.Min(_move.Y, 0) - 20, TabletMotion.Exit + 40, ease, () =>
         {
             if (generation != _generation || !_closing) return;
-            Hide();
+            Park();
             _open = false; _closing = false;
             _sharp.Source = null; _blurred.Source = null; // release the 16 MB snapshot
             TabletLog.Write("cc", "closed");
@@ -796,6 +798,22 @@ internal sealed class ControlCenterWindow : Window
     }
 
     // ---------------------------------------------------------------- native
+
+    // Closing parks the window (cloaked, off-screen) instead of hiding it: a hidden WPF window
+    // drops its swap chain, and the GPU driver keeps a thread for each new one (one leaked per open).
+    private nint _returnTo;
+    private void Park()
+    {
+        var handle = new WindowInteropHelper(this).Handle;
+        Cloak(handle, true);
+        SetWindowPos(handle, 0, -32000, -32000, 0, 0, 0x0001 | 0x0004 | 0x0010 /* NOSIZE | NOZORDER | NOACTIVATE */);
+        // A hidden window hands the foreground on by itself; a parked one must give it back.
+        if (AppWindows.GetForegroundWindow() == handle)
+        {
+            if (_returnTo != 0 && IsWindowVisible(_returnTo)) AppWindows.SetForeground(_returnTo);
+            else TabletShell.ShowHome();
+        }
+    }
 
     private static void Cloak(nint handle, bool cloak) { var value = cloak ? 1 : 0; DwmSetWindowAttribute(handle, 13 /* DWMWA_CLOAK */, ref value, sizeof(int)); }
 

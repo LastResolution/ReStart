@@ -21,10 +21,10 @@ internal sealed class HomeBar : TabletSurface
     internal const double BarHeight = 16;      // DIP
     private const double Slop = 8;              // movement before a gesture picks a direction
     private const double DockRange = 110;       // short swipe: dock
-    private const double HomeDistance = 210;    // a swipe this long always goes Home
-    private const double HomeVelocity = 0.75;   // DIP/ms upward at release
-    private const double HoldDistance = 70;     // the app must be lifted this far before resting counts
-    private const double HoldRest = 150;        // ms of (near) stillness that opens the switcher
+    private const double HomeDistance = 170;    // a swipe this long always goes Home
+    private const double HomeVelocity = 0.6;    // DIP/ms upward at release
+    private const double HoldDistance = 110;    // the app must be lifted this far before resting counts
+    private const double HoldRest = 300;        // ms of (near) stillness that opens the switcher (150 caught slow swipes)
 
     private readonly Grid _root;
     private readonly Border _pill;
@@ -137,7 +137,7 @@ internal sealed class HomeBar : TabletSurface
             _pillBrush.Color = TabletStyle.WithAlpha(TabletStyle.InkOn(dock.Material), 0xB0);
             return;
         }
-        var overlay = TabletNavigation.Switcher.IsVisible;
+        var overlay = TabletNavigation.Switcher.IsShown;
         var clear = _fullscreen || overlay || ForegroundCoversScreen();
         Color below;
         if (clear) below = overlay ? Colors.Black : SampleRow(Bounds.Bottom - Bounds.Height / 2);

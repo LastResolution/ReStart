@@ -67,7 +67,7 @@ internal sealed class SplitView
         foreach (var hook in _hooks) UnhookWinEvent(hook);
         _hooks.Clear();
         _resize?.Stop();
-        _divider.Hide();
+        _divider.Park();
         if (maximize && TabletNavigation.Active)
             foreach (var hwnd in keep is { } k ? [k] : new[] { a, b })
                 if (IsWindow(hwnd) && AppWindows.CanMaximize(hwnd)) AppWindows.Maximize(hwnd);
@@ -77,7 +77,7 @@ internal sealed class SplitView
     /// <summary>Re-lays out after rotation or resolution changes.</summary>
     internal void Relayout() { if (Active) { Apply(restore: false); _divider.Present(); } }
 
-    internal void RaiseDivider() { if (Active && _divider.IsVisible) _divider.Raise(); }
+    internal void RaiseDivider() { if (Active && _divider.IsShown) _divider.Raise(); }
 
     // ---- geometry -------------------------------------------------------------------
 
@@ -184,7 +184,7 @@ internal sealed class SplitView
         if (pid == Environment.ProcessId || !AppWindows.IsAppWindow(hwnd) && !AppWindows.IsAppWindow(root))
         {
             // Home, shell or our own surfaces: the pair stays arranged underneath.
-            _divider.Hide();
+            _divider.Park();
             return;
         }
         End(null, maximize: false); // a third app came to the front, full screen

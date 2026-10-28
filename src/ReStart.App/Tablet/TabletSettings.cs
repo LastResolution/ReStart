@@ -13,6 +13,7 @@ namespace ReStart.App.Tablet;
 /// <example>
 /// <code>
 /// {
+///   "posture": { "keyboardMeansLaptop": true },
 ///   "weather": { "latitude": 52.52, "longitude": 13.41, "name": "Home" },
 ///   "homeAssistant": {
 ///     "lights": [ { "entity": "light.living_room", "name": "Living room" } ],
@@ -27,6 +28,12 @@ internal sealed class TabletSettings
     internal static readonly string FilePath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ReStart", "tablet", "tablet-settings.json");
 
+    /// <summary>
+    /// Detachables only: a connected USB/Bluetooth keyboard means laptop mode even when Windows
+    /// still reports slate (seen on the ROG Flow Z13). Off by default, because convertibles with a
+    /// built-in USB keyboard would then never reach tablet mode.
+    /// </summary>
+    internal bool KeyboardMeansLaptop { get; private init; }
     /// <summary>Weather location, or null (the weather tiles then wait for "Configure data sources…").</summary>
     internal (double Latitude, double Longitude, string? Name)? Weather { get; private init; }
     /// <summary>Home Assistant tile settings (lights, scenesTitle, scenes) to copy into the installed package, or null.</summary>
@@ -45,7 +52,8 @@ internal sealed class TabletSettings
                 && lat is >= -90 and <= 90 && lon is >= -180 and <= 180)
                 weather = (lat, lon, w["name"]?.GetValue<string>());
             var home = root["homeAssistant"] as JsonObject;
-            return new() { Weather = weather, HomeAssistant = home?.DeepClone().AsObject() };
+            var keyboard = root["posture"]?["keyboardMeansLaptop"]?.GetValue<bool>() ?? false;
+            return new() { Weather = weather, HomeAssistant = home?.DeepClone().AsObject(), KeyboardMeansLaptop = keyboard };
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException or FormatException)
         {

@@ -70,9 +70,9 @@ internal sealed class DockWindow : TabletSurface
     {
         _enabled = false;
         _state = State.Hidden;
-        _catcher.Hide();
+        _catcher.Park();
         _clock.Stop();
-        Hide();
+        Park();
     }
 
     internal void Reposition() { if (_enabled) { Layout(); Refresh(); } }
@@ -109,7 +109,7 @@ internal sealed class DockWindow : TabletSurface
         MoveTo(Bounds.X, _y.Value);
         _frames.Frame(dt);
         if (_y.Settled) _frames.End();
-        if (_y.Settled && _y.Target >= _hiddenY - 1 && _state == State.Hidden) { Hide(); TabletNavigation.Bar.Retint(); return false; }
+        if (_y.Settled && _y.Target >= _hiddenY - 1 && _state == State.Hidden) { Park(); TabletNavigation.Bar.Retint(); return false; }
         return !_y.Settled;
     }
 
@@ -122,7 +122,7 @@ internal sealed class DockWindow : TabletSurface
     }
 
     /// <summary>Whether the shelf is up or coming up (the home bar then lets its material through).</summary>
-    internal bool ShelfShown => _enabled && IsVisible && _state != State.Hidden;
+    internal bool ShelfShown => _enabled && IsShown && _state != State.Hidden;
 
     /// <summary>The shelf's material, for the home bar over it.</summary>
     internal Color Material => _material.Color;
@@ -137,7 +137,7 @@ internal sealed class DockWindow : TabletSurface
     private void ShowWindow()
     {
         ApplyTheme();
-        if (!IsVisible)
+        if (!IsShown)
         {
             _y.Snap(_hiddenY);
             Layout();
@@ -147,7 +147,7 @@ internal sealed class DockWindow : TabletSurface
         TabletNavigation.Bar.Raise();
     }
 
-    internal void RaiseIfVisible() { if (IsVisible && !TabletShell.IsControlCenterOpen()) { if (_catcher.IsVisible) _catcher.Raise(); Raise(); } }
+    internal void RaiseIfVisible() { if (IsShown && !TabletShell.IsControlCenterOpen()) { if (_catcher.IsShown) _catcher.Raise(); Raise(); } }
 
     // ---- state ----------------------------------------------------------------------
 
@@ -161,7 +161,7 @@ internal sealed class DockWindow : TabletSurface
         var home = TabletNavigation.IsHomeFront() && !TabletNavigation.Switcher.IsBusy && !TabletShell.IsControlCenterOpen();
         if (home && _state != State.Home)
         {
-            _state = State.Home; _catcher.Hide(); _idle.Stop();
+            _state = State.Home; _catcher.Park(); _idle.Stop();
             ShowWindow(); SlideTo(_shownY);
         }
         else if (!home && _state == State.Home) { _state = State.Hidden; SlideTo(_hiddenY); }
@@ -207,7 +207,7 @@ internal sealed class DockWindow : TabletSurface
     internal void HideTransient()
     {
         _idle.Stop();
-        _catcher.Hide();
+        _catcher.Park();
         if (_state is State.Transient or State.Revealing) { _state = State.Hidden; SlideTo(_hiddenY); }
     }
 
