@@ -546,6 +546,26 @@ public enum TextKey
     RunAsAdministrator,
     /// <summary>Open file location</summary>
     OpenFileLocation,
+    /// <summary>Open</summary>
+    MenuOpen,
+    /// <summary>Open folder location</summary>
+    OpenFolderLocation,
+    /// <summary>Run as different user</summary>
+    RunAsDifferentUser,
+    /// <summary>Pin to taskbar</summary>
+    PinToTaskbar,
+    /// <summary>Unpin from taskbar</summary>
+    UnpinFromTaskbar,
+    /// <summary>App settings</summary>
+    AppSettings,
+    /// <summary>Installed apps…</summary>
+    ManageInstalledApps,
+    /// <summary>Share</summary>
+    ShareItem,
+    /// <summary>Rate and review</summary>
+    RateAndReview,
+    /// <summary>Copy full path</summary>
+    CopyFullPath,
     /// <summary>Uninstall</summary>
     UninstallApp,
     /// <summary>Properties</summary>

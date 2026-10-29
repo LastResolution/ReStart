@@ -7,28 +7,59 @@ namespace ReStart.App.Services;
 /// <summary>Reads canonical shell commands on an STA without evaluating localized menu labels or registry command strings.</summary>
 internal static class AppShellCommands
 {
-    internal static readonly IReadOnlySet<string> Supported = new HashSet<string>(["runas", "opencontaining", "uninstall", "properties"], StringComparer.OrdinalIgnoreCase);
-
-    internal static Task<IReadOnlySet<string>> ReadAsync(AppEntry app) => OnSta<IReadOnlySet<string>>(() =>
+    internal const string FolderLocation = "restart:folder-location";
+    internal static Task<IReadOnlySet<string>> ReadAsync(AppEntry app, bool extended = false) => OnSta<IReadOnlySet<string>>(() =>
     {
+        var commands = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         try
         {
-            using var context = new ShellContext(app);
-            return context.Commands.Keys.Where(Supported.Contains).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            using var context = new ShellContext(app, extended);
+            commands.UnionWith(context.Commands.Keys.Where(v => AppMenuCommands.Normalize(v) != null));
         }
-        catch (Exception ex) when (ex is COMException or ArgumentException or IOException or UnauthorizedAccessException) { return new HashSet<string>(); }
+        catch (Exception ex) when (ex is COMException or ArgumentException or IOException or UnauthorizedAccessException) { }
+        if (AppFileLocation.Find(app) is { } location)
+        {
+            commands.Add("opencontaining");
+            commands.Add("copyaspath");
+            if (location.IsDirectory) commands.Add(FolderLocation);
+            try
+            {
+                using var local = new ShellContext(new(app.Id, app.Name, location.Path, false), extended);
+                foreach (var verb in new[] { "properties", "runasuser" })
+                    if (local.Commands.ContainsKey(verb)) commands.Add(verb);
+            }
+            catch (Exception ex) when (ex is COMException or ArgumentException or IOException or UnauthorizedAccessException) { }
+        }
+        if (AppPackageCommands.Read(app) is { } package)
+        {
+            if (!commands.Contains("appsettings")) commands.Add("manageapps");
+            if (package.StoreSigned) commands.Add("review");
+        }
+        return commands;
     });
 
     internal static Task InvokeAsync(AppEntry app, string verb, nint owner)
     {
-        if (!Supported.Contains(verb)) throw new ArgumentException("Unsupported app command.", nameof(verb));
+        if (verb == null || AppMenuCommands.Normalize(verb) != verb && verb is not ("review" or "manageapps")) throw new ArgumentException("Unsupported app command.", nameof(verb));
         return OnSta(() =>
         {
+            if (verb == "opencontaining" && AppFileLocation.Find(app) is { } location)
+            { ExplorerLocation.Open(location.Path); return true; }
+            if (verb == "copyaspath" && AppFileLocation.Find(app) is { } copied)
+            { System.Windows.Clipboard.SetText("\"" + copied.Path + "\""); return true; }
+            if (verb is "review" or "manageapps")
+            { AppPackageCommands.Invoke(app, verb); return true; }
+            if (verb is "properties" or "runasuser" && AppFileLocation.Find(app) is { } source)
+            {
+                using var local = new ShellContext(new(app.Id, app.Name, source.Path, false), verb == "runasuser");
+                if (!local.Commands.TryGetValue(verb, out var localCommand)) throw new InvalidOperationException(L.T(K.ErrorAppCommandUnavailable));
+                local.Invoke(localCommand, owner); return true;
+            }
             // Requery at the moment of invocation: a stale command ID from a
             // previous menu must never invoke a different extension command.
-            using var context = new ShellContext(app);
-            if (!context.Commands.TryGetValue(verb, out var command)) throw new InvalidOperationException(L.T(K.ErrorAppCommandUnavailable));
-            context.Invoke(command, owner);
+            using var context = new ShellContext(app, verb == "runasuser");
+            if (context.Commands.TryGetValue(verb, out var command)) context.Invoke(command, owner);
+            else throw new InvalidOperationException(L.T(K.ErrorAppCommandUnavailable));
             return true;
         });
     }
@@ -80,7 +111,7 @@ internal static class AppShellCommands
         private IContextMenu? _context;
         private nint _menu;
         internal Dictionary<string, uint> Commands { get; } = new(StringComparer.OrdinalIgnoreCase);
-        internal ShellContext(AppEntry app)
+        internal ShellContext(AppEntry app, bool extended = false)
         {
             try
             {
@@ -92,7 +123,7 @@ internal static class AppShellCommands
                 Marshal.ThrowExceptionForHR(_item.BindToHandler(0, ref handler, ref contextId, out _context));
                 _menu = CreatePopupMenu();
                 if (_menu == 0) throw new COMException("Unable to allocate a shell command menu.");
-                Marshal.ThrowExceptionForHR(_context.QueryContextMenu(_menu, 0, 1, 0x7fff, 0));
+                Marshal.ThrowExceptionForHR(_context.QueryContextMenu(_menu, 0, 1, 0x7fff, extended ? 0x100u : 0)); // CMF_EXTENDEDVERBS
                 ReadMenu(_menu, 0);
             }
             catch { Dispose(); throw; }
@@ -112,7 +143,7 @@ internal static class AppShellCommands
                 if (id is < 1 or > 0x7fff) continue;
                 var text = new StringBuilder(256);
                 if (_context!.GetCommandString(id - 1, 4, 0, text, (uint)text.Capacity) >= 0 && text.Length > 0)
-                    Commands.TryAdd(text.ToString(), id - 1); // GCS_VERBW
+                    Commands.TryAdd(AppMenuCommands.Normalize(text.ToString()) ?? text.ToString(), id - 1); // GCS_VERBW
             }
         }
 
