@@ -14,15 +14,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-test:
-    name: Windows build and tests
+  build:
+    name: Build and core tests
     runs-on: windows-latest
     timeout-minutes: 25
+    env:
+      NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: 10.0.x
+          cache: true
+          cache-dependency-path: |
+            src/**/packages.lock.json
+            tests/**/packages.lock.json
+            tools/**/packages.lock.json
       - run: dotnet restore ReStart.slnx --locked-mode
       - name: Check tracked files for credentials and personal paths
         run: ./scripts/check-privacy.ps1
@@ -39,56 +46,45 @@ jobs:
       - run: dotnet format whitespace ReStart.slnx --verify-no-changes --no-restore
       - run: dotnet build ReStart.slnx -c Release --no-restore
       - run: dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory artifacts/test-results
-      - name: Verify connected monitor placement and accessibility providers without visible windows
-        run: ./scripts/test-platform.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
-      - name: Verify responsive app list and return to home
-        run: ./scripts/test-navigation.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
-      - name: Verify all-apps directory expansion and search
-        run: ./scripts/test-navigation.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe -AppFolders
-      - name: Verify first-character search during cold startup
-        run: ./scripts/test-first-input.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
-      - name: Verify selected search results and focused Enter actions
-        run: ./scripts/test-search-selection.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
-      - name: Verify local search, jump destinations, navigation and feature switches
-        run: ./scripts/test-fidelity.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
-      - name: Verify prepared startup, typeahead, cancellation and icon caching
-        run: ./scripts/test-startup.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
-      - name: Verify warm reopening, retained tiles and nonblocking wallpaper refresh
-        run: ./scripts/test-warm-resume.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
-      - name: Verify custom themes, settings colors and expanded navigation glyphs
-        run: ./scripts/test-appearance.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
-      - name: Verify live settings preview, close decisions and prepared update reminders
-        run: ./scripts/test-settings-preview.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
-      - name: Verify launcher motion and interrupted open/close
-        run: ./scripts/test-motion.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
-      - name: Verify app menus and read canonical shell commands
-        run: ./scripts/test-app-menus.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
-      - name: Verify version, licenses, migration and multilingual settings
-        run: ./scripts/test-release-info.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
-      - name: Verify group placement and inline naming
-        run: ./scripts/test-placement.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
-      - name: Verify folder drop timers, tile sizes and destination ownership
-        run: ./scripts/test-folder-drops.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
-      - name: Verify layout editing, selection and undo/redo
-        run: ./scripts/test-editing.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
-      - name: Verify independent scroll axes and themed scrollbars
-        run: ./scripts/test-scrolling.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
-      - name: Verify cold and running-instance filesystem pinning
-        run: ./scripts/test-file-pinning.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
-      - name: Verify bundled tile rendering and local interactions
-        run: ./scripts/test-bundled-tiles.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
-      - name: Verify HTML tiles, SVG time, localized names and Tile Studio without visible windows
-        run: ./scripts/test-studio.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
-      - name: Verify encrypted tile data connections and native configuration
-        run: ./scripts/test-tile-data.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
-      - name: Verify Shell icon sizes and transient status messages
-        run: ./scripts/test-icons.ps1 -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-build
+          path: src/ReStart.App/bin/Release/net10.0-windows/
+          retention-days: 3
+          if-no-files-found: error
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
-          name: windows-test-results
+          name: core-test-results
+          path: artifacts/test-results/*.trx
+          retention-days: 14
+          if-no-files-found: warn
+
+  native:
+    name: Native ${{ matrix.suite }} checks
+    needs: build
+    runs-on: windows-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [navigation, layout, tiles]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.x
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: windows-build
+          path: src/ReStart.App/bin/Release/net10.0-windows/
+      - name: Verify native suite
+        run: ./scripts/test-ui-suite.ps1 -Suite ${{ matrix.suite }} -Executable src/ReStart.App/bin/Release/net10.0-windows/ReStart.exe
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: windows-test-results-${{ matrix.suite }}
           path: |
-            artifacts/test-results/*.trx
             artifacts/platform/*/verification.json
             artifacts/platform/*/verify.log
             artifacts/navigation/*
@@ -132,6 +128,22 @@ jobs:
             artifacts/studio/*/layout-matrix.json
           retention-days: 14
           if-no-files-found: warn
+
+  build-test:
+    # Retain the required check name and fail closed for skipped/cancelled suites.
+    name: Windows build and tests
+    if: always()
+    needs: [build, native]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require the build and every native suite
+        env:
+          BUILD_RESULT: ${{ needs.build.result }}
+          NATIVE_RESULT: ${{ needs.native.result }}
+        run: |
+          test "$BUILD_RESULT" = success
+          test "$NATIVE_RESULT" = success
 
   portable:
     name: Clean portable ${{ matrix.runtime }}
