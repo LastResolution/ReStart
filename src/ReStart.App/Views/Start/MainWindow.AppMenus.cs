@@ -113,7 +113,10 @@ public partial class MainWindow
 
         async Task LoadShellAsync(int current, bool extended)
         {
-            var verbs = await (_shellCommandsFixture?.Invoke(app, extended) ?? AppShellCommands.ReadAsync(app, extended));
+            IReadOnlySet<string> verbs;
+            try { verbs = await (_shellCommandsFixture?.Invoke(app, extended) ?? AppShellCommands.ReadAsync(app, extended)).WaitAsync(TimeSpan.FromSeconds(5)); }
+            catch (Exception ex) when (ex is TimeoutException or COMException or IOException or UnauthorizedAccessException or InvalidOperationException or System.Security.SecurityException)
+            { verbs = new HashSet<string>(); }
             if (current != generation || !menu.IsOpen) return;
             PopulateAppShellItems(more, uninstall, app, verbs, search);
             if (!search) return;
@@ -127,8 +130,13 @@ public partial class MainWindow
 
         async Task LoadJumpsAsync(int current)
         {
-            var destinations = Document.Preferences.ShowJumpLists
-                ? await (_jumpDestinationsFixture?.Invoke(app) ?? AppJumpLists.ReadAsync(app)) : [];
+            IReadOnlyList<JumpDestination> destinations = [];
+            try
+            {
+                if (Document.Preferences.ShowJumpLists)
+                    destinations = await (_jumpDestinationsFixture?.Invoke(app) ?? AppJumpLists.ReadAsync(app)).WaitAsync(TimeSpan.FromSeconds(5));
+            }
+            catch (Exception ex) when (ex is TimeoutException or COMException or IOException or UnauthorizedAccessException or InvalidOperationException or System.Security.SecurityException) { }
             if (current == generation && menu.IsOpen) PopulateJumpItems(recent, frequent, app, destinations);
         }
     }

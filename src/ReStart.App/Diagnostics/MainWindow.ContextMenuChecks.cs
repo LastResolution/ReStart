@@ -189,6 +189,17 @@ public partial class MainWindow
         menu.IsOpen = true; await Task.Delay(10); old.SetResult(commands); await Task.Delay(20);
         check(menu.Items.OfType<MenuItem>().Any(i => i.Tag is "runas") && !menu.Items.OfType<MenuItem>().Any(i => i.Tag is "opencontaining"),
             "A stale Shell request replaced a reopened menu's capabilities: " + string.Join(", ", menu.Items.OfType<MenuItem>().Select(i => $"{i.Tag}:{i.Visibility}")));
+        await CloseMenuAsync(menu);
+        fixture._jumpDestinationsFixture = _ => Task.FromException<IReadOnlyList<JumpDestination>>(new IOException("Owned history fixture failure."));
+        fixture._shellCommandsFixture = (_, _) => Task.FromResult(commands);
+        menu.IsOpen = true; await Task.Delay(10);
+        check(menu.Items.OfType<MenuItem>().Any(i => i.Tag is "opencontaining"), "A failed history provider hides the app's commands.");
+        await CloseMenuAsync(menu);
+        fixture._shellCommandsFixture = (_, _) => Task.FromException<IReadOnlySet<string>>(new TimeoutException("Owned capability fixture timeout."));
+        menu.IsOpen = true; await Task.Delay(10);
+        check(menu.Items.OfType<MenuItem>().Any(i => i.Tag is "open") && !menu.Items.OfType<MenuItem>().Any(i => i.Tag is "opencontaining")
+            && menu.Items.OfType<MenuItem>().Single(i => i.Tag is "shell-more").Visibility == Visibility.Collapsed,
+            "A failed capability request leaves a loading placeholder or stale commands instead of the basic menu.");
         await CloseMenuAsync(menu); fixture.AppsPanel.Children.Remove(button);
     }
 

@@ -170,6 +170,7 @@ jobs:
           ./scripts/test-lifecycle.ps1 -Executable $executable
           ./scripts/test-update-installation.ps1 -Executable $executable
           ./scripts/test-search-selection.ps1 -Executable $executable
+          ./scripts/test-app-menus.ps1 -Executable $executable
           ./scripts/test-bundled-tiles.ps1 -Executable $executable
           ./scripts/test-studio.ps1 -Executable $executable
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -179,6 +180,8 @@ jobs:
           path: |
             artifacts/search-selection/*/start.json
             artifacts/search-selection/*/*.png
+            artifacts/app-menus/*.json
+            artifacts/app-menus/*.png
             artifacts/bundled-tiles/*/start.json
             artifacts/bundled-tiles/*/render.log
             artifacts/studio/*/verification.json
