@@ -68,7 +68,7 @@ Beim Ziehen erscheinen kurz Tastentipps am unteren Rand. Sie lassen sich in den 
 | Layout bearbeiten | Bearbeitungsmodus, Mehrfachauswahl, gemeinsames Verschieben und Rückgängig/Wiederholen pro Sitzung; Abbrechen erhält das Layout |
 | Ziehfeedback | Unterscheidbare Ziele für Gruppen und Ordner, Wartefortschritt, optionale Hinweise und Gruppengrenzen, automatisches Scrollen am Rand; Gruppierung und Ordnererstellung abschaltbar |
 | Anheften | Apps, Dateien, Verzeichnisse, Verknüpfungen und Websites; Explorer-Befehl **Pin to ReStart**, Kontextmenüs, Ziehen aus der App-Liste und explizite Ziele |
-| Suche | Normalisierte App-Namen, 15 übersetzte Windows-Einstellungsseiten mit englischen Suchbegriffen, optionale indizierte lokale Dateinamen, Pfeiltasten/Enter und Verwerfen veralteter Suchanfragen |
+| Suche | Normalisierte App-Namen, ausführbare Dateinamen und vom Betriebssystem deklarierte Aliase wie `notepad` oder `cmd`; 15 übersetzte Windows-Einstellungsseiten mit englischen Suchbegriffen, optionale indizierte lokale Dateinamen, Pfeiltasten/Enter und Verwerfen veralteter Suchanfragen |
 | Alle Apps | Responsive alphabetische Spalten, aufklappbare Startmenüordner, Buchstabenauswahl, Tastaturbedienung, Aktualisierung installierter/entfernter Apps, zuletzt hinzugefügte und optional häufig genutzte Apps |
 | App-Befehle | Verfügbare Windows-Aktionen für Administratorstart, Dateispeicherort, Eigenschaften und Deinstallation; optionale zuletzt/häufig verwendete Dokumente gemäß Windows-Einstellungen und API-Verfügbarkeit |
 | Startoptionen | Pro Kachel aktivierbare Argumente, Arbeitsverzeichnis und Administratorstart für unterstützte Desktop-Apps/Verknüpfungen; Windows verwaltet UAC |

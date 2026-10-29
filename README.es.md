@@ -68,7 +68,7 @@ Al arrastrar aparecen brevemente consejos de teclado en la parte inferior. Se pu
 | Edición | Modo de edición, selección múltiple, movimiento conjunto y deshacer/rehacer durante la sesión; cancelar un arrastre conserva el diseño |
 | Indicaciones al arrastrar | Destinos de grupo/carpeta distintos, progreso de espera, pistas y límites opcionales, desplazamiento en los bordes; creación automática de grupos/carpetas desactivable |
 | Anclar | Aplicaciones, archivos, directorios, accesos directos y sitios; comando **Pin to ReStart** de Explorer, menús contextuales, arrastre desde listas y destinos explícitos |
-| Búsqueda | Nombres de aplicaciones normalizados, 15 páginas de configuración de Windows traducidas con alias ingleses, nombres de archivos locales indexados opcionales, flechas/Intro y descarte de consultas antiguas |
+| Búsqueda | Nombres de aplicaciones normalizados, nombres de ejecutables y alias declarados por el sistema, como `notepad` o `cmd`; 15 páginas de configuración de Windows traducidas con alias ingleses, nombres de archivos locales indexados opcionales, flechas/Intro y descarte de consultas antiguas |
 | Todas las aplicaciones | Columnas alfabéticas adaptables, carpetas del menú Inicio desplegables, selector de letra, teclado, actualización al instalar/desinstalar, agregadas recientemente y más usadas opcionales |
 | Comandos | Acciones Windows disponibles para administrador, ubicación, propiedades y desinstalación; documentos recientes/frecuentes opcionales según ajustes de Windows y disponibilidad de API |
 | Opciones de ejecución | Activación por mosaico, argumentos, directorio de trabajo y administrador para aplicaciones/accesos directos de escritorio compatibles; Windows controla UAC |

@@ -94,7 +94,7 @@ Preview appearance, tile scale, group width and language before saving. Closing 
 | Layout editing | Global/per-group placement locks, keyboard placement/resize/group moves, edit mode, multi-selection and session Undo/Redo; cancelled drags preserve the original layout |
 | Drag feedback | Distinct group/folder/drop destinations, dwell progress, optional hints, hover boundaries and stationary edge scrolling; automatic group/folder creation can be switched off |
 | Pin anything | Apps, files, directories, shortcuts and websites; Explorer's Pin to ReStart, app/search context menus, drag from app lists, and explicit destinations |
-| Search | Unicode-width/kana-normalized app names, fifteen localized Windows settings pages with English aliases, optional local indexed filenames, selected-result Enter/arrow navigation and cancellation of stale file queries |
+| Search | Unicode-width/kana-normalized app names, executable filenames and OS-declared aliases; fifteen localized Windows settings pages with English aliases, optional local indexed filenames, selected-result Enter/arrow navigation and cancellation of stale file queries |
 | All apps | Responsive alphabetical columns, Start-menu directory expansion, letter picker, keyboard navigation, live installation/removal refresh, optional Recently added and opt-in Most used |
 | App commands | Available Windows administrator, file-location, properties and uninstall actions; optional Recent/Frequent document menus, subject to Windows history settings and API support |
 | Launch options | Per-tile enable/disable, additional arguments, working directory and administrator execution for supported desktop apps/shortcuts; Windows handles UAC |
@@ -113,6 +113,8 @@ Preview appearance, tile scale, group width and language before saving. Closing 
 **Measured platform coverage.** Native window-placement checks cover two displays at 100%/125%/150% scaling, including mixed portrait/landscape. Accessibility providers are checked in eight languages and both themes; basic Narrator announcements were inspected through Speech recap. Display reconnects, physical touch and full screen-reader interaction still need device checks. [Results and device coverage](docs/fidelity.md#observed-platform-coverage).
 
 ### Search, configure, launch
+
+Find apps by their displayed name or a Windows-supplied executable name: for example, `notepad` or `cmd` can find the corresponding installed app even when its name is translated. Search uses Start-menu targets, matching App Paths registrations and package-declared execution aliases. Availability depends on installed metadata; this is ReStart's local ranking, not Windows Search's complete results. Shortcuts with launch arguments rank below the ordinary app for a shared executable name.
 
 ![App, Windows setting and local file results in the complete search screen](docs/images/unified-search.png)
 

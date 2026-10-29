@@ -3,23 +3,45 @@ using System.Text;
 
 namespace ReStart.Core;
 
-/// <summary>Ranks local application names after Unicode-width and kana normalization.</summary>
+/// <summary>Ranks local application names and OS-supplied executable aliases after Unicode-width and kana normalization.</summary>
 public static class AppSearch
 {
-    /// <summary>Returns up to limit matches, prioritizing exact names, name prefixes, word prefixes, then substrings.</summary>
-    /// <param name="apps">Flat catalog of installed app identities and display names.</param>
+    /// <summary>Returns up to limit matches, prioritizing exact display names and aliases before prefix, word-prefix and substring matches.</summary>
+    /// <param name="apps">Flat catalog of installed app identities, display names and search-only executable aliases; entries and alias lists are not mutated.</param>
     /// <param name="query">Search text; matching normalizes case, Unicode width, and hiragana/katakana forms.</param>
     /// <param name="limit">Maximum number of ranked apps to return.</param>
     /// <returns>Ranked matching apps, limited to the requested count; a blank query returns the first culture-sorted catalog entries.</returns>
     public static IReadOnlyList<AppEntry> Find(IEnumerable<AppEntry> apps, string query, int limit = 80)
     {
         var words = Fold(query).Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        return apps.Select(app => (App: app, Name: Fold(app.Name)))
-            .Where(x => words.All(word => x.Name.Contains(word, StringComparison.Ordinal)))
-            .OrderBy(x => words.Length == 0 ? 0 : x.Name == string.Join(' ', words) ? 0 : x.Name.StartsWith(words[0], StringComparison.Ordinal) ? 1 :
-                words.All(word => x.Name.Split([' ', '-', '.', '_'], StringSplitOptions.RemoveEmptyEntries).Any(part => part.StartsWith(word, StringComparison.Ordinal))) ? 2 : 3)
+        return apps.Select(app => (App: app, Rank: Rank(app, words)))
+            .Where(x => x.Rank < int.MaxValue)
+            .OrderBy(x => x.Rank)
             .ThenBy(x => x.App.Name, StringComparer.CurrentCultureIgnoreCase)
             .Take(limit).Select(x => x.App).ToList();
+    }
+
+    private static int Rank(AppEntry app, string[] words)
+    {
+        if (words.Length == 0) return 0;
+        var name = Fold(app.Name);
+        var aliases = app.SearchAliases.Select(Fold).Where(a => a.Length > 0).ToArray();
+        var secondary = app.SecondarySearchAliases.Select(Fold).Where(a => a.Length > 0).ToArray();
+        var query = string.Join(' ', words);
+        if (name == query) return 0;
+        if (aliases.Contains(query, StringComparer.Ordinal)) return 1;
+        bool Contains(string text, string word) => text.Contains(word, StringComparison.Ordinal);
+        if (words.All(word => Contains(name, word)))
+        {
+            if (name.StartsWith(words[0], StringComparison.Ordinal)) return 2;
+            if (words.All(word => name.Split([' ', '-', '.', '_'], StringSplitOptions.RemoveEmptyEntries).Any(part => part.StartsWith(word, StringComparison.Ordinal)))) return 3;
+            return 5;
+        }
+        if (words.All(word => Contains(name, word) || aliases.Any(a => Contains(a, word))))
+            return aliases.Any(a => a.StartsWith(words[0], StringComparison.Ordinal)) ? 4 : 6;
+        if (!words.All(word => Contains(name, word) || aliases.Concat(secondary).Any(a => Contains(a, word)))) return int.MaxValue;
+        if (secondary.Contains(query, StringComparer.Ordinal)) return 7;
+        return secondary.Any(a => a.StartsWith(words[0], StringComparison.Ordinal)) ? 8 : 9;
     }
 
     private static string Fold(string text) => string.Concat((text ?? "").Normalize(NormalizationForm.FormKC)
