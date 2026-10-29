@@ -21,14 +21,14 @@ public partial class MainWindow
             await fixture.InitializeAsync();
             fixture.Document.Groups.Clear();
             var menu = fixture.CreateAppMenu(app);
-            var pin = menu.Items.OfType<MenuItem>().First();
+            var pin = menu.Items.OfType<MenuItem>().Single(i => i.Tag is "pin");
             Require((string)pin.Header == L.T(K.PinToStart), "An unpinned app does not offer Pin to Start.");
             pin.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
             Require(AppPinning.IsPinned(fixture.Document, app) && fixture.Document.Groups.Count == 1, "Pin to Start did not create one app pin.");
             Require(ReferenceEquals(fixture.TileForAppDrag(app.Id), AppPinning.Find(fixture.Document, app)) && fixture.Document.Groups.Count == 1,
                 "Dragging an already pinned app creates a duplicate instead of moving its existing tile.");
             menu = fixture.CreateAppMenu(app);
-            pin = menu.Items.OfType<MenuItem>().First();
+            pin = menu.Items.OfType<MenuItem>().Single(i => i.Tag is "pin");
             Require((string)pin.Header == L.T(K.UnpinTile), "A pinned app still offers duplicate pinning.");
             pin.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
             Require(!AppPinning.IsPinned(fixture.Document, app) && fixture.Document.Groups.Count == 0, "Unpin did not remove the pin and newly empty group.");
@@ -67,7 +67,7 @@ public partial class MainWindow
                 menu = fixture.CreateAppMenu(folderApp);
                 var action = explicitGroup
                     ? menu.Items.OfType<MenuItem>().Single(i => i.Header is "ReStart").Items.OfType<MenuItem>().First().Items.OfType<MenuItem>().Single()
-                    : menu.Items.OfType<MenuItem>().First();
+                    : menu.Items.OfType<MenuItem>().Single(i => i.Tag is "pin");
                 action.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
                 var tile = AppPinning.Find(fixture.Document, folderApp) ?? throw new InvalidOperationException("The directory pin is missing.");
                 bool IconRendered() => fixture._catalog.Icons.TryGetValue(folderApp.Id, out var source) &&
@@ -85,10 +85,11 @@ public partial class MainWindow
                     "Pinning a directory from its app menu leaves the fallback glyph until restart.");
                 fixture.SaveScreenshot(Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"app-menu-directory-{explicitGroup}.png"));
             }
-            return new(7, 2, 2);
+            var surfaces = await VerifyAppMenuSurfacesAsync(fixture, directory, snapshotPath);
+            return new(7, 2, 2, surfaces.Checks, surfaces.LanguageThemeCases, surfaces.NativeReads);
         }
         finally { fixture.Exit(); Activate(); }
     }
 }
 
-internal sealed record AppMenuSmokeResult(int PinChecks, int AvailabilityChecks, int ShellReadChecks);
+internal sealed record AppMenuSmokeResult(int PinChecks, int AvailabilityChecks, int ShellReadChecks, int SurfaceChecks, int LanguageThemeCases, int NativeReads);

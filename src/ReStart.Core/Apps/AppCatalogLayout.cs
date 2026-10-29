@@ -69,7 +69,7 @@ public static class AppCatalogLayout
         for (var i = 0; i < links.Length; i++)
         {
             var link = links[i];
-            if (assignments[i] is { } id) entries[id] = WithTarget(entries[id] with { FolderPath = link.App.FolderPath }, link.TargetPath, link.Arguments);
+            if (assignments[i] is { } id) entries[id] = WithTarget(entries[id] with { FolderPath = link.App.FolderPath, ShortcutPath = link.App.LaunchTarget }, link.TargetPath, link.Arguments);
             else entries.TryAdd(link.App.Id, WithTarget(link.App, link.TargetPath, link.Arguments));
         }
         return entries.Values.OrderBy(a => a.Name, StringComparer.CurrentCultureIgnoreCase).ToArray();

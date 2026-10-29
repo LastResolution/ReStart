@@ -627,7 +627,12 @@ public partial class MainWindow : Window
             var value = Prompt(L.T(K.PromptTileName), TileDisplayName(tile));
             if (value != null && value != TileDisplayName(tile)) { tile.Label = value; tile.UseLocalizedName = false; CommitLayout(); }
         });
-        if (tile.Widget.Length > 0) Add(menu, tile.Live ? L.T(K.DisableLiveTile) : L.T(K.EnableLiveTile), () => { tile.Live = !tile.Live; CommitLayout(); });
+        if (tile.Widget.Length > 0)
+        {
+            var liveMenu = new MenuItem { Header = L.T(K.MenuMore), Tag = "live-more" };
+            Add(liveMenu, tile.Live ? L.T(K.DisableLiveTile) : L.T(K.EnableLiveTile), () => { tile.Live = !tile.Live; CommitLayout(); }).Tag = "toggle-live";
+            menu.Items.Add(liveMenu);
+        }
         if (tile.Widget == "script") AddScriptMenu(menu, tile);
         var move = new MenuItem { Header = L.T(K.MoveToGroup), IsEnabled = CanEditTile(tile.Id) };
         foreach (var group in Document.Groups.Where(g => !g.IsStandalone))
@@ -814,7 +819,7 @@ public partial class MainWindow : Window
         RenderGroups();
     }
 
-    private Button AppButton(AppEntry app)
+    private Button AppButton(AppEntry app, bool search = false)
     {
         var button = new Button { Tag = app, HorizontalContentAlignment = HorizontalAlignment.Stretch, Padding = new(4, 3, 4, 3), Height = 44, ToolTip = app.Name };
         AutomationProperties.SetName(button, app.Name);
@@ -828,7 +833,7 @@ public partial class MainWindow : Window
         panel.Children.Add(new TextBlock { Text = app.Name, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center });
         button.Content = panel;
         button.Click += (_, _) => { if (!_dragging) Launch(app); };
-        button.ContextMenu = CreateAppMenu(app);
+        button.ContextMenu = CreateAppMenu(app, search);
         WireDrag(button, "ReStart.App", app.Id);
         return button;
     }

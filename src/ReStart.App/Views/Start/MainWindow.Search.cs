@@ -37,7 +37,7 @@ public partial class MainWindow
         var shownCategories = new HashSet<K>();
         foreach (var app in results)
         {
-            var button = AppButton(app);
+            var button = AppButton(app, search: true);
             var category = app.Id.StartsWith("restart:setting:", StringComparison.Ordinal) ? K.SearchSettings
                 : _fileSearchResults.Contains(app) ? K.SearchFiles : K.SearchApps;
             var content = new StackPanel();
