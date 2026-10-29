@@ -68,7 +68,7 @@ Des astuces clavier apparaissent brièvement en bas pendant le déplacement des 
 | Édition | Mode édition, sélection multiple, déplacement collectif, annuler/rétablir pour la session ; l’annulation d’un glissement conserve la disposition |
 | Retour pendant le glissement | Cibles de groupe/dossier distinctes, progression d’attente, indications et limites facultatives, défilement aux bords ; création automatique de groupes/dossiers désactivable |
 | Épinglage | Applications, fichiers, répertoires, raccourcis et sites ; commande Explorer **Pin to ReStart**, menus contextuels, glissement depuis la liste et destinations explicites |
-| Recherche | Noms d’applications normalisés, 15 pages Windows traduites avec alias anglais, noms de fichiers locaux indexés facultatifs, flèches/Entrée, rejet des requêtes périmées |
+| Recherche | Noms d’applications normalisés, noms des exécutables et alias déclarés par le système, comme `notepad` ou `cmd` ; 15 pages Windows traduites avec alias anglais, noms de fichiers locaux indexés facultatifs, flèches/Entrée, rejet des requêtes périmées |
 | Toutes les applications | Colonnes alphabétiques adaptatives, dossiers du menu Démarrer dépliables, choix d’une lettre, clavier, actualisation des installations/suppressions, ajouts récents et applications fréquentes en option |
 | Commandes d’application | Actions Windows disponibles : administrateur, emplacement, propriétés, désinstallation ; documents récents/fréquents facultatifs selon les paramètres Windows et les API disponibles |
 | Options de lancement | Activation par vignette, arguments, répertoire de travail et élévation pour les applications/raccourcis de bureau compatibles ; Windows gère l’UAC |

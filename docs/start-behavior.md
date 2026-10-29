@@ -50,6 +50,8 @@ Tile and group positions are packed automatically for the available board width.
 
 ## Search
 
+App search matches the OS display name and additional executable filenames, with or without their extensions. Search-only metadata comes from Start-menu link targets, App Paths registrations matching those targets, and each installed package application's executable and declared execution aliases. For example, `notepad`, `cmd` or `wt` can find a localized app when that metadata is available. A package declaration can remain searchable even when its command-line execution alias is disabled in Windows; Enter still uses the original catalog launch identity. Registrations never create extra apps. Exact display names rank first, then exact argument-free executable aliases; developer/profile shortcuts sharing an executable but supplying launch arguments rank below ordinary app matches. Directory names, shortcut arguments and arbitrary command text are not indexed or executed by this feature. Metadata is refreshed with the existing catalog, so removed apps lose their aliases too.
+
 App results appear immediately. Settings results cover fifteen Windows pages with translated names and English aliases. File search waits 200 ms after typing and queries only the local Windows index for up to twenty existing filesystem entries. It matches literal filenames and never recursively scans disks. A disabled/unavailable index leaves app and settings search operational and displays a localized explanation. Arrow keys and Enter always operate on the selected visible result; late file results preserve that selection.
 
 ## Per-tile launch options

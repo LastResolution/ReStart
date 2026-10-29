@@ -27,7 +27,7 @@ The mixed-DPI runs exposed WPF's suggested DPI-scaled window size overriding phy
 | Tiles | Four sizes; movable rectangular groups; empty-space drops create unnamed groups by default; overlap creates expandable tile folders; inline names |
 | Placement extensions | Optional independent placement, Alt-drag override, Shift-drag rearrangement without folders, optional free-mode overlap grouping, content-sized group width, half-cell horizontal anchors, horizontal scrolling and individual colors |
 | Editing extensions | Explicit edit mode, multi-selection moves and session-only layout undo/redo; these are ReStart additions |
-| Search | Immediate app-name results, fifteen localized Windows settings entry points and cancellable local Windows-indexed filename results; selection matches Enter. Settings and files can be disabled independently. No Web or Cortana |
+| Search | Immediate app-name, executable-name and OS-declared alias results, fifteen localized Windows settings entry points and cancellable local Windows-indexed filename results; selection matches Enter. Settings and files can be disabled independently. No Web or Cortana |
 | Catalog | AppsFolder and Start-menu links with native display names and icons; ambiguous shortcuts may appear twice |
 | Menus | Pin/unpin, canonical Shell commands and optional Windows Recent/Frequent destinations, respecting Windows history settings. Public APIs do not expose custom/pinned categories or application task lists |
 | Launching | Optional per-tile arguments, working directory and canonical administrator launch for supported desktop apps/shortcuts; Windows retains elevation consent |
