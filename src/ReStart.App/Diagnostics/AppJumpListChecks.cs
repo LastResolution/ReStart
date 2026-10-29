@@ -10,8 +10,7 @@ internal static partial class AppJumpLists
     {
         var appId = "ReStart.MenuFixture." + Guid.NewGuid().ToString("N");
         var target = Path.Combine(directory, "History sample 日本語.txt"); File.WriteAllText(target, "owned history fixture");
-        var shortcut = Path.Combine(directory, "History sample.lnk");
-        object? script = null, shortcutObject = null, shellLink = null;
+        object? shellLink = null;
         nint linkPointer = 0, idPointer = 0;
         var added = false;
         try
@@ -20,11 +19,8 @@ internal static partial class AppJumpLists
             // must not hide a wrong COM class or unsupported interface.
             if (ReadOnSta(appId).Count != 0) throw new InvalidOperationException("The unique history fixture was not empty.");
             if (!HistoryEnabled()) return (1, false);
-            script = Activator.CreateInstance(Type.GetTypeFromProgID("WScript.Shell")!);
-            shortcutObject = ((dynamic)script!).CreateShortcut(shortcut);
-            ((dynamic)shortcutObject).TargetPath = target; ((dynamic)shortcutObject).Save();
             shellLink = Activator.CreateInstance(Type.GetTypeFromCLSID(new("00021401-0000-0000-c000-000000000046"))!);
-            ((System.Runtime.InteropServices.ComTypes.IPersistFile)shellLink!).Load(shortcut, 0);
+            Marshal.ThrowExceptionForHR(((IShellLink)shellLink!).SetPath(target));
             linkPointer = Marshal.GetComInterfaceForObject(shellLink, typeof(IShellLink));
             idPointer = Marshal.StringToCoTaskMemUni(appId);
             var info = new HistoryAppIdLink { Link = linkPointer, AppId = idPointer };
@@ -50,7 +46,7 @@ internal static partial class AppJumpLists
             {
                 if (idPointer != 0) Marshal.FreeCoTaskMem(idPointer);
                 if (linkPointer != 0) Marshal.Release(linkPointer);
-                Release(shellLink); Release(shortcutObject); Release(script);
+                Release(shellLink);
             }
         }
     });

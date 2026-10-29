@@ -184,6 +184,16 @@ internal static partial class AppJumpLists
         [PreserveSig] int GetWorkingDirectory(nint path, int length);
         [PreserveSig] int SetWorkingDirectory(nint path);
         [PreserveSig] int GetArguments([MarshalAs(UnmanagedType.LPWStr)] System.Text.StringBuilder arguments, int length);
+        [PreserveSig] int SetArguments([MarshalAs(UnmanagedType.LPWStr)] string arguments);
+        [PreserveSig] int GetHotkey(out ushort value);
+        [PreserveSig] int SetHotkey(ushort value);
+        [PreserveSig] int GetShowCmd(out int value);
+        [PreserveSig] int SetShowCmd(int value);
+        [PreserveSig] int GetIconLocation(nint path, int length, out int index);
+        [PreserveSig] int SetIconLocation(nint path, int index);
+        [PreserveSig] int SetRelativePath(nint path, uint reserved);
+        [PreserveSig] int Resolve(nint owner, uint flags);
+        [PreserveSig] int SetPath([MarshalAs(UnmanagedType.LPWStr)] string path);
     }
     [DllImport("shell32.dll")] private static extern int SHGetIDListFromObject([MarshalAs(UnmanagedType.IUnknown)] object value, out nint pidl);
     [DllImport("shell32.dll")] private static extern int SHCreateItemFromIDList(nint pidl, ref Guid iid, [MarshalAs(UnmanagedType.Interface)] out object item);
