@@ -55,19 +55,20 @@ public partial class MainWindow
         if (actualPackage != null && AppPackageCommands.Read(actualPackage) is { } package)
         {
             var verbs = await AppShellCommands.ReadAsync(actualPackage); reads++;
-            Check(verbs.Contains("appsettings") && verbs.Contains("review") == package.StoreSigned, "An installed package's Settings/Store capabilities do not match its registration.");
+            Check((verbs.Contains("appsettings") || verbs.Contains("manageapps")) && verbs.Contains("review") == package.StoreSigned, "An installed package's management/Store capabilities do not match its registration.");
         }
         var extended = await AppShellCommands.ReadAsync(FilePinning.FromPath(linkPath), true); reads++;
         Check(extended.Contains("runasuser"), "Shift's extended shortcut menu lost Run as different user.");
         Check((await AppShellCommands.ReadAsync(new("missing", "Missing", Path.Combine(directory, "missing.exe"), false))).Count == 0, "A missing local item exposes actions."); reads++;
-        Check(AppPackageCommands.Target(new("Package_sample", true), "appsettings") == "ms-settings:appsfeatures-app?Package_sample"
+        Check(AppPackageCommands.Target(new("Package_sample", true), "manageapps") == "ms-settings:appsfeatures"
+            && AppPackageCommands.Target(new("Package_sample", true), "appsettings") == null
             && AppPackageCommands.Target(new("Package_sample", true), "review") == "ms-windows-store://review/?PFN=Package_sample"
             && AppPackageCommands.Target(new("Package_sample", false), "review") == null, "Package links are malformed or invent Store reviews for non-Store packages.");
         var invoked = new List<(string App, string Verb)>();
         fixture._appCommandFixture = (app, verb) => { invoked.Add((app.Id, verb)); return Task.CompletedTask; };
         fixture._jumpDestinationsFixture = _ => Task.FromResult<IReadOnlyList<JumpDestination>>([]);
         IReadOnlySet<string> Capabilities(AppEntry app) => app.Id == packaged.Id
-            ? new HashSet<string>(["open", "runas", "appsettings", "review", "uninstall"], StringComparer.OrdinalIgnoreCase) : native[app.Id];
+            ? new HashSet<string>(["open", "runas", "manageapps", "review", "uninstall"], StringComparer.OrdinalIgnoreCase) : native[app.Id];
         fixture._shellCommandsFixture = (app, _) => Task.FromResult(Capabilities(app));
         var language = L.Language;
         try
@@ -108,7 +109,7 @@ public partial class MainWindow
                                 Check(search == Visible(Find(commands, "copyaspath")), "Copy full path is missing from search or incorrectly exposed in the Start More menu.");
                             }
                             else
-                                Check(Visible(Find(commands, "appsettings")) && Visible(Find(commands, "review")) && Visible(Find(menu, "uninstall"))
+                                Check(Visible(Find(commands, "manageapps")) && !Visible(Find(commands, "appsettings")) && Visible(Find(commands, "review")) && Visible(Find(menu, "uninstall"))
                                     && !Visible(Find(commands, "opencontaining")), "Packaged actions or unavailable filesystem actions are incorrectly represented.");
                             Check(!Commands(menu).Any(i => i.Header?.ToString() is "MenuOpen" or "OpenFileLocation" or "OpenFolderLocation"), "A menu rendered resource identifiers instead of translations.");
                             menu.IsOpen = false; fixture.AppsPanel.Children.Remove(button);
@@ -143,7 +144,7 @@ public partial class MainWindow
                     var liveMenu = fixture.TileMenu(live);
                     Check(Find(liveMenu, "live-more") is { } liveMore && Find(liveMore, "toggle-live") != null
                         && Find(liveMenu, "shell-more") == null, "Live controls are misplaced or expose file actions for a widget.");
-                    foreach (var (verb, label) in new[] { ("runasuser", K.RunAsDifferentUser), ("taskbarpin", K.PinToTaskbar), ("taskbarunpin", K.UnpinFromTaskbar), ("share", K.ShareItem) })
+                    foreach (var (verb, label) in new[] { ("runasuser", K.RunAsDifferentUser), ("taskbarpin", K.PinToTaskbar), ("taskbarunpin", K.UnpinFromTaskbar), ("share", K.ShareItem), ("appsettings", K.AppSettings) })
                     {
                         var more = new MenuItem(); var uninstall = new MenuItem();
                         fixture.PopulateAppShellItems(more, uninstall, desktop, new HashSet<string>([verb]));

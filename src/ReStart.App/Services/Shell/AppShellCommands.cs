@@ -32,7 +32,7 @@ internal static class AppShellCommands
         }
         if (AppPackageCommands.Read(app) is { } package)
         {
-            commands.Add("appsettings");
+            if (!commands.Contains("appsettings")) commands.Add("manageapps");
             if (package.StoreSigned) commands.Add("review");
         }
         return commands;
@@ -40,14 +40,14 @@ internal static class AppShellCommands
 
     internal static Task InvokeAsync(AppEntry app, string verb, nint owner)
     {
-        if (verb == null || AppMenuCommands.Normalize(verb) != verb && verb != "review") throw new ArgumentException("Unsupported app command.", nameof(verb));
+        if (verb == null || AppMenuCommands.Normalize(verb) != verb && verb is not ("review" or "manageapps")) throw new ArgumentException("Unsupported app command.", nameof(verb));
         return OnSta(() =>
         {
             if (verb == "opencontaining" && AppFileLocation.Find(app) is { } location)
             { ExplorerLocation.Open(location.Path); return true; }
             if (verb == "copyaspath" && AppFileLocation.Find(app) is { } copied)
             { System.Windows.Clipboard.SetText("\"" + copied.Path + "\""); return true; }
-            if (verb == "review" || verb == "appsettings" && AppPackageCommands.Read(app) != null)
+            if (verb is "review" or "manageapps")
             { AppPackageCommands.Invoke(app, verb); return true; }
             if (verb is "properties" or "runasuser" && AppFileLocation.Find(app) is { } source)
             {

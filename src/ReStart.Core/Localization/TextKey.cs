@@ -558,6 +558,8 @@ public enum TextKey
     UnpinFromTaskbar,
     /// <summary>App settings</summary>
     AppSettings,
+    /// <summary>Installed apps…</summary>
+    ManageInstalledApps,
     /// <summary>Share</summary>
     ShareItem,
     /// <summary>Rate and review</summary>

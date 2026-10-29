@@ -5,7 +5,7 @@ using Windows.Management.Deployment;
 
 namespace ReStart.App.Services;
 
-/// <summary>Resolves installed current-user packages for documented Windows Settings and Store links.</summary>
+/// <summary>Resolves installed current-user packages for Windows app-management and Store links.</summary>
 internal static class AppPackageCommands
 {
     internal sealed record PackageInfo(string Family, bool StoreSigned);
@@ -27,7 +27,7 @@ internal static class AppPackageCommands
 
     internal static string? Target(PackageInfo package, string verb) => verb switch
     {
-        "appsettings" => "ms-settings:appsfeatures-app?" + Uri.EscapeDataString(package.Family),
+        "manageapps" => "ms-settings:appsfeatures",
         "review" when package.StoreSigned => "ms-windows-store://review/?PFN=" + Uri.EscapeDataString(package.Family),
         _ => null
     };

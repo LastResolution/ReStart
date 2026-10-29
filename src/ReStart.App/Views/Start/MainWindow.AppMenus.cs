@@ -171,6 +171,7 @@ public partial class MainWindow
         more.Items.Clear();
         foreach (var (verb, label) in new[] { ("runas", K.RunAsAdministrator), ("runasuser", K.RunAsDifferentUser),
             ("taskbarpin", K.PinToTaskbar), ("taskbarunpin", K.UnpinFromTaskbar), ("appsettings", K.AppSettings),
+            ("manageapps", K.ManageInstalledApps),
             ("opencontaining", verbs.Contains(AppShellCommands.FolderLocation) ? K.OpenFolderLocation : K.OpenFileLocation),
             ("copyaspath", K.CopyFullPath), ("share", K.ShareItem), ("review", K.RateAndReview), ("properties", K.AppProperties) })
         {
