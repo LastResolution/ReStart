@@ -21,15 +21,21 @@ public static class AppCatalogLayout
     /// <param name="shellApps">AppsFolder entries with unique app IDs.</param>
     /// <param name="shortcuts">Physical shortcuts ordered with per-user entries before common entries.</param>
     /// <param name="shellLinks">Optional target/argument metadata for Shell entries; null supplies no link matching.</param>
+    /// <param name="appPaths">Optional OS App Paths registrations; null supplies none. Names are attached only to catalog entries with matching executable targets; registrations never create entries.</param>
     /// <returns>A culture-sorted merged catalog, retaining Shell launch identities when a unique match is found.</returns>
     public static IReadOnlyList<AppEntry> Merge(IEnumerable<AppEntry> shellApps, IEnumerable<StartMenuShortcut> shortcuts,
-        IEnumerable<ShellAppLink>? shellLinks = null)
+        IEnumerable<ShellAppLink>? shellLinks = null, IEnumerable<AppPathRegistration>? appPaths = null)
     {
         var entries = shellApps.ToDictionary(a => a.Id, StringComparer.OrdinalIgnoreCase);
         var relativeKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var links = shortcuts.Where(s => relativeKeys.Add(s.RelativeKey.Replace('/', '\\'))).ToArray();
         var metadata = (shellLinks ?? []).Where(s => entries.ContainsKey(s.AppId)).DistinctBy(s => s.AppId, StringComparer.OrdinalIgnoreCase)
             .ToDictionary(s => s.AppId, StringComparer.OrdinalIgnoreCase);
+        var registered = (appPaths ?? []).GroupBy(p => p.TargetPath.Replace('/', '\\'), StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.Select(p => p.ExecutableName).ToArray(), StringComparer.OrdinalIgnoreCase);
+        AppEntry WithTarget(AppEntry app, string target, string arguments) => AppSearchAliases.AddExecutables(app,
+            new[] { target }.Concat(registered.GetValueOrDefault(target.Replace('/', '\\')) ?? []), !string.IsNullOrWhiteSpace(arguments));
+        foreach (var target in metadata.Values) entries[target.AppId] = WithTarget(entries[target.AppId], target.TargetPath, target.Arguments);
         var byTarget = metadata.Values.Where(s => !string.IsNullOrWhiteSpace(s.TargetPath))
             .GroupBy(s => new LinkKey(s.TargetPath, s.Arguments), LinkComparer.Instance)
             .Where(g => g.Count() == 1).ToDictionary(g => g.Key, g => g.Single().AppId, LinkComparer.Instance);
@@ -63,8 +69,8 @@ public static class AppCatalogLayout
         for (var i = 0; i < links.Length; i++)
         {
             var link = links[i];
-            if (assignments[i] is { } id) entries[id] = entries[id] with { FolderPath = link.App.FolderPath };
-            else entries.TryAdd(link.App.Id, link.App);
+            if (assignments[i] is { } id) entries[id] = WithTarget(entries[id] with { FolderPath = link.App.FolderPath }, link.TargetPath, link.Arguments);
+            else entries.TryAdd(link.App.Id, WithTarget(link.App, link.TargetPath, link.Arguments));
         }
         return entries.Values.OrderBy(a => a.Name, StringComparer.CurrentCultureIgnoreCase).ToArray();
     }

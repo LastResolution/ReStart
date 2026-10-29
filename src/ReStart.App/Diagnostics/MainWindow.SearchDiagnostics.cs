@@ -4,6 +4,8 @@ using System.Windows.Automation.Peers;
 using System.Windows.Automation.Provider;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Microsoft.Win32;
+using ReStart.App.Services;
 using ReStart.Core;
 
 namespace ReStart.App;
@@ -120,9 +122,85 @@ public partial class MainWindow
                 "A catalog refresh changed user pins or lost the selected installed app/input focus.");
             failCatalog = true; await fixture.RefreshCatalogAsync();
             Check(fixture._catalogRefresh == null && fixture.SearchResultNames.Contains("Delta Editor"), "A failed enumeration discarded the last successful catalog or blocked future refreshes.");
+            failCatalog = false;
+            fixture.Document.Preferences.Language = "en";
+            fixture.Document.Preferences.SearchFiles = false;
+            fixture.Document.Preferences.SearchSettings = false;
+            fixture.ApplyAppearance();
+            var shortcutPath = Path.Combine(directory, "Prompt.lnk");
+            var commandPath = Path.Combine(Environment.SystemDirectory, "cmd.exe");
+            object? shell = null, shortcut = null;
+            var registryPath = @"Software\ReStart.Tests\" + Guid.NewGuid().ToString("N");
+            try
+            {
+                Directory.CreateDirectory(directory);
+                shell = Activator.CreateInstance(Type.GetTypeFromProgID("WScript.Shell")!);
+                shortcut = ((dynamic)shell!).CreateShortcut(shortcutPath);
+                ((dynamic)shortcut).TargetPath = commandPath;
+                ((dynamic)shortcut).Arguments = "/k fixture-only";
+                ((dynamic)shortcut).Save();
+                var metadata = AppCatalog.ReadShortcutMetadata(shortcutPath);
+                Check(metadata.TargetPath.Equals(commandPath, StringComparison.OrdinalIgnoreCase) && metadata.Arguments == "/k fixture-only",
+                    "Windows shortcut metadata did not preserve the executable and its separate arguments.");
+                using var root = Registry.CurrentUser.CreateSubKey(registryPath + @"\App Paths");
+                using (var alias = root.CreateSubKey("console-alias.exe")) alias.SetValue("", @"""%SystemRoot%\System32\cmd.exe""", RegistryValueKind.ExpandString);
+                using (var invalid = root.CreateSubKey("invalid.exe")) invalid.SetValue("", "\"" + commandPath + "\" /c fixture-only");
+                using (var ignored = root.CreateSubKey("ignored.txt")) ignored.SetValue("", commandPath);
+                var registrations = AppExecutionMetadata.ReadAppPaths(root);
+                Check(registrations.Count == 1 && registrations[0].ExecutableName == "console-alias.exe",
+                    "App Paths enumeration accepted command arguments or a non-executable registration.");
+                apps = AppCatalogLayout.Merge([new("sample-prompt", "Command Prompt", "sample-prompt")],
+                    [new("Prompt.lnk", new("sample-link", "Command Prompt", shortcutPath, false), "sample-prompt", metadata.TargetPath, metadata.Arguments)],
+                    [new("sample-prompt", commandPath, metadata.Arguments)], registrations).ToList();
+                apps.Add(AppSearchAliases.AddExecutables(new("sample-notepad", "Notepad", "sample-notepad"), ["notepad.exe"]));
+                await fixture.RefreshCatalogAsync();
+                fixture.SetStatus("");
+                var promptIcon = AppCatalog.GetIcon(commandPath);
+                Check(promptIcon != null, "Windows did not supply the Command Prompt executable icon.");
+                fixture._catalog.Icons["sample-prompt"] = promptIcon!;
+                foreach (var (query, id, name) in new[] { ("Command Prompt", "sample-prompt", "Command Prompt"), ("cmd", "sample-prompt", "Command Prompt"), ("CMD.EXE", "sample-prompt", "Command Prompt"),
+                    ("console-alias", "sample-prompt", "Command Prompt"), ("notepad", "sample-notepad", "Notepad") })
+                {
+                    fixture.SetSmokeSearch(query); fixture.UpdateLayout();
+                    Check(Selected() == id && fixture.SearchResultNames.SequenceEqual(new[] { name }) && Row().IsSelected && fixture.SearchBox.IsKeyboardFocused,
+                        "An executable query did not select the original named catalog entry.");
+                    if (id == "sample-prompt") Check(Images((Button)fixture.SearchResults.SelectedItem).Any(image => ReferenceEquals(image.Source, promptIcon)),
+                        "A display-name or executable query lost the original Windows app icon.");
+                    var before = launched.Count; Key(System.Windows.Input.Key.Enter);
+                    Check(launched.Count == before + 1 && launched.Last() == id,
+                        "Enter on an executable query did not invoke exactly the original app identity.");
+                }
+                foreach (var theme in new[] { ReStart.Core.ThemeMode.Dark, ReStart.Core.ThemeMode.Light })
+                {
+                    fixture.Document.Preferences.Theme = theme; fixture.ApplyAppearance();
+                    fixture.SetSmokeSearch("cmd"); fixture.UpdateLayout();
+                    Check(Selected() == "sample-prompt" && Row().IsSelected, "An executable match lost native selection after a theme change.");
+                    fixture.SaveScreenshot(Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"search-executable-alias-{theme}.png"));
+                }
+                apps = [apps.Single(a => a.Id == "sample-notepad")];
+                await fixture.RefreshCatalogAsync();
+                Check(fixture.SearchResults.SelectedItem == null && !fixture.SearchResultNames.Contains("Command Prompt"),
+                    "Removing an app retained its executable alias or selected launch action.");
+                fixture.SetSmokeSearch("fixture-only");
+                Check(fixture.SearchResults.SelectedItem == null && pins == System.Text.Json.JsonSerializer.Serialize(fixture.Document.Groups),
+                    "Executable search exposed shortcut arguments or changed existing pins.");
+            }
+            finally
+            {
+                if (shortcut != null) System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shortcut);
+                if (shell != null) System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shell);
+                Registry.CurrentUser.DeleteSubKeyTree(registryPath, false);
+            }
             return new(checks, themes);
         }
         finally { fixture.Exit(); L.SetLanguage(language); ApplyAppearance(); Activate(); }
+
+        static IEnumerable<System.Windows.Controls.Image> Images(DependencyObject parent)
+        {
+            if (parent is System.Windows.Controls.Image image) yield return image;
+            for (var i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent); i++)
+                foreach (var child in Images(System.Windows.Media.VisualTreeHelper.GetChild(parent, i))) yield return child;
+        }
     }
 }
 

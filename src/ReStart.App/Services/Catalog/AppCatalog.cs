@@ -12,6 +12,7 @@ namespace ReStart.App.Services;
 public sealed class AppCatalog
 {
     private readonly IconCache? _cache;
+    private readonly AppExecutionMetadata _executables = new();
     /// <summary>Creates a catalog with an optional disposable pixel cache outside the portable application directory.</summary>
     /// <param name="cacheDirectory">Optional per-user icon-cache directory; null uses the default local ReStart cache.</param>
     public AppCatalog(string? cacheDirectory = null) { if (cacheDirectory != null) _cache = new(cacheDirectory); }
@@ -153,7 +154,7 @@ public sealed class AppCatalog
                 shortcuts.Add(new(relative, new(file, name, file, false, string.Join('\\', folders)), identity.AppId, identity.TargetPath, identity.Arguments));
             }
         }
-        var merged = AppCatalogLayout.Merge(entries.Values, shortcuts, shellLinks).ToList();
+        var merged = AppCatalogLayout.Merge(_executables.AddPackageAliases(entries.Values), shortcuts, shellLinks, AppExecutionMetadata.ReadAppPaths()).ToList();
         Count = merged.Count;
         _folderIconPaths = folderIconPaths;
         return merged;
@@ -163,6 +164,12 @@ public sealed class AppCatalog
     {
         try { return ((dynamic)item).ExtendedProperty(property) as string ?? ""; }
         catch (Exception ex) when (ex is COMException or Microsoft.CSharp.RuntimeBinder.RuntimeBinderException) { return ""; }
+    }
+
+    internal static ShellAppLink ReadShortcutMetadata(string path)
+    {
+        using var metadata = new ShortcutMetadata();
+        return metadata.Read(path);
     }
 
     // Optional identity reads never resolve, execute or modify the shortcut.
