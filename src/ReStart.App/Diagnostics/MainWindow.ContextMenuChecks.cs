@@ -200,6 +200,14 @@ public partial class MainWindow
         check(menu.Items.OfType<MenuItem>().Any(i => i.Tag is "open") && !menu.Items.OfType<MenuItem>().Any(i => i.Tag is "opencontaining")
             && menu.Items.OfType<MenuItem>().Single(i => i.Tag is "shell-more").Visibility == Visibility.Collapsed,
             "A failed capability request leaves a loading placeholder or stale commands instead of the basic menu.");
+        await CloseMenuAsync(menu);
+        var reopened = new TaskCompletionSource<IReadOnlySet<string>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        fixture._shellCommandsFixture = (_, _) => reopened.Task;
+        menu.IsOpen = true; await Task.Delay(10);
+        // A prior popup animation can deliver Closed after a newer open.
+        menu.RaiseEvent(new RoutedEventArgs(ContextMenu.ClosedEvent));
+        reopened.SetResult(commands); await Task.Delay(20);
+        check(menu.Items.OfType<MenuItem>().Any(i => i.Tag is "opencontaining"), "A late Closed notification invalidated a newer menu request.");
         await CloseMenuAsync(menu); fixture.AppsPanel.Children.Remove(button);
     }
 

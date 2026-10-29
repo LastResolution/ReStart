@@ -97,7 +97,9 @@ public partial class MainWindow
         menu.Items.Insert(position + 2, recent); menu.Items.Insert(position + 3, frequent);
         var generation = 0;
         var direct = new List<MenuItem>();
-        menu.Closed += (_, _) => generation++;
+        // A popup's close animation can finish after this menu was reopened.
+        // That late notification must not invalidate the newer open request.
+        menu.Closed += (_, _) => { if (!menu.IsOpen) generation++; };
         menu.Opened += (_, _) =>
         {
             var current = ++generation;
