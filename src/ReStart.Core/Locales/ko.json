@@ -1,4 +1,9 @@
 {
+  "RemoveFromThisList": "이 목록에서 제거",
+  "DontShowInThisList": "이 목록에 표시 안 함",
+  "ClearRecentList": "목록 지우기",
+  "PersonalizeThisList": "이 목록 개인 설정",
+  "UnpinGroupFromStart": "시작 화면에서 그룹 고정 해제",
   "ConfigureTileData": "데이터 소스 설정…",
   "RefreshTileData": "지금 데이터 새로 고침",
   "TileDataHelp": "웹 API, RSS/Atom 또는 로컬 파일을 선택합니다. 시작 화면이 보일 때 갱신합니다. 연결과 인증 정보는 현재 Windows 사용자용으로 암호화되며 내보내지 않습니다.",

@@ -74,6 +74,7 @@ public partial class MainWindow
         CollapsedAccountLabel.Picture = picture; UserRailLabel.Picture = picture;
         if (!Document.Preferences.ExpandNavigationOnHover) _railHoverTimer?.Stop();
         if (CollapsedFolderShortcuts == null) return;
+        SettingsNav.ContextMenu = NavigationFolderMenu(); ExpandedSettingsNav.ContextMenu = NavigationFolderMenu();
         CollapsedFolderShortcuts.Children.Clear(); ExpandedFolderShortcuts.Children.Clear();
         var enabled = DisplayPreferences.NavigationFolders ?? ["documents", "pictures"];
         foreach (var shortcut in FolderShortcuts.Where(s => enabled.Contains(s.Id, StringComparer.OrdinalIgnoreCase)))
@@ -83,7 +84,19 @@ public partial class MainWindow
                 System.Windows.Automation.AutomationProperties.SetName(button, L.T(shortcut.Label));
                 button.Content = new RailLabel { Glyph = shortcut.Glyph, Label = expanded ? L.T(shortcut.Label) : "" };
                 button.Click += (_, _) => LaunchPath(shortcut.Target());
+                button.ContextMenu = NavigationFolderMenu();
                 (expanded ? ExpandedFolderShortcuts : CollapsedFolderShortcuts).Children.Add(button);
             }
+    }
+
+    private ContextMenu NavigationFolderMenu()
+    {
+        var menu = CreateContextMenu();
+        Add(menu, L.T(K.PersonalizeThisList), () =>
+        {
+            if (_menuSettingsFixture != null) _menuSettingsFixture(K.SettingsStartExperience);
+            else ShowSettings(K.SettingsStartExperience);
+        }).Tag = "personalize-navigation";
+        return menu;
     }
 }

@@ -1,4 +1,9 @@
 {
+  "RemoveFromThisList": "この一覧から削除",
+  "DontShowInThisList": "この一覧に表示しない",
+  "ClearRecentList": "一覧を消去",
+  "PersonalizeThisList": "この一覧をカスタマイズ",
+  "UnpinGroupFromStart": "グループのピン留めをスタートから外す",
   "ConfigureTileData": "データソースを設定…",
   "RefreshTileData": "データを今すぐ更新",
   "TileDataHelp": "Web API、RSS・Atom、ローカルファイルを指定します。Startの表示中に更新します。接続先と認証情報は現在のWindowsユーザー用に暗号化し、エクスポートには含めません。",

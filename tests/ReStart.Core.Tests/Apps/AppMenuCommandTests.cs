@@ -46,7 +46,8 @@ public sealed class AppMenuCommandTests
         var language = L.Language;
         foreach (var tag in L.SupportedLanguages)
             foreach (var key in new[] { TextKey.MenuOpen, TextKey.OpenFolderLocation, TextKey.RunAsDifferentUser, TextKey.PinToTaskbar,
-                TextKey.UnpinFromTaskbar, TextKey.AppSettings, TextKey.ManageInstalledApps, TextKey.ShareItem, TextKey.RateAndReview, TextKey.CopyFullPath })
+                TextKey.UnpinFromTaskbar, TextKey.AppSettings, TextKey.ManageInstalledApps, TextKey.ShareItem, TextKey.RateAndReview, TextKey.CopyFullPath,
+                TextKey.RemoveFromThisList, TextKey.DontShowInThisList, TextKey.ClearRecentList, TextKey.PersonalizeThisList, TextKey.UnpinGroupFromStart })
                 Assert.False(string.IsNullOrWhiteSpace(L.Translate(key, tag)));
         Assert.Equal(language, L.Language);
     }

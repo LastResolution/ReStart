@@ -30,6 +30,7 @@ public partial class MainWindow
             foreach (var app in apps)
             {
                 var row = AppButton(app); row.Uid = "history";
+                row.ContextMenu = CreateAppMenu(app, history: heading);
                 AutomationProperties.SetItemStatus(row, L.T(heading));
                 AppsPanel.Children.Add(row);
             }

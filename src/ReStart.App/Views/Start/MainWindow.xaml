@@ -50,7 +50,7 @@
         <StackPanel VerticalAlignment="Bottom" Margin="0,0,0,12">
           <Button Height="48" ToolTip="{local:Loc Key=NavAccount}" AutomationProperties.Name="{local:Loc Key=NavAccount}" Click="OpenAccount" HorizontalContentAlignment="Stretch" Padding="0"><controls:RailLabel x:Name="CollapsedAccountLabel" Glyph="&#xE77B;" /></Button>
           <ScrollViewer x:Name="CollapsedFolderScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel x:Name="CollapsedFolderShortcuts" /></ScrollViewer>
-          <Button Height="48" ToolTip="{local:Loc Key=SettingsTitle}" AutomationProperties.Name="{local:Loc Key=SettingsTitle}" Click="OpenSettings" HorizontalContentAlignment="Stretch" Padding="0"><controls:RailLabel Glyph="&#xE713;" /></Button>
+          <Button x:Name="SettingsNav" Height="48" ToolTip="{local:Loc Key=SettingsTitle}" AutomationProperties.Name="{local:Loc Key=SettingsTitle}" Click="OpenSettings" HorizontalContentAlignment="Stretch" Padding="0"><controls:RailLabel Glyph="&#xE713;" /></Button>
           <Button Height="48" ToolTip="{local:Loc Key=NavPower}" AutomationProperties.Name="{local:Loc Key=NavPower}" Click="OpenPower" HorizontalContentAlignment="Stretch" Padding="0"><controls:RailLabel Glyph="&#xE7E8;" /></Button>
         </StackPanel>
       </Grid>
@@ -115,7 +115,7 @@
         <StackPanel VerticalAlignment="Bottom" Margin="0,0,0,12">
           <Button HorizontalContentAlignment="Stretch" Padding="0" x:Name="UserButton" AutomationProperties.Name="{local:Loc Key=NavAccount}" Height="48" Click="OpenAccount"><controls:RailLabel x:Name="UserRailLabel" Glyph="&#xE77B;" /></Button>
           <ScrollViewer x:Name="ExpandedFolderScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel x:Name="ExpandedFolderShortcuts" /></ScrollViewer>
-          <Button HorizontalContentAlignment="Stretch" Padding="0" AutomationProperties.Name="{local:Loc Key=SettingsTitle}" Height="48" Click="OpenSettings"><controls:RailLabel Glyph="&#xE713;" Label="{local:Loc Key=SettingsTitle}" /></Button>
+          <Button x:Name="ExpandedSettingsNav" HorizontalContentAlignment="Stretch" Padding="0" AutomationProperties.Name="{local:Loc Key=SettingsTitle}" Height="48" Click="OpenSettings"><controls:RailLabel Glyph="&#xE713;" Label="{local:Loc Key=SettingsTitle}" /></Button>
           <Button HorizontalContentAlignment="Stretch" Padding="0" AutomationProperties.Name="{local:Loc Key=NavPower}" Height="48" Click="OpenPower"><controls:RailLabel Glyph="&#xE7E8;" Label="{local:Loc Key=NavPower}" /></Button>
         </StackPanel>
       </Grid>

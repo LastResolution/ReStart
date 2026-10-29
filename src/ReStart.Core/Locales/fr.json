@@ -1,4 +1,9 @@
 {
+  "RemoveFromThisList": "Supprimer de cette liste",
+  "DontShowInThisList": "Ne pas afficher dans cette liste",
+  "ClearRecentList": "Effacer la liste",
+  "PersonalizeThisList": "Personnaliser cette liste",
+  "UnpinGroupFromStart": "Détacher le groupe du menu Démarrer",
   "ConfigureTileData": "Configurer les sources…",
   "RefreshTileData": "Actualiser les données",
   "TileDataHelp": "Choisissez une API Web, un flux RSS/Atom ou un fichier local. Actualisation avec le menu visible. Connexions et identifiants sont chiffrés pour cet utilisateur Windows et exclus des exports.",

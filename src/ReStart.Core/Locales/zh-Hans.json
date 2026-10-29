@@ -1,4 +1,9 @@
 {
+  "RemoveFromThisList": "从此列表中删除",
+  "DontShowInThisList": "不在此列表中显示",
+  "ClearRecentList": "清除列表",
+  "PersonalizeThisList": "个性化此列表",
+  "UnpinGroupFromStart": "从“开始”取消固定组",
   "ConfigureTileData": "配置数据源…",
   "RefreshTileData": "立即刷新数据",
   "TileDataHelp": "选择 Web API、RSS/Atom 或本地文件。开始界面可见时更新。连接和凭据为当前 Windows 用户加密，不包含在导出中。",

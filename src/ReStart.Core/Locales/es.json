@@ -1,4 +1,9 @@
 {
+  "RemoveFromThisList": "Quitar de esta lista",
+  "DontShowInThisList": "No mostrar en esta lista",
+  "ClearRecentList": "Borrar lista",
+  "PersonalizeThisList": "Personalizar esta lista",
+  "UnpinGroupFromStart": "Desanclar grupo de Inicio",
   "ConfigureTileData": "Configurar fuentes…",
   "RefreshTileData": "Actualizar datos ahora",
   "TileDataHelp": "Elige una API web, RSS/Atom o un archivo local. Se actualiza con Inicio visible. Conexiones y credenciales se cifran para este usuario de Windows y no se exportan.",

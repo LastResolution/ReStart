@@ -46,17 +46,47 @@ public sealed class AppActivity
     /// <param name="apps">Current catalog used to exclude missing apps and resolve current display names.</param>
     /// <returns>A new list ordered by descending launch count, latest launch and then current display name.</returns>
     public IReadOnlyList<AppEntry> Frequent(IReadOnlyCollection<AppEntry> apps) => apps
-        .Where(a => Entries.TryGetValue(a.Id, out var e) && e.Launches > 0)
+        .Where(a => Entries.TryGetValue(a.Id, out var e) && e.Launches > 0 && !e.HiddenFromMostUsed)
         .OrderByDescending(a => Entries[a.Id].Launches).ThenByDescending(a => Entries[a.Id].LastLaunched)
         .ThenBy(a => a.Name, StringComparer.CurrentCultureIgnoreCase).Take(6).ToArray();
 
-    /// <summary>Clears discovery dates and launch counts while retaining the current baseline so apps are not relabeled as new.</summary>
+    /// <summary>Removes one observed app from Recently added without changing its launch counts or installed catalog entry.</summary>
+    /// <param name="appId">Observed catalog identity, matched without case sensitivity; unknown identities leave history unchanged.</param>
+    /// <returns>True when a discovery date was cleared and history should be saved; otherwise false.</returns>
+    public bool DismissRecent(string appId)
+    {
+        if (!Entries.TryGetValue(appId, out var entry) || entry.FirstSeen == DateTimeOffset.MinValue) return false;
+        entry.FirstSeen = DateTimeOffset.MinValue; return true;
+    }
+
+    /// <summary>Clears all discovery dates while preserving launch counts, exclusions and the observed catalog baseline.</summary>
+    /// <returns>True when at least one date was cleared and history should be saved; otherwise false.</returns>
+    public bool ClearRecent()
+    {
+        var changed = false;
+        foreach (var entry in Entries.Values)
+            if (entry.FirstSeen != DateTimeOffset.MinValue) { entry.FirstSeen = DateTimeOffset.MinValue; changed = true; }
+        return changed;
+    }
+
+    /// <summary>Excludes one observed app from Most used until it is removed from and rediscovered in the catalog.</summary>
+    /// <param name="appId">Observed catalog identity, matched without case sensitivity; unknown identities leave history unchanged.</param>
+    /// <returns>True when the exclusion changed and history should be saved; otherwise false.</returns>
+    public bool HideFrequent(string appId)
+    {
+        if (!Entries.TryGetValue(appId, out var entry) || entry.HiddenFromMostUsed) return false;
+        entry.HiddenFromMostUsed = true; return true;
+    }
+
+    /// <summary>Clears discovery dates and launch counts while retaining exclusions and the baseline so apps are not relabeled as new.</summary>
     public void Clear() { foreach (var entry in Entries.Values) { entry.FirstSeen = DateTimeOffset.MinValue; entry.Launches = 0; entry.LastLaunched = default; } }
 }
 
 /// <summary>Stores discovery and opt-in launch metadata for one catalog identity.</summary>
 public sealed class AppActivityEntry
 {
+    /// <summary>Gets or sets whether the user excluded this app from Most used. Launch recording does not reset this choice.</summary>
+    public bool HiddenFromMostUsed { get; set; }
     /// <summary>Gets or sets discovery time, or MinValue for an initial-baseline or cleared app.</summary>
     public DateTimeOffset FirstSeen { get; set; }
     /// <summary>Gets or sets successful ReStart launches, capped at one million.</summary>

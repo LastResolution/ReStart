@@ -28,4 +28,45 @@ public class AppActivityTests
         history.Clear(); Assert.Empty(history.Frequent([B])); Assert.False(history.Observe([B], now.AddDays(1)));
         Assert.Empty(history.Recent([B], now.AddDays(1)));
     }
+
+    [Fact]
+    public void RecentDismissalDoesNotUninstallOrChangeFrequencyAndSurvivesRediscovery()
+    {
+        var history = new AppActivity(); var now = DateTimeOffset.UtcNow;
+        history.Observe([A], now); history.Observe([A, B], now.AddMinutes(1));
+        history.RecordLaunch("b", true, now.AddMinutes(2));
+        Assert.True(history.DismissRecent("B")); Assert.False(history.DismissRecent("b"));
+        Assert.False(history.DismissRecent("unknown"));
+        Assert.False(history.Observe([A, B], now.AddMinutes(3)));
+        Assert.Empty(history.Recent([A, B], now.AddMinutes(4)));
+        Assert.Equal([B], history.Frequent([A, B])); Assert.Equal(2, history.Entries.Count);
+    }
+
+    [Fact]
+    public void ClearingRecentListClearsAllObservationsRatherThanOnlyThreeVisibleItems()
+    {
+        var history = new AppActivity(); var now = DateTimeOffset.UtcNow;
+        var apps = Enumerable.Range(0, 5).Select(i => new AppEntry($"app{i}", $"App {i}", "")).ToArray();
+        history.Observe([A], now); history.Observe(apps.Append(A).ToArray(), now.AddMinutes(1));
+        history.RecordLaunch(apps[0].Id, true, now.AddMinutes(2));
+        Assert.Equal(3, history.Recent(apps, now.AddMinutes(3)).Count);
+        Assert.True(history.ClearRecent()); Assert.False(history.ClearRecent());
+        Assert.Empty(history.Recent(apps, now.AddMinutes(3)));
+        Assert.Equal([apps[0]], history.Frequent(apps));
+    }
+
+    [Fact]
+    public void MostUsedExclusionPersistsAcrossLaunchesSerializationAndClearUntilReinstalled()
+    {
+        var history = new AppActivity(); var now = DateTimeOffset.UtcNow;
+        history.Observe([A], now); history.Observe([A, B], now.AddMinutes(1));
+        history.RecordLaunch("b", true, now);
+        Assert.True(history.HideFrequent("B")); Assert.False(history.HideFrequent("b")); Assert.False(history.HideFrequent("unknown"));
+        history = System.Text.Json.JsonSerializer.Deserialize<AppActivity>(System.Text.Json.JsonSerializer.Serialize(history))!;
+        history.RecordLaunch("b", true, now.AddMinutes(2));
+        Assert.Empty(history.Frequent([A, B])); Assert.Equal([B], history.Recent([A, B], now.AddMinutes(3)));
+        history.Clear(); history.RecordLaunch("b", true, now.AddMinutes(4)); Assert.Empty(history.Frequent([A, B]));
+        history.Observe([A], now.AddMinutes(5)); history.Observe([A, B], now.AddMinutes(6));
+        history.RecordLaunch("b", true, now.AddMinutes(7)); Assert.Equal([B], history.Frequent([A, B]));
+    }
 }
