@@ -29,7 +29,7 @@ The mixed-DPI runs exposed WPF's suggested DPI-scaled window size overriding phy
 | Editing extensions | Explicit edit mode, multi-selection moves and session-only layout undo/redo; these are ReStart additions |
 | Search | Immediate app-name, executable-name and OS-declared alias results, fifteen localized Windows settings entry points and cancellable local Windows-indexed filename results; selection matches Enter. Settings and files can be disabled independently. No Web or Cortana |
 | Catalog | AppsFolder and Start-menu links with native display names and icons; ambiguous shortcuts may appear twice |
-| Menus | Pin/unpin, canonical Shell commands and optional Windows Recent/Frequent destinations, respecting Windows history settings. Public APIs do not expose custom/pinned categories or application task lists |
+| Menus | [Context-dependent menus](context-menus.md): direct search actions, Start More submenus, physical shortcut/file/folder locations, package settings/review and available canonical Shell actions; optional Windows Recent/Frequent destinations. Windows may withhold taskbar/share verbs; public APIs do not expose another app's complete custom/pinned Jump List or tasks |
 | Launching | Optional per-tile arguments, working directory and canonical administrator launch for supported desktop apps/shortcuts; Windows retains elevation consent |
 | Desktop integration | Reversible Windows-key and Start-button capture, tray, optional sign-in startup and Explorer pin commands; no shell injection |
 | Motion | Separate window fade, bottom-anchored zoom and bottom-to-top tile reveal; animated dismissal, interrupted reopen and reduced-motion support |
