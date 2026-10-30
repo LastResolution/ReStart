@@ -12,6 +12,15 @@ public class StartPreferencesTests
         Assert.True(preferences.TileHoverHighlight && preferences.DragEdgeScrolling && preferences.ShowDropHints && preferences.ShowDragShortcutHints);
         Assert.True(preferences.GroupTilesOnDrop && preferences.CreateFoldersOnDrop && preferences.ShowGroupBoundariesOnHover && preferences.ShowRecentlyAdded);
         Assert.False(preferences.ShowMostUsed); Assert.Null(preferences.NavigationFolders);
+        Assert.True(preferences.ShowAppTasks && preferences.ShowPinnedJumpLists);
+    }
+    [Fact]
+    public void NativeJumpSettingsRoundTripIndependentlyOfHistoryAndLayoutLock()
+    {
+        var preferences = new Preferences { ShowAppTasks = false, ShowPinnedJumpLists = true, ShowJumpLists = false, LayoutLocked = true };
+        var restored = JsonSerializer.Deserialize<Preferences>(JsonSerializer.Serialize(preferences))!;
+        Assert.False(restored.ShowAppTasks); Assert.False(restored.ShowJumpLists);
+        Assert.True(restored.ShowPinnedJumpLists); Assert.True(restored.LayoutLocked);
     }
     [Fact]
     public void TileOptionsRoundTripWithoutChangingTheTargetOrDefaultLaunch()

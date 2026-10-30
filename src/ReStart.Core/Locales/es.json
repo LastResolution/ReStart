@@ -497,5 +497,12 @@
   "BackupCreated": "Copia creada.",
   "BackupRestored": "Copia restaurada. Vuelve a configurar conexiones y permisos si es necesario.",
   "BackupConfirm": "¿Restaurar {0} grupos y {1} mosaicos principales? Sustituye distribución y apariencia. Conserva la integración local. Configura de nuevo conexiones y permisos de red.",
-  "BackupFailed": "Error de copia: {0}"
+  "BackupFailed": "Error de copia: {0}",
+  "JumpTasks": "Tareas",
+  "JumpPinned": "Anclados",
+  "PinToJumpList": "Anclar a esta lista",
+  "UnpinFromJumpList": "Desanclar de esta lista",
+  "JumpListUpdated": "Lista de accesos directos de Windows actualizada.",
+  "SettingsAppTasks": "Mostrar tareas de las aplicaciones en sus menús",
+  "SettingsPinnedJumpLists": "Mostrar elementos anclados de las listas de Windows"
 }

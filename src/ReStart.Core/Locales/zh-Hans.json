@@ -497,5 +497,12 @@
   "BackupCreated": "备份已创建。",
   "BackupRestored": "备份已恢复。请按需重新配置数据连接和权限。",
   "BackupConfirm": "恢复{0}个分组和{1}个顶层磁贴？这将替换布局和外观。系统集成设置保持不变。请重新配置数据连接和网络权限。",
-  "BackupFailed": "备份操作失败：{0}"
+  "BackupFailed": "备份操作失败：{0}",
+  "JumpTasks": "任务",
+  "JumpPinned": "已固定",
+  "PinToJumpList": "固定到此列表",
+  "UnpinFromJumpList": "从此列表取消固定",
+  "JumpListUpdated": "Windows 跳转列表已更新。",
+  "SettingsAppTasks": "在应用菜单中显示应用专属任务",
+  "SettingsPinnedJumpLists": "显示 Windows 跳转列表中的固定项目"
 }

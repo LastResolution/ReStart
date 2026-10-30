@@ -43,6 +43,8 @@ flowchart LR
 
 The App-to-TileHost project reference is a **build dependency only** (`ReferenceOutputAssembly=false`); the UI never invokes the worker's Jint engine in-process. Core references neither UI nor worker. The existing test project also links selected Windows services for process-level checks; these are explicitly Windows-gated rather than evidence that all tests are portable.
 
+The native Jump List adapter launches the same executable with `--jump-list-worker`, before single-instance registration, layout access, hooks or tray startup. Strict bounded stdin/stdout messages contain an AppUserModelID, operation and opaque item key (or explicit document path for pinning), never caller-supplied executable/arguments. The worker rereads native metadata before invoking the selected action. Two workers can run concurrently; menu closure cancels pending reads. Crashes, invalid replies and timeouts leave ordinary menus available. The parent terminates only its own helper, preserving any launched application. This helper provides fault containment and runs with normal user permissions. See [context menus](context-menus.md#application-tasks-and-windows-pins).
+
 ## Ownership and change boundaries
 
 | State / effect | Owner | Boundary |
@@ -53,7 +55,7 @@ The App-to-TileHost project reference is a **build dependency only** (`Reference
 | Selection, popup/focus and drag lifetime | MainWindow interaction partials | Dispatcher-owned; callbacks revalidate visibility and current generation |
 | Search request lifetime | MainWindow search orchestration | Immediate apps/settings, debounced indexed files, cancellation and stale-query rejection; Windows COM remains in a service |
 | Catalog and icons | `AppCatalog` | Dedicated STA enumeration; completed snapshots and frozen images cross to UI |
-| Launch and Jump List effects | `AppShellCommands` / `AppJumpLists` | Canonical verbs and documented COM; never evaluate translated menu text |
+| Launch and Jump List effects | `AppShellCommands` / `AppJumpLists` / `NativeJumpBroker` | Canonical verbs and public history APIs; undocumented task/pin ABI is isolated in a bounded helper, and translated menu text is never evaluated |
 | Optional app activity | `AppActivity` / App persistence | Bounded local state; separate from exported layout and Windows document history |
 | Script processes and data reads | App worker pool / data services | Parent owns cancellation, limits and process lifetime; worker sees bounded snapshots |
 | Documentation images | Dedicated render entry point | English curated fixtures, no visible windows or real settings; matched installed icons, not an exported app inventory |

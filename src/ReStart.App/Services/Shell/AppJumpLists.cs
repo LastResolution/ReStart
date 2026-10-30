@@ -124,6 +124,8 @@ internal static partial class AppJumpLists
         return key?.GetValue("Start_TrackDocs") is not int value || value != 0;
     }
 
+    internal static Task<string> ResolveAppIdAsync(AppEntry app) => AppShellCommands.OnSta(() => ResolveAppId(app));
+
     private static string ResolveAppId(AppEntry app)
     {
         if (app.IsShellApp) return app.LaunchTarget;

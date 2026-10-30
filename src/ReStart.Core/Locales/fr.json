@@ -497,5 +497,12 @@
   "BackupCreated": "Sauvegarde créée.",
   "BackupRestored": "Sauvegarde restaurée. Reconfigurez les connexions et autorisations si nécessaire.",
   "BackupConfirm": "Restaurer {0} groupes et {1} tuiles principales ? Cela remplace disposition et apparence. Les réglages système restent locaux. Reconfigurez connexions et autorisations réseau.",
-  "BackupFailed": "Échec de sauvegarde : {0}"
+  "BackupFailed": "Échec de sauvegarde : {0}",
+  "JumpTasks": "Tâches",
+  "JumpPinned": "Épinglés",
+  "PinToJumpList": "Épingler à cette liste",
+  "UnpinFromJumpList": "Détacher de cette liste",
+  "JumpListUpdated": "Liste de raccourcis Windows mise à jour.",
+  "SettingsAppTasks": "Afficher les tâches des applications dans leurs menus",
+  "SettingsPinnedJumpLists": "Afficher les éléments épinglés des listes de raccourcis Windows"
 }

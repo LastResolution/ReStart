@@ -497,5 +497,12 @@
   "BackupCreated": "Sicherung erstellt.",
   "BackupRestored": "Sicherung wiederhergestellt. Datenverbindungen und Berechtigungen bei Bedarf neu einrichten.",
   "BackupConfirm": "{0} Gruppen und {1} Hauptkacheln wiederherstellen? Layout und Darstellung werden ersetzt. Shell-Einstellungen bleiben lokal. Verbindungen und Web-Zugriff erneut einrichten.",
-  "BackupFailed": "Sicherung fehlgeschlagen: {0}"
+  "BackupFailed": "Sicherung fehlgeschlagen: {0}",
+  "JumpTasks": "Aufgaben",
+  "JumpPinned": "Angeheftet",
+  "PinToJumpList": "An diese Liste anheften",
+  "UnpinFromJumpList": "Von dieser Liste lösen",
+  "JumpListUpdated": "Windows-Sprungliste aktualisiert.",
+  "SettingsAppTasks": "Anwendungsaufgaben in App-Menüs anzeigen",
+  "SettingsPinnedJumpLists": "Angeheftete Elemente aus Windows-Sprunglisten anzeigen"
 }

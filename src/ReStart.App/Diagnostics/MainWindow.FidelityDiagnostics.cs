@@ -169,6 +169,8 @@ public partial class MainWindow
                 [K.SettingsSearchSettings] = p => p.SearchSettings,
                 [K.SearchFilesSetting] = p => p.SearchFiles,
                 [K.SettingsJumpLists] = p => p.ShowJumpLists,
+                [K.SettingsAppTasks] = p => p.ShowAppTasks,
+                [K.SettingsPinnedJumpLists] = p => p.ShowPinnedJumpLists,
                 [K.SettingsTileHover] = p => p.TileHoverHighlight,
                 [K.SettingsGroupHover] = p => p.ShowGroupBoundariesOnHover,
                 [K.SettingsFreePlacement] = p => p.FreeTilePlacement,

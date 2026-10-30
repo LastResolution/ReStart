@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace ReStart.App.Services;
 
 internal sealed record NativeJumpRequest(int Version, string Operation, string AppId, string Key = "", string Target = "");
-internal sealed record NativeJumpItem(string Key, string Name, string Target, bool IsDirectory, bool IsLink, bool IsSeparator = false);
+internal sealed record NativeJumpItem(string Key, string Name, string Target, bool IsDirectory, bool IsLink);
 internal sealed record NativeJumpSnapshot(bool TasksSupported, bool PinsSupported, NativeJumpItem[] Tasks, NativeJumpItem[] Pinned)
 {
     internal static NativeJumpSnapshot Empty => new(false, false, [], []);
@@ -36,11 +36,12 @@ internal static class NativeJumpContract
     internal static bool ValidReply(NativeJumpReply? reply, string owner) => reply != null
         && string.Equals(reply.AppId, owner, StringComparison.OrdinalIgnoreCase)
         && reply.Error is "" or "unsupported" or "unavailable" or "invalid-request"
+        && reply.Success == (reply.Error == "")
         && reply.Snapshot is { Tasks: { Length: <= 64 }, Pinned: { Length: <= 64 } } snapshot
-        && snapshot.Tasks.Concat(snapshot.Pinned).All(item => item != null && Safe(item.Name, 512)
-            && Safe(item.Target, 32767) && (item.IsSeparator ? item.Key == "" : IsKey(item.Key)))
-        && snapshot.Pinned.All(item => !item.IsSeparator)
-        && snapshot.Tasks.Where(item => !item.IsSeparator).Select(item => item.Key).Distinct(StringComparer.Ordinal).Count() == snapshot.Tasks.Count(item => !item.IsSeparator)
+        && (snapshot.TasksSupported || snapshot.Tasks.Length == 0) && (snapshot.PinsSupported || snapshot.Pinned.Length == 0)
+        && snapshot.Tasks.Concat(snapshot.Pinned).All(item => item != null && Safe(item.Name, 512, false)
+            && Safe(item.Target, 32767) && IsKey(item.Key))
+        && snapshot.Tasks.Select(item => item.Key).Distinct(StringComparer.Ordinal).Count() == snapshot.Tasks.Length
         && snapshot.Pinned.Select(item => item.Key).Distinct(StringComparer.Ordinal).Count() == snapshot.Pinned.Length;
 
     private static bool Safe(string? value, int maximum, bool empty = true) => value != null && value.Length <= maximum

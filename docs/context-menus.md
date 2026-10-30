@@ -6,16 +6,18 @@ ReStart keeps app actions separate from layout editing. Windows supplies the ava
 
 | Surface | Main menu | More |
 | --- | --- | --- |
-| All apps, including expanded Start-menu directories | Open, Pin to Start/Unpin from Start, available Uninstall and optional Recent/Frequent documents | Available administrator/different-user launch, taskbar pin/unpin, native app settings or the Installed apps shortcut, location, sharing, Store review and properties |
+| All apps, including expanded Start-menu directories | Open, Pin to Start/Unpin from Start, available Uninstall and optional Pinned/Recent/Frequent destinations and registered Tasks | Available administrator/different-user launch, taskbar pin/unpin, native app settings or the Installed apps shortcut, location, sharing, Store review and properties |
 | Recently added app rows | Same app actions as All apps | Also Remove from this list and Clear list; these affect ReStart's discovery list, not installed apps or launch counts |
 | Most used app rows | Same app actions as All apps | Also Don't show in this list; the exclusion persists through subsequent launches |
 | Search: apps, settings, indexed files and directories | Open, pin/unpin and available Shell actions directly; local items also offer Copy full path | Shell actions are not nested here |
-| Pinned tiles, including standalone pins and children of an opened tile folder | Unpin, Resize, available Uninstall and optional Recent/Frequent documents | Available app or filesystem actions, as in All apps |
+| Pinned tiles, including standalone pins and children of an opened tile folder | Unpin, Resize, available Uninstall and optional Pinned/Recent/Frequent destinations and registered Tasks | Available app or filesystem actions, as in All apps |
 | A closed tile folder | Open folder, Unpin and Resize; rename/unpack are in ReStart | No filesystem actions: this is a layout container, not a directory |
 | A live tile | Unpin, Resize and tile-specific tools such as Tile Studio, data configuration and reload | Turn live tile on/off |
+| A Windows-pinned Jump List destination | Open; right-click for Unpin from this list and, for filesystem items, location/Properties | No More submenu |
+| A registered application task | The application's registered action, such as New window | No synthesized app-specific command |
 | A group heading | Rename, Unpin group from Start and ReStart's tile/layout tools | No application Shell actions |
 | Navigation folder shortcuts and Settings, collapsed or expanded | Personalize this list opens ReStart's Start experience settings | No More submenu |
-| A Recent/Frequent document inside an app menu | Right-click the document for Open, location, Properties and Remove from this list | No More submenu |
+| A Recent/Frequent document inside an app menu | Right-click the document for Open, location, Properties, Remove from this list and Pin to this list when supported | No More submenu |
 
 The **ReStart** submenu contains placement destinations, names, colors and launch options. Layout locks disable placement changes without disabling available Shell actions. In Select tiles mode the app-list/search Open command is disabled, consistently with ordinary app activation in that mode. **Shift+F10** opens the focused item's context menu. Holding **Shift** while opening an app menu also requests extended Shell verbs, including **Run as different user** when available.
 
@@ -35,9 +37,21 @@ Administrator launch, different-user launch, uninstall, properties, taskbar pin/
 
 **App settings** is used only when Windows exposes that specific command. Otherwise, recognized installed packages offer **Installed apps…**, which opens the Windows management list, not a falsely labeled individual settings page. Microsoft has confirmed that the public `ms-settings:appsfeatures-app` URI does not reliably target another app from an unpackaged launcher ([documentation issue](https://github.com/MicrosoftDocs/windows-dev-docs/issues/3688)). **Rate and review** is offered only for Store-signed, non-development packages and opens the Store's review page; ReStart does not submit a rating. Windows system packages are excluded from these added package links. The Store still accepts package-family links on Windows 10/11, but Microsoft marks that addressing form as deprecated; no Store product IDs are guessed or hardcoded. Store-app sharing is not synthesized when the Shell withholds a share verb.
 
-Recent/Frequent lists respect Windows document-history preferences and ReStart's switch. Their loading is independent of the basic app commands, so a slow history provider cannot hold the More menu in its loading state. Closed/reopened menus reject obsolete async results. Public document-list APIs do not expose another app's complete custom/pinned Jump List categories or application task lists.
+Recent/Frequent lists respect Windows document-history preferences and ReStart's switch. Their loading is independent of the basic app commands, so a slow history provider cannot hold the More menu in its loading state. Closed/reopened menus reject obsolete async results. The documented document-list API supplies Recent/Frequent. Registered **Tasks** and **Pinned** destinations use a separate native adapter; arbitrary app-defined custom categories are not enumerated.
 
 Removing an automatic document destination uses Windows' `IApplicationDestinations` API. It removes that app's Recent/Frequent history entry, not the file, another app's history or a user-pinned Jump List item. ReStart rechecks the selected app and destination before removal. This Windows history change is separate from layout Undo/Redo. Removing a Recently added or Most used app instead changes only ReStart's local activity metadata; the alphabetical app entry and its pins remain available. Clear list clears all discovery dates, including items beyond the three displayed rows. Most used exclusions survive history clearing and subsequent launches, and expire when the app leaves and re-enters the observed catalog.
+
+## Application tasks and Windows pins
+
+An app can register **Tasks**, such as opening a new window. ReStart reads the registered labels and invokes the original Shell link or packaged-app activation context; task arguments and working directories are not reconstructed from menu text. Available tasks depend on the app, its installation and Windows. Apps without registered tasks have no Tasks section.
+
+**Pinned** shows that app's Windows Jump List pins. Right-click a Recent/Frequent document and choose **Pin to this list**, or right-click a pinned destination and choose **Unpin from this list**. These changes are shared with Windows, survive restarting ReStart and do not delete files. They are separate from Start tile pinning and layout Undo/Redo. A pinned destination is omitted from Recent/Frequent to avoid duplicate rows. Task entries themselves do not offer pinning.
+
+Start behavior settings independently control document history, registered tasks and pinned destinations. Hiding tasks or pins does not erase the app's registrations or Windows pins. Turning off Windows document history suppresses automatic history, while an app's registered tasks and retained pins may still be available.
+
+Windows does not offer a documented cross-application API for all of this metadata. The task/pin adapter uses version-dependent Shell COM contracts in a hidden, short-lived copy of ReStart, with bounded messages, two concurrent helpers and cancellation/deadlines. It never patches Explorer, injects a DLL or decodes private Jump List files. A failed/unsupported adapter omits these sections while retaining ordinary app commands. Before execution it rereads the app's native list and checks an opaque identity including the registered target, arguments and working directory; an obsolete menu item cannot invoke a replacement at the same list index. This is fault isolation, not a security sandbox: installed app actions run with the user's normal permissions.
+
+These native paths are exercised on the current Windows 11 development system and Windows CI runners, including an owned task's Unicode arguments/working directory, Windows pin persistence/unpinning and worker failures. They do not establish every Windows 10/11 build, every app or physical ARM64 compatibility. Windows can change these undocumented interfaces.
 
 ## Windows 10 coverage audit
 
@@ -50,7 +64,7 @@ A Start menu is not one universal context menu. Windows 10 varied commands by th
 | Group and tile-folder unpin | Implemented. Group removal uses the native-style Unpin group from Start label, with ReStart's confirmation and layout undo. |
 | Navigation shortcut Personalize this list | Implemented; opens ReStart's own shortcut settings rather than modifying Windows Start. |
 | Recent/Frequent document opening, location/properties and removal | Implemented through public Windows document-list and destination APIs. |
-| Jump List pinned destinations, pin/unpin-to-list and application Tasks such as New window or a private browsing window | Not implemented. The public reader used here enumerates automatic Recent/Frequent destinations, not another app's complete custom Jump List. ReStart does not guess app-specific commands or decode private history databases. |
+| Jump List pinned destinations, pin/unpin-to-list and application Tasks such as New window or a private browsing window | Implemented when the installed app has an authoritative identity and Windows exposes the native interfaces. Pins are shared with Windows. ReStart does not guess app-specific commands or decode private history databases. Arbitrary app-defined custom categories remain outside this implementation. |
 | Windows account settings, lock and sign out | Available from the account button's ordinary menu; account switching and the complete native account list are not reproduced. |
 | Suggested/promoted app dismissal and Store recommendations | Not applicable: ReStart does not display Microsoft's Start recommendations or ads. |
 | Right-click the Windows Start button / Win+X system tools | Owned by Windows, not an app-tile context menu. ReStart does not replace this native system menu. |
@@ -79,3 +93,5 @@ Sources:
 - [Microsoft: automatic destination removal and pinned/custom category exclusions](https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nn-shobjidl_core-iapplicationdestinations)
 - [Microsoft .NET source: document-list and destination COM class identities](https://source.dot.net/PresentationFramework/MS/Internal/AppModel/ComGuids.cs.html)
 - [Windows 10 navigation shortcut context menu, with firsthand screenshots](https://www.tenforums.com/tutorials/2192-add-remove-folders-start-list-windows-10-a.html)
+
+- [Open-Shell: native Jump List interop contracts, pinned source revision](https://github.com/Open-Shell/Open-Shell-Menu/blob/9dfa7fa5c3614de15d0ff4f3eba7edd9e2dcbd24/Src/StartMenu/StartMenuDLL/JumpLists.cpp) (MIT source attribution in `third-party/Open-Shell-interoperability.txt`; no Open-Shell binaries or assets are included)

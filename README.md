@@ -52,7 +52,7 @@ Use the gear icon for themes, optional sign-in startup, Windows-key/Start-button
 
 - **Choose several tiles without accidental launches.** Use **Select tiles** in the sidebar or background context menu, or press <kbd>Ctrl</kbd> + <kbd>E</kbd>. Move a selection together, then undo or redo the whole operation. Individual tiles and groups can be dragged directly while unlocked. Global and per-group placement locks prevent accidental changes; Ctrl+Arrow moves selected tiles without a mouse.
 - **Keep your files close.** Pin a document, directory or shortcut from Explorer's **Pin to ReStart** command.
-- **Find the next thing.** Search apps, Windows settings and indexed local filenames. App menus can show recent/frequent documents. Choose sidebar folders, optional app history and per-tile launch options. Control each feature in **Settings → Start behavior**. [Explore the switches](docs/start-behavior.md).
+- **Find the next thing.** Search apps, Windows settings and indexed local filenames. App menus can show recent/frequent documents, Windows-pinned destinations and registered application tasks. Choose sidebar folders, optional app history and per-tile launch options. Control each feature in **Settings → Start behavior**. [Explore the switches](docs/start-behavior.md).
 - **Open and type.** The first launch prepares icons and live tiles behind a localized progress screen with the app logo. Keystrokes typed while loading carry into Start automatically. Enter launches the highlighted search result; reopening returns to your pinned home. Installed and removed apps refresh in the background while ReStart keeps running.
 - **Set the mood.** Choose Midnight, Ocean, Forest, Rose or Sand independently of light, dark or system mode: every family has both variants. Entering your own background or accent switches to exact custom RGB colors. Text, controls, both scrollbars and the splash adapt together. Light, dark, system and high contrast remain available; wallpaper, individual tile colors and animation are optional.
 
@@ -96,7 +96,7 @@ Preview appearance, tile scale, group width and language before saving. Closing 
 | Pin anything | Apps, files, directories, shortcuts and websites; Explorer's Pin to ReStart, app/search context menus, drag from app lists, and explicit destinations |
 | Search | Unicode-width/kana-normalized app names, executable filenames and OS-declared aliases; fifteen localized Windows settings pages with English aliases, optional local indexed filenames, selected-result Enter/arrow navigation and cancellation of stale file queries |
 | All apps | Responsive alphabetical columns, Start-menu directory expansion, letter picker, keyboard navigation, live installation/removal refresh, optional Recently added and opt-in Most used |
-| App commands | Context-aware menus: Start actions under More, direct search actions, file/folder location, package management/review and available Windows verbs. Optional Recent/Frequent documents have their own actions; app-history removal and navigation customization are available from their menus. See the [menu guide and Windows 10 coverage](docs/context-menus.md). |
+| App commands | Context-aware menus: Start actions under More, direct search actions, file/folder location, package management/review and available Windows verbs. Optional Recent/Frequent documents, Windows-synchronized Jump List pins and registered application Tasks have their own actions. Pin/unpin documents from their menus; app-history removal and navigation customization are also available. See the [menu guide and Windows 10 coverage](docs/context-menus.md). |
 | Launch options | Per-tile enable/disable, additional arguments, working directory and administrator execution for supported desktop apps/shortcuts; Windows handles UAC |
 | Navigation | Optional hover expansion; individually selectable Documents, Downloads, Music, Pictures, Videos, Network and Personal folder; Windows account picture, account and power actions |
 | Appearance | Five color families in light/dark/system modes, custom background/accent RGB, desktop or separate locally stored wallpaper, Start accent tint, classic or individual tile colors, themed controls/scrollbars, high contrast and optional motion |
@@ -131,7 +131,7 @@ Find apps by their displayed name or a Windows-supplied executable name: for exa
 
 ![A confirmation using the current app theme](docs/images/confirmation.png)
 
-Switch off settings/file search, document menus, hover effects, automatic overlap grouping/folders, edge scrolling or drop hints individually. Most used recording starts off. **Use custom launch options** can be disabled while retaining its fields. The screenshots use fictional apps and documents.
+Switch off settings/file search, document history, application tasks, Windows-pinned destinations, hover effects, automatic overlap grouping/folders, edge scrolling or drop hints individually. Most used recording starts off. **Use custom launch options** can be disabled while retaining its fields. The screenshots use fictional apps and documents.
 
 </details>
 

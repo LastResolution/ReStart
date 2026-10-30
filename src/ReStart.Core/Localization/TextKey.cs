@@ -1002,4 +1002,18 @@ public enum TextKey
     PersonalizeThisList,
     /// <summary>Unpin group from Start.</summary>
     UnpinGroupFromStart,
+    /// <summary>Tasks registered by the installed application.</summary>
+    JumpTasks,
+    /// <summary>Destinations pinned in the application's Windows jump list.</summary>
+    JumpPinned,
+    /// <summary>Pin a destination to this Windows jump list.</summary>
+    PinToJumpList,
+    /// <summary>Unpin a destination from this Windows jump list.</summary>
+    UnpinFromJumpList,
+    /// <summary>Windows accepted a jump-list pin change.</summary>
+    JumpListUpdated,
+    /// <summary>Whether installed application tasks appear in menus.</summary>
+    SettingsAppTasks,
+    /// <summary>Whether Windows-pinned destinations appear in menus.</summary>
+    SettingsPinnedJumpLists,
 }

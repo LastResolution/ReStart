@@ -73,6 +73,7 @@ public partial class MainWindow
             Check((await NativeJumpBroker.SendAsync(new(1, "read", owner))).Success, "A failed helper prevented the next valid request.");
             foreach (var invalid in new[] { new NativeJumpRequest(2, "read", owner), new(1, "shell", owner), new(1, "read", "bad\nowner"), new(1, "read", owner, Target: marker), new(1, "invoke-task", owner, "bad"), new(1, "pin", owner) })
                 Check(!NativeJumpContract.ValidRequest(invalid), "The private protocol accepted an invalid operation or identity.");
+            checks += await VerifyNativeJumpMenusAsync(directory, snapshotPath);
             return new(checks, faults, true, true);
         }
         finally

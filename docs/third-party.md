@@ -18,6 +18,8 @@ The app and worker [lock files](../src/ReStart.App/packages.lock.json) record th
 
 [`scripts/package.ps1`](../scripts/package.ps1) copies the repository notices and the license/notice files from the **exact runtime packs resolved for that publish** into both x64 and ARM64 packages. The application also exposes bundled notices under **Settings → About → Licenses**. When updating a dependency, review its pinned source license, upstream notices and resolved transitive graph before committing the lock-file change. Review any newly shipped runtime-pack notices too.
 
+The independently implemented native Jump List adapter references Open-Shell’s MIT-licensed interop contracts at pinned revision `9dfa7fa5c3614de15d0ff4f3eba7edd9e2dcbd24`. [Attribution and the source license](../third-party/Open-Shell-interoperability.txt) are bundled in both packages and the Licenses view. No Open-Shell binaries, images or other project assets are included.
+
 ## Development tools and documentation
 
 Test dependencies such as xUnit, Microsoft.NET.Test.Sdk and coverlet are used for verification and are not copied into portable packages. GitHub Actions and local documentation tools are also separate from the shipped application.
