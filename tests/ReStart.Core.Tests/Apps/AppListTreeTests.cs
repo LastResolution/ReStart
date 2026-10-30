@@ -36,6 +36,27 @@ public sealed class AppListTreeTests
         var tree = AppListTree.Build([new("z", "Zulu", "z"), new("a", "Alpha", "a"), new("inside", "Leaf", "leaf", FolderPath: "Middle")]);
         Assert.Equal(new[] { "Alpha", "Middle", "Zulu" }, tree.Select(n => n.Name));
     }
+
+    [Fact]
+    public void ExplicitCollationAppliesToAppsAndFoldersAtEveryDepth()
+    {
+        var reverse = Comparer<string>.Create((a, b) => StringComparer.Ordinal.Compare(b, a));
+        var tree = AppListTree.Build([new("a", "Alpha", "a"), new("z", "Zulu", "z"),
+            new("x", "Alpha child", "x", FolderPath: "Middle"), new("y", "Zulu child", "y", FolderPath: "Middle"),
+            new("nested", "Leaf", "n", FolderPath: "Middle/Nested")], reverse);
+        Assert.Equal(new[] { "Zulu", "Middle", "Alpha" }, tree.Select(n => n.Name));
+        Assert.Equal(new[] { "Zulu child", "Nested", "Alpha child" }, tree[1].Children.Select(n => n.Name));
+    }
+
+    [Fact]
+    public void EqualCollationWeightsHaveStableIdentityOrderWithoutChangingNames()
+    {
+        var entries = new[] { new AppEntry("z", "Same", "z"), new AppEntry("a", "same", "a") };
+        var tree = AppListTree.Build(entries, StringComparer.OrdinalIgnoreCase);
+        Assert.Equal(new[] { "a", "z" }, tree.Select(n => n.App!.Id));
+        Assert.Same(entries[1], tree[0].App);
+        Assert.Equal("same", tree[0].Name);
+    }
     [Fact]
     public void NestedExpansionRequiresEachAncestorToBeOpen()
     {

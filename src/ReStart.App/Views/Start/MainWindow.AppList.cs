@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 using ReStart.App.Controls;
+using ReStart.App.Services;
 using ReStart.Core;
 
 namespace ReStart.App;
@@ -12,6 +13,8 @@ public partial class MainWindow
 {
     private readonly HashSet<string> _expandedAppFolders = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, AppFolderButton> _appFolderRows = new(StringComparer.OrdinalIgnoreCase);
+    private WindowsAppIndex _appIndex = WindowsAppIndex.ForLanguage(L.Language);
+    private string[] _appAlphabet = [];
 
     private void RenderApps()
     {
@@ -37,13 +40,19 @@ public partial class MainWindow
         }
         if (DisplayPreferences.ShowRecentlyAdded) HistorySection(K.RecentlyAdded, Activity.Recent(_apps, DateTimeOffset.Now));
         if (DisplayPreferences.ShowMostUsed) HistorySection(K.MostUsed, Activity.Frequent(_apps));
-        var tree = AppListTree.Build(_apps);
-        foreach (var section in tree.GroupBy(n => n.Section).OrderBy(g => g.Key, StringComparer.CurrentCulture))
+        var previousAlphabet = _appAlphabet;
+        var focusedLetter = (Keyboard.FocusedElement as Button)?.Content as string;
+        _appIndex = WindowsAppIndex.ForLanguage(L.Language);
+        var tree = AppListTree.Build(_apps, _appIndex.Names);
+        _appAlphabet = _appIndex.Alphabet(tree.Select(n => n.Name));
+        var sections = tree.GroupBy(n => _appIndex.Section(n.Name)).ToDictionary(g => g.Key, StringComparer.Ordinal);
+        foreach (var label in _appAlphabet.Where(sections.ContainsKey))
         {
-            var header = new Button { Content = section.Key, Tag = "section", HorizontalContentAlignment = HorizontalAlignment.Left, FontSize = 20, FontWeight = FontWeights.Light, Padding = new(8, 8, 0, 8) };
+            var section = sections[label];
+            var header = new Button { Content = label, Tag = "section", HorizontalContentAlignment = HorizontalAlignment.Left, FontSize = 20, FontWeight = FontWeights.Light, Padding = new(8, 8, 0, 8) };
             header.Click += (_, _) => OpenAlphabet();
             AppsPanel.Children.Add(header);
-            _sections[section.Key] = header;
+            _sections[label] = header;
             foreach (var row in AppListTree.VisibleRows(section, _expandedAppFolders))
             {
                 Button button;
@@ -70,6 +79,12 @@ public partial class MainWindow
             }
         }
         FitPanels();
+        if (AlphabetOverlay.Visibility == Visibility.Visible && (!previousAlphabet.SequenceEqual(_appAlphabet)
+            || AlphabetButtons.Children.OfType<Button>().Any(b => b.IsEnabled != _sections.ContainsKey((string)b.Content))))
+        {
+            OpenAlphabet();
+            AlphabetButtons.Children.OfType<Button>().FirstOrDefault(b => b.IsEnabled && Equals(b.Content, focusedLetter))?.Focus();
+        }
         if (focusedFolder != null) FocusAppFolder(focusedFolder);
         else if (focusedApp != null) Dispatcher.BeginInvoke(() =>
         {
@@ -86,14 +101,15 @@ public partial class MainWindow
 
     private bool FocusAppInitial(string text)
     {
-        if (!_allApps || SearchBox.Text.Length != 0 || text.Length != 1 || !char.IsAsciiLetterOrDigit(text[0])
+        if (!_allApps || SearchBox.Text.Length != 0 || !_appIndex.IsInitial(text)
             || Ancestor<AppListPanel>(Keyboard.FocusedElement as DependencyObject) == null) return false;
         var rows = AppsPanel.Children.OfType<Button>().Where(b => b.Tag is AppEntry || b is AppFolderButton).ToArray();
         var start = Array.IndexOf(rows, Keyboard.FocusedElement as Button);
         for (var offset = 1; offset <= rows.Length; offset++)
         {
             var row = rows[(start + offset) % rows.Length];
-            if (!System.Windows.Automation.AutomationProperties.GetName(row).StartsWith(text, StringComparison.CurrentCultureIgnoreCase)) continue;
+            var name = row.Tag is AppEntry app ? app.Name : System.Windows.Automation.AutomationProperties.GetName(row);
+            if (_appIndex.Section(name) != _appIndex.Section(text)) continue;
             row.Focus(); row.BringIntoView();
             return true;
         }

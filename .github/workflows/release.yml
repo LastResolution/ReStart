@@ -66,6 +66,7 @@ jobs:
           ./scripts/test-lifecycle.ps1 -Executable $executable
           ./scripts/test-update-installation.ps1 -Executable $executable
           ./scripts/test-search-selection.ps1 -Executable $executable
+          ./scripts/test-navigation.ps1 -Executable $executable -AppFolders
           ./scripts/test-app-menus.ps1 -Executable $executable
           ./scripts/test-jump-lists.ps1 -Executable $executable
           ./scripts/test-bundled-tiles.ps1 -Executable $executable
@@ -80,6 +81,7 @@ jobs:
             artifacts/jump-lists/*/start.json
             artifacts/jump-lists/*/native-*.png
             artifacts/app-menus/*.png
+            artifacts/navigation/*
             artifacts/update-installation/*/verification.json
             artifacts/update-installation/*/jobs/*/failure-kind
             artifacts/update-installation/*/jobs/*/outcome

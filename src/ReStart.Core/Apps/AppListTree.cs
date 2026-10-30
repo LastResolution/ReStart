@@ -10,8 +10,6 @@ public sealed record AppListNode(string Name, string Key, AppEntry? App, IReadOn
 {
     /// <summary>Gets whether this node is an expandable directory rather than an application.</summary>
     public bool IsFolder => App == null;
-    /// <summary>Gets the root alphabet section, based on the directory or app's OS-provided name.</summary>
-    public string Section => AppEntry.SectionFor(Name);
 }
 
 /// <summary>Describes a currently visible row and its folder indentation depth.</summary>
@@ -32,9 +30,11 @@ public static class AppListTree
 
     /// <summary>Merges case-insensitive folder paths and sorts sibling apps and folders together by display name.</summary>
     /// <param name="apps">Flat app catalog with relative Start-menu folder paths.</param>
+    /// <param name="nameComparer">Optional display-name collation for every sibling level; null uses the current culture. The comparer must remain unchanged during this call.</param>
     /// <returns>Sorted root nodes whose app leaves preserve the original launch entries.</returns>
-    public static IReadOnlyList<AppListNode> Build(IEnumerable<AppEntry> apps)
+    public static IReadOnlyList<AppListNode> Build(IEnumerable<AppEntry> apps, IComparer<string>? nameComparer = null)
     {
+        nameComparer ??= StringComparer.CurrentCultureIgnoreCase;
         var root = new Folder("", "");
         foreach (var app in apps)
         {
@@ -47,9 +47,9 @@ public static class AppListTree
             }
             parent.Apps.Add(app);
         }
-        static AppListNode[] Materialize(Folder folder) => folder.Folders.Values.Select(f => new AppListNode(f.Name, "folder:" + f.Key, null, Materialize(f), f.Key))
+        AppListNode[] Materialize(Folder folder) => folder.Folders.Values.Select(f => new AppListNode(f.Name, "folder:" + f.Key, null, Materialize(f), f.Key))
             .Concat(folder.Apps.Select(a => new AppListNode(a.Name, "app:" + a.Id, a, [])))
-            .OrderBy(n => n.Name, StringComparer.CurrentCultureIgnoreCase).ThenBy(n => n.Key, StringComparer.Ordinal).ToArray();
+            .OrderBy(n => n.Name, nameComparer).ThenBy(n => n.Key, StringComparer.Ordinal).ToArray();
         return Materialize(root);
     }
 

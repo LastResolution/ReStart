@@ -28,6 +28,14 @@ Open **ReStart settings → Start behavior** to choose how Start responds. Each 
 
 **Animation** in Appearance controls opening, closing, tile press transitions, local folder reveal and placement transitions. Windows reduced-motion and high-contrast settings take precedence. Hover brightening has its own switch.
 
+## All apps and alphabet navigation
+
+All apps uses the selected ReStart display language's Windows collation, rather than putting every non-ASCII name under Other. The public [CharacterGroupings API](https://learn.microsoft.com/en-us/uwp/api/windows.globalization.collation.charactergroupings) supplies the alphabet and heading labels; [CompareStringEx](https://learn.microsoft.com/en-us/windows/win32/api/stringapiset/nf-stringapiset-comparestringex) orders app and directory names with the same Windows language rules. Names and launch identities remain as supplied by Windows.
+
+Symbols use **&** and numbers use **#**. Windows supplies accented Latin groups (including Spanish **Ñ**), Japanese kana and **漢字**, Korean initials, Simplified Chinese pinyin and Traditional Chinese stroke counts. Names in other scripts can add populated groups to the alphabet. This is based on display names; ReStart does not guess readings for ambiguous names or import Start's private sorting metadata.
+
+Click a section heading to open the alphabet. Empty sections are disabled; long alphabets scroll. Selecting a letter scrolls to and focuses its current heading. While an app-list row has focus, a single Unicode letter or digit cycles through visible rows in that group, including expanded directories. Use <kbd>Ctrl</kbd> + <kbd>F</kbd> to search instead. Rebuilding the list after installation, removal or a language preview refreshes the open picker as well.
+
 ## Dragging, groups and folders
 
 By default, dropping a tile into empty board space creates an **unnamed group**. Drag its header to move the group, or use the pencil to name it. Overlap another tile and wait for the folder preview to create a **tile folder**; a closed folder accepts more children. Groups and folders are separate containers, as in late Windows 10 Start.

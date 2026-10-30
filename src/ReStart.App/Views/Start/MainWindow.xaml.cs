@@ -939,11 +939,18 @@ public partial class MainWindow : Window
     private void OpenAlphabet()
     {
         AlphabetButtons.Children.Clear();
-        var sections = new[] { "#" }.Concat(Enumerable.Range('A', 26).Select(c => ((char)c).ToString()))
-            .Concat(_sections.Keys.Where(s => s != "#" && !(s.Length == 1 && char.IsAsciiLetter(s[0]))));
-        foreach (var section in sections)
+        foreach (var section in _appAlphabet)
         {
-            var button = new Button { Content = section, IsEnabled = _sections.ContainsKey(section), Width = 75, Height = 60, FontSize = 22, HorizontalContentAlignment = HorizontalAlignment.Center };
+            var button = new Button
+            {
+                Content = section,
+                IsEnabled = _sections.ContainsKey(section),
+                Width = 75,
+                Height = 60,
+                FontSize = section.Length > 3 ? 14 : section.Length > 2 ? 16 : 22,
+                Padding = new(4),
+                HorizontalContentAlignment = HorizontalAlignment.Center
+            };
             button.Click += (_, _) =>
             {
                 AlphabetOverlay.Visibility = Visibility.Collapsed;
