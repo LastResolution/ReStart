@@ -58,7 +58,7 @@ internal static partial class AppJumpLists
                                     if (item is not IShellLink link) continue;
                                     var arguments = new System.Text.StringBuilder(32768);
                                     if (link.GetArguments(arguments, arguments.Capacity) < 0 || arguments.Length > 0) continue;
-                                    if (SHGetIDListFromObject(item, out pidl) < 0) continue;
+                                    if (link.GetIDList(out pidl) < 0 || pidl == 0) continue;
                                     var shellId = typeof(IShellItem).GUID;
                                     if (SHCreateItemFromIDList(pidl, ref shellId, out resolved) < 0) continue;
                                     shell = resolved as IShellItem;
@@ -196,6 +196,5 @@ internal static partial class AppJumpLists
         [PreserveSig] int Resolve(nint owner, uint flags);
         [PreserveSig] int SetPath([MarshalAs(UnmanagedType.LPWStr)] string path);
     }
-    [DllImport("shell32.dll")] private static extern int SHGetIDListFromObject([MarshalAs(UnmanagedType.IUnknown)] object value, out nint pidl);
     [DllImport("shell32.dll")] private static extern int SHCreateItemFromIDList(nint pidl, ref Guid iid, [MarshalAs(UnmanagedType.Interface)] out object item);
 }
