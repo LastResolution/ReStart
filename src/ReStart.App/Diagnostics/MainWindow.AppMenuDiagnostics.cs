@@ -86,10 +86,11 @@ public partial class MainWindow
                 fixture.SaveScreenshot(Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"app-menu-directory-{explicitGroup}.png"));
             }
             var surfaces = await VerifyAppMenuSurfacesAsync(fixture, directory, snapshotPath);
-            return new(7, 2, 2, surfaces.Checks, surfaces.LanguageThemeCases, surfaces.NativeReads, surfaces.NativeHistoryRoundTrip);
+            var fileCommands = await VerifyFileCommandsAsync(directory);
+            return new(7, 2, 2, surfaces.Checks, surfaces.LanguageThemeCases, surfaces.NativeReads, surfaces.NativeHistoryRoundTrip, fileCommands);
         }
         finally { fixture.Exit(); Activate(); }
     }
 }
 
-internal sealed record AppMenuSmokeResult(int PinChecks, int AvailabilityChecks, int ShellReadChecks, int SurfaceChecks, int LanguageThemeCases, int NativeReads, bool NativeHistoryRoundTrip);
+internal sealed record AppMenuSmokeResult(int PinChecks, int AvailabilityChecks, int ShellReadChecks, int SurfaceChecks, int LanguageThemeCases, int NativeReads, bool NativeHistoryRoundTrip, int FileCommandChecks);

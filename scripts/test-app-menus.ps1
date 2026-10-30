@@ -15,6 +15,7 @@ try {
     }
     $result = Get-Content -LiteralPath $reportPath -Raw | ConvertFrom-Json
     if (-not $result.success -or -not $result.appMenus) { throw 'App-menu verification reported failure.' }
+    if ($result.appMenus.FileCommandChecks -lt 42) { throw 'File Share/Properties capability and payload checks did not run.' }
     Write-Host "Native document-history round trip: $($result.appMenus.NativeHistoryRoundTrip)"
     $result.appMenus
 }

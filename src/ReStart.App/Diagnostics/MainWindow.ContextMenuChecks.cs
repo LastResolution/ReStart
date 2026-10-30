@@ -107,6 +107,16 @@ public partial class MainWindow
                                 var before = invoked.Count; location!.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
                                 Check(invoked.Count == before + 1 && invoked[^1] == (app.Id, "opencontaining"), "A location click invoked the wrong app or command.");
                                 Check(Visible(Find(commands, "properties")), "A local item's Properties command disappeared.");
+                                Check(Visible(Find(commands, "share")) == (app == local && FileShareSession.IsSupported),
+                                    "Share is missing for an accessible file or exposed for a folder/application shortcut.");
+                                var propertyCount = invoked.Count;
+                                Find(commands, "properties")!.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+                                Check(invoked.Count == propertyCount + 1 && invoked[^1] == (app.Id, "properties"), "Properties did not retain the clicked file or shortcut identity.");
+                                if (Find(commands, "share") is { } share)
+                                {
+                                    var shareCount = invoked.Count; share.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+                                    Check(invoked.Count == shareCount + 1 && invoked[^1] == (app.Id, "share"), "Share did not retain the clicked file identity.");
+                                }
                                 Check(search == Visible(Find(commands, "copyaspath")), "Copy full path is missing from search or incorrectly exposed in the Start More menu.");
                             }
                             else
