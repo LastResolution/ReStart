@@ -13,6 +13,8 @@ Open **ReStart settings → Start behavior** to choose how Start responds. Each 
 | Search Windows settings | On | Removes settings results; app search stays available |
 | Search indexed files | On | Cancels pending file search and removes file results |
 | Recent/frequent documents in app menus | On | Does not query Windows document history |
+| Application tasks in app menus | On | Hides actions registered by installed applications |
+| Pinned Windows jump-list items | On | Hides Windows-pinned destinations and their pin/unpin controls without deleting existing pins |
 | Highlight tiles on hover | On | Retains keyboard focus and press feedback |
 | Group boundaries on hover | On | Boundaries remain available during editing and dragging |
 | Use free tile placement | Off | Empty-space drops and pins create unnamed groups; existing independent entries are retained |

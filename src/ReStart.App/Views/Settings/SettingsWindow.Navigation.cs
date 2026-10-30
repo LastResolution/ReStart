@@ -21,6 +21,8 @@ internal sealed partial class SettingsWindow
         Check(panel, L.T(K.SettingsSearchSettings), _draft.SearchSettings, value => _draft.SearchSettings = value);
         Check(panel, L.T(K.SearchFilesSetting), _draft.SearchFiles, value => _draft.SearchFiles = value);
         Check(panel, L.T(K.SettingsJumpLists), _draft.ShowJumpLists, value => _draft.ShowJumpLists = value);
+        Check(panel, L.T(K.SettingsAppTasks), _draft.ShowAppTasks, value => _draft.ShowAppTasks = value);
+        Check(panel, L.T(K.SettingsPinnedJumpLists), _draft.ShowPinnedJumpLists, value => _draft.ShowPinnedJumpLists = value);
         Heading(panel, L.T(K.SettingsLayout));
         Check(panel, L.T(K.LockLayout), _draft.LayoutLocked, value => _draft.LayoutLocked = value);
         Note(panel, L.T(K.LayoutLockHelp));

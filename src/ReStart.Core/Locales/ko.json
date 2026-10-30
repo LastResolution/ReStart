@@ -497,5 +497,12 @@
   "BackupCreated": "백업을 만들었습니다.",
   "BackupRestored": "백업을 복원했습니다. 필요한 데이터 연결과 권한을 다시 설정하세요.",
   "BackupConfirm": "그룹 {0}개와 최상위 타일 {1}개를 복원할까요? 배치와 모양을 바꿉니다. 셸 연동 설정은 유지됩니다. 데이터 연결과 웹 통신 권한을 다시 설정하세요.",
-  "BackupFailed": "백업 작업 실패: {0}"
+  "BackupFailed": "백업 작업 실패: {0}",
+  "JumpTasks": "작업",
+  "JumpPinned": "고정됨",
+  "PinToJumpList": "이 목록에 고정",
+  "UnpinFromJumpList": "이 목록에서 고정 해제",
+  "JumpListUpdated": "Windows 점프 목록을 업데이트했습니다.",
+  "SettingsAppTasks": "앱 메뉴에 앱별 작업 표시",
+  "SettingsPinnedJumpLists": "Windows 점프 목록의 고정 항목 표시"
 }

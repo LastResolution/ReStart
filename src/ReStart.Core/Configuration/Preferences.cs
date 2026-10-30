@@ -17,6 +17,10 @@ public sealed class Preferences
     public bool SearchSettings { get; set; } = true;
     /// <summary>Gets or sets whether app menus query Windows Recent/Frequent destinations; Windows history privacy settings also apply.</summary>
     public bool ShowJumpLists { get; set; } = true;
+    /// <summary>Gets or sets whether app menus show tasks registered by installed applications; defaults to true and does not enable Windows document history.</summary>
+    public bool ShowAppTasks { get; set; } = true;
+    /// <summary>Gets or sets whether app menus show and edit the application's Windows-pinned destinations; defaults to true and does not change existing pins when disabled.</summary>
+    public bool ShowPinnedJumpLists { get; set; } = true;
     /// <summary>Gets or sets whether dwelling over the collapsed navigation rail expands it automatically.</summary>
     public bool ExpandNavigationOnHover { get; set; } = true;
     /// <summary>Gets or sets whether tile surfaces brighten on pointer hover; keyboard focus remains visible.</summary>

@@ -67,6 +67,7 @@ jobs:
           ./scripts/test-update-installation.ps1 -Executable $executable
           ./scripts/test-search-selection.ps1 -Executable $executable
           ./scripts/test-app-menus.ps1 -Executable $executable
+          ./scripts/test-jump-lists.ps1 -Executable $executable
           ./scripts/test-bundled-tiles.ps1 -Executable $executable
           ./scripts/test-studio.ps1 -Executable $executable
       - name: Preserve failed menu and update fixture diagnostics
@@ -76,6 +77,8 @@ jobs:
           name: portable-failure-diagnostics
           path: |
             artifacts/app-menus/*.json
+            artifacts/jump-lists/*/start.json
+            artifacts/jump-lists/*/native-*.png
             artifacts/app-menus/*.png
             artifacts/update-installation/*/verification.json
             artifacts/update-installation/*/jobs/*/failure-kind

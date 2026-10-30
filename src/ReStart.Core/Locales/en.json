@@ -497,5 +497,12 @@
   "BackupCreated": "Backup created.",
   "BackupRestored": "Backup restored. Reconfigure tile data connections and permissions as needed.",
   "BackupConfirm": "Restore {0} groups and {1} root tiles? This replaces layout and appearance. Shell integration stays local. Reconfigure data connections and web network permissions.",
-  "BackupFailed": "Backup operation failed: {0}"
+  "BackupFailed": "Backup operation failed: {0}",
+  "JumpTasks": "Tasks",
+  "JumpPinned": "Pinned",
+  "PinToJumpList": "Pin to this list",
+  "UnpinFromJumpList": "Unpin from this list",
+  "JumpListUpdated": "Windows jump list updated.",
+  "SettingsAppTasks": "Show application tasks in app menus",
+  "SettingsPinnedJumpLists": "Show pinned Windows jump-list items"
 }

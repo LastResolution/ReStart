@@ -497,5 +497,12 @@
   "BackupCreated": "已建立備份。",
   "BackupRestored": "已還原備份。請視需要重新設定資料連線與權限。",
   "BackupConfirm": "還原{0}個群組與{1}個頂層動態磚？這會取代配置與外觀。系統整合設定保持不變。請重新設定資料連線與網路權限。",
-  "BackupFailed": "備份操作失敗：{0}"
+  "BackupFailed": "備份操作失敗：{0}",
+  "JumpTasks": "工作",
+  "JumpPinned": "已釘選",
+  "PinToJumpList": "釘選到此清單",
+  "UnpinFromJumpList": "從此清單取消釘選",
+  "JumpListUpdated": "Windows 跳躍清單已更新。",
+  "SettingsAppTasks": "在應用程式選單中顯示專屬工作",
+  "SettingsPinnedJumpLists": "顯示 Windows 跳躍清單中的釘選項目"
 }

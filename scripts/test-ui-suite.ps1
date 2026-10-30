@@ -7,7 +7,7 @@ $ErrorActionPreference = 'Stop'
 # Each suite runs sequentially on its own runner: native preview processes share
 # a per-session instance lease and must never compete on the same desktop.
 $suites = @{
-    navigation = @('platform', 'navigation', 'app-folders', 'first-input', 'search-selection', 'fidelity', 'startup', 'warm-resume', 'app-menus', 'release-info', 'file-pinning', 'icons')
+    navigation = @('platform', 'navigation', 'app-folders', 'first-input', 'search-selection', 'fidelity', 'startup', 'warm-resume', 'app-menus', 'jump-lists', 'release-info', 'file-pinning', 'icons')
     layout = @('appearance', 'settings-preview', 'motion', 'placement', 'folder-drops', 'editing', 'scrolling')
     tiles = @('bundled-tiles', 'studio', 'tile-data')
 }

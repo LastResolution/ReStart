@@ -97,6 +97,7 @@ public partial class MainWindow
         var recent = new MenuItem { Header = L.T(K.JumpRecent), Visibility = Visibility.Collapsed };
         var frequent = new MenuItem { Header = L.T(K.JumpFrequent), Visibility = Visibility.Collapsed };
         menu.Items.Insert(position + 2, recent); menu.Items.Insert(position + 3, frequent);
+        AttachNativeJumpLists(menu, app, recent, frequent, position + 2);
         var generation = 0;
         var direct = new List<MenuItem>();
         // A popup's close animation can finish after this menu was reopened.
@@ -109,10 +110,9 @@ public partial class MainWindow
             direct.Clear();
             more.Items.Clear(); more.Items.Add(new MenuItem { Header = L.T(K.MenuLoading), IsEnabled = false });
             more.Visibility = Visibility.Visible; more.IsEnabled = !search;
-            uninstall.Visibility = recent.Visibility = frequent.Visibility = Visibility.Collapsed;
+            uninstall.Visibility = Visibility.Collapsed;
             var extended = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
             _ = LoadShellAsync(current, extended);
-            _ = LoadJumpsAsync(current);
         };
 
         async Task LoadShellAsync(int current, bool extended)
@@ -132,25 +132,15 @@ public partial class MainWindow
             }
         }
 
-        async Task LoadJumpsAsync(int current)
-        {
-            IReadOnlyList<JumpDestination> destinations = [];
-            try
-            {
-                if (Document.Preferences.ShowJumpLists)
-                    destinations = await (_jumpDestinationsFixture?.Invoke(app) ?? AppJumpLists.ReadAsync(app)).WaitAsync(TimeSpan.FromSeconds(5));
-            }
-            catch (Exception ex) when (ex is TimeoutException or COMException or IOException or UnauthorizedAccessException or InvalidOperationException or System.Security.SecurityException) { }
-            if (current == generation && menu.IsOpen) PopulateJumpItems(recent, frequent, app, destinations);
-        }
     }
 
-    private void PopulateJumpItems(MenuItem recent, MenuItem frequent, AppEntry app, IReadOnlyList<JumpDestination> destinations)
+    private void PopulateJumpItems(MenuItem recent, MenuItem frequent, AppEntry app, IReadOnlyList<JumpDestination> destinations, NativeJumpSnapshot? native = null, Action<NativeJumpSnapshot>? changed = null)
     {
         foreach (var menu in new[] { recent, frequent })
         {
             menu.Items.Clear();
-            foreach (var destination in destinations.Where(d => d.Frequent == (menu == frequent)))
+            foreach (var destination in destinations.Where(d => d.Frequent == (menu == frequent)
+                && native?.Pinned.Any(pin => pin.Target.Equals(d.Target, StringComparison.OrdinalIgnoreCase)) != true))
             {
                 var item = new MenuItem { Tag = destination.Target, Header = new TextBlock { Text = destination.Name, MaxWidth = 340, TextTrimming = TextTrimming.CharacterEllipsis }, ToolTip = destination.Target, IsEnabled = !_preview || _activationFixture != null };
                 async Task OpenAsync()
@@ -189,6 +179,12 @@ public partial class MainWindow
                     { SetStatus(L.T(K.ErrorAppCommand) + ex.Message); }
                 };
                 actions.Items.Add(remove); item.ContextMenu = actions;
+                if (native?.PinsSupported == true)
+                {
+                    var pin = new MenuItem { Header = L.T(K.PinToJumpList), Tag = "jump-pin", IsEnabled = !_preview || _nativeJumpFixture != null };
+                    pin.Click += async (_, _) => await ExecuteNativeJumpAsync(app, "pin", target: destination.Target, changed: changed);
+                    actions.Items.Add(pin);
+                }
                 menu.Items.Add(item);
             }
             menu.Visibility = menu.Items.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
