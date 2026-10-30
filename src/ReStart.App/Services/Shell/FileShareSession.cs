@@ -57,7 +57,6 @@ internal sealed class FileShareSession : IDisposable
         try { _manager = WinRT.MarshalInterface<DataTransferManager>.FromAbi(pointer); }
         finally { Marshal.Release(pointer); }
         _manager.DataRequested += Requested;
-        _manager.TargetApplicationChosen += TargetChosen;
         _owner.Deactivated += Deactivated;
         _owner.Activated += Activated;
     }
@@ -92,7 +91,6 @@ internal sealed class FileShareSession : IDisposable
         { args.Request.FailWithDisplayText(L.T(K.ErrorAppCommandUnavailable)); Finish(); }
     }
 
-    private void TargetChosen(DataTransferManager sender, TargetApplicationChosenEventArgs args) => Finish();
     private void Canceled(DataPackage sender, object args) => Finish();
     private void Shared(DataPackage sender, ShareCompletedEventArgs args) => Finish();
     private void Deactivated(object? sender, EventArgs args) => _deactivated = true;
@@ -104,16 +102,19 @@ internal sealed class FileShareSession : IDisposable
         _owner.Dispatcher.VerifyAccess();
         if (_disposed) return;
         _disposed = true;
-        _manager.DataRequested -= Requested;
-        _manager.TargetApplicationChosen -= TargetChosen;
         _owner.Deactivated -= Deactivated;
         _owner.Activated -= Activated;
-        foreach (var data in _packages)
+        try
         {
-            if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041)) data.ShareCanceled -= Canceled;
-            data.ShareCompleted -= Shared;
+            _manager.DataRequested -= Requested;
+            foreach (var data in _packages)
+            {
+                if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041)) data.ShareCanceled -= Canceled;
+                data.ShareCompleted -= Shared;
+            }
         }
-        _packages.Clear();
+        catch (COMException) { /* Windows may have already torn down its share broker. */ }
+        finally { _packages.Clear(); }
     }
 
     [ComImport, Guid("3A3DCD6C-3EAB-43DC-BCDE-45671CE800C8"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]

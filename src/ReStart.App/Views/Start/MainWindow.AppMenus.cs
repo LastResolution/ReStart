@@ -19,6 +19,7 @@ public partial class MainWindow
     private FileShareSession? _fileShare;
     private bool _fileShareGuard;
     private bool _fileShareTopmost;
+    private int _fileShareGeneration;
 
     private ContextMenu CreateAppMenu(AppEntry app, bool search = false, K? history = null)
     {
@@ -250,10 +251,12 @@ public partial class MainWindow
     private async Task ShareFileAsync(AppEntry app)
     {
         if (_fileShareGuard) return;
+        var generation = ++_fileShareGeneration;
         _fileShareGuard = true; _dialogDepth++; _fileShareTopmost = Topmost;
         try
         {
             var file = await FileShareSession.PrepareAsync(app);
+            if (generation != _fileShareGeneration) return;
             if (_exit || !IsVisible) { StopFileShare(); return; }
             CompleteEntrance();
             Topmost = false;
@@ -264,11 +267,15 @@ public partial class MainWindow
             });
             _fileShare.Show();
         }
-        catch { StopFileShare(); throw; }
+        catch
+        {
+            if (generation == _fileShareGeneration) { StopFileShare(); throw; }
+        }
     }
 
     private void StopFileShare()
     {
+        _fileShareGeneration++;
         _fileShare?.Dispose(); _fileShare = null;
         if (_fileShareGuard) { _fileShareGuard = false; _dialogDepth--; Topmost = _fileShareTopmost; }
     }
