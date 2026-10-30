@@ -23,6 +23,7 @@
     <ProjectReference Include="..\..\src\ReStart.TileHost\ReStart.TileHost.csproj" />
     <Compile Include="..\..\src\ReStart.App\Services\Shell\StartupRegistration.cs" Link="Services/Shell/StartupRegistration.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\Shell\NativeJumpContract.cs" Link="Services/Shell/NativeJumpContract.cs" />
+    <Compile Include="..\..\src\ReStart.App\Services\Search\SettingsSearch.cs" Link="Services/Search/SettingsSearch.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\Shell\ExplorerPinRegistration.cs" Link="Services/Shell/ExplorerPinRegistration.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\Catalog\SeedLayout.cs" Link="Services/Catalog/SeedLayout.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\LiveTiles\ScriptTileSession.cs" Link="Services/LiveTiles/ScriptTileSession.cs" />

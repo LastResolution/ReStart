@@ -19,6 +19,8 @@ public sealed class Preferences
     public bool ShowJumpLists { get; set; } = true;
     /// <summary>Gets or sets whether app menus show tasks registered by installed applications; defaults to true and does not enable Windows document history.</summary>
     public bool ShowAppTasks { get; set; } = true;
+    /// <summary>Gets or sets whether app menus show application-defined Windows Jump List categories; defaults to true and does not change registrations or document-history policy.</summary>
+    public bool ShowCustomJumpLists { get; set; } = true;
     /// <summary>Gets or sets whether app menus show and edit the application's Windows-pinned destinations; defaults to true and does not change existing pins when disabled.</summary>
     public bool ShowPinnedJumpLists { get; set; } = true;
     /// <summary>Gets or sets whether dwelling over the collapsed navigation rail expands it automatically.</summary>
@@ -39,8 +41,10 @@ public sealed class Preferences
     public bool CreateFoldersOnDrop { get; set; } = true;
     /// <summary>Gets or sets whether hovering a normal group reveals its boundary. Edit and drag boundaries remain visible.</summary>
     public bool ShowGroupBoundariesOnHover { get; set; } = true;
-    /// <summary>Gets or sets whether search includes up to twenty local Windows-indexed filesystem results.</summary>
+    /// <summary>Gets or sets whether search includes up to fifty local Windows-indexed filesystem results.</summary>
     public bool SearchFiles { get; set; } = true;
+    /// <summary>Gets or sets whether enabled file search also matches Windows-indexed document contents. Defaults to false; never enables Windows indexing or reads unindexed contents.</summary>
+    public bool SearchFileContents { get; set; }
     /// <summary>Gets or sets whether apps first observed after the initial catalog appear in Recently added for seven days.</summary>
     public bool ShowRecentlyAdded { get; set; } = true;
     /// <summary>Gets or sets whether successful ReStart app launches are counted locally and shown in Most used.</summary>

@@ -23,12 +23,25 @@ public partial class MainWindow
             while (!predicate() && Environment.TickCount64 < deadline) await Task.Delay(25);
             Check(predicate(), "The owned native task did not publish its marker.");
         }
-        IDisposable? fixture = NativeJumpWorker.CreateOwnedFixture(owner, probe, marker, directory);
+        IDisposable? fixture = NativeJumpWorker.CreateOwnedFixture(owner, probe, marker, directory, includeCustom: true);
+        var customRoundTrip = false;
         try
         {
             var snapshot = await NativeJumpBroker.SendAsync(new(1, "read", owner));
             Check(snapshot.Success && snapshot.Snapshot.TasksSupported && snapshot.Snapshot.PinsSupported, "The Windows task/pin interfaces did not initialize in the worker.");
             var task = snapshot.Snapshot.Tasks.Single();
+            var custom = snapshot.Snapshot.Categories?.SingleOrDefault();
+            Check(!AppJumpLists.HistoryEnabled() || custom != null, "Windows enabled document history, but the owned custom category was not read back.");
+            if (custom != null)
+            {
+                Check(custom.Name == "Owned projects" && custom.Items is [var destination] && destination.Key != task.Key,
+                    "The custom category lost its label or category-scoped destination identity.");
+                Check((await NativeJumpBroker.SendAsync(new(1, "invoke-custom", owner, custom.Items[0].Key))).Success, "An owned custom-category destination did not execute.");
+                await Until(() => File.Exists(marker + ".opened"));
+                Check(JsonSerializer.Deserialize<string[]>(File.ReadAllText(marker + ".opened")) is ["--jump-fixture", var argument] && argument == marker,
+                    "A custom-category destination changed its registered arguments.");
+                File.Delete(marker + ".opened"); File.Delete(marker + ".cwd"); customRoundTrip = true;
+            }
             Check(task.Name == "Owned sample action" && task.IsLink && task.Target.Length == 0, "The native task's title, type or private argument boundary is incorrect.");
             Check((await NativeJumpBroker.SendAsync(new(1, "invoke-task", owner, task.Key))).Success, "The owned registered task did not execute.");
             await Until(() => File.Exists(marker + ".opened"));
@@ -53,6 +66,8 @@ public partial class MainWindow
             fixture = NativeJumpWorker.CreateOwnedFixture(owner, probe, marker, directory, "--jump-fixture-2");
             Check(!(await NativeJumpBroker.SendAsync(new(1, "invoke-task", owner, task.Key))).Success && !File.Exists(marker + ".opened"), "A stale task key executed a replacement task at the same index.");
             var changed = await NativeJumpBroker.SendAsync(new(1, "read", owner));
+            if (custom != null) Check(!(await NativeJumpBroker.SendAsync(new(1, "invoke-custom", owner, custom.Items[0].Key))).Success,
+                "A removed category retained an executable destination.");
             Check(changed.Snapshot.Tasks.Single().Key != task.Key && (await NativeJumpBroker.SendAsync(new(1, "invoke-task", owner, changed.Snapshot.Tasks[0].Key))).Success,
                 "A replacement task did not receive its own validated identity.");
             await Until(() => File.Exists(marker + ".opened"));
@@ -90,7 +105,7 @@ public partial class MainWindow
             foreach (var invalid in new[] { new NativeJumpRequest(2, "read", owner), new(1, "shell", owner), new(1, "read", "bad\nowner"), new(1, "read", owner, Target: marker), new(1, "invoke-task", owner, "bad"), new(1, "pin", owner) })
                 Check(!NativeJumpContract.ValidRequest(invalid), "The private protocol accepted an invalid operation or identity.");
             checks += await VerifyNativeJumpMenusAsync(directory, snapshotPath);
-            return new(checks, faults, true, true);
+            return new(checks, faults, true, true, customRoundTrip);
         }
         finally
         {
@@ -104,4 +119,4 @@ public partial class MainWindow
     }
 }
 
-internal sealed record NativeJumpSmokeResult(int Checks, int FaultCases, bool TaskInvocation, bool WindowsPinRoundTrip);
+internal sealed record NativeJumpSmokeResult(int Checks, int FaultCases, bool TaskInvocation, bool WindowsPinRoundTrip, bool CustomCategoryRoundTrip);

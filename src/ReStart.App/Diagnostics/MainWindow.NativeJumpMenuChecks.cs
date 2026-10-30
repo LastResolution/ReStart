@@ -18,7 +18,8 @@ public partial class MainWindow
         static MenuItem Find(ItemsControl parent, string tag) => parent.Items.OfType<MenuItem>().Single(i => Equals(i.Tag, tag));
         var pinPath = Path.Combine(directory, "Pinned sample.txt"); File.WriteAllText(pinPath, "owned menu fixture");
         var historyPath = Path.Combine(directory, "Recent sample.txt"); File.WriteAllText(historyPath, "owned menu fixture");
-        var state = new NativeJumpSnapshot(true, true, [new(new string('A', 64), "New private window", "", false, true)], [new(new string('B', 64), "Pinned sample", pinPath, false, false)]);
+        var state = new NativeJumpSnapshot(true, true, [new(new string('A', 64), "New private window", "", false, true)], [new(new string('B', 64), "Pinned sample", pinPath, false, false)],
+            [new("Owned projects", [new(new string('D', 64), "Project sample", "", false, true)])]);
         var invoked = new List<(string App, string Operation, string Key, string Target)>();
         Task<NativeJumpReply> Respond(AppEntry selected, string operation, string key, string target, CancellationToken token)
         { invoked.Add((selected.Id, operation, key, target)); return Task.FromResult(new NativeJumpReply(true, "", app.Id, state)); }
@@ -41,6 +42,11 @@ public partial class MainWindow
                         var tasks = Find(menu, "jump-tasks"); var pinned = Find(menu, "jump-pinned");
                         Check(tasks.Visibility == Visibility.Visible && Equals(tasks.Header, L.T(K.JumpTasks)) && tasks.Items.Count == 1, "Registered tasks are absent or not localized.");
                         Check(pinned.Visibility == Visibility.Visible && Equals(pinned.Header, L.T(K.JumpPinned)) && pinned.Items.Count == 1, "Windows pins are absent or not localized.");
+                        var custom = Find(menu, "jump-custom");
+                        Check(custom.Header.Equals("Owned projects") && custom.Items.Count == 1, "An application-defined category lost its original label or destinations.");
+                        var customRow = custom.Items.OfType<MenuItem>().Single();
+                        customRow.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent, customRow)); await Task.Delay(10);
+                        Check(invoked.Last() == (app.Id, "invoke-custom", state.Categories![0].Items[0].Key, ""), "A custom destination lost its application/category identity.");
                         var recent = menu.Items.OfType<MenuItem>().Single(i => Equals(i.Header, L.T(K.JumpRecent)));
                         Check(recent.Items.Count == 1 && recent.Items.OfType<MenuItem>().Single().Tag?.Equals(historyPath) == true, "Pinned Windows destinations also appear in Recent.");
                         var task = tasks.Items.OfType<MenuItem>().Single();
@@ -89,10 +95,12 @@ public partial class MainWindow
             foreach (var enabled in new[] { false, true })
             {
                 fixture.Document.Preferences.ShowAppTasks = enabled; fixture.Document.Preferences.ShowPinnedJumpLists = enabled;
+                fixture.Document.Preferences.ShowCustomJumpLists = enabled;
                 current.IsOpen = true; await Task.Delay(10);
                 Check((Find(current, "jump-tasks").Visibility == Visibility.Visible) == enabled && (Find(current, "jump-pinned").Visibility == Visibility.Visible) == enabled,
                     "A native list ignores its disabled setting.");
                 Check(Find(current, "open").IsEnabled, "Native settings disabled the app's normal Open command."); await CloseMenuAsync(current);
+                Check(current.Items.OfType<MenuItem>().Any(row => Equals(row.Tag, "jump-custom")) == enabled, "A custom category ignores its display setting.");
             }
             fixture.Document.Preferences.ShowJumpLists = false; current.IsOpen = true; await Task.Delay(10);
             Check(Find(current, "jump-tasks").Visibility == Visibility.Visible && Find(current, "jump-pinned").Visibility == Visibility.Visible

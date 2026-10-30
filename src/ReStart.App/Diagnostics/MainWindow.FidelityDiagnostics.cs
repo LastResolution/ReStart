@@ -282,8 +282,32 @@ public partial class MainWindow
                 fixture.SaveScreenshot(Path.Combine(directory, "settings-search-" + theme + ".png"));
             }
             await fixture.SaveSearchShowcaseAsync(directory);
+            checks += await VerifySessionMenusAsync(fixture, directory);
+            checks += await IndexedFileSearch.VerifyOwnedFieldsAsync();
             var indexed = await new IndexedFileSearch().FindAsync("ReStart_nonexistent_%_[fidelity]", CancellationToken.None);
             Check(indexed.Files.Count == 0, "The native index query ignored literal wildcard characters.");
+            var contentIndex = await new IndexedFileSearch().FindAsync("ReStart_nonexistent_'[fidelity]", CancellationToken.None, true);
+            Check(!indexed.Available || contentIndex.Available, "The native file-content query failed on an available Windows index.");
+            Check(contentIndex.Files.Count == 0, "The native content query interpreted a literal fixture as SQL or full-text operators.");
+            // Reuse the bounded empty filename pattern to isolate wrapper lifetime;
+            // broad leading-wildcard/content queries may legitimately reach the provider deadline.
+            var repeated = await Task.WhenAll(Enumerable.Range(0, 6).Select(async _ =>
+            {
+                var reader = new IndexedFileSearch();
+                var result = await reader.FindAsync("ReStart_nonexistent_%_[fidelity]", CancellationToken.None);
+                return (Count: result.Files.Count, result.Available, reader.LastFailureCode);
+            }));
+            Check(repeated.All(result => result.Count == 0 && result.Available == indexed.Available),
+                "Overlapping index readers changed availability or results: " + string.Join(", ", repeated.Select(result => $"{result.Available}/{result.Count}/{result.LastFailureCode:X8}")));
+            using (var cancelledIndex = new CancellationTokenSource())
+            {
+                cancelledIndex.Cancel(); var cancelled = false;
+                try { await new IndexedFileSearch().FindAsync("ReStart_nonexistent_cancelled", cancelledIndex.Token, true); }
+                catch (OperationCanceledException) { cancelled = true; }
+                Check(cancelled, "A cancelled index query performed work.");
+            }
+            Check((await new IndexedFileSearch().FindAsync("ReStart_nonexistent_%_[fidelity]", CancellationToken.None)).Available == indexed.Available,
+                "A cancelled index reader retained the shared query gate.");
             return new(checks, indexed.Available);
         }
         finally { fixture.Exit(); L.SetLanguage(language); ApplyAppearance(); Activate(); }

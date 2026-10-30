@@ -4,7 +4,7 @@ namespace ReStart.App.Services;
 
 internal static partial class NativeJumpWorker
 {
-    internal static IDisposable CreateOwnedFixture(string owner, string probe, string marker, string workingDirectory, string action = "--jump-fixture")
+    internal static IDisposable CreateOwnedFixture(string owner, string probe, string marker, string workingDirectory, string action = "--jump-fixture", bool includeCustom = false)
     {
         if (!owner.StartsWith("ReStart.JumpFixture.", StringComparison.Ordinal) || !File.Exists(probe)
             || !Path.GetFileName(probe).Equals("ReStart.ShellProbe.exe", StringComparison.OrdinalIgnoreCase)
@@ -37,6 +37,13 @@ internal static partial class NativeJumpWorker
             }
             finally { Marshal.FreeCoTaskMem(title.Text); }
             Marshal.ThrowExceptionForHR(array.AddObject(linkObject!));
+            if (includeCustom)
+            {
+                var result = writer.AppendCategory("Owned projects", (IItems)arrayObject!);
+                // Windows refuses custom destinations when document history is disabled.
+                // Leave the privacy setting unchanged and still verify the Tasks path.
+                if (result != unchecked((int)0x80070005)) Marshal.ThrowExceptionForHR(result);
+            }
             Marshal.ThrowExceptionForHR(writer.AddUserTasks((IItems)arrayObject!));
             Marshal.ThrowExceptionForHR(writer.CommitList()); begun = false;
             return new OwnedFixture(owner);

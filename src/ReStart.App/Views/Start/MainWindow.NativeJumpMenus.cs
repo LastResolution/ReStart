@@ -49,12 +49,14 @@ public partial class MainWindow
                 if (current != generation || !menu.IsOpen) return;
                 PopulateJumpItems(recent, frequent, app, destinations, snapshot, Accept);
                 PopulateNativeJumpItems(pinned, tasks, app, snapshot, Accept);
+                PopulateCustomJumpItems(menu, tasks, app, snapshot);
             }
             void Accept(NativeJumpSnapshot update)
             {
                 snapshot = update with
                 {
                     Tasks = Document.Preferences.ShowAppTasks ? update.Tasks : [],
+                    Categories = Document.Preferences.ShowCustomJumpLists ? update.Categories : [],
                     Pinned = Document.Preferences.ShowPinnedJumpLists ? update.Pinned : [],
                     PinsSupported = Document.Preferences.ShowPinnedJumpLists && update.PinsSupported
                 };
@@ -75,12 +77,13 @@ public partial class MainWindow
             {
                 try
                 {
-                    if (Document.Preferences.ShowAppTasks || Document.Preferences.ShowPinnedJumpLists)
+                    if (Document.Preferences.ShowAppTasks || Document.Preferences.ShowPinnedJumpLists || Document.Preferences.ShowCustomJumpLists)
                     {
                         var reply = await SendNativeJumpAsync(app, "read", cancellation: token);
                         if (reply.Success) snapshot = reply.Snapshot with
                         {
                             Tasks = Document.Preferences.ShowAppTasks ? reply.Snapshot.Tasks : [],
+                            Categories = Document.Preferences.ShowCustomJumpLists ? reply.Snapshot.Categories : [],
                             Pinned = Document.Preferences.ShowPinnedJumpLists ? reply.Snapshot.Pinned : [],
                             PinsSupported = Document.Preferences.ShowPinnedJumpLists && reply.Snapshot.PinsSupported
                         };
@@ -91,6 +94,34 @@ public partial class MainWindow
             }
             _ = HistoryAsync(); _ = NativeAsync();
         };
+    }
+
+    private void PopulateCustomJumpItems(ContextMenu menu, MenuItem tasks, AppEntry app, NativeJumpSnapshot snapshot)
+    {
+        foreach (var existing in menu.Items.OfType<MenuItem>().Where(row => Equals(row.Tag, "jump-custom")).ToArray()) menu.Items.Remove(existing);
+        foreach (var category in snapshot.Categories ?? [])
+        {
+            var section = new MenuItem { Header = category.Name, Tag = "jump-custom" };
+            foreach (var entry in category.Items)
+            {
+                var row = new MenuItem
+                {
+                    Header = new TextBlock { Text = entry.Name, MaxWidth = 340, TextTrimming = TextTrimming.CharacterEllipsis },
+                    Tag = entry.Key,
+                    ToolTip = entry.Target.Length == 0 ? entry.Name : entry.Target,
+                    IsEnabled = !_preview || _nativeJumpFixture != null
+                };
+                row.Click += async (_, e) => { if (ReferenceEquals(e.Source, row)) await ExecuteNativeJumpAsync(app, "invoke-custom", entry.Key); };
+                if (entry.Target.Length > 0 && snapshot.PinsSupported)
+                {
+                    var actions = CreateContextMenu();
+                    var pin = new MenuItem { Header = L.T(K.PinToJumpList), IsEnabled = row.IsEnabled };
+                    pin.Click += async (_, _) => await ExecuteNativeJumpAsync(app, "pin", target: entry.Target); actions.Items.Add(pin); row.ContextMenu = actions;
+                }
+                section.Items.Add(row);
+            }
+            if (section.Items.Count > 0) menu.Items.Insert(menu.Items.IndexOf(tasks), section);
+        }
     }
 
     private void PopulateNativeJumpItems(MenuItem pinned, MenuItem tasks, AppEntry app, NativeJumpSnapshot snapshot, Action<NativeJumpSnapshot> changed)
@@ -140,10 +171,10 @@ public partial class MainWindow
         if (!_preview && launching) Dismiss();
         try
         {
-            if (!_preview && operation == "invoke-pinned")
+            if (!_preview && operation is "invoke-pinned" or "invoke-custom")
             {
                 var current = await SendNativeJumpAsync(app, "read");
-                if (await AppJumpLists.OpenPinnedFileAsync(app, current, key, new System.Windows.Interop.WindowInteropHelper(this).Handle)) return;
+                if (await AppJumpLists.OpenPinnedFileAsync(app, current, key, new System.Windows.Interop.WindowInteropHelper(this).Handle, operation == "invoke-custom")) return;
             }
             var reply = await SendNativeJumpAsync(app, operation, key, target);
             if (!reply.Success) throw new InvalidOperationException(L.T(K.ErrorAppCommandUnavailable));
