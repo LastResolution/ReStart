@@ -61,6 +61,14 @@ public partial class MainWindow
                 Check(buttons.Select(b => (string)b.Content).SequenceEqual(_appAlphabet), "The picker lost its selected language.");
                 Check(buttons.All(b => b.IsEnabled == _sections.ContainsKey((string)b.Content)), "An empty group is enabled or a populated group is disabled.");
                 Check(buttons.Any(b => !b.IsEnabled), "The fixture failed to retain empty alphabet slots.");
+                foreach (var button in buttons)
+                {
+                    var text = new System.Windows.Media.FormattedText((string)button.Content, L.Culture, FlowDirection.LeftToRight,
+                        new System.Windows.Media.Typeface(button.FontFamily, button.FontStyle, button.FontWeight, button.FontStretch),
+                        button.FontSize, System.Windows.Media.Brushes.Black, 1);
+                    Check(text.WidthIncludingTrailingWhitespace <= button.ActualWidth - button.Padding.Left - button.Padding.Right - 2,
+                        "A native alphabet label is clipped inside its picker button.");
+                }
                 _apps.Add(new("new-index", "Q added sample", "", false)); RenderApps();
                 Check(AlphabetButtons.Children.OfType<Button>().Single(b => b.Content is "Q").IsEnabled, "An open picker did not enable a newly installed group's letter.");
                 _apps.RemoveAll(a => a.Id == "new-index"); RenderApps();

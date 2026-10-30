@@ -947,7 +947,8 @@ public partial class MainWindow : Window
                 IsEnabled = _sections.ContainsKey(section),
                 Width = 75,
                 Height = 60,
-                FontSize = section.Length > 2 ? 16 : 22,
+                FontSize = section.Length > 3 ? 14 : section.Length > 2 ? 16 : 22,
+                Padding = new(4),
                 HorizontalContentAlignment = HorizontalAlignment.Center
             };
             button.Click += (_, _) =>
