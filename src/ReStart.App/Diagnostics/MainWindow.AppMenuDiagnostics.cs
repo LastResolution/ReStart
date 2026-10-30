@@ -13,7 +13,7 @@ public partial class MainWindow
         if (!_preview) throw new InvalidOperationException("App-menu verification requires preview mode.");
         var directory = Path.Combine(Path.GetDirectoryName(snapshotPath)!, "fixture-" + Guid.NewGuid().ToString("N"));
         var app = new AppEntry("fixture-menu", "Menu sample", "", false);
-        var fixture = new MainWindow(new LayoutStore(Path.Combine(directory, "layout.json")), true, () => Task.FromResult(new List<AppEntry> { app }))
+        var fixture = new MainWindow(new LayoutStore(Path.Combine(directory, "layout.json")), true, () => Task.FromResult(new List<AppEntry> { app }), _ => { })
         { Owner = this, Width = 1000, Height = 700, Topmost = false };
         try
         {
@@ -86,10 +86,10 @@ public partial class MainWindow
                 fixture.SaveScreenshot(Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"app-menu-directory-{explicitGroup}.png"));
             }
             var surfaces = await VerifyAppMenuSurfacesAsync(fixture, directory, snapshotPath);
-            return new(7, 2, 2, surfaces.Checks, surfaces.LanguageThemeCases, surfaces.NativeReads);
+            return new(7, 2, 2, surfaces.Checks, surfaces.LanguageThemeCases, surfaces.NativeReads, surfaces.NativeHistoryRoundTrip);
         }
         finally { fixture.Exit(); Activate(); }
     }
 }
 
-internal sealed record AppMenuSmokeResult(int PinChecks, int AvailabilityChecks, int ShellReadChecks, int SurfaceChecks, int LanguageThemeCases, int NativeReads);
+internal sealed record AppMenuSmokeResult(int PinChecks, int AvailabilityChecks, int ShellReadChecks, int SurfaceChecks, int LanguageThemeCases, int NativeReads, bool NativeHistoryRoundTrip);

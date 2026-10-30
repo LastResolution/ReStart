@@ -12,7 +12,7 @@ namespace ReStart.App;
 public partial class MainWindow
 {
     /// <summary>Opens real WPF menus on isolated app-list/search/tile/folder surfaces; external actions are captured, never executed.</summary>
-    private async Task<(int Checks, int LanguageThemeCases, int NativeReads)> VerifyAppMenuSurfacesAsync(MainWindow fixture, string directory, string snapshotPath)
+    private async Task<(int Checks, int LanguageThemeCases, int NativeReads, bool NativeHistoryRoundTrip)> VerifyAppMenuSurfacesAsync(MainWindow fixture, string directory, string snapshotPath)
     {
         var checks = 0; var themes = 0; var reads = 0;
         void Check(bool valid, string message) { if (!valid) throw new InvalidOperationException(message); checks++; }
@@ -36,6 +36,7 @@ public partial class MainWindow
         var desktop = new AppEntry("desktop-menu-fixture", "Command sample", linkPath, false) { ShortcutPath = linkPath };
         var packaged = new AppEntry("package-fixture!app", "Packaged sample", "package-fixture!app");
         var native = new Dictionary<string, IReadOnlySet<string>>();
+        var nativeHistory = await AppJumpLists.VerifyOwnedHistoryAsync(directory); reads += nativeHistory.Checks;
         foreach (var app in new[] { local, directoryApp, FilePinning.FromPath(linkPath), desktop })
         {
             var verbs = await AppShellCommands.ReadAsync(app); reads++;
@@ -151,15 +152,17 @@ public partial class MainWindow
                         Check(more.Items.OfType<MenuItem>().Single() is { } command && Equals(command.Tag, verb) && Equals(command.Header, L.T(label)),
                             "An optional Shell action was mislabeled or mixed with unavailable commands.");
                     }
+                    await VerifyHistoryMenusAsync(fixture, local, directoryApp, theme, snapshotPath, Check);
                     themes++;
                 }
             fixture.Document.Preferences.Language = "en"; fixture.ApplyAppearance();
             await VerifyMenuRequestLifetimeAsync(fixture, desktop, native[desktop.Id], Check);
-            return (checks, themes, reads);
+            return (checks, themes, reads, nativeHistory.RoundTrip);
         }
         finally
         {
             fixture._shellCommandsFixture = null; fixture._jumpDestinationsFixture = null; fixture._appCommandFixture = null;
+            fixture._removeJumpDestinationFixture = null; fixture._menuSettingsFixture = null;
             L.SetLanguage(language);
         }
     }
@@ -210,6 +213,12 @@ public partial class MainWindow
         reopened.SetResult(commands); await Task.Delay(20);
         check(menu.Items.OfType<MenuItem>().Any(i => i.Tag is "opencontaining"), "A late Closed notification invalidated a newer menu request.");
         await CloseMenuAsync(menu); fixture.AppsPanel.Children.Remove(button);
+        fixture.ResultsPanel.Visibility = Visibility.Visible;
+        fixture.AppsPanel.Visibility = fixture.GroupsPanel.Visibility = Visibility.Collapsed;
+        fixture.SearchResults.Items.Clear(); fixture.SearchResults.Items.Add(button); fixture.UpdateLayout();
+        var row = fixture.SearchResults.ItemContainerGenerator.ContainerFromItem(button) as ListBoxItem;
+        check(row != null && ReferenceEquals(row.ContextMenu, button.ContextMenu), "The focused search row does not expose its item's context menu for keyboard requests.");
+        fixture.SearchResults.Items.Clear();
     }
 
     private static async Task CloseMenuAsync(ContextMenu menu)

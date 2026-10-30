@@ -669,7 +669,7 @@ public partial class MainWindow : Window
         var menu = CreateContextMenu();
         AddLiveTileMenu(menu);
         Add(menu, L.T(K.RenameGroup), () => RenameGroup(group));
-        Add(menu, L.T(K.DeleteGroup), () =>
+        Add(menu, L.T(K.UnpinGroupFromStart), () =>
         {
             if (Confirm(L.F(K.ConfirmDeleteGroup, group.Name)))
             { Document.Groups.Remove(group); CommitLayout(); }

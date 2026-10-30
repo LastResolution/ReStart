@@ -1,4 +1,9 @@
 {
+  "RemoveFromThisList": "Remove from this list",
+  "DontShowInThisList": "Don't show in this list",
+  "ClearRecentList": "Clear list",
+  "PersonalizeThisList": "Personalize this list",
+  "UnpinGroupFromStart": "Unpin group from Start",
   "ConfigureTileData": "Configure data sources…",
   "RefreshTileData": "Refresh data now",
   "TileDataHelp": "Choose a Web API, RSS/Atom feed or local data file. Updates run while Start is visible. Connections and credentials are encrypted for this Windows user and excluded from exports.",

@@ -1,4 +1,9 @@
 {
+  "RemoveFromThisList": "從此清單移除",
+  "DontShowInThisList": "不要在此清單顯示",
+  "ClearRecentList": "清除清單",
+  "PersonalizeThisList": "個人化此清單",
+  "UnpinGroupFromStart": "從「開始」取消釘選群組",
   "ConfigureTileData": "設定資料來源…",
   "RefreshTileData": "立即重新整理資料",
   "TileDataHelp": "選取 Web API、RSS/Atom 或本機檔案。開始畫面顯示時更新。連線與認證資訊為目前 Windows 使用者加密，不包含在匯出中。",

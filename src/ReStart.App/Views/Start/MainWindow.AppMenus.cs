@@ -14,8 +14,10 @@ public partial class MainWindow
     private Func<AppEntry, bool, Task<IReadOnlySet<string>>>? _shellCommandsFixture;
     private Func<AppEntry, Task<IReadOnlyList<JumpDestination>>>? _jumpDestinationsFixture;
     private Func<AppEntry, string, Task>? _appCommandFixture;
+    private Func<AppEntry, string, Task>? _removeJumpDestinationFixture;
+    private Action<K>? _menuSettingsFixture;
 
-    private ContextMenu CreateAppMenu(AppEntry app, bool search = false)
+    private ContextMenu CreateAppMenu(AppEntry app, bool search = false, K? history = null)
     {
         var menu = CreateContextMenu();
         var open = Add(menu, L.T(K.MenuOpen), () => Launch(app));
@@ -32,7 +34,7 @@ public partial class MainWindow
             { PinMenuApplication(app); CommitLayout(); SetStatus(L.F(K.StatusPinned, app.Name)); }
         };
         menu.Items.Add(pin);
-        AddAppShellItems(menu, app, search: search);
+        AddAppShellItems(menu, app, search: search, history: history);
         menu.Items.Add(extras);
         void Refresh()
         {
@@ -84,7 +86,7 @@ public partial class MainWindow
         { if (!_exit) SetStatus(L.T(K.ErrorCatalogLoad) + ex.Message); }
     }
 
-    private void AddAppShellItems(ContextMenu menu, AppEntry app, int? index = null, bool search = false)
+    private void AddAppShellItems(ContextMenu menu, AppEntry app, int? index = null, bool search = false, K? history = null)
     {
         var more = new MenuItem { Header = L.T(search ? K.MenuLoading : K.MenuMore), Tag = "shell-more", IsEnabled = !search };
         more.Items.Add(new MenuItem { Header = L.T(K.MenuLoading), IsEnabled = false });
@@ -120,7 +122,7 @@ public partial class MainWindow
             catch (Exception ex) when (ex is TimeoutException or COMException or IOException or UnauthorizedAccessException or InvalidOperationException or System.Security.SecurityException)
             { verbs = new HashSet<string>(); }
             if (current != generation || !menu.IsOpen) return;
-            PopulateAppShellItems(more, uninstall, app, verbs, search);
+            PopulateAppShellItems(more, uninstall, app, verbs, search, history);
             if (!search) return;
             more.Visibility = Visibility.Collapsed;
             foreach (var item in more.Items.OfType<MenuItem>().ToArray())
@@ -150,8 +152,8 @@ public partial class MainWindow
             menu.Items.Clear();
             foreach (var destination in destinations.Where(d => d.Frequent == (menu == frequent)))
             {
-                var item = new MenuItem { Header = new TextBlock { Text = destination.Name, MaxWidth = 340, TextTrimming = TextTrimming.CharacterEllipsis }, ToolTip = destination.Target, IsEnabled = !_preview || _activationFixture != null };
-                item.Click += async (_, _) =>
+                var item = new MenuItem { Tag = destination.Target, Header = new TextBlock { Text = destination.Name, MaxWidth = 340, TextTrimming = TextTrimming.CharacterEllipsis }, ToolTip = destination.Target, IsEnabled = !_preview || _activationFixture != null };
+                async Task OpenAsync()
                 {
                     if (_preview) { _activationFixture?.Invoke(new(app.Id, destination.Name, destination.Target, false)); return; }
                     var owner = new WindowInteropHelper(this).Handle;
@@ -159,14 +161,41 @@ public partial class MainWindow
                     try { await AppShellCommands.OpenDocumentAsync(app, destination.Target, owner); }
                     catch (Exception ex) when (ex is COMException or Win32Exception or InvalidOperationException or IOException or UnauthorizedAccessException)
                     { Present(); SetStatus(L.T(K.ErrorAppCommand) + ex.Message); }
+                }
+                item.Click += async (_, e) => { if (ReferenceEquals(e.Source, item)) await OpenAsync(); };
+                var actions = CreateContextMenu();
+                var open = new MenuItem { Header = L.T(K.MenuOpen), Tag = "jump-open", IsEnabled = item.IsEnabled };
+                open.Click += async (_, _) => await OpenAsync(); actions.Items.Add(open);
+                var local = new AppEntry(destination.Target, destination.Name, destination.Target, false);
+                foreach (var (verb, label) in new[] { ("opencontaining", destination.IsDirectory ? K.OpenFolderLocation : K.OpenFileLocation), ("properties", K.AppProperties) })
+                {
+                    var command = new MenuItem { Header = L.T(label), Tag = verb, IsEnabled = !_preview || _appCommandFixture != null };
+                    command.Click += async (_, _) => await ExecuteAppCommandAsync(local, verb); actions.Items.Add(command);
+                }
+                var remove = new MenuItem { Header = L.T(K.RemoveFromThisList), Tag = "jump-remove", IsEnabled = !_preview || _removeJumpDestinationFixture != null };
+                remove.Click += async (_, _) =>
+                {
+                    if (_preview && _removeJumpDestinationFixture == null) return;
+                    try
+                    {
+                        await (_removeJumpDestinationFixture?.Invoke(app, destination.Target) ?? AppJumpLists.RemoveAsync(app, destination.Target));
+                        foreach (var category in new[] { recent, frequent })
+                        {
+                            foreach (var row in category.Items.OfType<MenuItem>().Where(i => Equals(i.Tag, destination.Target)).ToArray()) category.Items.Remove(row);
+                            category.Visibility = category.Items.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+                        }
+                    }
+                    catch (Exception ex) when (ex is COMException or IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException)
+                    { SetStatus(L.T(K.ErrorAppCommand) + ex.Message); }
                 };
+                actions.Items.Add(remove); item.ContextMenu = actions;
                 menu.Items.Add(item);
             }
             menu.Visibility = menu.Items.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
         }
     }
 
-    private void PopulateAppShellItems(MenuItem more, MenuItem uninstall, AppEntry app, IReadOnlySet<string> verbs, bool search = false)
+    private void PopulateAppShellItems(MenuItem more, MenuItem uninstall, AppEntry app, IReadOnlySet<string> verbs, bool search = false, K? history = null)
     {
         more.Items.Clear();
         foreach (var (verb, label) in new[] { ("runas", K.RunAsAdministrator), ("runasuser", K.RunAsDifferentUser),
@@ -179,6 +208,17 @@ public partial class MainWindow
             var item = new MenuItem { Header = L.T(label), Tag = verb, IsEnabled = !_preview || _appCommandFixture != null };
             item.Click += async (_, _) => await ExecuteAppCommandAsync(app, verb);
             more.Items.Add(item);
+        }
+        if (history is K.RecentlyAdded or K.MostUsed)
+        {
+            Add(more, L.T(history == K.RecentlyAdded ? K.RemoveFromThisList : K.DontShowInThisList), () =>
+            {
+                if (history == K.RecentlyAdded) Activity.DismissRecent(app.Id);
+                else Activity.HideFrequent(app.Id);
+                SaveActivity(); RenderApps();
+            }).Tag = "history-remove";
+            if (history == K.RecentlyAdded)
+                Add(more, L.T(K.ClearRecentList), () => { Activity.ClearRecent(); SaveActivity(); RenderApps(); }).Tag = "history-clear";
         }
         more.Visibility = more.Items.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
         more.IsEnabled = more.Items.Count > 0;

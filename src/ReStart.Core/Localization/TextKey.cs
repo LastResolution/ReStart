@@ -992,4 +992,14 @@ public enum TextKey
     ShortcutTileMenu,
     /// <summary>Clear selection, then finish selecting.</summary>
     ShortcutClearSelection,
+    /// <summary>Remove from this list.</summary>
+    RemoveFromThisList,
+    /// <summary>Don't show in this list.</summary>
+    DontShowInThisList,
+    /// <summary>Clear list (Recently added only).</summary>
+    ClearRecentList,
+    /// <summary>Personalize this list (navigation shortcuts).</summary>
+    PersonalizeThisList,
+    /// <summary>Unpin group from Start.</summary>
+    UnpinGroupFromStart,
 }

@@ -1,4 +1,9 @@
 {
+  "RemoveFromThisList": "Aus dieser Liste entfernen",
+  "DontShowInThisList": "Nicht in dieser Liste anzeigen",
+  "ClearRecentList": "Liste löschen",
+  "PersonalizeThisList": "Diese Liste anpassen",
+  "UnpinGroupFromStart": "Gruppe von Start lösen",
   "ConfigureTileData": "Datenquellen konfigurieren…",
   "RefreshTileData": "Daten jetzt aktualisieren",
   "TileDataHelp": "Web-API, RSS/Atom oder lokale Datei wählen. Aktualisierung bei sichtbarem Start. Verbindungen und Zugangsdaten werden für diesen Windows-Benutzer verschlüsselt und nicht exportiert.",
