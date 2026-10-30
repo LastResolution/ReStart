@@ -184,7 +184,6 @@ public enum TextKey
     /// <summary>Enter an http or https URL.</summary>
     ErrorInvalidUrl,
     /// <summary>Other</summary>
-    AppListOther,
     /// <summary>Everyday apps</summary>
     SeedEveryday,
     /// <summary>All apps</summary>

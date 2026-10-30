@@ -22,6 +22,8 @@ public partial class MainWindow
         var originalTheme = Document.Preferences.Theme;
         var originalRecent = Document.Preferences.ShowRecentlyAdded;
         var originalMostUsed = Document.Preferences.ShowMostUsed;
+        var originalLanguage = L.Language;
+        var originalLanguagePreference = Document.Preferences.Language;
         try
         {
             // This fixture checks the alphabetical directory tree. Optional
@@ -99,7 +101,8 @@ public partial class MainWindow
             Present();
             UpdateLayout();
             Require(_expandedAppFolders.Count == 0 && GroupsPanel.IsVisible, "Reopening retained all-apps directory state.");
-            return new(4, 2, 1, 1, 2, 3);
+            var indexChecks = VerifyLocalizedAppIndex(Path.GetDirectoryName(snapshotPath)!);
+            return new(4, 2, 1, 1, 2, 3, indexChecks, 16);
         }
         finally
         {
@@ -111,6 +114,8 @@ public partial class MainWindow
             Document.Preferences.Theme = originalTheme;
             Document.Preferences.ShowRecentlyAdded = originalRecent;
             Document.Preferences.ShowMostUsed = originalMostUsed;
+            Document.Preferences.Language = originalLanguagePreference;
+            LocalizationResources.Apply(originalLanguage);
             ApplyAppearance();
             RenderApps();
             ResetToPinnedView();
@@ -135,4 +140,4 @@ public partial class MainWindow
     }
 }
 
-internal sealed record AppFolderSmokeResult(int ExpansionChecks, int LayoutWidths, int HiddenSearchChecks, int ReopenChecks, int ThemeChecks, int NavigationChecks);
+internal sealed record AppFolderSmokeResult(int ExpansionChecks, int LayoutWidths, int HiddenSearchChecks, int ReopenChecks, int ThemeChecks, int NavigationChecks, int AlphabetChecks, int AlphabetLanguageThemeCases);

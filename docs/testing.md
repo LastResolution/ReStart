@@ -45,7 +45,7 @@ dotnet test ReStart.slnx -c Release --no-build --logger trx --results-directory 
 | --- | --- |
 | smoke | WPF render, real catalog/icon counts, sanitized tile labels; optional SearchQuery E or packaged Executable |
 | navigation | 288 fictional apps at 800/1280/1920/2560 DIPs, occupied column width, heading continuity and eight Hide/Present resets |
-| navigation -AppFolders | Inline directory expansion, keyboard/Automation paths, hidden-child search, 1920/3840 widths, themes and initial jump |
+| navigation -AppFolders | Inline directory expansion, keyboard/Automation paths, hidden-child search, 1920/3840 widths; native Windows alphabet reference checks and known kana/Hangul/pinyin/stroke/Latin cases, mixed scripts, width/combining marks/symbols, Unicode initial navigation, picker scroll/focus and live install/remove/language rebuilds across all eight languages and both themes |
 | first-input | Delayed catalog and first-character search, reopening/rail focus, native activation, then real foreground events with WPF deactivation disabled: repeated intermediate-window transitions, owned dialogs, hook lifetime and disabled preference |
 | motion | Real WPF entrance/exit clocks, staged rows, catalog refresh, input during entrance, rapid reopen, taskbar dismissal, disabled animation and shutdown cleanup; placement intermediate frames, retargeting, reduced motion, deterministic capture sampling and 4,000 stationary-preview calls without rebuilding/restarting clocks |
 | search-selection | Native selection/automation, selected Enter target, first-Down advance, single/no-result and list-end bounds, arrows, typing continuation, same-query refresh, removed/new app catalogs, refresh failure/coalescing, preserved pins and eight languages in both themes |
