@@ -16,6 +16,10 @@ public partial class MainWindow
     private Func<AppEntry, string, Task>? _appCommandFixture;
     private Func<AppEntry, string, Task>? _removeJumpDestinationFixture;
     private Action<K>? _menuSettingsFixture;
+    private FileShareSession? _fileShare;
+    private bool _fileShareGuard;
+    private bool _fileShareTopmost;
+    private int _fileShareGeneration;
 
     private ContextMenu CreateAppMenu(AppEntry app, bool search = false, K? history = null)
     {
@@ -159,6 +163,7 @@ public partial class MainWindow
                 var local = new AppEntry(destination.Target, destination.Name, destination.Target, false);
                 foreach (var (verb, label) in new[] { ("opencontaining", destination.IsDirectory ? K.OpenFolderLocation : K.OpenFileLocation), ("properties", K.AppProperties) })
                 {
+                    if (AppFileLocation.Find(local) == null) continue;
                     var command = new MenuItem { Header = L.T(label), Tag = verb, IsEnabled = !_preview || _appCommandFixture != null };
                     command.Click += async (_, _) => await ExecuteAppCommandAsync(local, verb); actions.Items.Add(command);
                 }
@@ -225,11 +230,53 @@ public partial class MainWindow
     {
         if (_preview) { if (_appCommandFixture != null) await _appCommandFixture(app, verb); return; }
         var owner = new WindowInteropHelper(this).Handle;
-        Dismiss();
-        try { await AppShellCommands.InvokeAsync(app, verb, owner); }
+        try
+        {
+            if (verb == "share") { await ShareFileAsync(app); return; }
+            if (verb == "properties")
+            {
+                Dismiss(immediately: true);
+                FileProperties.Show(app);
+                return;
+            }
+            Dismiss();
+            await AppShellCommands.InvokeAsync(app, verb, owner);
+        }
         catch (COMException ex) when (ex.HResult == unchecked((int)0x800704c7)) { }
         catch (Win32Exception ex) when (ex.NativeErrorCode == 1223) { }
-        catch (Exception ex) when (ex is COMException or Win32Exception or InvalidOperationException or IOException or UnauthorizedAccessException)
+        catch (Exception ex) when (ex is COMException or Win32Exception or InvalidOperationException or IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or System.Security.SecurityException)
         { Present(); SetStatus(L.T(K.ErrorAppCommand) + ex.Message); }
+    }
+
+    private async Task ShareFileAsync(AppEntry app)
+    {
+        if (_fileShareGuard) return;
+        var generation = ++_fileShareGeneration;
+        _fileShareGuard = true; _dialogDepth++; _fileShareTopmost = Topmost;
+        try
+        {
+            var file = await FileShareSession.PrepareAsync(app);
+            if (generation != _fileShareGeneration) return;
+            if (_exit || !IsVisible) { StopFileShare(); return; }
+            CompleteEntrance();
+            Topmost = false;
+            _fileShare = new(this, file, () =>
+            {
+                StopFileShare();
+                if (!_exit && !IsActive && Document.Preferences.CloseOnDeactivate) Dismiss();
+            });
+            _fileShare.Show();
+        }
+        catch
+        {
+            if (generation == _fileShareGeneration) { StopFileShare(); throw; }
+        }
+    }
+
+    private void StopFileShare()
+    {
+        _fileShareGeneration++;
+        _fileShare?.Dispose(); _fileShare = null;
+        if (_fileShareGuard) { _fileShareGuard = false; _dialogDepth--; Topmost = _fileShareTopmost; }
     }
 }

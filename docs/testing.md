@@ -118,6 +118,7 @@ Core tests use generated archives and temporary distributions for checksums, mal
 | Input | Bare Win then E, Enter, Win+E/D/L/Tab, IME composition, Ctrl+F, Esc, navigation |
 | Taskbar | Blank/app/secondary taskbar and thumbnail clicks close Start and preserve the original click; select a window after hovering a multi-window app, repeat after reopening; settings and drags stay open |
 | Shell | Win32/Store/link/URL launch; only supported app verbs; missing old pins |
+| File dialogs | Share an owned readable `.py`, image and PDF to the Windows chooser without sending; cancel/reopen and switch windows. Properties for a file, physical folder, shortcut and executable must stay visible after Start hides. Check unsupported/missing/locked targets omit the actions. Automated storage payload/menu checks do not verify the native chooser visually or every receiver. |
 | Settings | All languages/themes, contrast, scale, About/licenses, rollback information |
 | Updates | Public checks without an API key, rate limits, connectivity failure, newer compatible release; no implicit installation |
 | Startup | Enable/disable, moved installation, actual sign-in, Windows policy override |

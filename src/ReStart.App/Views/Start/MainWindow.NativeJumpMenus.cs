@@ -119,6 +119,7 @@ public partial class MainWindow
                         var local = new AppEntry(entry.Target, entry.Name, entry.Target, false);
                         foreach (var (verb, label) in new[] { ("opencontaining", entry.IsDirectory ? K.OpenFolderLocation : K.OpenFileLocation), ("properties", K.AppProperties) })
                         {
+                            if (AppFileLocation.Find(local) == null) continue;
                             var command = new MenuItem { Header = L.T(label), Tag = verb, IsEnabled = !_preview || _appCommandFixture != null };
                             command.Click += async (_, _) => await ExecuteAppCommandAsync(local, verb); actions.Items.Add(command);
                         }

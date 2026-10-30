@@ -8,24 +8,34 @@ namespace ReStart.App.Services;
 internal static class AppShellCommands
 {
     internal const string FolderLocation = "restart:folder-location";
-    internal static Task<IReadOnlySet<string>> ReadAsync(AppEntry app, bool extended = false) => OnSta<IReadOnlySet<string>>(() =>
+    internal static async Task<IReadOnlySet<string>> ReadAsync(AppEntry app, bool extended = false)
+    {
+        var commands = await ReadShellAsync(app, extended).ConfigureAwait(false);
+        if (await FileShareSession.CanShareAsync(app).ConfigureAwait(false)) commands.Add("share");
+        return commands;
+    }
+
+    private static Task<HashSet<string>> ReadShellAsync(AppEntry app, bool extended) => OnSta(() =>
     {
         var commands = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         try
         {
             using var context = new ShellContext(app, extended);
-            commands.UnionWith(context.Commands.Keys.Where(v => AppMenuCommands.Normalize(v) != null));
+            // A native menu verb is not a capability check for desktop sharing,
+            // or proof that an AppsFolder identity has filesystem properties.
+            commands.UnionWith(context.Commands.Keys.Where(v => v is not ("share" or "properties") && AppMenuCommands.Normalize(v) != null));
         }
         catch (Exception ex) when (ex is COMException or ArgumentException or IOException or UnauthorizedAccessException) { }
         if (AppFileLocation.Find(app) is { } location)
         {
             commands.Add("opencontaining");
             commands.Add("copyaspath");
+            commands.Add("properties");
             if (location.IsDirectory) commands.Add(FolderLocation);
             try
             {
                 using var local = new ShellContext(new(app.Id, app.Name, location.Path, false), extended);
-                foreach (var verb in new[] { "properties", "runasuser" })
+                foreach (var verb in new[] { "runasuser" })
                     if (local.Commands.ContainsKey(verb)) commands.Add(verb);
             }
             catch (Exception ex) when (ex is COMException or ArgumentException or IOException or UnauthorizedAccessException) { }
@@ -41,6 +51,7 @@ internal static class AppShellCommands
     internal static Task InvokeAsync(AppEntry app, string verb, nint owner)
     {
         if (verb == null || AppMenuCommands.Normalize(verb) != verb && verb is not ("review" or "manageapps")) throw new ArgumentException("Unsupported app command.", nameof(verb));
+        if (verb is "share" or "properties") throw new InvalidOperationException("File dialogs require the persistent UI apartment.");
         return OnSta(() =>
         {
             if (verb == "opencontaining" && AppFileLocation.Find(app) is { } location)
@@ -49,7 +60,7 @@ internal static class AppShellCommands
             { System.Windows.Clipboard.SetText("\"" + copied.Path + "\""); return true; }
             if (verb is "review" or "manageapps")
             { AppPackageCommands.Invoke(app, verb); return true; }
-            if (verb is "properties" or "runasuser" && AppFileLocation.Find(app) is { } source)
+            if (verb == "runasuser" && AppFileLocation.Find(app) is { } source)
             {
                 using var local = new ShellContext(new(app.Id, app.Name, source.Path, false), verb == "runasuser");
                 if (!local.Commands.TryGetValue(verb, out var localCommand)) throw new InvalidOperationException(L.T(K.ErrorAppCommandUnavailable));

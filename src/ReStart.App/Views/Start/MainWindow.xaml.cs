@@ -1157,7 +1157,7 @@ public partial class MainWindow : Window
     private static bool IsAnyMenuOpen() => Mouse.Captured is ContextMenu || Mouse.Captured is System.Windows.Controls.Primitives.MenuBase;
     private void OnClosing(object? sender, CancelEventArgs e) { if (!_exit) { e.Cancel = true; Dismiss(); } }
     /// <summary>Stops timers and isolated script workers before permanently closing the launcher.</summary>
-    public void Exit() { _exit = true; CancelStartupPresentation(); StopMotion(); StopFolderDwell(); StopDragGhost(); StopWatchingDesktopAppearance(); _clock.Stop(); _nameRefreshTimer?.Stop(); _railHoverTimer?.Stop(); _dragScrolling = false; _fileSearchCancellation?.Cancel(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); RetireHtmlTiles(all: true); _liveSessions.Dispose(); Close(); }
+    public void Exit() { _exit = true; StopFileShare(); CancelStartupPresentation(); StopMotion(); StopFolderDwell(); StopDragGhost(); StopWatchingDesktopAppearance(); _clock.Stop(); _nameRefreshTimer?.Stop(); _railHoverTimer?.Stop(); _dragScrolling = false; _fileSearchCancellation?.Cancel(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); RetireHtmlTiles(all: true); _liveSessions.Dispose(); Close(); }
 
     /// <summary>Renders only the launcher root to a PNG for reproducible UI verification.</summary>
     /// <param name="path">Destination PNG path for the current preview visual; missing parent directories are created.</param>
