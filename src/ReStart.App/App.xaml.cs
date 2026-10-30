@@ -24,6 +24,12 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        if (e.Args is ["--jump-list-worker"])
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            Shutdown(await NativeJumpBroker.RunWorkerAsync());
+            return;
+        }
         if (await HandleUpdateEntryAsync(e.Args)) return;
         if (e.Args.Contains("--render-docs") || e.Args.Contains("--render-promo") || e.Args.Contains("--render-studio") || e.Args.Contains("--verify-platform")) { await RenderDocumentationAsync(e.Args); return; }
         var preview = e.Args.Contains("--preview") || e.Args.Contains("--smoke-test");
@@ -181,6 +187,7 @@ public partial class App : Application
             AppFolderSmokeResult? appFolders = null;
             FirstInputSmokeResult? firstInput = null;
             AppMenuSmokeResult? appMenus = null;
+            NativeJumpSmokeResult? nativeJumps = null;
             ReleaseInfoSmokeResult? releaseInfo = null;
             ScrollSmokeResult? scrolling = null;
             BundledTilesSmokeResult? bundledTiles = null;
@@ -203,6 +210,7 @@ public partial class App : Application
                 if (args.Contains("--app-tree-test")) appFolders = _window.VerifyAppFolders(path);
                 if (args.Contains("--first-input-test")) firstInput = await _window.VerifyFirstInputAsync(path);
                 if (args.Contains("--app-menu-test")) appMenus = await _window.VerifyAppMenusAsync(path);
+                if (args.Contains("--jump-list-test")) nativeJumps = await _window.VerifyNativeJumpListsAsync(path);
                 if (args.Contains("--release-info-test")) releaseInfo = await _window.VerifyReleaseInfoAsync(path);
                 if (args.Contains("--scroll-test")) scrolling = await _window.VerifyScrollingAsync(path);
                 if (args.Contains("--bundled-tiles-test")) bundledTiles = await _window.VerifyBundledTilesAsync(path);
@@ -227,7 +235,7 @@ public partial class App : Application
             catch (Exception ex) { success = false; error = ex.ToString(); Console.Error.WriteLine(ex); }
             try
             {
-                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, catalogFolders = _window.CatalogFolderCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, navigation, placement, appFolders, firstInput, appMenus, releaseInfo, scrolling, bundledTiles, pinIcons, motion, editing, folderDrops, tileData, searchSelection, startupPreparation, warmResume, appearance, settingsPreview, fidelity, startup = _window.StartupMetrics, error, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
+                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, catalogFolders = _window.CatalogFolderCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, navigation, placement, appFolders, firstInput, appMenus, nativeJumps, releaseInfo, scrolling, bundledTiles, pinIcons, motion, editing, folderDrops, tileData, searchSelection, startupPreparation, warmResume, appearance, settingsPreview, fidelity, startup = _window.StartupMetrics, error, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
             }
             catch (IOException) { success = false; }
             _window.Exit(); Shutdown(success ? 0 : 1);
