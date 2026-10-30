@@ -47,8 +47,11 @@ internal sealed class WindowsAppIndex
         var text = name.TrimStart();
         // Lookup can return an unindexed symbol (including an emoji) unchanged.
         // Keep those with Windows' symbol group instead of creating emoji keys.
-        label = text.Length == 0 || !Rune.TryGetRuneAt(text, 0, out var initial) || !Rune.IsLetterOrDigit(initial) ? "&" : _groups.Lookup(text);
-        if (string.IsNullOrWhiteSpace(label)) label = "&";
+        label = text.Length == 0 || !Rune.TryGetRuneAt(text, 0, out _) ? "&" : _groups.Lookup(text);
+        // Judge the returned label, not the input's Unicode category. Windows
+        // indexes circled/superscript/Roman numerals under # and enclosed Latin
+        // letters under A-Z even though those inputs are symbols or numbers.
+        if (label.Length == 0 || label is not ("&" or "#") && (!Rune.TryGetRuneAt(label, 0, out var initial) || !Rune.IsLetterOrDigit(initial))) label = "&";
         _labels[name] = label;
         return label;
     }
@@ -68,7 +71,7 @@ internal sealed class WindowsAppIndex
     }
 
     internal bool IsInitial(string text) => text.Length != 0 && StringInfo.ParseCombiningCharacters(text).Length == 1
-        && Rune.TryGetRuneAt(text, 0, out var initial) && Rune.IsLetterOrDigit(initial);
+        && Rune.TryGetRuneAt(text, 0, out _) && Section(text) != "&";
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
     private static extern int CompareStringEx(string locale, uint flags, string left, int leftLength, string right, int rightLength,
