@@ -126,6 +126,22 @@ internal static partial class AppJumpLists
 
     internal static Task<string> ResolveAppIdAsync(AppEntry app) => AppShellCommands.OnSta(() => ResolveAppId(app));
 
+    /// <summary>Opens a freshly revalidated filesystem pin with the selected app's original Shell identity, not a guessed AppsFolder target or the file's default association.</summary>
+    /// <param name="app">Original installed application or desktop shortcut selected in the menu.</param>
+    /// <param name="current">Successful current native snapshot obtained for this application's resolved AppUserModelID.</param>
+    /// <param name="key">Opaque identity of the selected pinned destination; a missing identity is rejected.</param>
+    /// <param name="owner">Owner HWND for native launch UI; zero is supported for an owned diagnostic fixture.</param>
+    /// <returns>True after the app accepts the document; false for a native link or virtual item, which requires worker invocation.</returns>
+    /// <exception cref="InvalidOperationException">The current snapshot or selected identity is unavailable.</exception>
+    internal static async Task<bool> OpenPinnedFileAsync(AppEntry app, NativeJumpReply current, string key, nint owner)
+    {
+        var entry = current.Snapshot.Pinned.FirstOrDefault(item => item.Key == key);
+        if (!current.Success || entry == null) throw new InvalidOperationException(L.T(K.ErrorAppCommandUnavailable));
+        if (entry.IsLink || entry.Target.Length == 0) return false;
+        await AppShellCommands.OpenDocumentAsync(app, entry.Target, owner);
+        return true;
+    }
+
     private static string ResolveAppId(AppEntry app)
     {
         if (app.IsShellApp) return app.LaunchTarget;

@@ -139,6 +139,11 @@ public partial class MainWindow
         if (!_preview && launching) Dismiss();
         try
         {
+            if (!_preview && operation == "invoke-pinned")
+            {
+                var current = await SendNativeJumpAsync(app, "read");
+                if (await AppJumpLists.OpenPinnedFileAsync(app, current, key, new System.Windows.Interop.WindowInteropHelper(this).Handle)) return;
+            }
             var reply = await SendNativeJumpAsync(app, operation, key, target);
             if (!reply.Success) throw new InvalidOperationException(L.T(K.ErrorAppCommandUnavailable));
             if (!launching) { changed?.Invoke(reply.Snapshot); SetStatus(L.T(K.JumpListUpdated)); }

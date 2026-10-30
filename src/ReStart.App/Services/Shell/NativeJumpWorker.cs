@@ -124,7 +124,17 @@ internal static partial class NativeJumpWorker
             if (!task && item is not ILink && item is IItem shell)
             {
                 var target = Display(shell, 0x80028000);
-                AppShellCommands.OpenDocumentAsync(new(owner, owner, owner), target, 0).GetAwaiter().GetResult();
+                if (File.Exists(target) || Directory.Exists(target))
+                    AppShellCommands.OpenDocumentAsync(new(owner, owner, owner), target, 0).GetAwaiter().GetResult();
+                else
+                {
+                    var handler = new Guid("3981e225-f559-11d3-8e3a-00c04f6837d5"); // BHID_SFUIObject
+                    var iid = typeof(IMenu).GUID;
+                    Marshal.ThrowExceptionForHR(shell.BindToHandler(0, ref handler, ref iid, out var pointer));
+                    object? context = null;
+                    try { context = Marshal.GetObjectForIUnknown(pointer); InvokeLink(context); }
+                    finally { Release(context); if (pointer != 0) Marshal.Release(pointer); }
+                }
             }
             else InvokeLink(item);
             invoked = true;

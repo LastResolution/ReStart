@@ -39,6 +39,12 @@ public partial class MainWindow
             Check(pinned.Success && pinned.Snapshot.Pinned.Single().Target.Equals(marker, StringComparison.OrdinalIgnoreCase), "Native pinning did not persist in the Windows list.");
             var reread = await NativeJumpBroker.SendAsync(new(1, "read", owner));
             Check(reread.Snapshot.Pinned.Length == 1, "A new worker did not observe the Windows pin.");
+            File.Delete(marker + ".opened"); File.Delete(marker + ".cwd");
+            Check(await AppJumpLists.OpenPinnedFileAsync(new(owner, "Owned probe", probe, false), reread, pinned.Snapshot.Pinned[0].Key, 0),
+                "A physical Windows pin did not use its original desktop application.");
+            await Until(() => File.Exists(marker + ".opened"));
+            Check(JsonSerializer.Deserialize<string[]>(File.ReadAllText(marker + ".opened")) is [var document] && document == marker,
+                "The pinned document opened with a different association or changed its Unicode path.");
             Check((await NativeJumpBroker.SendAsync(new(1, "unpin", owner, pinned.Snapshot.Pinned[0].Key))).Success, "Native unpinning failed.");
             Check((await NativeJumpBroker.SendAsync(new(1, "read", owner))).Snapshot.Pinned.Length == 0 && File.ReadAllText(marker) == "owned native task fixture", "Unpinning retained the item or changed its file.");
             File.Delete(marker + ".opened"); File.Delete(marker + ".cwd");
@@ -51,6 +57,16 @@ public partial class MainWindow
                 "A replacement task did not receive its own validated identity.");
             await Until(() => File.Exists(marker + ".opened"));
             Check(JsonSerializer.Deserialize<string[]>(File.ReadAllText(marker + ".opened")) is ["--jump-fixture-2", var second] && second == marker, "The replacement native task invoked stale arguments.");
+            fixture.Dispose(); fixture = null;
+            var held = Path.Combine(directory, "Held task.txt"); File.WriteAllText(held, "owned child lifetime fixture");
+            fixture = NativeJumpWorker.CreateOwnedFixture(owner, probe, held, directory, "--jump-fixture-hold");
+            var holding = (await NativeJumpBroker.SendAsync(new(1, "read", owner))).Snapshot.Tasks.Single();
+            var launchTime = Stopwatch.StartNew();
+            Check((await NativeJumpBroker.SendAsync(new(1, "invoke-task", owner, holding.Key))).Success && launchTime.Elapsed < TimeSpan.FromSeconds(8),
+                "Task invocation waited for the launched application to exit.");
+            var surviveDeadline = Environment.TickCount64 + 15000;
+            while (!File.Exists(held + ".survived") && Environment.TickCount64 < surviveDeadline) await Task.Delay(50);
+            Check(File.Exists(held + ".survived"), "Exiting the task helper terminated its launched application.");
             foreach (var fault in new[] { "crash", "malformed", "oversized", "timeout" })
             {
                 var start = new ProcessStartInfo(probe)

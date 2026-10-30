@@ -12,6 +12,11 @@ if (args is ["--jump-worker-fault", var fault])
 if (args.Length < 1 || !File.Exists(args[^1])) return 2;
 Publish(args[^1] + ".opened", JsonSerializer.Serialize(args));
 Publish(args[^1] + ".cwd", Environment.CurrentDirectory);
+if (args[0] == "--jump-fixture-hold")
+{
+    Thread.Sleep(10000);
+    Publish(args[^1] + ".survived", "owned child survived helper exit");
+}
 return 0;
 
 static void Publish(string path, string content)
