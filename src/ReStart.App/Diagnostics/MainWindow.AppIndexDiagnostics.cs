@@ -14,7 +14,7 @@ public partial class MainWindow
     {
         var checks = 0;
         void Check(bool condition, string message) { Require(condition, message); checks++; }
-        string[] samples = ["!Symbols", "123 Tools", "９Tools", "Alpha", "alpha", "Éditeur", "E\u0301diteur", "Öffnen", "Ñotas", "ＺTools",
+        string[] samples = ["!Symbols", "123 Tools", "９Tools", "① Tools", "Ⅳ Tools", "² Tools", "ⓐ Notes", "K Tools", "Æ Notes", "ß Notes", "Alpha", "alpha", "Éditeur", "E\u0301diteur", "Öffnen", "Ñotas", "ＺTools",
             "あいう", "カレンダー", "ｶﾒﾗ", "メモ帳", "設定", "電卓", "がくしゅう", "ぱそこん", "가게", "까치", "하나", "中文", "设置", "😀Sample", "Ωmega", "ЯSample"];
         foreach (var language in L.SupportedLanguages)
         {
@@ -25,8 +25,11 @@ public partial class MainWindow
             Check(index.Section("😀Sample") == "&" && index.Section("") == "&" && index.Section("   ") == "&"
                 && index.Section("\ud800") == "&", "A blank, malformed or symbol name created a spurious alphabet button.");
             Check(index.IsInitial("é") && index.IsInitial("E\u0301") && index.IsInitial("か") && index.IsInitial("ㄱ")
+                && index.IsInitial("①") && index.IsInitial("Ⅳ") && index.IsInitial("²") && index.IsInitial("ⓐ")
                 && !index.IsInitial("ab") && !index.IsInitial("😀") && !index.IsInitial("\ud800"), "Unicode initial-key recognition is inconsistent.");
             Check(index.Section("  Alpha") == "A" && index.Section("ＺTools") == "Z", "Width or leading whitespace changed an app heading.");
+            Check(index.Section("① Tools") == "#" && index.Section("Ⅳ Tools") == "#" && index.Section("² Tools") == "#"
+                && index.Section("ⓐ Notes") == "A", "Compatibility letters and numbers bypassed Windows collation.");
             var declared = native.Where(g => g.Label.Length != 0).Select(g => g.Label).ToArray();
             var alphabet = index.Alphabet(samples);
             Check(alphabet.Where(declared.Contains).SequenceEqual(declared), "The picker changed Windows' native alphabet order for " + language + ".");
@@ -84,7 +87,7 @@ public partial class MainWindow
                 }
                 var first = AppsPanel.Children.OfType<Button>().First(b => b.Tag is AppEntry);
                 first.Focus();
-                foreach (var text in new[] { "é", "E\u0301", "Ｚ", "か", "ㄱ", "中" })
+                foreach (var text in new[] { "é", "E\u0301", "Ｚ", "か", "ㄱ", "中", "①", "Ⅳ", "ⓐ" })
                 {
                     var section = index.Section(text);
                     var exists = AppsPanel.Children.OfType<Button>().Any(b => b.Tag is AppEntry a && index.Section(a.Name) == section);
