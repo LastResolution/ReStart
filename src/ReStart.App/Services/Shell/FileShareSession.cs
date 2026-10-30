@@ -17,7 +17,8 @@ internal sealed class FileShareSession : IDisposable
     private readonly DataTransferManager _manager;
     private readonly IDataTransferManagerInterop _interop;
     private readonly List<DataPackage> _packages = [];
-    private bool _disposed, _deactivated;
+    private bool _disposed;
+    internal bool IsDisposed => _disposed;
 
     // Cancellation is needed to release the Start focus guard even if the user
     // dismisses Share by clicking another application, without returning to Start.
@@ -30,14 +31,14 @@ internal sealed class FileShareSession : IDisposable
         }
     }
 
-    internal static async Task<StorageFile> PrepareAsync(AppEntry app)
+    internal static Task<StorageFile> PrepareAsync(AppEntry app) => Task.Run(async () =>
     {
         var path = AppShareTarget.Find(app) ?? throw new InvalidOperationException(L.T(K.ErrorAppCommandUnavailable));
         // StorageFile acquisition alone can succeed for an unreadable file.
         // Recheck read access without reading bytes or resolving its association.
         using (new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete)) { }
         return await StorageFile.GetFileFromPathAsync(path);
-    }
+    });
 
     internal static async Task<bool> CanShareAsync(AppEntry app)
     {
@@ -57,8 +58,6 @@ internal sealed class FileShareSession : IDisposable
         try { _manager = WinRT.MarshalInterface<DataTransferManager>.FromAbi(pointer); }
         finally { Marshal.Release(pointer); }
         _manager.DataRequested += Requested;
-        _owner.Deactivated += Deactivated;
-        _owner.Activated += Activated;
     }
 
     internal void Show()
@@ -93,8 +92,6 @@ internal sealed class FileShareSession : IDisposable
 
     private void Canceled(DataPackage sender, object args) => Finish();
     private void Shared(DataPackage sender, ShareCompletedEventArgs args) => Finish();
-    private void Deactivated(object? sender, EventArgs args) => _deactivated = true;
-    private void Activated(object? sender, EventArgs args) { if (_deactivated) Finish(); }
     private void Finish() => _owner.Dispatcher.BeginInvoke(() => { if (!_disposed) { Dispose(); _completed(); } });
 
     public void Dispose()
@@ -102,8 +99,6 @@ internal sealed class FileShareSession : IDisposable
         _owner.Dispatcher.VerifyAccess();
         if (_disposed) return;
         _disposed = true;
-        _owner.Deactivated -= Deactivated;
-        _owner.Activated -= Activated;
         try
         {
             _manager.DataRequested -= Requested;

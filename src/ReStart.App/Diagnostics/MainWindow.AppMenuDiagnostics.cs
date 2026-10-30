@@ -86,7 +86,7 @@ public partial class MainWindow
                 fixture.SaveScreenshot(Path.Combine(Path.GetDirectoryName(snapshotPath)!, $"app-menu-directory-{explicitGroup}.png"));
             }
             var surfaces = await VerifyAppMenuSurfacesAsync(fixture, directory, snapshotPath);
-            var fileCommands = await VerifyFileCommandsAsync(directory);
+            var fileCommands = await VerifyFileCommandsAsync(fixture, directory);
             return new(7, 2, 2, surfaces.Checks, surfaces.LanguageThemeCases, surfaces.NativeReads, surfaces.NativeHistoryRoundTrip, fileCommands);
         }
         finally { fixture.Exit(); Activate(); }

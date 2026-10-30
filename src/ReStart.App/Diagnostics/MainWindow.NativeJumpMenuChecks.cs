@@ -99,6 +99,18 @@ public partial class MainWindow
                 && current.Items.OfType<MenuItem>().Single(i => Equals(i.Header, L.T(K.JumpRecent))).Visibility == Visibility.Collapsed,
                 "Turning off history hides registered tasks or Windows pins."); await CloseMenuAsync(current);
             fixture.Document.Preferences.ShowJumpLists = true;
+            var original = state;
+            foreach (var unavailable in new[] { Path.Combine(directory, "Unavailable pin.txt"), "https://example.invalid/owned-fixture" })
+            {
+                state = state with { Pinned = [new(new string('C', 64), "Unavailable or virtual destination", unavailable, false, false)] };
+                current.IsOpen = true; await Task.Delay(10);
+                var actions = Find(current, "jump-pinned").Items.OfType<MenuItem>().Single().ContextMenu!;
+                Check(actions.Items.OfType<MenuItem>().All(i => i.Tag is not ("properties" or "opencontaining"))
+                    && actions.Items.OfType<MenuItem>().Any(i => i.Tag is "jump-unpin"),
+                    "A missing or virtual pinned destination advertises filesystem commands or loses unpin.");
+                await CloseMenuAsync(current);
+            }
+            state = original;
             foreach (var failure in new Exception[] { new IOException("Owned read failure."), new TimeoutException("Owned timeout.") })
             {
                 fixture._nativeJumpFixture = (_, _, _, _, _) => Task.FromException<NativeJumpReply>(failure);

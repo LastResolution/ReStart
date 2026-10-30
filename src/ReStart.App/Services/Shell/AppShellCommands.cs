@@ -10,8 +10,8 @@ internal static class AppShellCommands
     internal const string FolderLocation = "restart:folder-location";
     internal static async Task<IReadOnlySet<string>> ReadAsync(AppEntry app, bool extended = false)
     {
-        var commands = await ReadShellAsync(app, extended);
-        if (await FileShareSession.CanShareAsync(app)) commands.Add("share");
+        var commands = await ReadShellAsync(app, extended).ConfigureAwait(false);
+        if (await FileShareSession.CanShareAsync(app).ConfigureAwait(false)) commands.Add("share");
         return commands;
     }
 

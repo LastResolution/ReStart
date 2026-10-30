@@ -7,7 +7,7 @@ namespace ReStart.App;
 public partial class MainWindow
 {
     /// <summary>Checks real StorageFile payloads and unavailable targets without opening a receiver or sending any data.</summary>
-    private static async Task<int> VerifyFileCommandsAsync(string directory)
+    private static async Task<int> VerifyFileCommandsAsync(MainWindow owner, string directory)
     {
         var checks = 0;
         void Check(bool value, string message) { if (!value) throw new InvalidOperationException(message); checks++; }
@@ -45,6 +45,19 @@ public partial class MainWindow
         {
             try { await AppShellCommands.InvokeAsync(folder, verb, 0); throw new IOException("A file dialog reached the short-lived Shell STA."); }
             catch (InvalidOperationException) { checks++; }
+        }
+        if (FileShareSession.IsSupported)
+        {
+            var path = Path.Combine(directory, "Focus lifetime.py"); File.WriteAllText(path, "owned fixture");
+            var file = await FileShareSession.PrepareAsync(FilePinning.FromPath(path));
+            var completed = 0;
+            using var session = new FileShareSession(owner, file, () => completed++);
+            // A menu, transient window or visibility change is not confirmation
+            // from Windows that the share operation completed or was canceled.
+            owner.Hide(); owner.Show(); owner.Activate(); await Task.Delay(30);
+            Check(!session.IsDisposed && completed == 0, "Focus churn ended sharing before Windows requested its file.");
+            session.Dispose(); session.Dispose();
+            Check(session.IsDisposed && completed == 0, "Explicit share teardown is not idempotent or reports an OS completion.");
         }
         return checks;
     }
