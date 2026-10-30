@@ -3,7 +3,7 @@ using ReStart.Core;
 
 namespace ReStart.App.Services;
 
-internal sealed record JumpDestination(string Name, string Target, bool Frequent);
+internal sealed record JumpDestination(string Name, string Target, bool Frequent, bool IsDirectory = false);
 
 /// <summary>Reads public Recent/Frequent destination lists without decoding private shell databases.</summary>
 internal static partial class AppJumpLists
@@ -66,10 +66,11 @@ internal static partial class AppJumpLists
                                 if (shell == null) continue;
                                 var target = Display(shell, 0x80028000); // SIGDN_DESKTOPABSOLUTEPARSING
                                 var name = Display(shell, 0);
-                                if (name.Length > 0 && (File.Exists(target) || Directory.Exists(target)))
+                                var isDirectory = Directory.Exists(target);
+                                if (name.Length > 0 && (isDirectory || File.Exists(target)))
                                 {
                                     visit?.Invoke(item, target);
-                                    if (entries.All(e => !e.Target.Equals(target, StringComparison.OrdinalIgnoreCase))) entries.Add(new(name, target, category == 1));
+                                    if (entries.All(e => !e.Target.Equals(target, StringComparison.OrdinalIgnoreCase))) entries.Add(new(name, target, category == 1, isDirectory));
                                 }
                             }
                             finally { if (pidl != 0) Marshal.FreeCoTaskMem(pidl); Release(resolved); }
@@ -190,7 +191,7 @@ internal static partial class AppJumpLists
         [PreserveSig] int GetShowCmd(out int value);
         [PreserveSig] int SetShowCmd(int value);
         [PreserveSig] int GetIconLocation(nint path, int length, out int index);
-        [PreserveSig] int SetIconLocation(nint path, int index);
+        [PreserveSig] int SetIconLocation([MarshalAs(UnmanagedType.LPWStr)] string path, int index);
         [PreserveSig] int SetRelativePath(nint path, uint reserved);
         [PreserveSig] int Resolve(nint owner, uint flags);
         [PreserveSig] int SetPath([MarshalAs(UnmanagedType.LPWStr)] string path);

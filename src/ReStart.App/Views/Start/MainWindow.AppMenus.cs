@@ -167,7 +167,7 @@ public partial class MainWindow
                 var open = new MenuItem { Header = L.T(K.MenuOpen), Tag = "jump-open", IsEnabled = item.IsEnabled };
                 open.Click += async (_, _) => await OpenAsync(); actions.Items.Add(open);
                 var local = new AppEntry(destination.Target, destination.Name, destination.Target, false);
-                foreach (var (verb, label) in new[] { ("opencontaining", Directory.Exists(destination.Target) ? K.OpenFolderLocation : K.OpenFileLocation), ("properties", K.AppProperties) })
+                foreach (var (verb, label) in new[] { ("opencontaining", destination.IsDirectory ? K.OpenFolderLocation : K.OpenFileLocation), ("properties", K.AppProperties) })
                 {
                     var command = new MenuItem { Header = L.T(label), Tag = verb, IsEnabled = !_preview || _appCommandFixture != null };
                     command.Click += async (_, _) => await ExecuteAppCommandAsync(local, verb); actions.Items.Add(command);

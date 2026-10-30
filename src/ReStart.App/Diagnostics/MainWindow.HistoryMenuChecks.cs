@@ -65,7 +65,7 @@ public partial class MainWindow
             check(fixture.GroupMenu(new()).Items.OfType<MenuItem>().Any(i => Equals(i.Header, L.T(K.UnpinGroupFromStart))), "The group menu does not describe unpinning from Start.");
             var removed = new List<(string App, string Target)>();
             fixture._removeJumpDestinationFixture = (owner, target) => { removed.Add((owner.Id, target)); return Task.CompletedTask; };
-            fixture._jumpDestinationsFixture = _ => Task.FromResult<IReadOnlyList<JumpDestination>>([new("History sample", other.LaunchTarget, false)]);
+            fixture._jumpDestinationsFixture = _ => Task.FromResult<IReadOnlyList<JumpDestination>>([new("History sample", other.LaunchTarget, false, true)]);
             var anchor = fixture.AppButton(app); fixture.AppsPanel.Children.Add(anchor);
             menu = anchor.ContextMenu!; menu.PlacementTarget = anchor; menu.IsOpen = true; await Task.Delay(10);
             var recent = menu.Items.OfType<MenuItem>().Single(i => Equals(i.Header, L.T(K.JumpRecent)));
