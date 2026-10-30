@@ -15,6 +15,7 @@ try {
     }
     $result = Get-Content -LiteralPath $reportPath -Raw | ConvertFrom-Json
     if (-not $result.success -or -not $result.appMenus) { throw 'App-menu verification reported failure.' }
+    Write-Host "Native document-history round trip: $($result.appMenus.NativeHistoryRoundTrip)"
     $result.appMenus
 }
 finally { $process.Dispose() }

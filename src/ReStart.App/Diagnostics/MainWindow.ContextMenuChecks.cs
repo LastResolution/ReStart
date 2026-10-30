@@ -213,6 +213,12 @@ public partial class MainWindow
         reopened.SetResult(commands); await Task.Delay(20);
         check(menu.Items.OfType<MenuItem>().Any(i => i.Tag is "opencontaining"), "A late Closed notification invalidated a newer menu request.");
         await CloseMenuAsync(menu); fixture.AppsPanel.Children.Remove(button);
+        fixture.ResultsPanel.Visibility = Visibility.Visible;
+        fixture.AppsPanel.Visibility = fixture.GroupsPanel.Visibility = Visibility.Collapsed;
+        fixture.SearchResults.Items.Clear(); fixture.SearchResults.Items.Add(button); fixture.UpdateLayout();
+        var row = fixture.SearchResults.ItemContainerGenerator.ContainerFromItem(button) as ListBoxItem;
+        check(row != null && ReferenceEquals(row.ContextMenu, button.ContextMenu), "The focused search row does not expose its item's context menu for keyboard requests.");
+        fixture.SearchResults.Items.Clear();
     }
 
     private static async Task CloseMenuAsync(ContextMenu menu)
