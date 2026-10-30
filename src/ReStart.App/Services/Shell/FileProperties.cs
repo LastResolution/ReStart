@@ -14,11 +14,13 @@ internal static class FileProperties
         var location = AppFileLocation.Find(app) ?? throw new InvalidOperationException(L.T(K.ErrorAppCommandUnavailable));
         // An independent native sheet remains visible when full-screen Start
         // dismisses. A hidden Start HWND must not own a disappearing dialog.
-        var root = Path.GetPathRoot(location.Path);
-        var volume = string.Equals(Path.TrimEndingDirectorySeparator(root ?? ""), location.Path, StringComparison.OrdinalIgnoreCase);
-        if (!SHObjectProperties(0, volume ? 4u : 2u, location.Path, null))
+        if (!SHObjectProperties(0, ObjectType(location.Path), location.Path, null))
             throw new InvalidOperationException(L.T(K.ErrorAppCommandUnavailable));
     }
+
+    // UNC share roots are directories, not local volume names. Never pass a
+    // network root through SHOP_VOLUMEGUID merely because it equals its path root.
+    internal static uint ObjectType(string path) => path.Length == 3 && char.IsAsciiLetter(path[0]) && path[1] == ':' && path[2] == '\\' ? 4u : 2u;
 
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
     [return: MarshalAs(UnmanagedType.Bool)]

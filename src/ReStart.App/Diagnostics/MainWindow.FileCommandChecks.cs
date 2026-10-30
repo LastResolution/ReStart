@@ -11,6 +11,9 @@ public partial class MainWindow
     {
         var checks = 0;
         void Check(bool value, string message) { if (!value) throw new InvalidOperationException(message); checks++; }
+        Check(FileProperties.ObjectType(@"Q:\") == 4 && FileProperties.ObjectType(@"Q:\Folder") == 2
+            && FileProperties.ObjectType(@"\\server.invalid\owned-share\") == 2,
+            "A network share root is incorrectly passed to local volume properties.");
         foreach (var name in new[] { "Sample 日本語 & (one).py", "Image.png", "Document.pdf", "Archive.zip", "Unknown.extension-fixture", "No extension" })
         {
             var path = Path.Combine(directory, name); File.WriteAllText(path, "owned payload fixture; never executed");
