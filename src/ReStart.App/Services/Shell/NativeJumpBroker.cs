@@ -78,6 +78,9 @@ internal static class NativeJumpBroker
 
     internal static async Task<int> RunWorkerAsync()
     {
+        // Remain bounded even if the parent crashes during a blocking native
+        // call. Terminate only this helper, never its launched application.
+        using var watchdog = new Timer(static _ => Process.GetCurrentProcess().Kill(), null, TimeSpan.FromSeconds(10), Timeout.InfiniteTimeSpan);
         NativeJumpRequest? request = null;
         NativeJumpReply reply;
         try
@@ -86,6 +89,8 @@ internal static class NativeJumpBroker
             using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
             var input = await ReadBoundedAsync(Console.OpenStandardInput(), NativeJumpContract.MaximumInputBytes, deadline.Token);
             request = JsonSerializer.Deserialize<NativeJumpRequest>(input, NativeJumpContract.Json);
+            if (NativeJumpContract.ValidRequest(request))
+                watchdog.Change(TimeSpan.FromSeconds(request!.Operation.StartsWith("invoke-", StringComparison.Ordinal) ? 50 : 10), Timeout.InfiniteTimeSpan);
             reply = NativeJumpContract.ValidRequest(request) ? NativeJumpWorker.Run(request!)
                 : new(false, "invalid-request", "", NativeJumpSnapshot.Empty);
         }
