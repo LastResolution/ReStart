@@ -77,7 +77,8 @@ internal static class StartSessionCommands
             throw new InvalidOperationException("This power action is unavailable.");
         // Enable only the current process's existing shutdown right, and restore it
         // immediately after the API call. Never force users or applications closed.
-        if (!OpenProcessToken(System.Diagnostics.Process.GetCurrentProcess().Handle, 0x28, out var token)) throw new Win32Exception();
+        using var process = System.Diagnostics.Process.GetCurrentProcess();
+        if (!OpenProcessToken(process.Handle, 0x28, out var token)) throw new Win32Exception();
         try
         {
             if (!LookupPrivilegeValue(null, "SeShutdownPrivilege", out var id)) throw new Win32Exception();

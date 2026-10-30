@@ -45,6 +45,8 @@ public partial class MainWindow
                         var custom = Find(menu, "jump-custom");
                         Check(custom.Header.Equals("Owned projects") && custom.Items.Count == 1, "An application-defined category lost its original label or destinations.");
                         var customRow = custom.Items.OfType<MenuItem>().Single();
+                        Check(Equals(Find(customRow.ContextMenu!, "jump-open").Header, L.T(K.MenuOpen)) && customRow.ContextMenu!.Items.Count == 1,
+                            "A virtual custom destination lacks localized Open or advertises filesystem actions.");
                         customRow.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent, customRow)); await Task.Delay(10);
                         Check(invoked.Last() == (app.Id, "invoke-custom", state.Categories![0].Items[0].Key, ""), "A custom destination lost its application/category identity.");
                         var recent = menu.Items.OfType<MenuItem>().Single(i => Equals(i.Header, L.T(K.JumpRecent)));
@@ -108,6 +110,28 @@ public partial class MainWindow
                 "Turning off history hides registered tasks or Windows pins."); await CloseMenuAsync(current);
             fixture.Document.Preferences.ShowJumpLists = true;
             var original = state;
+            foreach (var target in new[] { historyPath, directory, Path.Combine(directory, "Unavailable project.txt"), "https://example.invalid/owned-project" })
+            {
+                var physical = File.Exists(target) || Directory.Exists(target);
+                state = original with { Categories = [new("Owned projects", [new(new string('E', 64), "Owned project", target, Directory.Exists(target), false)])] };
+                current.IsOpen = true; await Task.Delay(10);
+                var actions = Find(current, "jump-custom").Items.OfType<MenuItem>().Single().ContextMenu!;
+                Check(actions.Items.OfType<MenuItem>().Any(row => Equals(row.Tag, "properties")) == physical
+                    && actions.Items.OfType<MenuItem>().Any(row => Equals(row.Tag, "opencontaining")) == physical,
+                    "A custom destination lost available file actions or exposes them for a missing/virtual item.");
+                Check(actions.Items.OfType<MenuItem>().Any(row => Equals(row.Tag, "jump-pin")) == physical,
+                    "Custom destination pinning ignores filesystem availability.");
+                if (physical)
+                {
+                    Find(actions, "jump-pin").RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)); await Task.Delay(10);
+                    Check(invoked.Last() == (app.Id, "pin", "", target), "A custom destination pin changed the target or app identity.");
+                    var location = Find(actions, "opencontaining");
+                    Check(Equals(location.Header, L.T(Directory.Exists(target) ? K.OpenFolderLocation : K.OpenFileLocation)),
+                        "A custom destination uses the wrong file/folder location label.");
+                }
+                await CloseMenuAsync(current);
+            }
+            state = original;
             foreach (var unavailable in new[] { Path.Combine(directory, "Unavailable pin.txt"), "https://example.invalid/owned-fixture" })
             {
                 state = state with { Pinned = [new(new string('C', 64), "Unavailable or virtual destination", unavailable, false, false)] };

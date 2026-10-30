@@ -49,7 +49,7 @@ public partial class MainWindow
                 if (current != generation || !menu.IsOpen) return;
                 PopulateJumpItems(recent, frequent, app, destinations, snapshot, Accept);
                 PopulateNativeJumpItems(pinned, tasks, app, snapshot, Accept);
-                PopulateCustomJumpItems(menu, tasks, app, snapshot);
+                PopulateCustomJumpItems(menu, tasks, app, snapshot, Accept);
             }
             void Accept(NativeJumpSnapshot update)
             {
@@ -96,7 +96,7 @@ public partial class MainWindow
         };
     }
 
-    private void PopulateCustomJumpItems(ContextMenu menu, MenuItem tasks, AppEntry app, NativeJumpSnapshot snapshot)
+    private void PopulateCustomJumpItems(ContextMenu menu, MenuItem tasks, AppEntry app, NativeJumpSnapshot snapshot, Action<NativeJumpSnapshot> changed)
     {
         foreach (var existing in menu.Items.OfType<MenuItem>().Where(row => Equals(row.Tag, "jump-custom")).ToArray()) menu.Items.Remove(existing);
         foreach (var category in snapshot.Categories ?? [])
@@ -112,12 +112,7 @@ public partial class MainWindow
                     IsEnabled = !_preview || _nativeJumpFixture != null
                 };
                 row.Click += async (_, e) => { if (ReferenceEquals(e.Source, row)) await ExecuteNativeJumpAsync(app, "invoke-custom", entry.Key); };
-                if (entry.Target.Length > 0 && snapshot.PinsSupported)
-                {
-                    var actions = CreateContextMenu();
-                    var pin = new MenuItem { Header = L.T(K.PinToJumpList), IsEnabled = row.IsEnabled };
-                    pin.Click += async (_, _) => await ExecuteNativeJumpAsync(app, "pin", target: entry.Target); actions.Items.Add(pin); row.ContextMenu = actions;
-                }
+                row.ContextMenu = NativeDestinationActions(app, entry, "invoke-custom", snapshot.PinsSupported, changed);
                 section.Items.Add(row);
             }
             if (section.Items.Count > 0) menu.Items.Insert(menu.Items.IndexOf(tasks), section);
@@ -140,29 +135,41 @@ public partial class MainWindow
                     IsEnabled = !_preview || _nativeJumpFixture != null
                 };
                 row.Click += async (_, e) => { if (ReferenceEquals(e.Source, row)) await ExecuteNativeJumpAsync(app, operation, entry.Key); };
-                if (section == pinned)
-                {
-                    var actions = CreateContextMenu();
-                    var open = new MenuItem { Header = L.T(K.MenuOpen), Tag = "jump-open", IsEnabled = row.IsEnabled };
-                    open.Click += async (_, _) => await ExecuteNativeJumpAsync(app, operation, entry.Key); actions.Items.Add(open);
-                    if (entry.Target.Length > 0)
-                    {
-                        var local = new AppEntry(entry.Target, entry.Name, entry.Target, false);
-                        foreach (var (verb, label) in new[] { ("opencontaining", entry.IsDirectory ? K.OpenFolderLocation : K.OpenFileLocation), ("properties", K.AppProperties) })
-                        {
-                            if (AppFileLocation.Find(local) == null) continue;
-                            var command = new MenuItem { Header = L.T(label), Tag = verb, IsEnabled = !_preview || _appCommandFixture != null };
-                            command.Click += async (_, _) => await ExecuteAppCommandAsync(local, verb); actions.Items.Add(command);
-                        }
-                    }
-                    var unpin = new MenuItem { Header = L.T(K.UnpinFromJumpList), Tag = "jump-unpin", IsEnabled = row.IsEnabled };
-                    unpin.Click += async (_, _) => await ExecuteNativeJumpAsync(app, "unpin", entry.Key, changed: changed); actions.Items.Add(unpin);
-                    row.ContextMenu = actions;
-                }
+                if (section == pinned) row.ContextMenu = NativeDestinationActions(app, entry, operation, snapshot.PinsSupported, changed);
                 section.Items.Add(row);
             }
             section.Visibility = section.Items.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
         }
+    }
+
+    private ContextMenu NativeDestinationActions(AppEntry app, NativeJumpItem entry, string operation, bool pinsSupported, Action<NativeJumpSnapshot> changed)
+    {
+        var actions = CreateContextMenu(); var enabled = !_preview || _nativeJumpFixture != null;
+        var open = new MenuItem { Header = L.T(K.MenuOpen), Tag = "jump-open", IsEnabled = enabled };
+        open.Click += async (_, _) => await ExecuteNativeJumpAsync(app, operation, entry.Key); actions.Items.Add(open);
+        if (entry.Target.Length > 0)
+        {
+            var local = new AppEntry(entry.Target, entry.Name, entry.Target, false);
+            if (AppFileLocation.Find(local) != null)
+            {
+                foreach (var (verb, label) in new[] { ("opencontaining", entry.IsDirectory ? K.OpenFolderLocation : K.OpenFileLocation), ("properties", K.AppProperties) })
+                {
+                    var command = new MenuItem { Header = L.T(label), Tag = verb, IsEnabled = !_preview || _appCommandFixture != null };
+                    command.Click += async (_, _) => await ExecuteAppCommandAsync(local, verb); actions.Items.Add(command);
+                }
+            }
+        }
+        if (operation == "invoke-pinned")
+        {
+            var unpin = new MenuItem { Header = L.T(K.UnpinFromJumpList), Tag = "jump-unpin", IsEnabled = enabled };
+            unpin.Click += async (_, _) => await ExecuteNativeJumpAsync(app, "unpin", entry.Key, changed: changed); actions.Items.Add(unpin);
+        }
+        else if (entry.Target.Length > 0 && pinsSupported && (File.Exists(entry.Target) || Directory.Exists(entry.Target)))
+        {
+            var pin = new MenuItem { Header = L.T(K.PinToJumpList), Tag = "jump-pin", IsEnabled = enabled };
+            pin.Click += async (_, _) => await ExecuteNativeJumpAsync(app, "pin", target: entry.Target, changed: changed); actions.Items.Add(pin);
+        }
+        return actions;
     }
 
     private async Task ExecuteNativeJumpAsync(AppEntry app, string operation, string key = "", string target = "", Action<NativeJumpSnapshot>? changed = null)

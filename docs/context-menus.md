@@ -15,6 +15,7 @@ ReStart keeps app actions separate from layout editing. Windows supplies the ava
 | A live tile | Unpin, Resize and tile-specific tools such as Tile Studio, data configuration and reload | Turn live tile on/off |
 | A Windows-pinned Jump List destination | Open; right-click for Unpin from this list and, for filesystem items, location/Properties | No More submenu |
 | A registered application task | The application's registered action, such as New window | No synthesized app-specific command |
+| An application-defined Jump List destination | Open; its own context menu offers available file/folder location and Properties, plus Windows pinning for existing physical destinations | Category membership remains controlled by the publishing app |
 | A group heading | Rename, Unpin group from Start and ReStart's tile/layout tools | No application Shell actions |
 | Navigation folder shortcuts and Settings, collapsed or expanded | Personalize this list opens ReStart's Start experience settings | No More submenu |
 | A Recent/Frequent document inside an app menu | Right-click the document for Open, location, Properties, Remove from this list and Pin to this list when supported | No More submenu |
