@@ -41,6 +41,8 @@ internal sealed partial class SettingsWindow
             var local = _main.Document.Preferences; var restored = pending.Layout.Preferences;
             restored.CaptureWindowsKey = local.CaptureWindowsKey; restored.CaptureStartButton = local.CaptureStartButton;
             restored.StartWithWindows = local.StartWithWindows; restored.ExplorerContextMenu = local.ExplorerContextMenu;
+            restored.TabletFeaturesEnabled = local.TabletFeaturesEnabled; restored.TabletKeyboardMeansDesktop = local.TabletKeyboardMeansDesktop;
+            restored.TabletHideTaskbar = local.TabletHideTaskbar; restored.ShowTaskbarWhileOpen = local.ShowTaskbarWhileOpen;
             pending.Commit(_store.Save);
             _main.AdoptRestoredProfile(pending.Layout); DiscardAndClose();
         }

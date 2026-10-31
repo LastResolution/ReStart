@@ -1,4 +1,13 @@
 {
+  "TileDataApprove": "Save and approve",
+  "TilePermissionHelp": "Approval applies only to this tile and its enabled read-only connections. Disable a connection to revoke access. Changed package requests require approval again.",
+  "SettingsShowTaskbar": "Show an automatically hidden taskbar while ReStart is open",
+  "SettingsTaskbarHelp": "Only the taskbar on ReStart’s monitor is affected. Windows auto-hide settings stay unchanged.",
+  "SettingsTablet": "Tablet integration",
+  "SettingsTabletEnable": "Enable optional tablet integration",
+  "SettingsTabletKeyboard": "Pause tablet integration when a USB or Bluetooth keyboard is connected",
+  "SettingsTabletHide": "Hide the taskbar while ReStart is open in tablet mode",
+  "SettingsTabletHelp": "Uses Windows posture detection after you save. Your tiles and desktop Start shortcuts are preserved. Unknown posture does not activate tablet effects.",
   "RemoveFromThisList": "Remove from this list",
   "DontShowInThisList": "Don't show in this list",
   "ClearRecentList": "Clear list",

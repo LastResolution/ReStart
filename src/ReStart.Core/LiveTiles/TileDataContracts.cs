@@ -60,7 +60,7 @@ public sealed class TileDataBinding
 /// <param name="HttpStatus">Optional HTTP status code; null for non-HTTP failures.</param>
 public sealed record TileDataError(string Code, int? HttpStatus = null);
 /// <summary>Contains only bounded display data and freshness metadata safe to pass to a tile worker.</summary>
-/// <param name="Status">Provider state such as loading, ready, error, disabled or unconfigured.</param>
+/// <param name="Status">Provider state such as loading, ready, error, disabled, unconfigured or permission (current host approval is missing).</param>
 /// <param name="Value">Bounded JSON display value; never includes connection credentials.</param>
 /// <param name="UpdatedAt">Time of the last successful value update, or null before success.</param>
 /// <param name="CheckedAt">Time of the latest completed read attempt, or null before a read.</param>

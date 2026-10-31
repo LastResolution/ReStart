@@ -13,7 +13,8 @@ public partial class MainWindow
             {
                 var manifest = _scriptPackages.Read(tile.ScriptId).Manifest;
                 if (!manifest.Capabilities.Contains("data.sources")) return;
-                var window = new TileDataWindow(owner, manifest, _scriptPackages.DataBindingPath(tile.ScriptId));
+                var window = new TileDataWindow(owner, manifest, _scriptPackages.DataBindingPath(tile.ScriptId, tile.Id),
+                    new(_scriptPackages.DataGrantPath(tile.ScriptId, tile.Id), tile.Id, tile.ScriptId), _scriptPackages.DataBindingPath(tile.ScriptId));
                 if (window.ShowDialog() != true) return;
                 RetireTileData(tile.Id);
                 if (_scriptSessions.TryGetValue(tile.Id, out var session)) session.NextUpdate = DateTimeOffset.MinValue;

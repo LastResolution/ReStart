@@ -385,7 +385,9 @@ public partial class MainWindow
         if (!_tileData.TryGetValue(tile.Id, out var current) || current.Package != tile.ScriptId || current.Runtime.Signature != signature)
         {
             RetireTileData(tile.Id);
-            var runtime = new ScriptDataRuntime(_scriptPackages.DataBindingPath(tile.ScriptId), manifest, _tileDataTransport ??= new());
+            var packageId = tile.ScriptId; var tileId = tile.Id;
+            var runtime = new ScriptDataRuntime(_scriptPackages.DataBindingPath(packageId, tileId), _scriptPackages.DataGrantPath(packageId, tileId),
+                tileId, packageId, manifest, () => _scriptPackages.Read(packageId).Manifest, _tileDataTransport ??= new());
             runtime.Updated += () => Dispatcher.BeginInvoke(() =>
             {
                 if (!_exit && IsVisible && _tileData.TryGetValue(tile.Id, out var latest) && latest.Runtime == runtime

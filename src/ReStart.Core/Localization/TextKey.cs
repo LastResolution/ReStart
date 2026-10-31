@@ -3,6 +3,24 @@ namespace ReStart.Core;
 /// <summary>Stable, language-independent identifiers for all application-owned UI text.</summary>
 public enum TextKey
 {
+    /// <summary>Save and approve</summary>
+    TileDataApprove,
+    /// <summary>Approval applies only to this tile and its enabled read-only connections. Disable a connection to revoke access. Changed package requests require approval again.</summary>
+    TilePermissionHelp,
+    /// <summary>Show an automatically hidden taskbar while ReStart is open</summary>
+    SettingsShowTaskbar,
+    /// <summary>Only the taskbar on ReStart's monitor is affected. Windows auto-hide settings stay unchanged.</summary>
+    SettingsTaskbarHelp,
+    /// <summary>Tablet integration</summary>
+    SettingsTablet,
+    /// <summary>Enable optional tablet integration</summary>
+    SettingsTabletEnable,
+    /// <summary>Pause tablet integration when a USB or Bluetooth keyboard is connected</summary>
+    SettingsTabletKeyboard,
+    /// <summary>Hide the taskbar while ReStart is open in tablet mode</summary>
+    SettingsTabletHide,
+    /// <summary>Uses Windows posture detection after you save. Your tiles and desktop Start shortcuts are preserved. Unknown posture does not activate tablet effects.</summary>
+    SettingsTabletHelp,
     /// <summary>Wi-Fi</summary>
     WindowsSettingNetworkWifi,
     /// <summary>Ethernet</summary>

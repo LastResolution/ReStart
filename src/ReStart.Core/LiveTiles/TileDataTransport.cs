@@ -29,11 +29,13 @@ public sealed class TileDataTransport : IDisposable
     { internal TileDataError Error { get; } = new(code, status); }
 
     internal async Task<Result> ReadAsync(TileDataDefinition definition, TileDataBinding binding, int budget,
-        string? etag, DateTimeOffset? modified, CancellationToken cancellation)
+        string? etag, DateTimeOffset? modified, CancellationToken cancellation, Func<bool>? authorized = null)
     {
         await _requests.WaitAsync(cancellation).ConfigureAwait(false);
         try
         {
+            void Authorize() { if (authorized?.Invoke() == false) throw new Failure("permission"); }
+            Authorize();
             using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
             deadline.CancelAfter(TimeSpan.FromSeconds(8));
             if (binding.Access == "file")
@@ -41,19 +43,23 @@ public sealed class TileDataTransport : IDisposable
                 var info = new FileInfo(binding.Location);
                 if (!info.Exists || (info.Attributes & (FileAttributes.Directory | FileAttributes.ReparsePoint)) != 0) throw new Failure("file");
                 if (info.Length > MaxResponseBytes) throw new Failure("tooLarge");
+                Authorize();
                 await using var file = new FileStream(binding.Location, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, 4096, true);
                 var data = await ReadBoundedAsync(file, deadline.Token).ConfigureAwait(false);
+                Authorize();
                 return new(Parse(data, definition, binding, budget));
             }
             var original = new Uri(binding.Location); var address = original;
             for (var redirects = 0; redirects <= 3; redirects++)
             {
+                Authorize();
                 using var request = new HttpRequestMessage(HttpMethod.Get, address);
                 request.Headers.UserAgent.ParseAdd("ReStart-LiveTiles/1.0");
                 if (binding.Secret.Length > 0) request.Headers.TryAddWithoutValidation(binding.HeaderName, binding.Secret);
                 if (etag != null) request.Headers.TryAddWithoutValidation("If-None-Match", etag);
                 if (modified != null) request.Headers.IfModifiedSince = modified;
                 using var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, deadline.Token).ConfigureAwait(false);
+                Authorize();
                 if ((int)response.StatusCode is 301 or 302 or 303 or 307 or 308)
                 {
                     if (response.Headers.Location == null || redirects == 3) throw new Failure("redirect");
@@ -67,6 +73,7 @@ public sealed class TileDataTransport : IDisposable
                 if (response.Content.Headers.ContentLength > MaxResponseBytes) throw new Failure("tooLarge");
                 await using var stream = await response.Content.ReadAsStreamAsync(deadline.Token).ConfigureAwait(false);
                 var bytes = await ReadBoundedAsync(stream, deadline.Token).ConfigureAwait(false);
+                Authorize();
                 return new(Parse(bytes, definition, binding, budget), response.Headers.ETag?.ToString(), response.Content.Headers.LastModified);
             }
             throw new Failure("redirect");

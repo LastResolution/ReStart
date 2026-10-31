@@ -3,6 +3,14 @@ namespace ReStart.Core;
 /// <summary>Stores local UI and integration choices; imported layouts do not replace these settings.</summary>
 public sealed class Preferences
 {
+    /// <summary>Gets or sets explicit consent to optional tablet integration; false by default. Posture detection alone never enables it or replaces layouts.</summary>
+    public bool TabletFeaturesEnabled { get; set; }
+    /// <summary>Gets or sets whether tablet effects require confirmed absence of a USB/Bluetooth keyboard. False by default; unknown detection pauses effects when enabled.</summary>
+    public bool TabletKeyboardMeansDesktop { get; set; }
+    /// <summary>Gets or sets whether opted-in, active tablet integration hides this launcher's monitor taskbar while Start is open, after recovery is durably saved. False by default.</summary>
+    public bool TabletHideTaskbar { get; set; }
+    /// <summary>Gets or sets whether an automatically hidden taskbar is revealed while Start is open; true by default, independently of tablet opt-in.</summary>
+    public bool ShowTaskbarWhileOpen { get; set; } = true;
     /// <summary>Gets or sets whether live tiles outside the scrolled viewport are suspended; defaults to true.</summary>
     public bool PauseOffscreenLiveTiles { get; set; } = true;
     /// <summary>Gets or sets whether failed live tiles receive bounded automatic recovery attempts; defaults to true.</summary>

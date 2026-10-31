@@ -11,16 +11,19 @@ namespace ReStart.App;
 /// <summary>Edits explicit, local-only connections without putting URLs or credentials in package manifests or layouts.</summary>
 internal sealed class TileDataWindow : Window
 {
+    internal sealed record Approval(string Path, string TileId, string PackageId);
     private sealed record Editor(string Id, TileDataDefinition Definition, TileDataBinding Previous, CheckBox Enabled,
         ComboBox Access, TextBox Location, TextBox Pointer, TextBox Header, PasswordBox Secret, CheckBox Clear);
     private readonly List<Editor> _editors = [];
     private readonly string _path;
+    private readonly Approval? _approval;
+    private readonly ScriptTileManifest _manifest;
     private readonly TextBlock _feedback = new() { TextWrapping = TextWrapping.Wrap };
     internal Button SaveButton { get; }
     internal IReadOnlyList<TextBox> LocationInputs => _editors.Select(e => e.Location).ToArray();
-    internal TileDataWindow(Window owner, ScriptTileManifest manifest, string path)
+    internal TileDataWindow(Window owner, ScriptTileManifest manifest, string path, Approval? approval = null, string? legacyPath = null)
     {
-        _path = path; Owner = owner; ShowInTaskbar = false; Title = L.T(K.ConfigureTileData);
+        _path = path; _approval = approval; _manifest = manifest; Owner = owner; ShowInTaskbar = false; Title = L.T(K.ConfigureTileData);
         Width = 620; Height = 730; MinWidth = 460; MinHeight = 400; WindowStartupLocation = WindowStartupLocation.CenterOwner;
         Style = (Style)Application.Current.FindResource(typeof(Window)); ThemeWindow.Attach(this);
         var root = new DockPanel { Margin = new(24) };
@@ -28,14 +31,15 @@ internal sealed class TileDataWindow : Window
         footer.Children.Add(_feedback);
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new(0, 14, 0, 0) };
         buttons.Children.Add(new Button { Content = L.T(K.CommonCancel), MinWidth = 96, IsCancel = true });
-        SaveButton = new Button { Content = L.T(K.CommonSave), MinWidth = 96, IsDefault = true, Margin = new(8, 0, 0, 0) };
+        SaveButton = new Button { Content = L.T(approval == null ? K.CommonSave : K.TileDataApprove), MinWidth = 96, IsDefault = true, Margin = new(8, 0, 0, 0) };
         SaveButton.SetResourceReference(BackgroundProperty, "AccentBrush"); SaveButton.Click += (_, _) => Save();
         SaveButton.SetResourceReference(ForegroundProperty, "AccentTextBrush");
         buttons.Children.Add(SaveButton); footer.Children.Add(buttons); root.Children.Add(footer);
         var body = new StackPanel();
         body.Children.Add(new TextBlock { Text = L.T(K.TileDataHelp), TextWrapping = TextWrapping.Wrap, Margin = new(0, 0, 0, 18) });
+        if (approval != null) body.Children.Add(new TextBlock { Text = L.T(K.TilePermissionHelp), TextWrapping = TextWrapping.Wrap, Margin = new(0, 0, 0, 18) });
         Dictionary<string, TileDataBinding> saved;
-        try { saved = ScriptDataBindings.Read(path); }
+        try { saved = ScriptDataBindings.Read(!File.Exists(path) && legacyPath != null ? legacyPath : path); }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or CryptographicException or System.Text.Json.JsonException)
         { saved = []; _feedback.Text = L.T(K.TileDataInvalid); }
         foreach (var (id, definition) in manifest.DataSources)
@@ -98,7 +102,12 @@ internal sealed class TileDataWindow : Window
             if (!binding.IsValid()) { _feedback.Text = L.T(K.TileDataInvalid); editor.Location.Focus(); return; }
             bindings[editor.Id] = binding;
         }
-        try { ScriptDataBindings.Save(_path, bindings); DialogResult = true; }
+        try
+        {
+            ScriptDataBindings.Save(_path, bindings);
+            if (_approval != null) ScriptTileGrants.ApproveData(_approval.Path, _approval.TileId, _approval.PackageId, _manifest, bindings);
+            DialogResult = true;
+        }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or CryptographicException)
         { _feedback.Text = L.T(K.TileDataInvalid); }
     }

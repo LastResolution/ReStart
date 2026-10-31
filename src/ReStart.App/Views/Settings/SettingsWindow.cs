@@ -66,7 +66,8 @@ internal sealed partial class SettingsWindow : Window
         var title = new TextBlock { Text = Title, FontSize = 26, Margin = new(0, 0, 0, 24) };
         DockPanel.SetDock(title, Dock.Top); root.Children.Add(title);
         var body = new Grid(); body.ColumnDefinitions.Add(new() { Width = new GridLength(180) }); body.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
-        var navigation = new StackPanel { Margin = new(0, 0, 24, 0) }; body.Children.Add(navigation);
+        var navigation = new StackPanel { Margin = new(0, 0, 24, 0) };
+        body.Children.Add(new ScrollViewer { Content = navigation, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled });
         var view = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Padding = new(0, 0, 16, 0) };
         Grid.SetColumn(view, 1); body.Children.Add(view);
         var navigationButtons = new List<Button>();
@@ -90,9 +91,18 @@ internal sealed partial class SettingsWindow : Window
         Note(content, L.T(_main.IsPreview ? K.PreviewAutostartHelp : K.StartupBackgroundHelp));
         if (!_main.IsPreview && StartupRegistration.Current.Command is string command) Note(content, L.T(K.StartupCommandPrefix) + command);
         Check(content, L.T(K.SettingsCloseOnDeactivate), _draft.CloseOnDeactivate, v => _draft.CloseOnDeactivate = v);
+        Check(content, L.T(K.SettingsShowTaskbar), _draft.ShowTaskbarWhileOpen, v => _draft.ShowTaskbarWhileOpen = v);
+        Note(content, L.T(K.SettingsTaskbarHelp));
         var explorer = Check(content, L.T(K.ExplorerPinSetting), _draft.ExplorerContextMenu, v => _draft.ExplorerContextMenu = v);
         explorer.IsEnabled = !_main.IsPreview;
         Note(content, L.T(K.ExplorerPinHelp));
+        content = Section(K.SettingsTablet);
+        var tablet = Check(content, L.T(K.SettingsTabletEnable), _draft.TabletFeaturesEnabled, v => _draft.TabletFeaturesEnabled = v);
+        var keyboardPolicy = Check(content, L.T(K.SettingsTabletKeyboard), _draft.TabletKeyboardMeansDesktop, v => _draft.TabletKeyboardMeansDesktop = v);
+        var hideTaskbar = Check(content, L.T(K.SettingsTabletHide), _draft.TabletHideTaskbar, v => _draft.TabletHideTaskbar = v);
+        void UpdateTabletControls() { keyboardPolicy.IsEnabled = hideTaskbar.IsEnabled = tablet.IsChecked == true; }
+        tablet.Checked += (_, _) => UpdateTabletControls(); tablet.Unchecked += (_, _) => UpdateTabletControls(); UpdateTabletControls();
+        Note(content, L.T(K.SettingsTabletHelp));
         content = Section(K.SettingsAppearance);
         BuildAppearance(content);
         BuildNavigationSettings(Section(K.SettingsStartExperience));

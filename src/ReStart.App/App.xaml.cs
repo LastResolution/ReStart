@@ -15,6 +15,7 @@ public partial class App : Application
     private SingleInstanceGate? _instance;
     private RegisteredWaitHandle? _wait;
     private StartIntegration? _integration;
+    private TabletIntegration? _tabletIntegration;
     private System.Windows.Forms.NotifyIcon? _tray;
     private MainWindow? _window;
     private PinRequestChannel? _pinRequests;
@@ -24,6 +25,37 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        if (e.Args is ["--taskbar-live-check", var taskbarReport])
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            Shutdown(await TaskbarLiveCheck.RunAsync(taskbarReport)); return;
+        }
+        if (e.Args.Contains("--taskbar-live-check")) { Shutdown(1); return; }
+        if (e.Args is ["--taskbar-watchdog-fixture", var fixtureParent, var fixtureStarted, var fixtureNonce, var fixtureDirectory])
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            Shutdown(await TaskbarWatchdogFixture.RecoverAsync(fixtureParent, fixtureStarted, fixtureNonce, fixtureDirectory)); return;
+        }
+        if (e.Args is ["--taskbar-watchdog-owner-fixture", var ownerDirectory])
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            Shutdown(await TaskbarWatchdogFixture.OwnAsync(ownerDirectory)); return;
+        }
+        if (e.Args.Contains("--taskbar-watchdog-fixture") || e.Args.Contains("--taskbar-watchdog-owner-fixture")) { Shutdown(1); return; }
+        if (e.Args is ["--taskbar-watchdog", var parentId, var parentStarted, var nonce])
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            Shutdown(await TaskbarWatchdog.RunAsync(parentId, parentStarted, nonce));
+            return;
+        }
+        if (e.Args.Contains("--taskbar-watchdog")) { Shutdown(1); return; }
+        if (e.Args is ["--observe-keyboard", var keyboardReport])
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            Shutdown(await KeyboardObservationWindow.RunAsync(keyboardReport));
+            return;
+        }
+        if (e.Args.Contains("--observe-keyboard")) { Shutdown(1); return; }
         if (e.Args is ["--jump-list-worker"])
         {
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
@@ -91,11 +123,13 @@ public partial class App : Application
         var handle = new WindowInteropHelper(_window).EnsureHandle();
         LegacySettingsCleanup.Run();
         _integration = new StartIntegration(handle, Dispatcher, _window.Toggle, _window.DismissFromTaskbar, _window.ToggleFromStartButton);
-        _window.IsVisibleChanged += (_, _) => _integration.SetMenuOpen(_window.IsPresenting);
-        _window.PresentationVisibilityChanged = () => _integration.SetMenuOpen(_window.IsPresenting);
+        _tabletIntegration = new TabletIntegration(_window, HwndSource.FromHwnd(handle));
+        _window.IsVisibleChanged += (_, _) => { _integration.SetMenuOpen(_window.IsPresenting); _tabletIntegration.Refresh(); };
+        _window.PresentationVisibilityChanged = () => { _integration.SetMenuOpen(_window.IsPresenting); _tabletIntegration.Refresh(); };
         _window.PreferencesChanged = () =>
         {
             _integration.Apply(_window.Document.Preferences);
+            _tabletIntegration.Refresh();
             try { ExplorerPinRegistration.Current.SetEnabled(_window.Document.Preferences.ExplorerContextMenu); }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException or InvalidOperationException)
             { _window.SetStatus(L.T(K.ErrorExplorerRegistration) + ex.Message); }
@@ -249,6 +283,7 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         _integration?.Dispose();
+        _tabletIntegration?.Dispose();
         _pinRequests?.Dispose();
         _tray?.Dispose();
         _wait?.Unregister(null);

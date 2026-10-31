@@ -1,4 +1,13 @@
 {
+  "TileDataApprove": "저장 및 허용",
+  "TilePermissionHelp": "허용은 이 타일과 활성화된 읽기 전용 연결에만 적용됩니다. 연결을 비활성화하면 접근 권한이 취소됩니다. 패키지의 접근 요청이 변경되면 다시 허용해야 합니다.",
+  "SettingsShowTaskbar": "ReStart가 열려 있는 동안 자동으로 숨겨진 작업 표시줄 표시",
+  "SettingsTaskbarHelp": "ReStart가 표시되는 모니터의 작업 표시줄에만 적용됩니다. Windows의 자동 숨기기 설정은 변경하지 않습니다.",
+  "SettingsTablet": "태블릿 통합",
+  "SettingsTabletEnable": "선택적 태블릿 통합 사용",
+  "SettingsTabletKeyboard": "USB 또는 Bluetooth 키보드가 연결되면 태블릿 통합 일시 중지",
+  "SettingsTabletHide": "태블릿 모드에서 ReStart가 열려 있는 동안 작업 표시줄 숨기기",
+  "SettingsTabletHelp": "저장 후 Windows의 장치 자세 감지를 사용합니다. 타일과 데스크톱 시작 바로 가기는 유지됩니다. 자세를 확인할 수 없으면 태블릿 효과가 활성화되지 않습니다.",
   "RemoveFromThisList": "이 목록에서 제거",
   "DontShowInThisList": "이 목록에 표시 안 함",
   "ClearRecentList": "목록 지우기",

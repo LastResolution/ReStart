@@ -8,7 +8,8 @@ The repository ignores the default backup filename and its privacy guard rejects
 
 ## Excluded resources
 
-- Encrypted data connections and credential headers (`data-bindings.dat`).
+- Encrypted data connections and credential headers (per-tile `data-*.dat` and legacy `data-bindings.dat`).
+- Host integration approvals (`grant-*.dat`), private taskbar recovery records and watchdog handshakes.
 - Photo-folder bindings (`host-bindings.json`), slideshow photo collections and external JSON files.
 - Logs, application usage history, icon/browser caches, update downloads and unrelated files.
 - Per-tile browser networking grants; restored tiles require permission again.
@@ -19,7 +20,7 @@ The background copied into ReStart is included; the original image directory is 
 
 1. Open **Settings → Layout and data → Restore full backup** and select the ZIP.
 2. ReStart validates entry counts, compressed/expanded sizes, paths, duplicates, hashes, the layout and tile package bounds before offering confirmation.
-3. Confirm the group/tile counts. Restore replaces layout and appearance, including language. Windows-key capture, Start-button capture, Explorer registration and sign-in startup retain the current PC's settings.
+3. Confirm the group/tile counts. Restore replaces layout and appearance, including language. Windows-key capture, Start-button capture, Explorer registration, sign-in startup, tablet opt-in and taskbar choices retain the current PC's settings.
 4. Reconfigure data connections, photo folders and browser networking if needed.
 
 Global or group layout locks and read-only future layouts block restoration. A backup from a newer app must be restored using a compatible app version. Unsaved settings must be resolved before starting either action.

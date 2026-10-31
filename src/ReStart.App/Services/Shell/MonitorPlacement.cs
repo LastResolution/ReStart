@@ -15,14 +15,16 @@ internal static class MonitorPlacement
     /// <param name="after">Native insertion-order handle; ignored when <paramref name="flags"/> includes SWP_NOZORDER.</param>
     /// <param name="area">Target monitor working area in physical screen pixels, including negative screen coordinates.</param>
     /// <param name="flags">SetWindowPos flags controlling activation, visibility and stacking; must allow movement and resizing.</param>
+    /// <param name="resolveArea">Optional UI-thread working-area resolver used after DPI transitions; null follows the ordinary Windows working area.</param>
     /// <returns>True if the immediate native operation succeeds; false on native failure.</returns>
     /// <remarks>A DPI transition schedules one coalesced correction after WPF processes its suggested scaled size. The window must have a live WPF presentation source.</remarks>
     /// <exception cref="ArgumentException">The handle does not belong to a live WPF presentation source.</exception>
-    internal static bool FitWorkingArea(nint window, nint after, Rectangle area, uint flags)
+    internal static bool FitWorkingArea(nint window, nint after, Rectangle area, uint flags, Func<System.Windows.Forms.Screen, Rectangle>? resolveArea = null)
     {
         var source = HwndSource.FromHwnd(window) ?? throw new ArgumentException("The window must have a WPF presentation source.", nameof(window));
         var placement = Placements.GetValue(source, static value => new Placement(value));
         placement.Area = area;
+        placement.ResolveArea = resolveArea;
         return Native.SetWindowPos(window, after, area.X, area.Y, area.Width, area.Height, flags);
     }
 
@@ -41,6 +43,7 @@ internal static class MonitorPlacement
         private readonly HwndSource _source;
         private bool _pending, _released;
         internal Rectangle Area;
+        internal Func<System.Windows.Forms.Screen, Rectangle>? ResolveArea;
 
         internal Placement(HwndSource source) { _source = source; source.AddHook(OnMessage); }
         internal void Release() { _released = true; _source.RemoveHook(OnMessage); }
@@ -58,7 +61,8 @@ internal static class MonitorPlacement
                     _pending = false;
                     if (!_released && !_source.IsDisposed)
                     {
-                        Area = System.Windows.Forms.Screen.FromRectangle(Area).WorkingArea;
+                        var screen = System.Windows.Forms.Screen.FromRectangle(Area);
+                        Area = ResolveArea?.Invoke(screen) ?? screen.WorkingArea;
                         Native.SetWindowPos(window, 0, Area.X, Area.Y, Area.Width, Area.Height, 0x0014);
                     }
                 }, DispatcherPriority.Loaded);

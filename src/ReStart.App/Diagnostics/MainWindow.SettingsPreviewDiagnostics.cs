@@ -58,6 +58,16 @@ public partial class MainWindow
                             try
                             {
                                 Check(!editor.HasPendingChanges, "An untouched settings editor has unsaved changes.");
+                                editor.SelectSection(L.T(K.SettingsStartup));
+                                Named<CheckBox>(editor, K.SettingsShowTaskbar).IsChecked = false;
+                                editor.SelectSection(L.T(K.SettingsTablet));
+                                Check(!Named<CheckBox>(editor, K.SettingsTabletKeyboard).IsEnabled && !Named<CheckBox>(editor, K.SettingsTabletHide).IsEnabled,
+                                    "Tablet effects were editable before explicit opt-in.");
+                                Named<CheckBox>(editor, K.SettingsTabletEnable).IsChecked = true;
+                                Named<CheckBox>(editor, K.SettingsTabletKeyboard).IsChecked = true;
+                                Named<CheckBox>(editor, K.SettingsTabletHide).IsChecked = true;
+                                Check(Named<CheckBox>(editor, K.SettingsTabletKeyboard).IsEnabled && Named<CheckBox>(editor, K.SettingsTabletHide).IsEnabled,
+                                    "Opt-in did not enable the separate tablet choices.");
                                 editor.SelectSection(L.T(K.SettingsAppearance));
                                 Named<ComboBox>(editor, K.SettingsBaseTheme).SelectedIndex = (int)mode;
                                 Named<ComboBox>(editor, K.SettingsGroupWidth).SelectedIndex = 1;
@@ -75,6 +85,14 @@ public partial class MainWindow
                                 Named<ComboBox>(editor, K.SettingsDisplayLanguage).SelectedIndex = 1 + TextCatalog.SupportedLanguages.ToList().IndexOf(tag);
                                 editor.ApplyDraftPreview();
                                 Check(L.Language == tag && editor.Title == L.T(K.SettingsTitle) && editor.HasPendingChanges, "Language preview lost the draft or the active language section.");
+                                editor.SelectSection(L.T(K.SettingsStartup)); editor.UpdateLayout();
+                                Check(Named<CheckBox>(editor, K.SettingsShowTaskbar).IsChecked == false, "Rebuilding settings lost the independent taskbar choice.");
+                                editor.SelectSection(L.T(K.SettingsTablet)); editor.UpdateLayout();
+                                Check(Named<CheckBox>(editor, K.SettingsTabletEnable).IsChecked == true && Named<CheckBox>(editor, K.SettingsTabletKeyboard).IsChecked == true
+                                    && Named<CheckBox>(editor, K.SettingsTabletHide).IsChecked == true,
+                                    "Rebuilding translated settings lost tablet consent or taskbar choices.");
+                                if (tag == "en" && decision == SettingsCloseChoice.Discard)
+                                    SaveStartupScreenshot(editor, Path.Combine(directory, $"tablet-settings-{mode}.png"));
                                 Check(JsonSerializer.Serialize(fixture.Document.Preferences) == original && File.ReadAllBytes(store.FilePath).SequenceEqual(persisted)
                                     && JsonSerializer.Serialize(fixture.Document.Groups) == originalGroups && integrations == 0, "Preview changed saved models, disk or integration callbacks.");
                                 fixture.SaveLayout();
@@ -88,6 +106,8 @@ public partial class MainWindow
                         editor.ShowDialog(); if (error != null) throw new InvalidOperationException("Settings draft fixture failed.", error);
                         Check(fixture._preferencesPreview == null, "A closed editor retained its display overlay.");
                         Check(decision == SettingsCloseChoice.Save ? fixture.Document.Preferences.TileScale == 1.25 && store.Load()!.Preferences.Columns == 8
+                            && store.Load()!.Preferences.TabletFeaturesEnabled && store.Load()!.Preferences.TabletKeyboardMeansDesktop
+                            && store.Load()!.Preferences.TabletHideTaskbar && !store.Load()!.Preferences.ShowTaskbarWhileOpen
                             : JsonSerializer.Serialize(fixture.Document.Preferences) == original && JsonSerializer.Serialize(store.Load()!.Preferences) == original,
                             "Save/discard returned the wrong committed settings.");
                         Check(JsonSerializer.Serialize(fixture.Document.Groups) == originalGroups, "Settings preview altered tile coordinates or membership.");

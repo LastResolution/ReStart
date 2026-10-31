@@ -32,6 +32,8 @@ https://github.com/user-attachments/assets/a893cd20-8c82-4c47-b5fb-bf22743f67e1
 
 [Explore the tiles](#give-your-tiles-something-to-say) · [Connect your data](#connect-weather-headlines-and-app-data) · [Write a tile](#write-your-own) · [Build from source](#build-it-yourself)
 
+**Tablet and taskbar choices.** Startup settings can reveal an auto-hidden taskbar on ReStart’s display while it is open. Optional tablet integration starts off and preserves your layout and desktop Start shortcuts; keyboard-aware behavior and taskbar hiding have separate switches. Host data connections require **Save and approve** for each placed tile. Changed access requests need approval again. [Behavior and measured coverage](docs/fidelity.md).
+
 ## Reliability and private backups
 
 Live tiles pause outside the visible area and recover from browser failures with bounded retries. Both behaviors have independent switches in JavaScript tile settings. **Settings → Layout and data** can back up and restore layout, appearance, installed tiles, library drafts and backgrounds together. Saved data connections, credentials, photo-folder paths and caches are excluded; backups still contain private app names, launch paths and your custom source/assets. [Backup and recovery guide](docs/backups.md).

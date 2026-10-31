@@ -84,7 +84,9 @@ internal sealed class ScriptTilePackages(string dataDirectory)
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or JsonException) { return tile.Label; }
     }
     internal string SlideshowBindingPath(string id) => Path.Combine(Folder(id), "host-bindings.json");
-    internal string DataBindingPath(string id) => Path.Combine(Folder(id), "data-bindings.dat");
+    internal string DataBindingPath(string id, string? tileId = null) => Path.Combine(Folder(id), tileId == null ? "data-bindings.dat" : "data-" + ValidTileId(tileId) + ".dat");
+    internal string DataGrantPath(string id, string tileId) => Path.Combine(Folder(id), "grant-" + ValidTileId(tileId) + ".dat");
+    private static string ValidTileId(string id) => Guid.TryParseExact(id, "N", out _) ? id : throw new InvalidDataException("Invalid tile identity.");
     private static (ScriptTileManifest Manifest, string Source) ReadFolder(string folder)
     {
         var manifestPath = Path.Combine(folder, "manifest.json"); var sourcePath = Path.Combine(folder, "tile.js");
