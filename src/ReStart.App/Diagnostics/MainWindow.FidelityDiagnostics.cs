@@ -30,6 +30,8 @@ public partial class MainWindow
         try
         {
             fixture.Present(); await fixture.InitializeAsync(); fixture._clock.Stop();
+            checks += VerifyTouchPanningLease();
+            checks += fixture.VerifyTouchDragRoutes();
             fixture.Document.Preferences.Animate = false;
             foreach (var lang in TextCatalog.SupportedLanguages)
             {

@@ -86,6 +86,7 @@ public partial class MainWindow : Window
         InstallGroupBoundaries();
         InstallPlacementMotion();
         InstallNavigationBehavior();
+        InstallTouchDrag();
         ThemeWindow.Attach(this);
         WatchDesktopAppearance();
         Activated += (_, _) =>
@@ -115,7 +116,7 @@ public partial class MainWindow : Window
         ContentScroll.PreviewDragOver += (_, e) => TrackDragScrolling(e);
         UserRailLabel.Label = _preview ? "ReStart" : Environment.UserName;
         PreviewMouseDown += (_, _) => CompleteEntrance();
-        IsVisibleChanged += (_, _) => { if (!IsVisible) { StopMotion(); StopDragGhost(); ClearPlacementMotion(); SetLayoutEditing(false); } };
+        IsVisibleChanged += (_, _) => { if (!IsVisible) { _touchPanning.Release(); StopMotion(); StopDragGhost(); ClearPlacementMotion(); SetLayoutEditing(false); } };
         Loaded += async (_, _) => await InitializeAsync();
         SourceInitialized += (_, _) =>
         {
@@ -698,12 +699,15 @@ public partial class MainWindow : Window
 
     private void BeginDrag(Button button, MouseEventArgs e, string format, string id)
     {
+        if (_touchInput != null) { _touchInput.MouseMoves++; if (e.LeftButton == MouseButtonState.Pressed) _touchInput.PressedMouseMoves++; }
         if (e.LeftButton != MouseButtonState.Pressed || _dragging || !CanEditLayout
+            || TouchesOver.Skip(1).Any()
             || format == "ReStart.Group" && Document.Groups.FirstOrDefault(g => g.Id == id) is { } dragGroup && !CanEditGroup(dragGroup)
             || format == "ReStart.Tile" && !CanEditTile(id)) return;
         var point = e.GetPosition(this);
         if (Math.Abs(point.X - _dragOrigin.X) < SystemParameters.MinimumHorizontalDragDistance && Math.Abs(point.Y - _dragOrigin.Y) < SystemParameters.MinimumVerticalDragDistance) return;
         _dragging = true;
+        if (_touchInput != null) _touchInput.DragStarts++;
         _freePlacementGesture = Keyboard.Modifiers.HasFlag(ModifierKeys.Alt);
         _reorderGesture = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
         ShowGroupBoundaries(true);
@@ -737,10 +741,12 @@ public partial class MainWindow : Window
             // A list/search row can disappear when switching to tiles. Keep the
             // OLE drag source attached to the window for the whole operation.
             var result = DragDrop.DoDragDrop(this, new DataObject(format, id), DragDropEffects.Move);
+            if (_touchInput != null) { if (result == DragDropEffects.None) _touchInput.CancelledDrags++; else _touchInput.AcceptedDrops++; }
             if (result == DragDropEffects.None) RestoreDragView(previousView);
         }
         finally
         {
+            _touchPanning.Release();
             StopDragGhost();
             _dragScrolling = false; _activeDragFormat = null; _activeDragId = null;
             _freePlacementGesture = false; _reorderGesture = false;
@@ -759,6 +765,7 @@ public partial class MainWindow : Window
 
     private void WireDrag(Button button, string format, string id)
     {
+        WireTouchDrag(button, format, id);
         button.PreviewMouseLeftButtonDown += (_, e) =>
         {
             _dragOrigin = e.GetPosition(this);
