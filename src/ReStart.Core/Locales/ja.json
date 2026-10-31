@@ -562,9 +562,9 @@
   "WindowsAppHistoryHelp": "Windowsのアプリ起動の追跡が有効な場合に使用します。インストール済みアプリに一致する記録だけを読み、保存はしません。ReStartの履歴を消去してもWindowsの履歴は消えません。",
   "SettingsWindowsSearchSyntax": "Windowsの高度なファイル検索構文を使用",
   "WindowsSearchSyntaxHelp": "Windowsの検索構文と関連度順を使用します。System.Kind:pictureなどの正規プロパティ名は言語を問わず使用できます。本文の検索には別途本文検索の設定が必要です。",
-  "SearchInWindows": "Windowsで検索",
+  "SearchInWindows": "Windows検索を開く",
   "SettingsWindowsSearchHandoff": "Windows検索への引き継ぎを表示",
-  "WindowsSearchHandoffHelp": "選択したときだけWindows検索を開きます。Web・クラウド・アカウントへのアクセスはWindows側で管理されます。",
+  "WindowsSearchHandoffHelp": "Win+SでWindows検索を開きます。検索語はWindows側で入力してください。Web・クラウド・アカウントへのアクセスはWindowsが管理します。",
   "SettingsLegacyUwpTiles": "Windowsアプリのライブタイルを表示（互換機能）",
   "LegacyUwpTilesHelp": "ピン留めしたパッケージアプリの有効なタイルとバッジだけを読み取ります。Windowsの非公開データ形式を使用し、利用できない場合はアイコンを表示します。トースト通知は取得せず、外部画像もダウンロードしません。"
 }

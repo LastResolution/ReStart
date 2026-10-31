@@ -76,7 +76,7 @@ After the first query, a background catalog also reads Windows-supplied settings
 
 **Use Windows advanced file queries** enables the public Windows AQS parser and native relevance ordering. Canonical queries such as `System.Kind:picture` and `System.Size:>1048576` avoid dependence on localized property aliases. The query stays in the local `SystemIndex`, with a fixed projection, fifty-result bound and existing three-second provider deadline. Turning content matching off rejects generated content/wildcard predicates even when the input explicitly names a content property. Unsupported syntax/providers fall back to literal matching.
 
-**Search in Windows** is an explicit handoff for additional local, Web and account-backed sources. The query is URI-encoded, not passed through a terminal or concatenated into a command. Windows controls its own sources, accounts, network activity and policies. Typing in ReStart does not invoke this action. This does not reproduce Windows Search's proprietary ranking or cloud results inside ReStart.
+**Open Windows Search** dismisses ReStart and invokes Windows’ documented Win+S shortcut for additional local, Web and account-backed sources. Enter the query in Windows; ReStart does not inject query text or use the clipboard. Windows controls its own sources, accounts, network activity and policies. Typing in ReStart does not invoke this action. This does not reproduce Windows Search's proprietary ranking or cloud results inside ReStart.
 
 ## Windows app tile compatibility
 

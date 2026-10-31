@@ -69,7 +69,7 @@ Drag shortcut tips appear briefly at the bottom of Start and can be disabled in 
 
 ## Windows app integration
 
-Search now also uses Windows-provided settings keywords and Control Panel entries. Optional Advanced Query Syntax adds native file filtering and relevance order; **Search in Windows** explicitly hands additional sources to Windows.
+Search now also uses Windows-provided settings keywords and Control Panel entries. Optional Advanced Query Syntax adds native file filtering and relevance order. **Open Windows Search** opens the Windows interface with <kbd>Win</kbd> + <kbd>S</kbd>; enter your query there for additional sources.
 
 Two options are off by default: counts of app launches recorded by Windows for Most used, and a read-only compatibility reader for Windows app tiles and badges. The tile renderer supports common size bindings, local raster images and literal data bindings. It does not restore discontinued push services; unavailable data keeps the app icon.
 

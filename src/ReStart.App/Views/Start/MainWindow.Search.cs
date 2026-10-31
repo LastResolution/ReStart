@@ -22,8 +22,8 @@ public partial class MainWindow
     private bool _windowsSettingsLoading;
     private bool _windowsSettingsLoaded;
     private Func<Task<IReadOnlyList<WindowsSettingsCatalog.Entry>>>? _windowsSettingsFixture = null;
-    private bool? _windowsSearchAvailable;
-    private bool CanHandoffToWindows => _preview || (_windowsSearchAvailable ??= WindowsSearchAvailability.IsRegistered());
+    private Func<bool>? _windowsSearchFixture;
+    private bool CanHandoffToWindows => _preview || WindowsSearchLauncher.IsAvailable();
     private Func<string, CancellationToken, Task<(IReadOnlyList<AppEntry> Files, bool Available)>>? _fileSearchFixture;
 
     /// <summary>Rebuilds the visible results, retaining the selected app only when the query has not changed.</summary>
@@ -77,8 +77,10 @@ public partial class MainWindow
 
     private void OpenWindowsSearch(object sender, RoutedEventArgs e)
     {
-        if (Document.Preferences.ShowWindowsSearchHandoff && CanHandoffToWindows && (!_preview || _activationFixture != null) && WindowsSearchHandoff.ForQuery(SearchBox.Text) is { } uri)
-            Launch(new("restart:windows-search", L.T(K.SearchInWindows), uri.AbsoluteUri, false));
+        if (!Document.Preferences.ShowWindowsSearchHandoff || !CanHandoffToWindows || _preview && _windowsSearchFixture == null) return;
+        if (_windowsSearchFixture != null) { _windowsSearchFixture(); return; }
+        Dismiss(immediately: true);
+        if (!WindowsSearchLauncher.TryOpen()) { Present(); SetStatus(L.T(K.ErrorLaunch) + L.T(K.SearchInWindows)); }
     }
 
     private async void EnsureWindowsSettingsCatalog()

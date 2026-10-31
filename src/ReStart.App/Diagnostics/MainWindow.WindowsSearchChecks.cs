@@ -9,9 +9,10 @@ public partial class MainWindow
 {
     private static async Task<int> VerifyWindowsSearchAsync(MainWindow fixture, List<AppEntry> launched, string directory)
     {
-        var checks = 0; var loads = 0;
+        var checks = 0; var loads = 0; var handoffs = 0;
         void Check(bool value, string message) { Require(value, message); checks++; }
         fixture.Document.Preferences.SearchSettings = true;
+        fixture._windowsSearchFixture = () => { handoffs++; return true; };
         fixture._windowsSettingsFixture = async () =>
         {
             loads++; await Task.Delay(35);
@@ -19,17 +20,16 @@ public partial class MainWindow
         };
         var beforeLaunch = launched.Count;
         fixture.SetSmokeSearch("owned keyword");
-        Check(launched.Count == beforeLaunch, "Typing automatically invoked Windows Search.");
+        Check(launched.Count == beforeLaunch && handoffs == 0, "Typing automatically invoked Windows Search.");
         var deadline = Environment.TickCount64 + 2000;
         while (!fixture._windowsSettingsLoaded && Environment.TickCount64 < deadline) await Task.Delay(20);
         Check(fixture.SearchResultNames.Contains("Owned Windows setting"), "Native settings keywords did not appear in categorized results.");
         Check(((Button)fixture.SearchResults.SelectedItem).Tag is AppEntry { Id: "restart:setting:native:owned" }, "Late native settings lost the visible result selection.");
         fixture.WindowsSearchButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-        Check(launched.Last().LaunchTarget == WindowsSearchHandoff.ForQuery("owned keyword")!.AbsoluteUri,
-            "The explicit Windows Search action did not preserve the encoded query.");
+        Check(handoffs == 1 && launched.Count == beforeLaunch, "The explicit Windows Search action did not use the native shortcut route.");
         fixture.Document.Preferences.ShowWindowsSearchHandoff = false; fixture.RefreshSearchResults();
         var afterLaunch = launched.Count; fixture.WindowsSearchButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-        Check(fixture.WindowsSearchButton.Visibility == Visibility.Collapsed && launched.Count == afterLaunch, "A disabled handoff remained visible or invokable.");
+        Check(fixture.WindowsSearchButton.Visibility == Visibility.Collapsed && launched.Count == afterLaunch && handoffs == 1, "A disabled handoff remained visible or invokable.");
         fixture.Document.Preferences.SearchSettings = false; fixture.RefreshSearchResults();
         Check(!fixture.SearchResultNames.Contains("Owned Windows setting"), "Native settings ignored the settings search switch.");
         fixture.Document.Preferences.SearchSettings = true; fixture.Document.Preferences.ShowWindowsSearchHandoff = true;
@@ -52,7 +52,7 @@ public partial class MainWindow
             SaveFixtureElement(fixture.Root, Path.Combine(directory, "windows-search-" + theme + ".png"));
         }
         Check(loads == 1, "Repeated searches re-enumerated the native settings catalog.");
-        fixture._windowsSettingsFixture = null; fixture.ResetToPinnedView();
+        fixture._windowsSettingsFixture = null; fixture._windowsSearchFixture = null; fixture.ResetToPinnedView();
         return checks;
     }
 }

@@ -830,11 +830,11 @@ public enum TextKey
     SettingsWindowsSearchSyntax,
     /// <summary>Use Windows query syntax and relevance ranking. Canonical properties such as System.Kind:picture work across languages. Document contents still require the separate content option.</summary>
     WindowsSearchSyntaxHelp,
-    /// <summary>Search in Windows</summary>
+    /// <summary>Open Windows Search</summary>
     SearchInWindows,
     /// <summary>Show Windows Search handoff</summary>
     SettingsWindowsSearchHandoff,
-    /// <summary>Windows Search opens only when selected. Windows controls Web, cloud and account access.</summary>
+    /// <summary>Opens Windows Search with Win+S. Enter your query there. Windows controls Web, cloud and account access.</summary>
     WindowsSearchHandoffHelp,
     /// <summary>Show Windows app live tiles (compatibility)</summary>
     SettingsLegacyUwpTiles,

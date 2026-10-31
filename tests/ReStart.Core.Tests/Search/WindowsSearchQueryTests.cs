@@ -4,25 +4,19 @@ namespace ReStart.Core.Tests;
 
 public class WindowsSearchQueryTests
 {
-    [Theory]
-    [InlineData("hello & #world?", "hello & #world?")]
-    [InlineData(" 日本語 / text ", "日本語 / text")]
-    [InlineData("\"quoted\" % value", "\"quoted\" % value")]
-    public void HandoffUsesOneEncodedQueryAndAFixedScheme(string text, string expected)
+    [Fact]
+    public void HandoffContainsOnlyOneBalancedWindowsSearchChord()
     {
-        var uri = WindowsSearchHandoff.ForQuery(text)!;
-        Assert.Equal("ms-search", uri.Scheme); Assert.Equal("search", uri.AbsolutePath);
-        Assert.Equal(expected, Uri.UnescapeDataString(uri.Query["?query=".Length..]));
-        Assert.Equal("", uri.Fragment);
+        if (!OperatingSystem.IsWindows()) return;
+        var inputs = WindowsSearchLauncher.CreateInputs();
+        Assert.Equal(new ushort[] { 0x5B, 0x53, 0x53, 0x5B }, inputs.Select(i => i.Union.Keyboard.Vk));
+        Assert.Equal(new uint[] { 0, 0, 2, 2 }, inputs.Select(i => i.Union.Keyboard.Flags));
+        Assert.All(inputs, i => { Assert.Equal(1u, i.Type); Assert.Equal(0, i.Union.Keyboard.Scan); });
     }
 
     [Fact]
-    public void RejectsEmptyOversizedOrControlBearingHandoffs()
+    public void AdvancedQueriesStartOffAndWindowsSearchActionStartsOn()
     {
-        Assert.Null(WindowsSearchHandoff.ForQuery(null));
-        Assert.Null(WindowsSearchHandoff.ForQuery(" "));
-        Assert.Null(WindowsSearchHandoff.ForQuery(new string('x', 129)));
-        Assert.Null(WindowsSearchHandoff.ForQuery("bad\nquery"));
         Assert.False(new Preferences().SearchWindowsSyntax); Assert.True(new Preferences().ShowWindowsSearchHandoff);
     }
 
