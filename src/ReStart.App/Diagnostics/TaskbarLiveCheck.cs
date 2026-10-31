@@ -16,6 +16,9 @@ internal static class TaskbarLiveCheck
             Width = 500,
             Height = 160,
             Topmost = true,
+            WindowStyle = WindowStyle.None,
+            ResizeMode = ResizeMode.NoResize,
+            ShowInTaskbar = false,
             WindowStartupLocation = WindowStartupLocation.CenterScreen,
             Content = new System.Windows.Controls.TextBlock { Text = "Checking the taskbar on this display.\nThe original state will be restored automatically.", Margin = new(24), TextWrapping = TextWrapping.Wrap }
         };
@@ -23,6 +26,9 @@ internal static class TaskbarLiveCheck
         var open = true;
         window.Closed += (_, _) => Volatile.Write(ref open, false);
         var available = false; var blocked = false; var acquired = false; var held = false; var restored = false;
+        var overlay = true; var fullscreenStable = true;
+        Exception? acquisitionFailure = null;
+        var acquisitionAttempts = 0;
         var observations = new List<object>();
         try
         {
@@ -30,7 +36,9 @@ internal static class TaskbarLiveCheck
             window.Show();
             var screen = System.Windows.Forms.Screen.FromHandle(new WindowInteropHelper(window).Handle);
             var bounds = screen.Bounds;
-            var backend = new TaskbarNativeBackend { Scope = new(bounds.X, bounds.Y, bounds.Width, bounds.Height) };
+            var launcher = new WindowInteropHelper(window).Handle;
+            MonitorPlacement.FitWorkingArea(launcher, new nint(-1), bounds, 0x0040);
+            var backend = new TaskbarNativeBackend { Scope = new(bounds.X, bounds.Y, bounds.Width, bounds.Height), LauncherWindow = launcher };
             available = await Task.Run(() => backend.Capture(TaskbarLeaseMode.Reveal) != null);
             if (available)
             {
@@ -40,7 +48,16 @@ internal static class TaskbarLiveCheck
                 {
                     var watchdog = new TaskbarWatchdog(store);
                     lease = new(store, backend, watchdog.Protect, () => watchdog.IsReady);
-                    acquired = await Task.Run(() => lease.Synchronize(TaskbarLeaseMode.Reveal, () => Volatile.Read(ref open)));
+                    var deadline = Environment.TickCount64 + 3000;
+                    do
+                    {
+                        acquisitionAttempts++;
+                        acquired = await Task.Run(() => lease.Synchronize(TaskbarLeaseMode.Reveal, () => Volatile.Read(ref open)));
+                        acquisitionFailure = lease.LastFailure;
+                        if (!acquired) await Task.Delay(200);
+                    } while (!acquired && open && Environment.TickCount64 < deadline);
+                    MonitorPlacement.FitWorkingArea(launcher, 0, TaskbarNativeBackend.AvailableArea(bounds, lease.Snapshot,
+                        new(bounds.X, bounds.Y, bounds.Width, bounds.Height)), 0x0014);
                     held = acquired;
                     for (var index = 0; index < 8 && open && acquired; index++)
                     {
@@ -49,6 +66,10 @@ internal static class TaskbarLiveCheck
                         {
                             var current = backend.Capture(TaskbarLeaseMode.Reveal);
                             var original = lease.Snapshot;
+                            Native.GetWindowRect(launcher, out var launcherRect);
+                            fullscreenStable &= launcherRect.Left == bounds.Left && launcherRect.Top == bounds.Top
+                                && launcherRect.Right == bounds.Right && launcherRect.Bottom == bounds.Bottom;
+                            overlay &= original != null && original.Windows.All(w => TaskbarNativeBackend.IsAbove((nint)w.Window, launcher));
                             if (current != null && original != null)
                                 foreach (var actual in current.Windows)
                                 {
@@ -75,10 +96,24 @@ internal static class TaskbarLiveCheck
                     });
                 }
             }
-            var success = !available || !blocked && acquired && held && restored;
+            var success = available && !blocked && acquired && held && restored && overlay && fullscreenStable;
             var path = Path.Combine(directory, "taskbar-live.json"); TaskbarRecoveryStore.CheckLinks(path);
             await using (var output = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.Read))
-                await JsonSerializer.SerializeAsync(output, new { success, available, blocked, acquired, held, restored, observations });
+                await JsonSerializer.SerializeAsync(output, new
+                {
+                    success,
+                    available,
+                    blocked,
+                    acquired,
+                    held,
+                    restored,
+                    overlay,
+                    fullscreenStable,
+                    acquisitionAttempts,
+                    failure = acquisitionFailure?.Message,
+                    nativeCode = (acquisitionFailure as System.ComponentModel.Win32Exception)?.NativeErrorCode,
+                    observations
+                });
             return success ? 0 : 1;
         }
         catch (Exception error) when (TaskbarLease.Expected(error) || error is ArgumentException) { return 1; }
