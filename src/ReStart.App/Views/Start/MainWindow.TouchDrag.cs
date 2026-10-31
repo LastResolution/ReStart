@@ -47,6 +47,9 @@ public partial class MainWindow
 
     private void WireTouchDrag(Button button, string format, string id)
     {
+        // List rows retain touch scrolling; only pinned layout controls use
+        // direct touch-to-mouse dragging. Mouse drag wiring remains shared.
+        if (format is not ("ReStart.Tile" or "ReStart.Group")) return;
         button.AddHandler(PreviewTouchDownEvent, new EventHandler<TouchEventArgs>((_, e) =>
         {
             if (TouchesOver.Skip(1).Any() || !CanEditLayout || _dragging

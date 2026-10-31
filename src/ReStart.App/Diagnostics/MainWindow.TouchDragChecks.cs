@@ -51,6 +51,12 @@ public partial class MainWindow
         try
         {
             Document.Preferences.LayoutLocked = false; Document.Preferences.LockedGroupIds.Clear();
+            foreach (var search in new[] { false, true })
+            {
+                var row = AppButton(_apps.First(), search);
+                Check(!Routed(row, PreviewTouchDownEvent).Handled && ContentScroll.PanningMode == initial,
+                    "An app/search row stole touch list scrolling.");
+            }
             Check(!Routed(button, PreviewTouchDownEvent).Handled && ContentScroll.PanningMode == PanningMode.None,
                 "A draggable tile did not scope panning without consuming touch promotion.");
             Routed(button, PreviewTouchUpEvent);
