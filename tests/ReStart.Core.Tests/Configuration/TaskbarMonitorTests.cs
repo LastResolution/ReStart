@@ -75,6 +75,37 @@ public sealed class TaskbarMonitorTests
     [InlineData(true, true, null)]
     public void RecoveryRestoresOnlyAnOwnedTopmostPromotion(bool? original, bool current, bool? expected)
         => Assert.Equal(expected, TaskbarNativeBackend.RestoreTopmost(original, current));
+    [Theory]
+    [InlineData(0, -46, 0, 48, 800, true)]
+    [InlineData(1, 0, -46, 1280, 48, true)]
+    [InlineData(2, 1278, 0, 48, 800, true)]
+    [InlineData(3, 0, 798, 1280, 48, true)]
+    [InlineData(0, -44, 0, 48, 800, false)]
+    [InlineData(1, 0, -44, 1280, 48, false)]
+    [InlineData(2, 1276, 0, 48, 800, false)]
+    [InlineData(3, 0, 796, 1280, 48, false)]
+    [InlineData(0, 0, 0, 48, 800, false)]
+    [InlineData(1, 0, 0, 1280, 48, false)]
+    [InlineData(2, 1232, 0, 48, 800, false)]
+    [InlineData(3, 0, 752, 1280, 48, false)]
+    [InlineData(4, 0, 798, 1280, 48, false)]
+    public void ContentRecoveryExcludesVisibleAndPartiallyRevealingTaskbars(int edge, int x, int y, int width, int height, bool hidden)
+    {
+        var monitor = new TaskbarBounds(-1280, -800, 1280, 800);
+        Assert.Equal(hidden, TaskbarNativeBackend.HiddenAtEdge(monitor, new(x - 1280, y - 800, width, height), edge));
+    }
+    [Fact]
+    public void ReplacedCompositionContentInvalidatesTheLease()
+    {
+        var monitor = new TaskbarBounds(0, 0, 1280, 800);
+        var observed = Window(1, monitor, new(0, 752, 1280, 48)) with { Content = [new(2, false)] };
+        var backend = new TaskbarNativeBackend(() => [observed]) { Scope = monitor };
+        var saved = backend.Capture(TaskbarLeaseMode.Reveal)!;
+        observed = observed with { Content = [new(2, true)] };
+        Assert.True(backend.IsCurrent(saved));
+        observed = observed with { Content = [new(3, false)] };
+        Assert.False(backend.IsCurrent(saved));
+    }
     [Fact]
     public void HidingTheWindowsTaskbarDoesNotRemoveAnotherAppbarsReservedArea()
     {

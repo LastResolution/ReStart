@@ -56,7 +56,7 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
             var resolved = ResolveMonitor(monitor, monitors, bounds => AutoHideEdge(window, bounds));
             monitor = resolved.Monitor; var edge = resolved.Edge;
             var target = edge == null ? original : VisibleBounds(monitor, original, edge.Value);
-            yield return new(window, pid, started, IsWindowVisible(window), edge != null, monitor, original, target, IsTopmost(window));
+            yield return new(window, pid, started, IsWindowVisible(window), edge != null, monitor, original, target, IsTopmost(window), ContentWindows(window, pid));
         }
     }
 
@@ -89,6 +89,7 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
         return current != null && current.Windows.Length == state.Windows.Length
             && state.Windows.All(saved => current.Windows.Any(observed => observed.Window == saved.Window && observed.ProcessId == saved.ProcessId
                 && observed.ProcessStarted == saved.ProcessStarted && observed.Monitor == saved.Monitor && observed.AutoHide == saved.AutoHide
+                && (observed.Content ?? []).Select(child => child.Window).Order().SequenceEqual((saved.Content ?? []).Select(child => child.Window).Order())
                 && (state.Mode != TaskbarLeaseMode.Reveal || observed.Target == saved.Target)));
     }
 
@@ -105,6 +106,16 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
                 if (LauncherWindow == 0) throw new IOException("Taskbar reveal requires a launcher window.");
                 if (!Bounds(window, out var current) || current != item.Target || !IsWindowVisible(window) || !IsAbove(window, LauncherWindow))
                     Position(window, item.Target, show: true, topmost: true);
+                // On Windows 11 the tray HWND can be visible and correctly
+                // positioned while its composition content is still hidden.
+                // Recoverable ownership of each exact child was saved before
+                // this point; only direct children of this Explorer tray qualify.
+                foreach (var child in item.Content ?? [])
+                {
+                    if (!MatchesContent(item, child)) throw new IOException("Taskbar content identity changed.");
+                    if (!IsWindowVisible((nint)child.Window)) ShowWindow((nint)child.Window, 8);
+                    if (!IsWindowVisible((nint)child.Window)) throw new IOException("Taskbar content reveal failed.");
+                }
                 if (!Bounds(window, out var applied) || applied != item.Target) throw new IOException("Taskbar reveal geometry was not applied.");
                 if (!IsWindowVisible(window)) throw new IOException("Taskbar reveal visibility was not applied.");
                 if (!IsAbove(window, LauncherWindow)) throw new IOException("Taskbar reveal stacking was not applied.");
@@ -130,6 +141,7 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
                 // preference, monitor and auto-hide state, including after a
                 // setting change, a display change or recovery of an old lease.
                 Handoff(window, current, RestoreTopmost(item.Topmost, IsTopmost(window)));
+                RestoreContent(item);
             }
         }
     }
@@ -208,6 +220,61 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
     }
     private static bool Matches(TaskbarWindowState state) => Identity((nint)state.Window, out var pid, out var started)
         && pid == state.ProcessId && started == state.ProcessStarted;
+
+    private static TaskbarContentState[] ContentWindows(nint parent, int pid)
+    {
+        var children = new List<TaskbarContentState>();
+        nint previous = 0;
+        for (var count = 0; count < 4; count++)
+        {
+            var child = FindWindowEx(parent, previous, "Windows.UI.Composition.DesktopWindowContentBridge", null);
+            if (child == 0) break;
+            GetWindowThreadProcessId(child, out var owner);
+            if (owner == pid) children.Add(new(child, IsWindowVisible(child)));
+            previous = child;
+        }
+        return children.ToArray();
+    }
+
+    private static bool MatchesContent(TaskbarWindowState parent, TaskbarContentState child)
+    {
+        if (!Matches(parent) || GetParent((nint)child.Window) != (nint)parent.Window) return false;
+        var name = new StringBuilder(128);
+        GetClassName((nint)child.Window, name, name.Capacity);
+        GetWindowThreadProcessId((nint)child.Window, out var pid);
+        return pid == parent.ProcessId && name.ToString() == "Windows.UI.Composition.DesktopWindowContentBridge";
+    }
+
+    private static void RestoreContent(TaskbarWindowState item)
+    {
+        // Do not hide content if Windows now wants a visible/fixed taskbar, or
+        // while a pointer-triggered reveal/animation is still on screen. Native
+        // Shell transitions keep control in those cases. This restores only our
+        // temporary child reveal after the tray has actually returned offscreen.
+        if (!AutoHideEnabled || !Bounds((nint)item.Window, out var current) || !Monitor((nint)item.Window, out var geometric)) return;
+        var owner = ResolveMonitor(geometric, MonitorBounds(), monitor => AutoHideEdge((nint)item.Window, monitor));
+        if (owner.Edge is not { } edge || !HiddenAtEdge(owner.Monitor, current, edge)) return;
+        foreach (var child in item.Content ?? [])
+        {
+            if (child.Visible || !MatchesContent(item, child)) continue;
+            if (IsWindowVisible((nint)child.Window)) ShowWindow((nint)child.Window, 0);
+            if (IsWindowVisible((nint)child.Window)) throw new IOException("Taskbar content recovery failed.");
+        }
+    }
+
+    /// <summary>Recognizes an auto-hidden taskbar with at most its two-pixel reveal strip inside the registered display.</summary>
+    /// <param name="monitor">Current registered monitor in physical pixels, including negative desktop coordinates.</param>
+    /// <param name="bar">Fresh tray rectangle after Explorer has reconciled its own position.</param>
+    /// <param name="edge">Registered appbar edge: left 0, top 1, right 2 or bottom 3.</param>
+    /// <returns>True only for a valid edge whose visible thickness is at most two physical pixels; false for a visible or partially revealing taskbar.</returns>
+    internal static bool HiddenAtEdge(TaskbarBounds monitor, TaskbarBounds bar, int edge) => edge switch
+    {
+        0 => bar.X < monitor.X && bar.X + bar.Width <= monitor.X + 2,
+        1 => bar.Y < monitor.Y && bar.Y + bar.Height <= monitor.Y + 2,
+        2 => bar.X >= monitor.X + monitor.Width - 2,
+        3 => bar.Y >= monitor.Y + monitor.Height - 2,
+        _ => false
+    };
     private static bool Bounds(nint window, out TaskbarBounds bounds)
     {
         var success = GetWindowRect(window, out var rect);
@@ -296,6 +363,7 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
     [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] private static extern bool IsWindowVisible(nint window);
     [DllImport("user32.dll")] private static extern nint GetTopWindow(nint parent);
     [DllImport("user32.dll")] private static extern nint GetWindow(nint window, uint command);
+    [DllImport("user32.dll")] private static extern nint GetParent(nint window);
     [DllImport("user32.dll", CharSet = CharSet.Unicode, EntryPoint = "GetWindowLongPtrW")] private static extern nint GetWindowLongPtr(nint window, int index);
     [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] private static extern bool ShowWindow(nint window, int command);
     [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] private static extern bool GetWindowRect(nint window, out Rect rect);

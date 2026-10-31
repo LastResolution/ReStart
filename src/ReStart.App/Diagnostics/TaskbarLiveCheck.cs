@@ -8,8 +8,16 @@ namespace ReStart.App;
 /// <summary>Provides an explicit local-only native reveal check. CI uses inert dependencies instead.</summary>
 internal static class TaskbarLiveCheck
 {
-    internal static async Task<int> RunAsync(string directory)
+    /// <summary>Checks real taskbar reveal and content recovery on one existing display without changing Windows preferences.</summary>
+    /// <param name="directory">New local report directory; its JSON report must not already exist.</param>
+    /// <param name="monitorIndex">Optional zero-based Screen.AllScreens ordinal; null selects the primary display. No monitor name is recorded.</param>
+    /// <returns>Zero only after reveal, content visibility, front order and repeated recovery pass; one for unsupported configuration or failure.</returns>
+    internal static async Task<int> RunAsync(string directory, int? monitorIndex = null)
     {
+        var screens = System.Windows.Forms.Screen.AllScreens;
+        if (monitorIndex is { } requestedIndex && (requestedIndex < 0 || requestedIndex >= screens.Length)) return 1;
+        var selected = monitorIndex is { } selectedIndex ? screens[selectedIndex] : System.Windows.Forms.Screen.PrimaryScreen;
+        if (selected == null) return 1;
         var window = new Window
         {
             Title = "ReStart — Taskbar check",
@@ -19,7 +27,7 @@ internal static class TaskbarLiveCheck
             WindowStyle = WindowStyle.None,
             ResizeMode = ResizeMode.NoResize,
             ShowInTaskbar = false,
-            WindowStartupLocation = WindowStartupLocation.CenterScreen,
+            WindowStartupLocation = WindowStartupLocation.Manual,
             Content = new System.Windows.Controls.TextBlock { Text = "Checking the taskbar on this display.\nWindows retains control of automatic hiding.", Margin = new(24), TextWrapping = TextWrapping.Wrap }
         };
         TaskbarLease? lease = null;
@@ -37,10 +45,11 @@ internal static class TaskbarLiveCheck
             directory = Path.GetFullPath(directory); TaskbarRecoveryStore.CheckLinks(directory); Directory.CreateDirectory(directory);
             var launcher = new WindowInteropHelper(window).EnsureHandle();
             TaskbarNativeBackend.PrepareLauncher(launcher, true);
+            MonitorPlacement.FitWorkingArea(launcher, 0, selected.Bounds, 0x0014, screen => screen.Bounds);
             window.Show();
             var screen = System.Windows.Forms.Screen.FromHandle(new WindowInteropHelper(window).Handle);
             var bounds = screen.Bounds;
-            MonitorPlacement.FitWorkingArea(launcher, new nint(-1), bounds, 0x0040);
+            MonitorPlacement.FitWorkingArea(launcher, new nint(-1), bounds, 0x0040, screen => screen.Bounds);
             var backend = new TaskbarNativeBackend { Scope = new(bounds.X, bounds.Y, bounds.Width, bounds.Height), LauncherWindow = launcher };
             available = await Task.Run(() => backend.Capture(TaskbarLeaseMode.Reveal) != null);
             if (available)
@@ -60,7 +69,7 @@ internal static class TaskbarLiveCheck
                         if (!acquired) await Task.Delay(200);
                     } while (!acquired && open && Environment.TickCount64 < deadline);
                     MonitorPlacement.FitWorkingArea(launcher, 0, TaskbarNativeBackend.AvailableArea(bounds, lease.Snapshot,
-                        new(bounds.X, bounds.Y, bounds.Width, bounds.Height)), 0x0014);
+                        new(bounds.X, bounds.Y, bounds.Width, bounds.Height)), 0x0014, screen => screen.Bounds);
                     held = acquired;
                     for (var index = 0; index < 8 && open && acquired; index++)
                     {
@@ -80,13 +89,15 @@ internal static class TaskbarLiveCheck
                                     observations.Add(new
                                     {
                                         actual.Visible,
+                                        content = actual.Content?.Select(c => new { c.Visible }).ToArray(),
                                         dx = actual.Original.X - target.X,
                                         dy = actual.Original.Y - target.Y,
                                         dw = actual.Original.Width - target.Width,
                                         dh = actual.Original.Height - target.Height
                                     });
                                 }
-                            var visible = current != null && original != null && current.Windows.All(w => w.Visible && original.Windows.Any(o => o.Window == w.Window && o.Target == w.Original));
+                            var visible = current != null && original != null && current.Windows.All(w => w.Visible && (w.Content == null || w.Content.All(c => c.Visible))
+                                && original.Windows.Any(o => o.Window == w.Window && o.Target == w.Original));
                             return lease.Synchronize(TaskbarLeaseMode.Reveal, () => Volatile.Read(ref open)) && visible;
                         });
                     }
@@ -107,7 +118,7 @@ internal static class TaskbarLiveCheck
                     {
                         await Task.Delay(200);
                         var after = await Task.Run(() => backend.Capture(TaskbarLeaseMode.Reveal));
-                        hidden = after != null && after.Windows.All(w => w.AutoHide && w.Original != w.Target);
+                        hidden = after != null && after.Windows.All(w => w.AutoHide && w.Original != w.Target && (w.Content == null || w.Content.All(c => !c.Visible)));
                     }
                     restored &= hidden;
                     // Repeat with the same watchdog and actual native window,
@@ -115,11 +126,11 @@ internal static class TaskbarLiveCheck
                     for (var cycle = 0; cycle < 3 && restored; cycle++)
                     {
                         window.Show();
-                        MonitorPlacement.FitWorkingArea(launcher, new nint(-1), bounds, 0x0040);
+                        MonitorPlacement.FitWorkingArea(launcher, new nint(-1), bounds, 0x0040, screen => screen.Bounds);
                         var revealed = await Task.Run(() => lease.Synchronize(TaskbarLeaseMode.Reveal));
                         await Task.Delay(400);
                         var during = await Task.Run(() => backend.Capture(TaskbarLeaseMode.Reveal));
-                        held &= revealed && during != null && during.Windows.All(w => w.AutoHide && w.Original == w.Target
+                        held &= revealed && during != null && during.Windows.All(w => w.AutoHide && w.Original == w.Target && (w.Content == null || w.Content.All(c => c.Visible))
                             && TaskbarNativeBackend.IsAbove((nint)w.Window, launcher));
                         window.Hide();
                         restored &= await Task.Run(() => lease.Synchronize(null));
@@ -128,7 +139,7 @@ internal static class TaskbarLiveCheck
                         {
                             await Task.Delay(200);
                             var after = await Task.Run(() => backend.Capture(TaskbarLeaseMode.Reveal));
-                            hidden = after != null && after.Windows.All(w => w.AutoHide && w.Original != w.Target);
+                            hidden = after != null && after.Windows.All(w => w.AutoHide && w.Original != w.Target && (w.Content == null || w.Content.All(c => !c.Visible)));
                         }
                         restored &= hidden;
                         if (held && restored) repeatCycles++;

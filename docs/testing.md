@@ -120,6 +120,10 @@ The watchdog process fixture runs the actual parent/child readiness handshake in
 
 Settings preview checks include taskbar Save/Discard behavior and absence of the removed hide option across eight languages and both themes. Data-source checks exercise the native approval editor, encrypted per-tile grants, revocation cache clearing, copied identities, changed requests and changed destinations. Fake-provider tests cover integration/entity/action scope and approval changes during in-flight calls; no real credentials or service are used.
 
+Windows 11 taskbar coverage must inspect the direct composition content as well as the tray HWND. The original reveal path can pass geometry, visibility and front-order checks while its content child stays hidden; that exact case was reproduced as a failing native check. The corrected check requires visible content during reveal and hidden content after each close. Recovery validation rejects duplicate, self-referential, invalid or excessive child handles and accepts older records without content data. Edge cases exclude a visible or partially revealed taskbar from restoring a child's captured hidden state, including on displays with negative coordinates.
+
+The native check optionally accepts a third argument: `--taskbar-live-check <owned-output-directory> <monitor-index>`. The index is zero-based in `Screen.AllScreens`; omission selects the primary display. Run displays sequentially to preserve exclusive recovery ownership. This does not change scaling, taskbar preferences or the pointer position. Invalid indices fail before showing a window.
+
 ## Manual coverage still required
 
 | Area | Check |

@@ -7,6 +7,24 @@ namespace ReStart.Core.Tests;
 public sealed class TaskbarRecoveryTests
 {
     [Fact]
+    public void ContentVisibilityRoundTripsAndOlderRecordsRemainReadable()
+    {
+        var state = new TaskbarLeaseState(1, Guid.NewGuid().ToString("N"), 1, 2, TaskbarLeaseMode.Reveal,
+            [new(1, 1, 1, true, true, new(0, 0, 800, 600), new(0, 598, 800, 40), new(0, 560, 800, 40), Content: [new(2, false)])]);
+        var json = JsonSerializer.SerializeToNode(state)!;
+        var roundTrip = json.Deserialize<TaskbarLeaseState>()!;
+        Assert.True(roundTrip.IsValid());
+        Assert.False(Assert.Single(roundTrip.Windows[0].Content!).Visible);
+        json["Windows"]![0]!.AsObject().Remove("Content");
+        var older = json.Deserialize<TaskbarLeaseState>()!;
+        Assert.True(older.IsValid());
+        Assert.Null(older.Windows[0].Content);
+        Assert.False((state with { Windows = [state.Windows[0] with { Content = [new(2, true), new(2, false)] }] }).IsValid());
+        Assert.False((state with { Windows = [state.Windows[0] with { Content = [new(1, false)] }] }).IsValid());
+        Assert.False((state with { Windows = [state.Windows[0] with { Content = [new(0, false)] }] }).IsValid());
+        Assert.False((state with { Windows = [state.Windows[0] with { Content = [new(2, false), new(3, false), new(4, false), new(5, false), new(6, false)] }] }).IsValid());
+    }
+    [Fact]
     public void OlderRecoveryRecordsDoNotInventAnOriginalStackingTier()
     {
         var state = new TaskbarLeaseState(1, Guid.NewGuid().ToString("N"), 1, 2, TaskbarLeaseMode.Reveal,
