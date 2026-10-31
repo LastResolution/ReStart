@@ -118,7 +118,7 @@ internal static partial class AppJumpLists
         finally { Release(instance); }
     }
 
-    private static bool HistoryEnabled()
+    internal static bool HistoryEnabled()
     {
         using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced");
         return key?.GetValue("Start_TrackDocs") is not int value || value != 0;
@@ -131,11 +131,13 @@ internal static partial class AppJumpLists
     /// <param name="current">Successful current native snapshot obtained for this application's resolved AppUserModelID.</param>
     /// <param name="key">Opaque identity of the selected pinned destination; a missing identity is rejected.</param>
     /// <param name="owner">Owner HWND for native launch UI; zero is supported for an owned diagnostic fixture.</param>
+    /// <param name="custom">True selects only application-defined categories; false selects only Windows-pinned destinations. Keys are revalidated within that source.</param>
     /// <returns>True after the app accepts the document; false for a native link or virtual item, which requires worker invocation.</returns>
     /// <exception cref="InvalidOperationException">The current snapshot or selected identity is unavailable.</exception>
-    internal static async Task<bool> OpenPinnedFileAsync(AppEntry app, NativeJumpReply current, string key, nint owner)
+    internal static async Task<bool> OpenPinnedFileAsync(AppEntry app, NativeJumpReply current, string key, nint owner, bool custom = false)
     {
-        var entry = current.Snapshot.Pinned.FirstOrDefault(item => item.Key == key);
+        var entries = custom ? (current.Snapshot.Categories ?? []).SelectMany(category => category.Items) : current.Snapshot.Pinned;
+        var entry = entries.FirstOrDefault(item => item.Key == key);
         if (!current.Success || entry == null) throw new InvalidOperationException(L.T(K.ErrorAppCommandUnavailable));
         if (entry.IsLink || entry.Target.Length == 0) return false;
         await AppShellCommands.OpenDocumentAsync(app, entry.Target, owner);

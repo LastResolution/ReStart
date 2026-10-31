@@ -24,8 +24,9 @@ internal static partial class NativeJumpWorker
             "read" => true,
             "pin" => PinPath(request.AppId, request.Target),
             "unpin" => Unpin(request.AppId, request.Key),
-            "invoke-task" => Invoke(request.AppId, request.Key, true),
-            "invoke-pinned" => Invoke(request.AppId, request.Key, false),
+            "invoke-task" => Invoke(request.AppId, request.Key, "task"),
+            "invoke-pinned" => Invoke(request.AppId, request.Key, "pinned"),
+            "invoke-custom" => Invoke(request.AppId, request.Key, "custom"),
             _ => false
         };
         return new(success, success ? "" : "unavailable", request.AppId, Read(request.AppId));
@@ -34,6 +35,7 @@ internal static partial class NativeJumpWorker
     private static NativeJumpSnapshot Read(string owner)
     {
         var tasks = new List<NativeJumpItem>(); var pinned = new List<NativeJumpItem>();
+        var categories = new List<NativeJumpCategory>();
         var tasksSupported = false; var pinsSupported = false;
         object? root = null;
         try
@@ -48,9 +50,21 @@ internal static partial class NativeJumpWorker
                     if (custom.GetCategory(index, 1, ref category) < 0) continue;
                     try
                     {
-                        if (category.Type != 2) continue;
+                        if (category.Type is not (0 or 2)) continue;
+                        var name = category.Type == 0 ? Name(Marshal.PtrToStringUni(category.Data) ?? "") : "";
+                        if (category.Type == 0 && (name.Length == 0 || categories.Count >= 8 || categories.Any(c => c.Name == name))) continue;
                         var iid = typeof(IItems).GUID; IItems? items = null;
-                        try { if (custom.EnumerateCategoryDestinations(index, ref iid, out items) >= 0) Visit(items, item => { if (Describe(owner, item, true) is { } entry) tasks.Add(entry); }); }
+                        try
+                        {
+                            var entries = new List<NativeJumpItem>();
+                            if (custom.EnumerateCategoryDestinations(index, ref iid, out items) >= 0) Visit(items, item =>
+                            {
+                                if (Describe(owner, item, category.Type == 2) is not { } entry) return;
+                                if (category.Type == 2) tasks.Add(entry);
+                                else if (entries.Count < 8) entries.Add(entry with { Key = Key(entry.Key, name) });
+                            });
+                            if (category.Type == 0 && entries.Count > 0) categories.Add(new(name, entries.DistinctBy(item => item.Key).ToArray()));
+                        }
                         finally { Release(items); }
                     }
                     finally { if (category.Type == 0 && category.Data != 0) Marshal.FreeCoTaskMem(category.Data); }
@@ -76,7 +90,7 @@ internal static partial class NativeJumpWorker
         }
         catch (Exception ex) when (ex is COMException or InvalidCastException or ArgumentException) { }
         finally { Release(root); }
-        return new(tasksSupported, pinsSupported, tasks.DistinctBy(item => item.Key).Take(64).ToArray(), pinned.DistinctBy(item => item.Key).Take(64).ToArray());
+        return new(tasksSupported, pinsSupported, tasks.DistinctBy(item => item.Key).Take(64).ToArray(), pinned.DistinctBy(item => item.Key).Take(64).ToArray(), categories.ToArray());
     }
 
     private static bool PinPath(string owner, string path)
@@ -114,13 +128,15 @@ internal static partial class NativeJumpWorker
         finally { Release(items); Release(root); }
     }
 
-    private static bool Invoke(string owner, string key, bool task)
+    private static bool Invoke(string owner, string key, string kind)
     {
         object? root = null; IItems? items = null;
         var invoked = false;
+        var task = kind == "task"; var categoryName = "";
         void Select(object item)
         {
-            if (invoked || Describe(owner, item, task)?.Key != key) return;
+            var entry = Describe(owner, item, task);
+            if (invoked || entry == null || (kind == "custom" ? Key(entry.Key, categoryName) : entry.Key) != key) return;
             if (!task && item is not ILink && item is IItem shell)
             {
                 var target = Display(shell, 0x80028000);
@@ -141,7 +157,7 @@ internal static partial class NativeJumpWorker
         }
         try
         {
-            if (!task)
+            if (kind == "pinned")
             {
                 root = Create(AutomaticClass);
                 if (root is not IAutomaticList automatic || automatic.Initialize(owner, null, null) < 0) return false;
@@ -157,7 +173,9 @@ internal static partial class NativeJumpWorker
                 if (custom.GetCategory(index, 1, ref category) < 0) continue;
                 try
                 {
-                    if (category.Type != 2) continue;
+                    if (category.Type != (task ? 2 : 0)) continue;
+                    categoryName = task ? "" : Name(Marshal.PtrToStringUni(category.Data) ?? "");
+                    if (!task && categoryName.Length == 0) continue;
                     var iid = typeof(IItems).GUID;
                     try { if (custom.EnumerateCategoryDestinations(index, ref iid, out items) >= 0) Visit(items, Select); }
                     finally { Release(items); items = null; }

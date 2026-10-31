@@ -12,8 +12,10 @@ Open **ReStart settings → Start behavior** to choose how Start responds. Each 
 | Navigation shortcuts | Documents, Pictures | Each folder is independently selectable; none is also supported |
 | Search Windows settings | On | Removes settings results; app search stays available |
 | Search indexed files | On | Cancels pending file search and removes file results |
+| Search indexed file contents | Off | Matches filenames only; enabling it also matches content already in the local Windows index |
 | Recent/frequent documents in app menus | On | Does not query Windows document history |
 | Application tasks in app menus | On | Hides actions registered by installed applications |
+| Application-defined jump-list categories | On | Hides registered categories without deleting their destinations |
 | Pinned Windows jump-list items | On | Hides Windows-pinned destinations and their pin/unpin controls without deleting existing pins |
 | Highlight tiles on hover | On | Retains keyboard focus and press feedback |
 | Group boundaries on hover | On | Boundaries remain available during editing and dragging |
@@ -64,7 +66,7 @@ Tile and group positions are packed automatically for the available board width.
 
 App search matches the OS display name and additional executable filenames, with or without their extensions. Search-only metadata comes from Start-menu link targets, App Paths registrations matching those targets, and each installed package application's executable and declared execution aliases. For example, `notepad`, `cmd` or `wt` can find a localized app when that metadata is available. A package declaration can remain searchable even when its command-line execution alias is disabled in Windows; Enter still uses the original catalog launch identity. Registrations never create extra apps. Exact display names rank first, then exact argument-free executable aliases; developer/profile shortcuts sharing an executable but supplying launch arguments rank below ordinary app matches. Directory names, shortcut arguments and arbitrary command text are not indexed or executed by this feature. Metadata is refreshed with the existing catalog, so removed apps lose their aliases too.
 
-App results appear immediately. Settings results cover fifteen Windows pages with translated names and English aliases. File search waits 200 ms after typing and queries only the local Windows index for up to twenty existing filesystem entries. It matches literal filenames and never recursively scans disks. A disabled/unavailable index leaves app and settings search operational and displays a localized explanation. Arrow keys and Enter always operate on the selected visible result; late file results preserve that selection.
+App results appear immediately. Settings results cover 63 documented Windows pages with names in all eight UI languages and English aliases. Page availability depends on the OS, edition and installed hardware. File search waits 200 ms after typing and queries only the local Windows index for up to fifty existing filesystem entries. It matches literal filenames; optional content matching uses Windows FREETEXT and the installed index filters. Content search starts off, does not enable indexing, and never recursively scans unindexed files. A disabled/unavailable index leaves app and settings search operational and displays a localized explanation. Arrow keys and Enter always operate on the selected visible result; late file results preserve that selection.
 
 ## Per-tile launch options
 
@@ -78,7 +80,7 @@ Custom options are available for supported desktop applications and application 
 
 **Clear app history** clears counts and discovery dates while retaining the catalog baseline. Activity is separate from layout export and is not uploaded. Disabling Most used preserves existing counts so they can be resumed or explicitly cleared. Windows app-usage history is not imported.
 
-Document destinations come from Windows Recent/Frequent lists only when allowed by the Windows document-history setting. ReStart does not copy those lists into its activity file. Public Windows APIs do not expose application task lists or custom/pinned destination categories; unsupported identities produce no history menu. See [compatibility](fidelity.md).
+Document destinations come from Windows Recent/Frequent lists only when allowed by the Windows document-history setting. ReStart does not copy those lists into its activity file. Registered tasks, Windows pins and up to eight app-defined categories of eight destinations each use the isolated native adapter. Category labels belong to the installed app and are preserved rather than translated by ReStart. Unsupported identities omit these sections. See [compatibility](fidelity.md).
 
 ## Placement protection and keyboard editing
 
@@ -99,3 +101,9 @@ Appearance, wallpaper, tile scale, group width, sidebar presentation and languag
 Closing through Close, Escape, Alt+F4 or the title bar offers **Save and close**, **Discard and close**, and **Keep editing** when there are changes. The default and Escape keep editing. Discard restores the latest committed palette, geometry and language; save errors leave the editor and draft available. An unchanged editor closes without a prompt. Imported background copies that were created by that editor and never saved are removed on close.
 
 Preview uses a detached presentation overlay. It does not change saved preferences, tile coordinates, history, startup registration, Explorer integration or input hooks; unrelated layout saves cannot capture it. Explicit Start-board edits, layout import/reset and live-tile library actions keep their existing separately confirmed/immediate behavior. They do not become part of the settings draft. External folder/support actions, application exit and update restart resolve unsaved settings before proceeding.
+
+## Accounts and power
+
+The account menu provides account settings, Lock, Sign out and **Switch user**, subject to the supported Windows policies. Switching preserves applications in the current local session and hands account selection and authentication to Windows. ReStart does not enumerate a duplicate account picker; Remote Desktop sessions omit this action.
+
+Power offers Shut down and Restart, with Sleep and Hibernate when Windows capabilities and menu settings allow them. A full hibernation file is required for Hibernate. A pending Windows Update restart can add **Update and shut down** and **Update and restart** asynchronously. These commands finish Windows updates; ReStart's own updater remains in Settings. Failure to read Windows Update does not block the ordinary menu. Session-ending actions retain ReStart's themed confirmation; cancelling does not issue a Windows request. Applications may block an interactive shutdown, and ReStart never forces them closed.

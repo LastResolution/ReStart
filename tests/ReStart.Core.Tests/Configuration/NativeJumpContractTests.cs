@@ -13,6 +13,7 @@ public class NativeJumpContractTests
     [InlineData("unpin", true, false)]
     [InlineData("invoke-task", true, false)]
     [InlineData("invoke-pinned", true, false)]
+    [InlineData("invoke-custom", true, false)]
     public void OnlyIdentityBasedOperationsAndExplicitPinPathsAreAccepted(string operation, bool key, bool target)
     {
         var request = new NativeJumpRequest(1, operation, Owner, key ? Key : "", target ? "owned-file.txt" : "");
@@ -55,4 +56,20 @@ public class NativeJumpContractTests
     [InlineData("{\"Version\":1,\"Operation\":\"read\",\"AppId\":\"Sample\",\"Executable\":\"program.exe\"}")]
     public void ProtocolRejectsMissingIdentityAndExtraExecutionFields(string json)
         => Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<NativeJumpRequest>(json, NativeJumpContract.Json));
+
+    [Fact]
+    public void CustomCategoriesAreBoundedNamedAndDoNotAcceptExecutionStrings()
+    {
+        var item = new NativeJumpItem(Key, "Owned destination", "", false, true);
+        var category = new NativeJumpCategory("Projects", [item]);
+        var reply = new NativeJumpReply(true, "", Owner, new(true, true, [], [], [category]));
+        Assert.True(NativeJumpContract.ValidReply(reply, Owner));
+        foreach (var bad in new[] { category with { Name = "" }, category with { Name = "Injected\ncategory" }, category with { Items = null! },
+            category with { Items = [item, item] }, category with { Items = [item with { Key = "program.exe" }] },
+            category with { Items = Enumerable.Repeat(item, 9).ToArray() } })
+            Assert.False(NativeJumpContract.ValidReply(reply with { Snapshot = reply.Snapshot with { Categories = [bad] } }, Owner));
+        Assert.False(NativeJumpContract.ValidReply(reply with { Snapshot = reply.Snapshot with { Categories = [category, category] } }, Owner));
+        Assert.False(NativeJumpContract.ValidReply(reply with { Snapshot = reply.Snapshot with { Categories = Enumerable.Range(0, 9).Select(i => category with { Name = "Category " + i }).ToArray() } }, Owner));
+        Assert.True(NativeJumpContract.ValidReply(JsonSerializer.Deserialize<NativeJumpReply>(JsonSerializer.Serialize(reply, NativeJumpContract.Json), NativeJumpContract.Json), Owner));
+    }
 }

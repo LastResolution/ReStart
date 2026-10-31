@@ -19,9 +19,13 @@ internal sealed partial class SettingsWindow
             });
         Heading(panel, L.T(K.SearchTitle));
         Check(panel, L.T(K.SettingsSearchSettings), _draft.SearchSettings, value => _draft.SearchSettings = value);
-        Check(panel, L.T(K.SearchFilesSetting), _draft.SearchFiles, value => _draft.SearchFiles = value);
+        CheckBox? contentSearch = null;
+        Check(panel, L.T(K.SearchFilesSetting), _draft.SearchFiles, value => { _draft.SearchFiles = value; if (contentSearch != null) contentSearch.IsEnabled = value; });
+        contentSearch = Check(panel, L.T(K.SearchFileContentsSetting), _draft.SearchFileContents, value => _draft.SearchFileContents = value);
+        contentSearch.IsEnabled = _draft.SearchFiles;
         Check(panel, L.T(K.SettingsJumpLists), _draft.ShowJumpLists, value => _draft.ShowJumpLists = value);
         Check(panel, L.T(K.SettingsAppTasks), _draft.ShowAppTasks, value => _draft.ShowAppTasks = value);
+        Check(panel, L.T(K.SettingsCustomJumpLists), _draft.ShowCustomJumpLists, value => _draft.ShowCustomJumpLists = value);
         Check(panel, L.T(K.SettingsPinnedJumpLists), _draft.ShowPinnedJumpLists, value => _draft.ShowPinnedJumpLists = value);
         Heading(panel, L.T(K.SettingsLayout));
         Check(panel, L.T(K.LockLayout), _draft.LayoutLocked, value => _draft.LayoutLocked = value);

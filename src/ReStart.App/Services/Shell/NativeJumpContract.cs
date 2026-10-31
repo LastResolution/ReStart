@@ -5,7 +5,8 @@ namespace ReStart.App.Services;
 
 internal sealed record NativeJumpRequest(int Version, string Operation, string AppId, string Key = "", string Target = "");
 internal sealed record NativeJumpItem(string Key, string Name, string Target, bool IsDirectory, bool IsLink);
-internal sealed record NativeJumpSnapshot(bool TasksSupported, bool PinsSupported, NativeJumpItem[] Tasks, NativeJumpItem[] Pinned)
+internal sealed record NativeJumpCategory(string Name, NativeJumpItem[] Items);
+internal sealed record NativeJumpSnapshot(bool TasksSupported, bool PinsSupported, NativeJumpItem[] Tasks, NativeJumpItem[] Pinned, NativeJumpCategory[]? Categories = null)
 {
     internal static NativeJumpSnapshot Empty => new(false, false, [], []);
 }
@@ -29,7 +30,7 @@ internal static class NativeJumpContract
         {
             "read" => request.Key.Length == 0 && request.Target.Length == 0,
             "pin" => request.Key.Length == 0 && request.Target.Length > 0,
-            "unpin" or "invoke-task" or "invoke-pinned" => IsKey(request.Key) && request.Target.Length == 0,
+            "unpin" or "invoke-task" or "invoke-pinned" or "invoke-custom" => IsKey(request.Key) && request.Target.Length == 0,
             _ => false
         };
 
@@ -39,10 +40,14 @@ internal static class NativeJumpContract
         && reply.Success == (reply.Error == "")
         && reply.Snapshot is { Tasks: { Length: <= 64 }, Pinned: { Length: <= 64 } } snapshot
         && (snapshot.TasksSupported || snapshot.Tasks.Length == 0) && (snapshot.PinsSupported || snapshot.Pinned.Length == 0)
-        && snapshot.Tasks.Concat(snapshot.Pinned).All(item => item != null && Safe(item.Name, 512, false)
+        && (snapshot.Categories == null || snapshot.Categories.Length <= 8 && snapshot.Categories.All(category => category != null
+            && Safe(category.Name, 512, false) && category.Items is { Length: <= 8 } && category.Items.All(item => item != null))
+            && snapshot.Categories.Select(category => category.Name).Distinct(StringComparer.Ordinal).Count() == snapshot.Categories.Length)
+        && snapshot.Tasks.Concat(snapshot.Pinned).Concat((snapshot.Categories ?? []).SelectMany(category => category.Items)).All(item => item != null && Safe(item.Name, 512, false)
             && Safe(item.Target, 32767) && IsKey(item.Key))
         && snapshot.Tasks.Select(item => item.Key).Distinct(StringComparer.Ordinal).Count() == snapshot.Tasks.Length
-        && snapshot.Pinned.Select(item => item.Key).Distinct(StringComparer.Ordinal).Count() == snapshot.Pinned.Length;
+        && snapshot.Pinned.Select(item => item.Key).Distinct(StringComparer.Ordinal).Count() == snapshot.Pinned.Length
+        && (snapshot.Categories ?? []).All(category => category.Items.Select(item => item.Key).Distinct(StringComparer.Ordinal).Count() == category.Items.Length);
 
     private static bool Safe(string? value, int maximum, bool empty = true) => value != null && value.Length <= maximum
         && (empty || value.Length > 0) && !value.Any(char.IsControl);

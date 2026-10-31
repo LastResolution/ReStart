@@ -990,28 +990,11 @@ public partial class MainWindow : Window
     }
     private void OpenAccount(object sender, RoutedEventArgs e)
     {
-        var menu = CreateContextMenu();
-        Add(menu, L.T(K.AccountSettings), () => LaunchPath("ms-settings:yourinfo"));
-        Add(menu, L.T(K.AccountLock), () => { Dismiss(immediately: true); Native.LockWorkStation(); });
-        Add(menu, L.T(K.AccountSignOut), () => RunPower("/l", L.T(K.AccountSignOut)));
-        OpenMenu(menu, (Button)sender);
+        OpenMenu(CreateAccountMenu(), (Button)sender);
     }
     private void OpenPower(object sender, RoutedEventArgs e)
     {
-        var menu = CreateContextMenu();
-        Add(menu, L.T(K.PowerSleep), () => { if (Confirm(L.T(K.ConfirmSleep))) { Dismiss(immediately: true); System.Windows.Forms.Application.SetSuspendState(System.Windows.Forms.PowerState.Suspend, false, false); } });
-        Add(menu, L.T(K.PowerShutdown), () => RunPower("/s", L.T(K.PowerShutdown)));
-        Add(menu, L.T(K.PowerRestart), () => RunPower("/r", L.T(K.PowerRestart)));
-        OpenMenu(menu, (Button)sender);
-    }
-    private void RunPower(string operation, string label)
-    {
-        if (!Confirm(L.F(K.ConfirmPower, label))) return;
-        var info = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "shutdown.exe")) { UseShellExecute = false, CreateNoWindow = true };
-        info.ArgumentList.Add(operation);
-        if (operation != "/l") { info.ArgumentList.Add("/t"); info.ArgumentList.Add("0"); }
-        try { Process.Start(info); Dismiss(immediately: true); }
-        catch (Win32Exception ex) { SetStatus(ex.Message); }
+        OpenMenu(CreatePowerMenu(), (Button)sender);
     }
 
     private static void OpenMenu(ContextMenu menu, Button target) { menu.PlacementTarget = target; menu.IsOpen = true; }

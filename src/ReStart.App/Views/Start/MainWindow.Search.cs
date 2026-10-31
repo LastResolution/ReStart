@@ -15,6 +15,7 @@ public partial class MainWindow
     private IReadOnlyList<AppEntry> _fileSearchResults = [];
     private bool _fileIndexAvailable = true;
     private bool _fileSearchPending;
+    private bool _fileSearchIncludesContents;
     private Func<string, CancellationToken, Task<(IReadOnlyList<AppEntry> Files, bool Available)>>? _fileSearchFixture;
 
     /// <summary>Rebuilds the visible results, retaining the selected app only when the query has not changed.</summary>
@@ -64,21 +65,23 @@ public partial class MainWindow
     private void ScheduleIndexedSearch(string query)
     {
         var requested = Document.Preferences.SearchFiles && (!_preview || _fileSearchFixture != null) && IndexedFileQuery.Build(query) != null ? query : "";
-        if (requested == _fileSearchQuery) return;
+        var contents = Document.Preferences.SearchFileContents;
+        if (requested == _fileSearchQuery && contents == _fileSearchIncludesContents) return;
+        _fileSearchIncludesContents = contents;
         _fileSearchQuery = requested;
         _fileSearchCancellation?.Cancel(); _fileSearchCancellation?.Dispose(); _fileSearchCancellation = null;
         _fileSearchResults = []; _fileIndexAvailable = true; _fileSearchPending = requested.Length > 0;
         if (requested.Length == 0) return;
         var cancellation = new CancellationTokenSource(); _fileSearchCancellation = cancellation;
-        _ = LoadIndexedResultsAsync(requested, cancellation.Token);
+        _ = LoadIndexedResultsAsync(requested, contents, cancellation.Token);
     }
 
-    private async Task LoadIndexedResultsAsync(string query, CancellationToken token)
+    private async Task LoadIndexedResultsAsync(string query, bool includeContents, CancellationToken token)
     {
         try
         {
             await Task.Delay(200, token);
-            var result = await (_fileSearchFixture?.Invoke(query, token) ?? _indexedFiles.FindAsync(query, token));
+            var result = await (_fileSearchFixture?.Invoke(query, token) ?? _indexedFiles.FindAsync(query, token, includeContents));
             token.ThrowIfCancellationRequested();
             if (_exit || SearchBox.Text.Trim() != query) return;
             _fileSearchResults = result.Files; _fileIndexAvailable = result.Available; _fileSearchPending = false;

@@ -3,6 +3,115 @@ namespace ReStart.Core;
 /// <summary>Stable, language-independent identifiers for all application-owned UI text.</summary>
 public enum TextKey
 {
+    /// <summary>Wi-Fi</summary>
+    WindowsSettingNetworkWifi,
+    /// <summary>Ethernet</summary>
+    WindowsSettingNetworkEthernet,
+    /// <summary>VPN</summary>
+    WindowsSettingNetworkVpn,
+    /// <summary>Proxy</summary>
+    WindowsSettingNetworkProxy,
+    /// <summary>Airplane mode</summary>
+    WindowsSettingNetworkAirplanemode,
+    /// <summary>Mobile hotspot</summary>
+    WindowsSettingNetworkMobilehotspot,
+    /// <summary>Mouse</summary>
+    WindowsSettingMousetouchpad,
+    /// <summary>Typing</summary>
+    WindowsSettingTyping,
+    /// <summary>Printers and scanners</summary>
+    WindowsSettingPrinters,
+    /// <summary>USB</summary>
+    WindowsSettingUsb,
+    /// <summary>AutoPlay</summary>
+    WindowsSettingAutoplay,
+    /// <summary>Default apps</summary>
+    WindowsSettingDefaultapps,
+    /// <summary>Optional features</summary>
+    WindowsSettingOptionalfeatures,
+    /// <summary>Startup apps</summary>
+    WindowsSettingStartupapps,
+    /// <summary>Sign-in options</summary>
+    WindowsSettingSigninoptions,
+    /// <summary>Your info</summary>
+    WindowsSettingYourinfo,
+    /// <summary>Other users</summary>
+    WindowsSettingOtherusers,
+    /// <summary>Access work or school</summary>
+    WindowsSettingWorkplace,
+    /// <summary>Activation</summary>
+    WindowsSettingActivation,
+    /// <summary>About your PC</summary>
+    WindowsSettingAbout,
+    /// <summary>Notifications</summary>
+    WindowsSettingNotifications,
+    /// <summary>Multitasking</summary>
+    WindowsSettingMultitasking,
+    /// <summary>Clipboard</summary>
+    WindowsSettingClipboard,
+    /// <summary>Remote Desktop</summary>
+    WindowsSettingRemotedesktop,
+    /// <summary>Recovery</summary>
+    WindowsSettingRecovery,
+    /// <summary>Troubleshoot</summary>
+    WindowsSettingTroubleshoot,
+    /// <summary>Taskbar</summary>
+    WindowsSettingTaskbar,
+    /// <summary>Fonts</summary>
+    WindowsSettingFonts,
+    /// <summary>Lock screen</summary>
+    WindowsSettingLockscreen,
+    /// <summary>Themes</summary>
+    WindowsSettingThemes,
+    /// <summary>Start menu settings</summary>
+    WindowsSettingPersonalizationStart,
+    /// <summary>Region</summary>
+    WindowsSettingRegionformatting,
+    /// <summary>Speech</summary>
+    WindowsSettingSpeech,
+    /// <summary>Magnifier</summary>
+    WindowsSettingEaseofaccessMagnifier,
+    /// <summary>Narrator</summary>
+    WindowsSettingEaseofaccessNarrator,
+    /// <summary>Accessibility keyboard</summary>
+    WindowsSettingEaseofaccessKeyboard,
+    /// <summary>Accessibility mouse</summary>
+    WindowsSettingEaseofaccessMouse,
+    /// <summary>Captions</summary>
+    WindowsSettingEaseofaccessClosedcaptioning,
+    /// <summary>High contrast</summary>
+    WindowsSettingEaseofaccessHighcontrast,
+    /// <summary>Location privacy</summary>
+    WindowsSettingPrivacyLocation,
+    /// <summary>Camera privacy</summary>
+    WindowsSettingPrivacyWebcam,
+    /// <summary>Microphone privacy</summary>
+    WindowsSettingPrivacyMicrophone,
+    /// <summary>Diagnostics and feedback</summary>
+    WindowsSettingPrivacyFeedback,
+    /// <summary>Windows Security</summary>
+    WindowsSettingWindowsdefender,
+    /// <summary>Windows update history</summary>
+    WindowsSettingWindowsupdateHistory,
+    /// <summary>Windows Update advanced options</summary>
+    WindowsSettingWindowsupdateOptions,
+    /// <summary>Game Bar</summary>
+    WindowsSettingGamingGamebar,
+    /// <summary>Game Mode</summary>
+    WindowsSettingGamingGamemode,
+
+    /// <summary>Hibernate</summary>
+    PowerHibernate,
+    /// <summary>Update and shut down</summary>
+    PowerUpdateShutdown,
+    /// <summary>Update and restart</summary>
+    PowerUpdateRestart,
+    /// <summary>Switch user</summary>
+    AccountSwitchUser,
+    /// <summary>Search indexed file contents</summary>
+    SearchFileContentsSetting,
+    /// <summary>Show application-defined jump-list categories</summary>
+    SettingsCustomJumpLists,
     /// <summary>Create full backup</summary>
     BackupCreate,
     /// <summary>Restore full backup</summary>
