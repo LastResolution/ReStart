@@ -1,4 +1,6 @@
 {
+  "TileDataApprove": "Speichern und erlauben",
+  "TilePermissionHelp": "Die Erlaubnis gilt nur für diese Kachel und ihre aktivierten Leseverbindungen. Deaktivieren Sie eine Verbindung, um den Zugriff zu widerrufen. Geänderte Paketanfragen erfordern eine erneute Erlaubnis.",
   "SettingsShowTaskbar": "Automatisch ausgeblendete Taskleiste anzeigen, solange ReStart geöffnet ist",
   "SettingsTaskbarHelp": "Betrifft nur die Taskleiste auf dem Bildschirm von ReStart. Die Windows-Einstellungen zum automatischen Ausblenden bleiben unverändert.",
   "SettingsTablet": "Tablet-Integration",

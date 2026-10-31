@@ -1,4 +1,6 @@
 {
+  "TileDataApprove": "저장 및 허용",
+  "TilePermissionHelp": "허용은 이 타일과 활성화된 읽기 전용 연결에만 적용됩니다. 연결을 비활성화하면 접근 권한이 취소됩니다. 패키지의 접근 요청이 변경되면 다시 허용해야 합니다.",
   "SettingsShowTaskbar": "ReStart가 열려 있는 동안 자동으로 숨겨진 작업 표시줄 표시",
   "SettingsTaskbarHelp": "ReStart가 표시되는 모니터의 작업 표시줄에만 적용됩니다. Windows의 자동 숨기기 설정은 변경하지 않습니다.",
   "SettingsTablet": "태블릿 통합",

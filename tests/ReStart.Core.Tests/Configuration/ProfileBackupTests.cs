@@ -20,6 +20,8 @@ public sealed class ProfileBackupTests : IDisposable
         File.WriteAllText(Path.Combine(package, "index.html"), "<title>Sample</title>"); File.WriteAllText(Path.Combine(package, "tile.css"), "body{color:white}");
         File.WriteAllText(Path.Combine(package, "assets", "sample.svg"), "<svg/>");
         File.WriteAllText(Path.Combine(package, "data-bindings.dat"), "private-connection-sentinel");
+        File.WriteAllText(Path.Combine(package, "data-" + Guid.NewGuid().ToString("N") + ".dat"), "private-tile-connection-sentinel");
+        File.WriteAllText(Path.Combine(package, "grant-" + Guid.NewGuid().ToString("N") + ".dat"), "private-approval-sentinel");
         File.WriteAllText(Path.Combine(package, "host-bindings.json"), "private-photo-folder-sentinel");
         Directory.CreateDirectory(Path.Combine(Source, "TileLibrary", "Sample draft"));
         File.WriteAllText(Path.Combine(Source, "TileLibrary", "Sample draft", "manifest.json"), "{\"title\":\"Draft\"}");

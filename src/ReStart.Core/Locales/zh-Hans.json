@@ -1,4 +1,6 @@
 {
+  "TileDataApprove": "保存并授权",
+  "TilePermissionHelp": "授权仅适用于此磁贴及其已启用的只读连接。禁用连接即可撤销访问权限。包的访问请求更改后需要重新授权。",
   "SettingsShowTaskbar": "ReStart 打开时显示自动隐藏的任务栏",
   "SettingsTaskbarHelp": "仅影响 ReStart 所在显示器的任务栏，不更改 Windows 自动隐藏设置。",
   "SettingsTablet": "平板集成",

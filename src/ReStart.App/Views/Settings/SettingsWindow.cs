@@ -92,6 +92,9 @@ internal sealed partial class SettingsWindow : Window
         Check(content, L.T(K.SettingsCloseOnDeactivate), _draft.CloseOnDeactivate, v => _draft.CloseOnDeactivate = v);
         Check(content, L.T(K.SettingsShowTaskbar), _draft.ShowTaskbarWhileOpen, v => _draft.ShowTaskbarWhileOpen = v);
         Note(content, L.T(K.SettingsTaskbarHelp));
+        var explorer = Check(content, L.T(K.ExplorerPinSetting), _draft.ExplorerContextMenu, v => _draft.ExplorerContextMenu = v);
+        explorer.IsEnabled = !_main.IsPreview;
+        Note(content, L.T(K.ExplorerPinHelp));
         Heading(content, L.T(K.SettingsTablet));
         var tablet = Check(content, L.T(K.SettingsTabletEnable), _draft.TabletFeaturesEnabled, v => _draft.TabletFeaturesEnabled = v);
         var keyboardPolicy = Check(content, L.T(K.SettingsTabletKeyboard), _draft.TabletKeyboardMeansDesktop, v => _draft.TabletKeyboardMeansDesktop = v);
@@ -99,9 +102,6 @@ internal sealed partial class SettingsWindow : Window
         void UpdateTabletControls() { keyboardPolicy.IsEnabled = hideTaskbar.IsEnabled = tablet.IsChecked == true; }
         tablet.Checked += (_, _) => UpdateTabletControls(); tablet.Unchecked += (_, _) => UpdateTabletControls(); UpdateTabletControls();
         Note(content, L.T(K.SettingsTabletHelp));
-        var explorer = Check(content, L.T(K.ExplorerPinSetting), _draft.ExplorerContextMenu, v => _draft.ExplorerContextMenu = v);
-        explorer.IsEnabled = !_main.IsPreview;
-        Note(content, L.T(K.ExplorerPinHelp));
         content = Section(K.SettingsAppearance);
         BuildAppearance(content);
         BuildNavigationSettings(Section(K.SettingsStartExperience));

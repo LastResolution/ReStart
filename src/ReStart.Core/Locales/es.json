@@ -1,4 +1,6 @@
 {
+  "TileDataApprove": "Guardar y autorizar",
+  "TilePermissionHelp": "La autorización solo se aplica a este mosaico y sus conexiones de solo lectura activadas. Desactive una conexión para revocar el acceso. Los cambios en las solicitudes del paquete requieren una nueva autorización.",
   "SettingsShowTaskbar": "Mostrar la barra de tareas oculta automáticamente mientras ReStart esté abierto",
   "SettingsTaskbarHelp": "Solo afecta a la barra de tareas de la pantalla de ReStart. No cambia la configuración de ocultación automática de Windows.",
   "SettingsTablet": "Integración con tabletas",

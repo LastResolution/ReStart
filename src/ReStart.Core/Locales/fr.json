@@ -1,4 +1,6 @@
 {
+  "TileDataApprove": "Enregistrer et autoriser",
+  "TilePermissionHelp": "L’autorisation concerne uniquement cette tuile et ses connexions en lecture seule activées. Désactivez une connexion pour révoquer l’accès. Toute modification des demandes du paquet nécessite une nouvelle autorisation.",
   "SettingsShowTaskbar": "Afficher la barre des tâches masquée automatiquement lorsque ReStart est ouvert",
   "SettingsTaskbarHelp": "Seule la barre des tâches de l’écran de ReStart est concernée. Les réglages de masquage automatique de Windows restent inchangés.",
   "SettingsTablet": "Intégration tablette",

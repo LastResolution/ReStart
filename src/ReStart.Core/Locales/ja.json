@@ -1,4 +1,6 @@
 {
+  "TileDataApprove": "保存して許可",
+  "TilePermissionHelp": "許可はこのタイルと、有効にした読み取り専用の接続だけに適用されます。接続を無効にすると許可を取り消せます。パッケージのアクセス要求が変わった場合は、再度許可が必要です。",
   "SettingsShowTaskbar": "ReStartを開いている間、自動的に隠すタスクバーを表示する",
   "SettingsTaskbarHelp": "ReStartが表示される画面のタスクバーだけが対象です。Windowsの自動非表示設定は変更しません。",
   "SettingsTablet": "タブレット連携",

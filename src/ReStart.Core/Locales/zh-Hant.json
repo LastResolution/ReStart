@@ -1,4 +1,6 @@
 {
+  "TileDataApprove": "儲存並授權",
+  "TilePermissionHelp": "授權僅適用於此磚及其已啟用的唯讀連線。停用連線即可撤銷存取權限。套件的存取要求變更後需要重新授權。",
   "SettingsShowTaskbar": "ReStart 開啟時顯示自動隱藏的工作列",
   "SettingsTaskbarHelp": "僅影響 ReStart 所在螢幕的工作列，不變更 Windows 自動隱藏設定。",
   "SettingsTablet": "平板整合",

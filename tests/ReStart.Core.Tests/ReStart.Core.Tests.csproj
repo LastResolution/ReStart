@@ -41,6 +41,7 @@
     <Compile Include="..\..\src\ReStart.App\Services\LiveTiles\ScriptTileWorkerPool.cs" Link="Services/LiveTiles/ScriptTileWorkerPool.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\LiveTiles\SystemMetricsSampler.cs" Link="Services/LiveTiles/SystemMetricsSampler.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\LiveTiles\ScriptTilePackages.cs" Link="Services/LiveTiles/ScriptTilePackages.cs" />
+    <Compile Include="..\..\src\ReStart.App\Services\LiveTiles\TileIntegrationPermissions.cs" Link="Services/LiveTiles/TileIntegrationPermissions.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\LiveTiles\TileStudioContext.cs" Link="Services/LiveTiles/TileStudioContext.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\LiveTiles\ReadOnlySqlite.cs" Link="Services/LiveTiles/ReadOnlySqlite.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\LiveTiles\LegacyNotificationStore.cs" Link="Services/LiveTiles/LegacyNotificationStore.cs" />

@@ -1,4 +1,6 @@
 {
+  "TileDataApprove": "Save and approve",
+  "TilePermissionHelp": "Approval applies only to this tile and its enabled read-only connections. Disable a connection to revoke access. Changed package requests require approval again.",
   "SettingsShowTaskbar": "Show an automatically hidden taskbar while ReStart is open",
   "SettingsTaskbarHelp": "Only the taskbar on ReStart’s monitor is affected. Windows auto-hide settings stay unchanged.",
   "SettingsTablet": "Tablet integration",

@@ -31,8 +31,10 @@ public partial class MainWindow
             for (var i = 0; i < tiles.Length; i++)
             {
                 var manifest = fixture._scriptPackages.Read(tiles[i].ScriptId).Manifest;
-                ScriptDataBindings.Save(fixture._scriptPackages.DataBindingPath(tiles[i].ScriptId), new()
-                { [manifest.DataSources.Keys.Single()] = new() { Enabled = true, Access = "file", Location = Path.Combine(directory, files[i]) } });
+                var bindings = new Dictionary<string, TileDataBinding>()
+                { [manifest.DataSources.Keys.Single()] = new() { Enabled = true, Access = "file", Location = Path.Combine(directory, files[i]) } };
+                ScriptDataBindings.Save(fixture._scriptPackages.DataBindingPath(tiles[i].ScriptId, tiles[i].Id), bindings);
+                ScriptTileGrants.ApproveData(fixture._scriptPackages.DataGrantPath(tiles[i].ScriptId, tiles[i].Id), tiles[i].Id, tiles[i].ScriptId, manifest, bindings);
             }
             fixture.Document = new()
             {
@@ -44,6 +46,7 @@ public partial class MainWindow
                 && fixture._scriptFrames.TryGetValue(tiles[1].Id, out var feed) && feed.Text == "First headline"
                 && fixture._scriptFrames.TryGetValue(tiles[2].Id, out var service) && service.Text == "Connected");
             Check(fixture.ScriptFrameCount == 3, "Connected samples did not render through actual tile workers.");
+            checks += await VerifyHostDataApprovalsAsync(fixture, directory);
             fixture._scriptViews.Single(v => v.Tile == tiles[1]).Button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await Until(() => fixture._scriptFrames[tiles[1].Id].Text == "Second headline");
             Check(fixture.IsVisible, "A feed click launched an external app.");

@@ -3,6 +3,10 @@ namespace ReStart.Core;
 /// <summary>Stable, language-independent identifiers for all application-owned UI text.</summary>
 public enum TextKey
 {
+    /// <summary>Save and approve</summary>
+    TileDataApprove,
+    /// <summary>Approval applies only to this tile and its enabled read-only connections. Disable a connection to revoke access. Changed package requests require approval again.</summary>
+    TilePermissionHelp,
     /// <summary>Show an automatically hidden taskbar while ReStart is open</summary>
     SettingsShowTaskbar,
     /// <summary>Only the taskbar on ReStart's monitor is affected. Windows auto-hide settings stay unchanged.</summary>
