@@ -77,6 +77,8 @@ jobs:
         with:
           name: portable-failure-diagnostics
           path: |
+            artifacts/smoke/*.json
+            artifacts/smoke/*.png
             artifacts/app-menus/*.json
             artifacts/jump-lists/*/start.json
             artifacts/jump-lists/*/native-*.png

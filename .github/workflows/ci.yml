@@ -87,6 +87,8 @@ jobs:
           path: |
             artifacts/platform/*/verification.json
             artifacts/platform/*/verify.log
+            artifacts/smoke/*.json
+            artifacts/smoke/*.png
             artifacts/navigation/*
             artifacts/motion/*/start.json
             artifacts/motion/*/fixture-*/*.png
@@ -181,6 +183,8 @@ jobs:
         with:
           name: portable-diagnostics
           path: |
+            artifacts/smoke/*.json
+            artifacts/smoke/*.png
             artifacts/search-selection/*/start.json
             artifacts/search-selection/*/*.png
             artifacts/app-menus/*.json
