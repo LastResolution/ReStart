@@ -29,10 +29,10 @@ public sealed class UpdatePipelineTests : IDisposable
         var package = Path.Combine(_root, Guid.NewGuid().ToString("N")); Package(package, version, runtime);
         var zip = package + ".zip"; ZipFile.CreateFromDirectory(package, zip); return zip;
     }
-    private (string Install, string Work, UpdateTransaction Transaction) Transaction(bool extra = true)
+    private (string Install, string Work, UpdateTransaction Transaction) Transaction(bool extra = true, bool previousExtra = false)
     {
         var install = Path.Combine(_root, "install"); var work = Path.Combine(_root, Guid.NewGuid().ToString("N"));
-        Package(install, "1.0.0"); Package(Path.Combine(work, "payload"), "1.1.0", extra: extra);
+        Package(install, "1.0.0", extra: previousExtra); Package(Path.Combine(work, "payload"), "1.1.0", extra: extra);
         return (install, work, new(install, work));
     }
     [Fact]
@@ -130,19 +130,120 @@ public sealed class UpdatePipelineTests : IDisposable
     {
         if (!OperatingSystem.IsWindows()) return;
         var (install, _, transaction) = Transaction();
-        using var held = new FileStream(Path.Combine(install, "ReStart.exe"), FileMode.Open, FileAccess.Read, FileShare.Read);
+        var name = release ? "ReStart.exe" : "TileHost/ReStart.TileHost.exe";
+        using var held = new FileStream(Path.Combine(install, name), FileMode.Open, FileAccess.Read, FileShare.Read);
         var watch = System.Diagnostics.Stopwatch.StartNew();
         var apply = Task.Run(() => Record.Exception(() => transaction.Apply()));
         await Task.WhenAny(apply, Task.Delay(250));
         Assert.False(apply.IsCompleted, "Replacement did not wait for the actual Windows sharing lock.");
         if (release) held.Dispose();
-        var error = await apply.WaitAsync(TimeSpan.FromSeconds(10));
+        var error = await apply.WaitAsync(TimeSpan.FromSeconds(25));
         if (release) { Assert.Null(error); transaction.Complete(); }
-        else Assert.True(error is IOException or UnauthorizedAccessException);
-        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(10));
+        else
+        {
+            Assert.True(error is IOException or UnauthorizedAccessException);
+            Assert.Equal("replace", error.Data["ReStart.Update.Operation"]);
+            Assert.Equal(name, error.Data["ReStart.Update.File"]);
+            Assert.True((int)error.Data["ReStart.Update.Retries"]! > 0);
+            Assert.InRange((long)error.Data["ReStart.Update.ElapsedMs"]!, 9_000, 25_000);
+        }
+        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(25));
         Assert.Equal(release ? "1.1.0" : "1.0.0", UpdatePackage.ReadManifest(install).Version);
         UpdatePackage.VerifyFiles(install, UpdatePackage.ReadManifest(install));
         Assert.False(File.Exists(Path.Combine(install, UpdateTransaction.PendingName)));
+    }
+    [Theory]
+    [InlineData("ReStart.exe")]
+    [InlineData(UpdatePackage.ManifestName)]
+    public async Task WindowsLocksLongerThanTwoSecondsRecoverWithoutLosingLocalFiles(string name)
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        var (install, work, transaction) = Transaction();
+        File.WriteAllText(Path.Combine(install, "personal.txt"), "private sentinel");
+        using var held = new FileStream(Path.Combine(install, name), FileMode.Open, FileAccess.Read, FileShare.Read);
+        var apply = Task.Run(() => Record.Exception(() => transaction.Apply()));
+        await Task.Delay(3500);
+        var waited = !apply.IsCompleted;
+        held.Dispose();
+        var error = await apply.WaitAsync(TimeSpan.FromSeconds(20));
+        Assert.True(waited, "Replacement abandoned a transient lock after the old two-second budget.");
+        Assert.Null(error);
+        transaction.Complete();
+        UpdatePackage.VerifyFiles(install, UpdatePackage.ReadManifest(install));
+        Assert.Equal("1.1.0", UpdatePackage.ReadManifest(install).Version);
+        Assert.Equal("private sentinel", File.ReadAllText(Path.Combine(install, "personal.txt")));
+        Assert.False(File.Exists(Path.Combine(work, "backup", "personal.txt")));
+        Assert.Empty(Directory.GetFiles(install, ".restart-copy-*", SearchOption.AllDirectories));
+    }
+    [Fact]
+    public async Task WindowsJournalLockRecoversBeforeFinalizingTheTransaction()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        var (install, work, transaction) = Transaction();
+        FileStream? held = null;
+        var acquired = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var apply = Task.Run(() => Record.Exception(() => transaction.Apply(count =>
+        {
+            if (count != 1) return;
+            held = new FileStream(Path.Combine(work, "transaction.json"), FileMode.Open, FileAccess.Read, FileShare.Read);
+            acquired.SetResult();
+        })));
+        try
+        {
+            await acquired.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            await Task.Delay(3500);
+        }
+        finally { held?.Dispose(); }
+        Assert.Null(await apply.WaitAsync(TimeSpan.FromSeconds(20)));
+        transaction.Complete();
+        Assert.Equal("1.1.0", UpdatePackage.ReadManifest(install).Version);
+        Assert.False(File.Exists(Path.Combine(install, UpdateTransaction.PendingName)));
+    }
+    [Fact]
+    public async Task ObsoleteOwnedFileDeletionWaitsForTransientWindowsLocks()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        var (install, _, transaction) = Transaction(extra: false, previousExtra: true);
+        using var held = new FileStream(Path.Combine(install, "new.txt"), FileMode.Open, FileAccess.Read, FileShare.Read);
+        var replacing = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var apply = Task.Run(() => Record.Exception(() => transaction.Apply(count => { if (count == 1) replacing.SetResult(); })));
+        try
+        {
+            await replacing.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            await Task.Delay(3500);
+        }
+        finally { held.Dispose(); }
+        Assert.Null(await apply.WaitAsync(TimeSpan.FromSeconds(20)));
+        transaction.Complete();
+        Assert.False(File.Exists(Path.Combine(install, "new.txt")));
+        UpdatePackage.VerifyFiles(install, UpdatePackage.ReadManifest(install));
+    }
+    [Theory]
+    [InlineData("ReStart.exe")]
+    [InlineData("TileHost/ReStart.TileHost.exe")]
+    [InlineData(UpdatePackage.ManifestName)]
+    public void ReadOnlyDistributionFilesFailBeforeBackupWithoutChangingAttributes(string name)
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        var (install, work, transaction) = Transaction();
+        var target = Path.Combine(install, name);
+        var attributes = File.GetAttributes(target);
+        File.SetAttributes(target, attributes | FileAttributes.ReadOnly);
+        try
+        {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            var error = Assert.Throws<UnauthorizedAccessException>(() => transaction.Apply());
+            Assert.True(watch.Elapsed < TimeSpan.FromSeconds(2));
+            Assert.Equal("preflight-read-only", error.Data["ReStart.Update.Operation"]);
+            Assert.Equal(name, error.Data["ReStart.Update.File"]);
+            Assert.True((File.GetAttributes(target) & FileAttributes.ReadOnly) != 0);
+            Assert.False(Directory.Exists(Path.Combine(work, "backup")));
+            Assert.False(File.Exists(Path.Combine(work, "transaction.json")));
+            Assert.False(File.Exists(Path.Combine(install, UpdateTransaction.PendingName)));
+            Assert.Equal("1.0.0", UpdatePackage.ReadManifest(install).Version);
+            UpdatePackage.VerifyFiles(install, UpdatePackage.ReadManifest(install));
+        }
+        finally { File.SetAttributes(target, attributes); }
     }
     [Fact]
     public void ModifiedDistributionAndNewLocalFileCollisionFailBeforeMutation()

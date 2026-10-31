@@ -125,17 +125,39 @@ public partial class MainWindow
             {
                 MonitorPlacement.Release(handle);
                 Document.Preferences.Language = "en"; Document.Preferences.Theme = ReStart.Core.ThemeMode.Dark;
+                Document.Groups.Add(new()
+                {
+                    Name = "Scroll right",
+                    X = Math.Ceiling(Math.Max(ContentScroll.ActualWidth, 800) / Cell) + 8,
+                    Row = 0,
+                    Tiles = Enum.GetValues<TileSize>().Select(size => new Tile { AppId = "fixture:alpha", Label = size + " sample", Size = size }).ToList()
+                });
+                Document.Groups.Add(new()
+                {
+                    Name = "Scroll down",
+                    X = 0,
+                    Row = (int)Math.Ceiling(Math.Max(ContentScroll.ActualHeight, 800) / Cell) + 8,
+                    Tiles = _apps.Select(Tile.FromApp).ToList()
+                });
                 ApplyAppearance(); RenderGroups(); RenderApps(); ResetToPinnedView();
                 SetStatus("");
                 Root.ClearValue(WidthProperty); Root.ClearValue(HeightProperty);
                 Title = "ReStart platform verification";
                 WindowStyle = WindowStyle.SingleBorderWindow; ResizeMode = ResizeMode.CanResize;
-                Left = 100; Top = 100; Width = 1000; Height = 760;
+                WindowState = WindowState.Maximized;
+                _touchInput = new();
                 var hidden = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                 void OnVisibilityChanged(object sender, DependencyPropertyChangedEventArgs args) { if (!IsVisible) hidden.TrySetResult(); }
                 IsVisibleChanged += OnVisibilityChanged;
                 try { await Task.WhenAny(hidden.Task, Task.Delay(TimeSpan.FromMinutes(3))); }
-                finally { IsVisibleChanged -= OnVisibilityChanged; }
+                finally
+                {
+                    IsVisibleChanged -= OnVisibilityChanged;
+                    _touchPanning.Release();
+                    _touchInput!.FinalPanningMode = (int)ContentScroll.PanningMode;
+                    File.WriteAllText(Path.Combine(directory, "touch-input.json"), JsonSerializer.Serialize(_touchInput, new JsonSerializerOptions { IncludeFields = true, WriteIndented = true }));
+                    _touchInput = null;
+                }
             }
         }
         finally

@@ -154,8 +154,23 @@ internal static partial class PortableUpdates
         catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception)
         {
             if (request.Fixture)
+            {
                 File.WriteAllText(Path.Combine(directory, "failure-kind"), phase + ":" + (ex is System.ComponentModel.Win32Exception native
                     ? $"win32-{native.NativeErrorCode}" : $"{ex.HResult:X8}"));
+                // Fixture filenames and fixed categories only: never serialize exception
+                // messages, stack traces, installation roots or arbitrary Data entries.
+                var operation = ex.Data["ReStart.Update.Operation"] as string;
+                var name = ex.Data["ReStart.Update.File"] as string;
+                if (operation is "replace" or "metadata-replace" or "delete" or "preflight-read-only"
+                    && name is "ReStart.exe" or "TileHost/ReStart.TileHost.exe" or "README.txt" or UpdatePackage.ManifestName or UpdateTransaction.PendingName or "transaction.json")
+                    File.WriteAllText(Path.Combine(directory, "failure-context.json"), JsonSerializer.Serialize(new
+                    {
+                        operation,
+                        file = name,
+                        retries = ex.Data["ReStart.Update.Retries"] is int retries ? retries : 0,
+                        elapsedMs = ex.Data["ReStart.Update.ElapsedMs"] is long elapsed ? elapsed : 0
+                    }, Json));
+            }
             if (replacement is { HasExited: false }) { replacement.Kill(entireProcessTree: true); await replacement.WaitForExitAsync(); }
             if (File.Exists(Path.Combine(directory, "transaction.json")))
             {
