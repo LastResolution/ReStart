@@ -20,6 +20,8 @@ Le menu Démarrer plein écran de Windows 10 vous manque ? ReStart offre un espa
 
 **Portable · Vignettes JavaScript · x64 et ARM64 · Huit langues · Aucune installation séparée de .NET**
 
+**Tablette et barre des tâches.** Les réglages de démarrage permettent d’afficher la barre des tâches masquée automatiquement sur l’écran de ReStart lorsqu’il est ouvert. L’intégration tablette facultative est désactivée au départ et conserve la disposition et les raccourcis Démarrer. La détection du clavier et le masquage de la barre se règlent séparément. Les connexions de données nécessitent « Enregistrer et autoriser » pour chaque tuile placée ; les demandes d’accès modifiées nécessitent une nouvelle autorisation. [Comportement et couverture vérifiée (anglais)](docs/fidelity.md).
+
 ## Fiabilité et sauvegardes privées
 
 Les tuiles hors de la zone visible sont suspendues et les erreurs du navigateur déclenchent des tentatives limitées de récupération. Ces options sont indépendantes. **Paramètres → Disposition et données** sauvegarde et restaure disposition, apparence, tuiles, brouillons et fonds. Connexions, identifiants, chemins des photos et caches sont exclus. La sauvegarde contient toujours des noms, chemins et sources personnels : gardez-la privée. [Guide en anglais](docs/backups.md).
