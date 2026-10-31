@@ -13,7 +13,7 @@ public partial class MainWindow
 
     private int VerifyTaskbarPositionCoercion()
     {
-        var window = new Window { Owner = this, Width = 240, Height = 120, ShowActivated = false, ShowInTaskbar = false, Topmost = false };
+        var window = new Window { Width = 240, Height = 120, ShowActivated = false, ShowInTaskbar = false, Topmost = false };
         window.Show(); window.UpdateLayout();
         var handle = new WindowInteropHelper(window).Handle;
         var source = HwndSource.FromHwnd(handle);
@@ -44,7 +44,29 @@ public partial class MainWindow
             TaskbarNativeBackend.Position(handle, original, false);
             Native.GetWindowRect(handle, out var restored);
             Require(restored.Left == original.X && restored.Top == original.Y, "The owned taskbar rectangle was not restored.");
-            return 3;
+            var cover = new Window { Left = window.Left, Top = window.Top, Width = 240, Height = 120, ShowActivated = false, ShowInTaskbar = false, Topmost = true };
+            try
+            {
+                TaskbarNativeBackend.Position(handle, original, false, topmost: false);
+                cover.Show(); cover.UpdateLayout();
+                var coverHandle = new WindowInteropHelper(cover).Handle;
+                Require(TaskbarNativeBackend.IsAbove(coverHandle, handle), "The owned fullscreen cover did not start above the taskbar fixture.");
+                TaskbarNativeBackend.Position(handle, original, false);
+                Require(!TaskbarNativeBackend.IsAbove(handle, coverHandle), "The old coordinate-only path unexpectedly changed stacking order.");
+                var foreground = Native.GetForegroundWindow();
+                TaskbarNativeBackend.Position(handle, original, true, topmost: true);
+                Require(TaskbarNativeBackend.IsAbove(handle, coverHandle), "The taskbar fixture was still behind the fullscreen cover after reveal.");
+                Require(Native.GetForegroundWindow() == foreground, "Revealing the taskbar fixture stole foreground activation.");
+                TaskbarNativeBackend.Position(coverHandle, original, false, topmost: true);
+                Require(TaskbarNativeBackend.IsAbove(coverHandle, handle), "The repeated cover did not reproduce topmost taskbar occlusion.");
+                TaskbarNativeBackend.Position(handle, original, true, topmost: true);
+                Require(TaskbarNativeBackend.IsAbove(handle, coverHandle), "An already-topmost taskbar fixture was not brought back in front.");
+                Require(Native.GetForegroundWindow() == foreground, "Repeated taskbar reveal stole foreground activation.");
+                TaskbarNativeBackend.Position(handle, original, false, topmost: false);
+                Require(TaskbarNativeBackend.IsAbove(coverHandle, handle), "The taskbar fixture did not return to its original ordinary tier.");
+                return 11;
+            }
+            finally { cover.Close(); }
         }
         finally { source.RemoveHook(Clamp); window.Close(); }
     }

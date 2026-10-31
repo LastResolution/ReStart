@@ -34,12 +34,12 @@ public sealed class TaskbarMonitorTests
         Assert.Null(backend.Capture(mode));
     }
     [Fact]
-    public void FixedTaskbarIsNotRevealedAndExplorerChangesInvalidateOldOwnership()
+    public void FixedTaskbarCanBeRaisedAndExplorerChangesInvalidateOldOwnership()
     {
         var monitor = new TaskbarBounds(0, 0, 1280, 800);
         var observed = Window(1, monitor, new(0, 752, 1280, 48), false);
         var backend = new TaskbarNativeBackend(() => [observed]) { Scope = monitor };
-        Assert.Null(backend.Capture(TaskbarLeaseMode.Reveal));
+        Assert.False(Assert.Single(backend.Capture(TaskbarLeaseMode.Reveal)!.Windows).AutoHide);
         observed = observed with { AutoHide = true };
         var saved = backend.Capture(TaskbarLeaseMode.Reveal)!;
         observed = observed with { ProcessStarted = 2 };
@@ -48,19 +48,30 @@ public sealed class TaskbarMonitorTests
         Assert.False(backend.IsCurrent(saved));
     }
     [Theory]
-    [InlineData(0, 752, 1280, 48, 0, 0, 1280, 752)]
-    [InlineData(0, 0, 1280, 48, 0, 48, 1280, 752)]
-    [InlineData(0, 0, 48, 800, 48, 0, 1232, 800)]
-    [InlineData(1232, 0, 48, 800, 0, 0, 1232, 800)]
-    public void RevealedTaskbarsReserveOnlyTheirOwnEdge(int x, int y, int width, int height, int ax, int ay, int aw, int ah)
+    [InlineData(0, 752, 1280, 48)]
+    [InlineData(0, 0, 1280, 48)]
+    [InlineData(0, 0, 48, 800)]
+    [InlineData(1232, 0, 48, 800)]
+    public void RevealingAnyTaskbarEdgePreservesTheExistingFullscreenArea(int x, int y, int width, int height)
     {
         var monitor = new TaskbarBounds(-1280, -800, 1280, 800);
         var state = new TaskbarLeaseState(1, Guid.NewGuid().ToString("N"), 1, 1, TaskbarLeaseMode.Reveal,
             [Window(1, monitor, new(x - 1280, y - 800, width, height))]);
-        Assert.Equal(new Rectangle(ax - 1280, ay - 800, aw, ah), TaskbarNativeBackend.AvailableArea(new(-1280, -800, 1280, 800), state, monitor));
+        Assert.Equal(new Rectangle(-1280, -800, 1280, 800), TaskbarNativeBackend.AvailableArea(new(-1280, -800, 1280, 800), state, monitor));
+        var reserved = new Rectangle(-1240, -770, 1240, 730);
+        Assert.Equal(reserved, TaskbarNativeBackend.AvailableArea(reserved, state, monitor));
         var another = new TaskbarBounds(0, 0, 1920, 1080);
         Assert.Equal(new Rectangle(0, 0, 1920, 1080), TaskbarNativeBackend.AvailableArea(new(0, 0, 1920, 1080), state, another));
     }
+    [Theory]
+    [InlineData(null, false, null)]
+    [InlineData(null, true, null)]
+    [InlineData(false, true, false)]
+    [InlineData(false, false, null)]
+    [InlineData(true, false, null)]
+    [InlineData(true, true, null)]
+    public void RecoveryRestoresOnlyAnOwnedTopmostPromotion(bool? original, bool current, bool? expected)
+        => Assert.Equal(expected, TaskbarNativeBackend.RestoreTopmost(original, current));
     [Fact]
     public void HidingTheWindowsTaskbarDoesNotRemoveAnotherAppbarsReservedArea()
     {

@@ -1,9 +1,24 @@
 using ReStart.App.Services;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace ReStart.Core.Tests;
 
 public sealed class TaskbarRecoveryTests
 {
+    [Fact]
+    public void OlderRecoveryRecordsDoNotInventAnOriginalStackingTier()
+    {
+        var state = new TaskbarLeaseState(1, Guid.NewGuid().ToString("N"), 1, 2, TaskbarLeaseMode.Reveal,
+            [new(1, 1, 1, true, true, new(0, 0, 800, 600), new(0, 598, 800, 40), new(0, 560, 800, 40), false)]);
+        var json = JsonSerializer.SerializeToNode(state)!;
+        json["Windows"]![0]!.AsObject().Remove("Topmost");
+        var recovered = json.Deserialize<TaskbarLeaseState>()!;
+        Assert.True(recovered.IsValid());
+        Assert.Null(Assert.Single(recovered.Windows).Topmost);
+        Assert.Null(TaskbarNativeBackend.RestoreTopmost(recovered.Windows[0].Topmost, true));
+        Assert.False(Assert.Single(JsonSerializer.Deserialize<TaskbarLeaseState>(JsonSerializer.Serialize(state))!.Windows).Topmost);
+    }
     private sealed class Guard : IDisposable { public void Dispose() { } }
     private sealed class Store : ITaskbarRecoveryStore
     {

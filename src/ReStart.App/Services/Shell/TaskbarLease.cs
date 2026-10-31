@@ -9,7 +9,7 @@ internal enum TaskbarLeaseMode { Reveal, Hide }
 internal readonly record struct TaskbarBounds(int X, int Y, int Width, int Height);
 /// <summary>Identifies the exact Explorer window and its original and intended geometry for conditional recovery.</summary>
 internal sealed record TaskbarWindowState(long Window, int ProcessId, long ProcessStarted, bool Visible, bool AutoHide,
-    TaskbarBounds Monitor, TaskbarBounds Original, TaskbarBounds Target);
+    TaskbarBounds Monitor, TaskbarBounds Original, TaskbarBounds Target, bool? Topmost = null);
 /// <summary>Stores a private, process-bound recovery transaction; never sent to tiles or shared diagnostics.</summary>
 internal sealed record TaskbarLeaseState(int Version, string Token, int ParentId, long ParentStarted, TaskbarLeaseMode Mode, TaskbarWindowState[] Windows)
 {
@@ -52,6 +52,8 @@ internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBac
     private bool _applied;
     internal bool IsActive => _state != null;
     internal bool RecoveryFailed { get; private set; }
+    /// <summary>Retains the last local acquisition/recovery exception for explicit owned diagnostics; never exported to tiles or shared reports.</summary>
+    internal Exception? LastFailure { get; private set; }
     internal TaskbarLeaseMode? Mode => _state?.Mode;
     /// <summary>Gets only successfully applied geometry; retained recovery ownership alone must not resize the launcher.</summary>
     internal TaskbarLeaseState? Snapshot => _applied ? _state : null;
@@ -62,6 +64,7 @@ internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBac
     /// <returns>True when the requested effect is active, or restoration completed; false for unavailable/failed acquisition or recovery.</returns>
     internal bool Synchronize(TaskbarLeaseMode? mode, Func<bool>? stillRequested = null)
     {
+        LastFailure = null;
         if (_disposed) return mode == null && _state == null;
         if (mode == null && _state == null) return true;
         try
@@ -69,7 +72,7 @@ internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBac
             using var ownership = store.Acquire();
             return SynchronizeLocked(mode, stillRequested);
         }
-        catch (Exception error) when (Expected(error)) { RecoveryFailed = _state != null; return false; }
+        catch (Exception error) when (Expected(error)) { LastFailure = error; RecoveryFailed = _state != null; return false; }
     }
 
     private bool SynchronizeLocked(TaskbarLeaseMode? mode, Func<bool>? stillRequested)
@@ -102,6 +105,7 @@ internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBac
         }
         catch (Exception error) when (Expected(error))
         {
+            LastFailure = error;
             if (_state != null) Restore();
             return false;
         }
@@ -120,7 +124,7 @@ internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBac
             RecoveryFailed = false;
             return true;
         }
-        catch (Exception error) when (Expected(error)) { RecoveryFailed = true; return false; }
+        catch (Exception error) when (Expected(error)) { LastFailure = error; RecoveryFailed = true; return false; }
     }
 
     internal static bool Expected(Exception error) => error is IOException or InvalidDataException or UnauthorizedAccessException or InvalidOperationException or Win32Exception;

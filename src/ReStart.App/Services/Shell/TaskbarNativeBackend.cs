@@ -8,6 +8,23 @@ namespace ReStart.App.Services;
 internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>? observe = null) : ITaskbarLeaseBackend
 {
     internal TaskbarBounds Scope { get; set; }
+    internal nint LauncherWindow { get; set; }
+    /// <summary>Reports whether a top-level window precedes another in the current bounded desktop stacking order.</summary>
+    /// <param name="window">Existing top-level window expected to be in front.</param>
+    /// <param name="other">Existing top-level window expected to be behind it.</param>
+    /// <returns>True only when both distinct handles are found and window is encountered first; false for missing or uncertain ordering.</returns>
+    internal static bool IsAbove(nint window, nint other)
+    {
+        if (window == 0 || other == 0 || window == other) return false;
+        var first = 0;
+        var current = GetTopWindow(0);
+        for (var count = 0; current != 0 && count < 4096; count++, current = GetWindow(current, 2))
+        {
+            if (current == window) { if (first == 2) return false; first = 1; }
+            if (current == other) { if (first == 1) return true; first = 2; }
+        }
+        return false;
+    }
     private static readonly int ParentId = Environment.ProcessId;
     private static readonly long ParentStarted = CurrentStarted();
     private static long CurrentStarted() { using var process = Process.GetCurrentProcess(); return process.StartTime.ToUniversalTime().Ticks; }
@@ -17,7 +34,7 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
         var windows = new List<TaskbarWindowState>();
         foreach (var item in (observe ?? ObserveWindows)())
         {
-            if (item.Monitor != Scope || mode == TaskbarLeaseMode.Reveal && !item.AutoHide) continue;
+            if (item.Monitor != Scope) continue;
             windows.Add(item);
         }
         return windows.Count == 0 ? null : new(1, Guid.NewGuid().ToString("N"), ParentId, ParentStarted, mode, windows.ToArray());
@@ -36,7 +53,7 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
             var resolved = ResolveMonitor(monitor, monitors, bounds => AutoHideEdge(window, bounds));
             monitor = resolved.Monitor; var edge = resolved.Edge;
             var target = edge == null ? original : VisibleBounds(monitor, original, edge.Value);
-            yield return new(window, pid, started, IsWindowVisible(window), edge != null, monitor, original, target);
+            yield return new(window, pid, started, IsWindowVisible(window), edge != null, monitor, original, target, IsTopmost(window));
         }
     }
 
@@ -85,11 +102,13 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
             }
             else
             {
-                if (AutoHideEdge(window, item.Monitor) == null) throw new IOException("Taskbar preference changed.");
-                if (!Bounds(window, out var current) || current != item.Target || !IsWindowVisible(window))
-                    Position(window, item.Target, show: true);
-                if (!Bounds(window, out var applied) || applied != item.Target || !IsWindowVisible(window))
-                    throw new IOException("Taskbar reveal was not applied.");
+                if ((AutoHideEdge(window, item.Monitor) != null) != item.AutoHide) throw new IOException("Taskbar preference changed.");
+                if (LauncherWindow == 0) throw new IOException("Taskbar reveal requires a launcher window.");
+                if (!Bounds(window, out var current) || current != item.Target || !IsWindowVisible(window) || !IsAbove(window, LauncherWindow))
+                    Position(window, item.Target, show: true, topmost: true);
+                if (!Bounds(window, out var applied) || applied != item.Target) throw new IOException("Taskbar reveal geometry was not applied.");
+                if (!IsWindowVisible(window)) throw new IOException("Taskbar reveal visibility was not applied.");
+                if (!IsAbove(window, LauncherWindow)) throw new IOException("Taskbar reveal stacking was not applied.");
             }
         }
     }
@@ -105,21 +124,21 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
                 if (item.Visible && !IsWindowVisible(window)) ShowWindow(window, 8);
                 if (item.Visible && !IsWindowVisible(window)) throw new IOException("Taskbar visibility recovery failed.");
             }
-            else if (AutoHideEdge(window, item.Monitor) != null && Monitor(window, out var monitor) && monitor == item.Monitor
+            else if ((AutoHideEdge(window, item.Monitor) != null) == item.AutoHide && Monitor(window, out var monitor) && monitor == item.Monitor
                 && Bounds(window, out var current) && current == item.Target)
             {
                 // A changed Windows preference/monitor/rectangle belongs to the
                 // user or Explorer. Restore only the exact geometry we installed.
-                Position(window, item.Original, show: item.Visible);
+                Position(window, item.Original, show: item.Visible, topmost: RestoreTopmost(item.Topmost, IsTopmost(window)));
                 if (!item.Visible && IsWindowVisible(window)) ShowWindow(window, 0);
             }
         }
     }
 
-    /// <summary>Subtracts the taskbar's visible footprint from a monitor working area without changing Windows work-area settings.</summary>
+    /// <summary>Preserves the existing launcher area when revealing a taskbar; hiding expands only its own reserved edge.</summary>
     internal static System.Drawing.Rectangle AvailableArea(System.Drawing.Rectangle working, TaskbarLeaseState? state, TaskbarBounds monitor)
     {
-        if (state == null) return working;
+        if (state == null || state.Mode == TaskbarLeaseMode.Reveal) return working;
         var item = state.Windows.FirstOrDefault(window => window.Monitor == monitor);
         if (item == null) return working;
         var bar = item.Target;
@@ -139,16 +158,16 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
             else if (bar.X > monitor.X && working.Right >= bar.X) expanded.Width = monitor.X + monitor.Width - expanded.X;
             return expanded;
         }
-        var area = new System.Drawing.Rectangle(monitor.X, monitor.Y, monitor.Width, monitor.Height);
-        if (bar.Width >= monitor.Width / 2)
-        {
-            if (bar.Y <= monitor.Y) { area.Y += bar.Height; area.Height -= bar.Height; }
-            else area.Height -= bar.Height;
-        }
-        else if (bar.X <= monitor.X) { area.X += bar.Width; area.Width -= bar.Width; }
-        else area.Width -= bar.Width;
-        return area.Width > 0 && area.Height > 0 ? System.Drawing.Rectangle.Intersect(working, area) : working;
+        return working;
     }
+
+    /// <summary>Reverts only an owned promotion from the ordinary window tier; old records and external demotion retain their current tier.</summary>
+    /// <param name="original">Captured tier, or null for a recovery record created before tier capture was supported.</param>
+    /// <param name="current">Current topmost tier after identity and geometry validation.</param>
+    /// <returns>False to undo an owned promotion, or null to leave the current tier unchanged.</returns>
+    internal static bool? RestoreTopmost(bool? original, bool current) => original == false && current ? false : null;
+
+    private static bool IsTopmost(nint window) => (GetWindowLongPtr(window, -20).ToInt64() & 8) != 0;
 
     private static IEnumerable<nint> Taskbars()
     {
@@ -218,12 +237,15 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
     /// <param name="window">Revalidated taskbar HWND or a native verification window owned by this process.</param>
     /// <param name="bounds">Exact physical screen rectangle, also used by conditional recovery.</param>
     /// <param name="show">Whether to show without activating; false retains current visibility.</param>
-    internal static void Position(nint window, TaskbarBounds bounds, bool show)
+    /// <param name="topmost">True raises above the launcher, false returns to the ordinary tier; null retains stacking order.</param>
+    internal static void Position(nint window, TaskbarBounds bounds, bool show, bool? topmost = null)
     {
         // The temporary lease supplies both target and recovery rectangles.
         // Suppress WINDOWPOSCHANGING so Explorer cannot coerce the requested
         // visible rectangle back to its auto-hidden edge during this call.
-        if (!SetWindowPos(window, 0, bounds.X, bounds.Y, bounds.Width, bounds.Height, (uint)(0x0414 | (show ? 0x0040 : 0))))
+        var after = topmost.HasValue ? new nint(topmost.Value ? -1 : -2) : 0;
+        var flags = (uint)(0x0410 | (topmost.HasValue ? 0 : 0x0004) | (show ? 0x0040 : 0));
+        if (!SetWindowPos(window, after, bounds.X, bounds.Y, bounds.Width, bounds.Height, flags))
             throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
     }
 
@@ -237,6 +259,9 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
     private delegate bool MonitorCallback(nint monitor, nint hdc, ref Rect rect, nint data);
     [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] private static extern bool EnumDisplayMonitors(nint hdc, nint clip, MonitorCallback callback, nint data);
     [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] private static extern bool IsWindowVisible(nint window);
+    [DllImport("user32.dll")] private static extern nint GetTopWindow(nint parent);
+    [DllImport("user32.dll")] private static extern nint GetWindow(nint window, uint command);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, EntryPoint = "GetWindowLongPtrW")] private static extern nint GetWindowLongPtr(nint window, int index);
     [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] private static extern bool ShowWindow(nint window, int command);
     [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] private static extern bool GetWindowRect(nint window, out Rect rect);
     [DllImport("user32.dll")] private static extern nint MonitorFromWindow(nint window, uint flags);

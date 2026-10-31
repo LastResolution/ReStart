@@ -42,7 +42,7 @@ internal sealed class TabletIntegration : IDisposable
     /// <summary>Attaches short native event hooks and a coalesced background worker; construction does not mutate the shell.</summary>
     /// <param name="window">UI-owned launcher whose saved preferences provide consent and whose current monitor scopes every effect.</param>
     /// <param name="source">Existing launcher presentation source; hooks are removed on disposal.</param>
-    internal TabletIntegration(MainWindow window, HwndSource source) : this(window, source, NativeDependencies()) { }
+    internal TabletIntegration(MainWindow window, HwndSource source) : this(window, source, NativeDependencies(source.Handle)) { }
 
     /// <summary>Initializes the identical UI lifecycle with explicitly supplied external dependencies for owned verification.</summary>
     /// <param name="window">Owned launcher fixture or normal launcher; its preferences are never mutated.</param>
@@ -60,10 +60,10 @@ internal sealed class TabletIntegration : IDisposable
         _timer.Start(); Refresh();
     }
 
-    private static Dependencies NativeDependencies()
+    private static Dependencies NativeDependencies(nint launcher)
     {
         var store = new TaskbarRecoveryStore(TaskbarWatchdog.Profile);
-        var backend = new TaskbarNativeBackend();
+        var backend = new TaskbarNativeBackend { LauncherWindow = launcher };
         var watchdog = new TaskbarWatchdog(store);
         return new(store, backend, value => backend.Scope = value, watchdog.Protect, () => watchdog.IsReady, TabletInputDevices.Read,
             () => TaskbarRecovery.Run(store, backend, TaskbarWatchdog.IsAlive));
