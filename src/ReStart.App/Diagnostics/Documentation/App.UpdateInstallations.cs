@@ -11,7 +11,7 @@ public partial class App
     /// <summary>Exercises updater handoff and rollback using fictional installations, without ordinary settings, hooks or network requests.</summary>
     /// <param name="directory">New owned fixture root for installations, updater workspaces and the JSON report.</param>
     /// <param name="previousExecutable">Optional standalone preceding-release binary copied into each old installation. Null uses the current binary with a fictional old manifest.</param>
-    /// <returns>A task completing after four process scenarios and owned-cache cleanup are verified.</returns>
+    /// <returns>A task completing after five process scenarios and owned-cache cleanup are verified. The transient-lock scenario always uses the current helper; the other four may use previousExecutable.</returns>
     private static async Task VerifyUpdateInstallationsAsync(string directory, string? previousExecutable = null)
     {
         Directory.CreateDirectory(directory); PortableUpdates.CacheRoot = Path.Combine(directory, "jobs");
@@ -36,11 +36,11 @@ public partial class App
             : current.Patch > 0 ? new ReleaseVersion(current.Major, current.Minor, current.Patch - 1)
             : current.Minor > 0 ? new ReleaseVersion(current.Major, current.Minor - 1, 0) : new ReleaseVersion(Math.Max(0, current.Major - 1), 0, 0);
         if (previous.CompareTo(current) >= 0) throw new InvalidOperationException("Fixture requires an older previous release.");
-        foreach (var scenario in new[] { "success", "startup-failure", "locked-file", "interrupted" })
+        foreach (var scenario in new[] { "success", "transient-lock", "startup-failure", "locked-file", "interrupted" })
         {
             var installation = Path.Combine(directory, scenario);
             Directory.CreateDirectory(Path.Combine(installation, "TileHost"));
-            File.Copy(previousExecutable ?? source, Path.Combine(installation, "ReStart.exe"), overwrite: true);
+            File.Copy(scenario == "transient-lock" ? source : previousExecutable ?? source, Path.Combine(installation, "ReStart.exe"), overwrite: true);
             File.WriteAllText(Path.Combine(installation, "TileHost", "ReStart.TileHost.exe"), "fictional worker");
             File.WriteAllText(Path.Combine(installation, "README.txt"), "old instructions");
             WriteFixtureManifest(installation, previous.ToString());
@@ -75,7 +75,7 @@ public partial class App
                 Check(PortableUpdates.RestorePrepared(installation)?.Id == id, "Rejecting modified preparation consumed the restored valid package.");
             }
             if (scenario == "startup-failure") File.WriteAllText(Path.Combine(workspace, "simulate-startup-failure"), "fail");
-            using var locked = scenario == "locked-file" ? new FileStream(Path.Combine(installation, "README.txt"), FileMode.Open, FileAccess.Read, FileShare.Read) : null;
+            using var locked = scenario is "locked-file" or "transient-lock" ? new FileStream(Path.Combine(installation, "README.txt"), FileMode.Open, FileAccess.Read, FileShare.Read) : null;
             if (scenario == "interrupted")
             {
                 new UpdateTransaction(installation, workspace).Apply();
@@ -92,21 +92,41 @@ public partial class App
                 await parent.WaitForExitAsync(deadline.Token);
                 Check(parent.ExitCode == 0, "Fixture parent did not hand off safely.");
             }
+            if (scenario == "transient-lock")
+            {
+                // Start the hold interval only once the helper reaches replacement,
+                // rather than measuring variable process startup/extraction time.
+                for (var i = 0; i < 100 && !Directory.EnumerateFiles(installation, ".restart-copy-*").Any(); i++) await Task.Delay(100);
+                Check(Directory.EnumerateFiles(installation, ".restart-copy-*").Any(), "Helper never reached the locked atomic replacement.");
+                await Task.Delay(3500);
+                Check(!File.Exists(Path.Combine(workspace, "outcome")), "Helper abandoned the transient lock before release.");
+                locked!.Dispose();
+            }
             var outcome = Path.Combine(workspace, "outcome");
             for (var i = 0; i < 600 && !File.Exists(outcome); i++) await Task.Delay(100);
             Check(File.Exists(outcome), "Updater did not finish the isolated scenario.");
-            var expectedOutcome = scenario == "success" ? "complete" : "rolled-back";
+            var successful = scenario is "success" or "transient-lock";
+            var expectedOutcome = successful ? "complete" : "rolled-back";
             var actualOutcome = PortableUpdates.Outcome(id);
             var failurePath = Path.Combine(workspace, "failure-kind");
             var failure = File.Exists(failurePath) ? File.ReadAllText(failurePath) : "none";
             Check(actualOutcome == expectedOutcome,
                 $"Updater returned {actualOutcome} for {scenario}, expected {expectedOutcome}; acknowledged={File.Exists(Path.Combine(workspace, "acknowledged"))}, started={File.Exists(Path.Combine(workspace, "fixture-started"))}, failure={failure}.");
-            Check(UpdatePackage.ReadManifest(installation).Version == (scenario == "success" ? current.ToString() : previous.ToString()), "Installation version was not committed or restored.");
+            if (scenario == "locked-file" && previousExecutable == null)
+            {
+                using var context = JsonDocument.Parse(File.ReadAllText(Path.Combine(workspace, "failure-context.json")));
+                var root = context.RootElement;
+                Check(root.GetProperty("operation").GetString() == "replace" && root.GetProperty("file").GetString() == "README.txt"
+                    && root.GetProperty("retries").GetInt32() > 0 && root.GetProperty("elapsedMs").GetInt64() >= 9_000,
+                    "Persistent lock diagnostics lost their fixed operation, relative file or bounded retry evidence.");
+                Check(root.EnumerateObject().Count() == 4, "Failure diagnostics contain unexpected fields.");
+            }
+            Check(UpdatePackage.ReadManifest(installation).Version == (successful ? current.ToString() : previous.ToString()), "Installation version was not committed or restored.");
             UpdatePackage.VerifyFiles(installation, UpdatePackage.ReadManifest(installation)); checks++;
             Check(!File.Exists(Path.Combine(installation, UpdateTransaction.PendingName)), "Pending marker survived a completed update.");
             Check(File.ReadAllText(Path.Combine(installation, "local-sentinel.txt")) == "private fixture sentinel", "Updater changed an unrelated local file.");
             Check(!File.Exists(Path.Combine(workspace, "backup", "local-sentinel.txt")), "Updater copied an unrelated local file.");
-            var startupMarker = Path.Combine(workspace, scenario == "success" ? "fixture-started" : "fixture-restored");
+            var startupMarker = Path.Combine(workspace, successful ? "fixture-started" : "fixture-restored");
             for (var i = 0; i < 100 && !File.Exists(startupMarker); i++) await Task.Delay(100);
             Check(File.Exists(startupMarker), "Updated/restored app did not start through the isolated entry point.");
             if (scenario == "success") successfulWorkspace = workspace;
@@ -116,7 +136,7 @@ public partial class App
         Check(File.ReadAllText(unrelated) == "retained", "Cache cleanup removed an unrelated file.");
         Check(!File.Exists(Path.Combine(successfulWorkspace!, "ReStart.exe")), "Completed update binaries were not cleaned up.");
         Check(File.ReadAllText(Path.Combine(directory, "success", "local-sentinel.txt")) == "private fixture sentinel", "Cache cleanup changed the installed user's file.");
-        File.WriteAllText(Path.Combine(directory, "verification.json"), JsonSerializer.Serialize(new { success = true, scenarios = 4, checks, previousExecutableVersion = previousExecutable == null ? null : previous.ToString() }, new JsonSerializerOptions { WriteIndented = true }));
+        File.WriteAllText(Path.Combine(directory, "verification.json"), JsonSerializer.Serialize(new { success = true, scenarios = 5, checks, previousExecutableVersion = previousExecutable == null ? null : previous.ToString() }, new JsonSerializerOptions { WriteIndented = true }));
     }
 
     private static void WriteFixtureManifest(string installation, string version)

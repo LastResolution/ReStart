@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 
@@ -16,7 +17,8 @@ public sealed class UpdateTransaction(string installation, string workspace)
 
     /// <summary>Backs up verified distribution files and replaces them with the staged package.</summary>
     /// <param name="progress">Optional observer invoked after each replaced/deleted file; throwing aborts and rolls back the transaction.</param>
-    /// <exception cref="IOException">A distribution is modified, a new filename collides with a local file, or disk/rollback access fails.</exception>
+    /// <exception cref="IOException">A distribution is modified, a new filename collides with a local file, or disk/rollback access fails. Windows access/share locks are retried with backoff for at most ten seconds per file operation.</exception>
+    /// <exception cref="UnauthorizedAccessException">An owned file is read-only, or access remains denied after bounded retries; file attributes and permissions are never changed.</exception>
     /// <exception cref="InvalidOperationException">The workspace overlaps the installation or already has a journal.</exception>
     public void Apply(Action<int>? progress = null)
     {
@@ -28,6 +30,16 @@ public sealed class UpdateTransaction(string installation, string workspace)
             throw new InvalidDataException("Update must be newer and use the installed architecture.");
         UpdatePackage.VerifyFiles(installation, previous);
         UpdatePackage.VerifyFiles(Path.Combine(workspace, "payload"), next);
+        // Reject permanent attribute failures before creating backups or a journal.
+        // This also avoids copying read-only attributes into recovery material.
+        if (OperatingSystem.IsWindows())
+            foreach (var name in previous.Files.Select(f => f.Path).Append(UpdatePackage.ManifestName))
+                if ((File.GetAttributes(UpdatePackage.SafePath(installation, name)) & FileAttributes.ReadOnly) != 0)
+                {
+                    var error = new UnauthorizedAccessException("An installed distribution file is read-only.");
+                    AddFailureContext(error, "preflight-read-only", name, 0, 0);
+                    throw error;
+                }
         var previousNames = previous.Files.Select(f => f.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
         foreach (var file in next.Files)
         {
@@ -54,13 +66,13 @@ public sealed class UpdateTransaction(string installation, string workspace)
             {
                 var target = UpdatePackage.SafePath(installation, file.Path);
                 if (!previousNames.Contains(file.Path) && File.Exists(target)) throw new InvalidDataException("A local file appeared during update.");
-                Replace(UpdatePackage.SafePath(Path.Combine(workspace, "payload"), file.Path), target);
+                Replace(UpdatePackage.SafePath(Path.Combine(workspace, "payload"), file.Path), target, file.Path);
                 progress?.Invoke(++count);
             }
             var nextNames = next.Files.Select(f => f.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
             foreach (var file in previous.Files.Where(f => !nextNames.Contains(f.Path)))
-            { File.Delete(UpdatePackage.SafePath(installation, file.Path)); progress?.Invoke(++count); }
-            Replace(UpdatePackage.SafePath(Path.Combine(workspace, "payload"), UpdatePackage.ManifestName), UpdatePackage.SafePath(installation, UpdatePackage.ManifestName));
+            { Delete(UpdatePackage.SafePath(installation, file.Path), file.Path); progress?.Invoke(++count); }
+            Replace(UpdatePackage.SafePath(Path.Combine(workspace, "payload"), UpdatePackage.ManifestName), UpdatePackage.SafePath(installation, UpdatePackage.ManifestName), UpdatePackage.ManifestName);
             UpdatePackage.VerifyFiles(installation, next);
             WriteJournal(new(previous, next, "awaiting-startup"));
         }
@@ -69,6 +81,7 @@ public sealed class UpdateTransaction(string installation, string workspace)
 
     /// <summary>Commits the update only after the replacement application acknowledges successful startup.</summary>
     /// <exception cref="IOException">The journal, installed package or completion marker cannot be verified or written.</exception>
+    /// <exception cref="UnauthorizedAccessException">Metadata replacement or marker deletion remains denied after bounded Windows retries.</exception>
     public void Complete()
     {
         ValidateRoots();
@@ -76,16 +89,17 @@ public sealed class UpdateTransaction(string installation, string workspace)
         if (journal.State != "awaiting-startup") throw new InvalidDataException("Update is not awaiting startup.");
         UpdatePackage.VerifyFiles(installation, journal.Next);
         WriteJournal(journal with { State = "complete" });
-        File.Delete(Path.Combine(installation, PendingName));
+        Delete(Path.Combine(installation, PendingName), PendingName);
     }
 
     /// <summary>Restores verified backups and removes only new distribution files; safe to repeat after interruption.</summary>
     /// <exception cref="IOException">A journal/backup is invalid, or restoring files fails; the pending marker remains for recovery.</exception>
+    /// <exception cref="UnauthorizedAccessException">Restoration or marker deletion remains denied after bounded Windows retries; permissions are not changed.</exception>
     public void Rollback()
     {
         ValidateRoots();
         var journal = ReadJournal();
-        if (journal.State == "complete") { File.Delete(Path.Combine(installation, PendingName)); return; }
+        if (journal.State == "complete") { Delete(Path.Combine(installation, PendingName), PendingName); return; }
         UpdatePackage.VerifyFiles(Backup, journal.Previous);
         var previous = journal.Previous.Files.Select(f => f.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
         foreach (var file in journal.Next.Files.Where(f => !previous.Contains(f.Path)))
@@ -96,7 +110,7 @@ public sealed class UpdateTransaction(string installation, string workspace)
             if (!File.Exists(path) || new FileInfo(path).Length != file.Size) continue;
             using (var stream = File.OpenRead(path))
                 if (!Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(stream)).Equals(file.Sha256, StringComparison.OrdinalIgnoreCase)) continue;
-            File.Delete(path);
+            Delete(path, file.Path);
         }
         foreach (var name in journal.Previous.Files.Select(f => f.Path).Append(UpdatePackage.ManifestName))
         {
@@ -107,11 +121,11 @@ public sealed class UpdateTransaction(string installation, string workspace)
                 using var old = File.OpenRead(source); using var current = File.OpenRead(target);
                 if (System.Security.Cryptography.SHA256.HashData(old).SequenceEqual(System.Security.Cryptography.SHA256.HashData(current))) continue;
             }
-            Replace(source, target);
+            Replace(source, target, name);
         }
         UpdatePackage.VerifyFiles(installation, journal.Previous);
         WriteJournal(journal with { State = "rolled-back" });
-        File.Delete(Path.Combine(installation, PendingName));
+        Delete(Path.Combine(installation, PendingName), PendingName);
     }
 
     private Journal ReadJournal()
@@ -139,7 +153,7 @@ public sealed class UpdateTransaction(string installation, string workspace)
             throw new InvalidOperationException("Update directories overlap.");
     }
     private void WriteJournal(Journal journal) => AtomicText(JournalPath, JsonSerializer.Serialize(journal, UpdatePackage.Json));
-    private static void Replace(string source, string target)
+    private static void Replace(string source, string target, string name)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(target)!);
         var temporary = Path.Combine(Path.GetDirectoryName(target)!, ".restart-copy-" + Guid.NewGuid().ToString("N"));
@@ -147,16 +161,16 @@ public sealed class UpdateTransaction(string installation, string workspace)
         {
             using (var output = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))
             using (var input = File.OpenRead(source)) { input.CopyTo(output); output.Flush(flushToDisk: true); }
-            // Windows can retain an image/scan handle briefly after process exit.
-            // Keep the atomic source intact while retrying only access/share locks;
-            // persistent failures still take the ordinary rollback path.
-            for (var attempt = 0; ; attempt++)
-                try { File.Move(temporary, target, overwrite: true); break; }
-                catch (Exception ex) when (OperatingSystem.IsWindows() && attempt < 20 && ex is IOException or UnauthorizedAccessException
-                    && (ex.HResult & 0xFFFF) is 5 or 32 or 33)
-                { Thread.Sleep(100); }
+            // Retain the flushed atomic source while Windows releases image/scan handles.
+            RetryAccess(() => File.Move(temporary, target, overwrite: true), "replace", name);
         }
-        finally { if (File.Exists(temporary)) File.Delete(temporary); }
+        finally
+        {
+            // A scanner may also hold the abandoned temporary file. Cleanup must
+            // not mask the replacement failure needed to diagnose/recover the update.
+            try { File.Delete(temporary); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+        }
     }
     private static void AtomicText(string target, string text)
     {
@@ -165,6 +179,36 @@ public sealed class UpdateTransaction(string installation, string workspace)
         UpdatePackage.NoLinks(temporary);
         using (var output = new FileStream(temporary, FileMode.Create, FileAccess.Write, FileShare.None))
         { output.Write(Encoding.UTF8.GetBytes(text)); output.Flush(flushToDisk: true); }
-        File.Move(temporary, target, overwrite: true);
+        RetryAccess(() => File.Move(temporary, target, overwrite: true), "metadata-replace", Path.GetFileName(target));
+    }
+    private static void Delete(string path, string name) => RetryAccess(() => File.Delete(path), "delete", name);
+    private static void RetryAccess(Action action, string operation, string name)
+    {
+        var watch = Stopwatch.StartNew();
+        var retries = 0;
+        const int budgetMs = 10_000;
+        while (true)
+        {
+            try { action(); return; }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+            {
+                var remainingMs = budgetMs - watch.ElapsedMilliseconds;
+                if (!OperatingSystem.IsWindows() || (error.HResult & 0xFFFF) is not (5 or 32 or 33) || remainingMs <= 0)
+                {
+                    AddFailureContext(error, operation, name, retries, watch.ElapsedMilliseconds);
+                    throw;
+                }
+                Thread.Sleep((int)Math.Min(remainingMs, retries switch { 0 => 100, 1 => 200, 2 => 400, _ => 500 }));
+                retries++;
+            }
+        }
+    }
+    private static void AddFailureContext(Exception error, string operation, string name, int retries, long elapsedMs)
+    {
+        // Fixed categories and inventory-relative names only, never exception text or roots.
+        error.Data["ReStart.Update.Operation"] = operation;
+        error.Data["ReStart.Update.File"] = name;
+        error.Data["ReStart.Update.Retries"] = retries;
+        error.Data["ReStart.Update.ElapsedMs"] = elapsedMs;
     }
 }

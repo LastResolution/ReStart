@@ -24,7 +24,7 @@ try {
         throw "Update installation verification failed: $($process.ExitCode)"
     }
     $report = Get-Content -LiteralPath (Join-Path $directory 'verification.json') -Raw | ConvertFrom-Json
-    if (-not $report.success -or $report.scenarios -ne 4) { throw 'Update installation verification reported failure.' }
+    if (-not $report.success -or $report.scenarios -ne 5) { throw 'Update installation verification reported failure.' }
     $report
 }
 finally { $process.Dispose() }

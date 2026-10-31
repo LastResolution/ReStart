@@ -86,6 +86,7 @@ jobs:
             artifacts/navigation/*
             artifacts/update-installation/*/verification.json
             artifacts/update-installation/*/jobs/*/failure-kind
+            artifacts/update-installation/*/jobs/*/failure-context.json
             artifacts/update-installation/*/jobs/*/outcome
           if-no-files-found: ignore
           retention-days: 14
