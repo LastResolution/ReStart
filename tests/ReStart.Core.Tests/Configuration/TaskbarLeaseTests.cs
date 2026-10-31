@@ -44,6 +44,14 @@ public sealed class TaskbarLeaseTests
         Assert.Equal(0, backend.Applied); Assert.Equal(0, backend.Restored); Assert.Equal(0, guards);
     }
     [Fact]
+    public void ClosingOrChangingScopeDuringWatchdogReadinessPreventsLateMutation()
+    {
+        var store = new Store(); var backend = new Backend(); var requested = true; var released = false;
+        using var lease = new TaskbarLease(store, backend, _ => { requested = false; return new Guard(() => released = true); });
+        Assert.False(lease.Synchronize(TaskbarLeaseMode.Reveal, () => requested));
+        Assert.Equal(0, backend.Applied); Assert.Null(store.State); Assert.Null(lease.Snapshot); Assert.True(released);
+    }
+    [Fact]
     public void MissingWatchdogPreventsMutationAndCleansValidRecoveryState()
     {
         var store = new Store(); var backend = new Backend();

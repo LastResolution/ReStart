@@ -24,11 +24,11 @@ public sealed class TabletModeTests
 
     [Theory]
     [MemberData(nameof(Observations))]
-    public void KeyboardPolicyUsesOnlyCurrentPositivePresence(DevicePosture posture, KeyboardPresence keyboard, bool keyboardPolicy)
+    public void OptionalKeyboardPolicyRequiresConfirmedCurrentAbsence(DevicePosture posture, KeyboardPresence keyboard, bool keyboardPolicy)
     {
         var preferences = new Preferences { TabletFeaturesEnabled = true, TabletKeyboardMeansDesktop = keyboardPolicy };
         var input = new TabletInputSnapshot(posture, keyboard);
-        Assert.Equal(posture == DevicePosture.Slate && !(keyboardPolicy && keyboard == KeyboardPresence.Present), TabletModePolicy.IsActive(preferences, input));
+        Assert.Equal(posture == DevicePosture.Slate && (!keyboardPolicy || keyboard == KeyboardPresence.Absent), TabletModePolicy.IsActive(preferences, input));
         Assert.False(TabletModePolicy.IsActive(preferences, input, DevicePosture.Desktop));
     }
 

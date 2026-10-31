@@ -24,7 +24,7 @@ public enum KeyboardPresence
 
 /// <summary>Contains anonymous device observations, not consent or persistent user preferences.</summary>
 /// <param name="Posture">Current Windows posture; Unknown does not activate tablet integration.</param>
-/// <param name="Keyboard">Current keyboard presence; Unknown never suppresses a known slate posture.</param>
+/// <param name="Keyboard">Current keyboard presence. With the optional keyboard policy enabled, Unknown pauses tablet effects until absence is confirmed.</param>
 public readonly record struct TabletInputSnapshot(DevicePosture Posture, KeyboardPresence Keyboard);
 
 /// <summary>Resolves tablet mode independently of desktop shortcuts, layout seeding and temporary observations.</summary>
@@ -34,10 +34,10 @@ public static class TabletModePolicy
     /// <param name="preferences">Caller-owned persistent choices; never modified.</param>
     /// <param name="input">Current anonymous posture and keyboard observations.</param>
     /// <param name="temporaryPosture">Optional in-memory test posture; null follows Windows. It cannot grant consent or override an enabled keyboard policy.</param>
-    /// <returns>True only with persistent opt-in and a selected slate posture not suppressed by a present keyboard.</returns>
+    /// <returns>True only with persistent opt-in and a selected slate posture; an enabled keyboard policy additionally requires confirmed keyboard absence.</returns>
     public static bool IsActive(Preferences preferences, TabletInputSnapshot input, DevicePosture? temporaryPosture = null)
         => preferences.TabletFeaturesEnabled && (temporaryPosture ?? input.Posture) == DevicePosture.Slate
-            && !(preferences.TabletKeyboardMeansDesktop && input.Keyboard == KeyboardPresence.Present);
+            && (!preferences.TabletKeyboardMeansDesktop || input.Keyboard == KeyboardPresence.Absent);
 }
 
 /// <summary>Owns reversible tablet effects; transitions never alter desktop preferences or stored layouts.</summary>

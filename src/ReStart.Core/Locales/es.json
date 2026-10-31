@@ -1,4 +1,11 @@
 {
+  "SettingsShowTaskbar": "Mostrar la barra de tareas oculta automáticamente mientras ReStart esté abierto",
+  "SettingsTaskbarHelp": "Solo afecta a la barra de tareas de la pantalla de ReStart. No cambia la configuración de ocultación automática de Windows.",
+  "SettingsTablet": "Integración con tabletas",
+  "SettingsTabletEnable": "Activar la integración opcional con tabletas",
+  "SettingsTabletKeyboard": "Pausar la integración con tabletas al conectar un teclado USB o Bluetooth",
+  "SettingsTabletHide": "Ocultar la barra de tareas mientras ReStart esté abierto en modo tableta",
+  "SettingsTabletHelp": "Tras guardar, usa la detección de postura de Windows. Se conservan los mosaicos y los accesos de Inicio del escritorio. Una postura desconocida no activa los efectos de tableta.",
   "RemoveFromThisList": "Quitar de esta lista",
   "DontShowInThisList": "No mostrar en esta lista",
   "ClearRecentList": "Borrar lista",

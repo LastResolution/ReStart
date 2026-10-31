@@ -253,9 +253,9 @@ public partial class MainWindow : Window
         if (!_preview)
         {
             var screen = System.Windows.Forms.Screen.FromPoint(_startButtonPoint ?? System.Windows.Forms.Cursor.Position);
-            var area = screen.WorkingArea;
+            var area = NativeWorkingArea?.Invoke(screen) ?? screen.WorkingArea;
             _wallpaperMonitor = screen.Bounds;
-            MonitorPlacement.FitWorkingArea(handle, new nint(-1), area, 0x0040);
+            MonitorPlacement.FitWorkingArea(handle, new nint(-1), area, 0x0040, NativeWorkingArea);
         }
         if (!_preview || _openingWallpaperFixture != null) QueueOpeningWallpaperRefresh();
         if (!_preview || _verifyNativeActivation) ForegroundActivation.Request(handle);

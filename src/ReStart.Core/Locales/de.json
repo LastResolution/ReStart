@@ -1,4 +1,11 @@
 {
+  "SettingsShowTaskbar": "Automatisch ausgeblendete Taskleiste anzeigen, solange ReStart geöffnet ist",
+  "SettingsTaskbarHelp": "Betrifft nur die Taskleiste auf dem Bildschirm von ReStart. Die Windows-Einstellungen zum automatischen Ausblenden bleiben unverändert.",
+  "SettingsTablet": "Tablet-Integration",
+  "SettingsTabletEnable": "Optionale Tablet-Integration aktivieren",
+  "SettingsTabletKeyboard": "Tablet-Integration bei angeschlossener USB- oder Bluetooth-Tastatur pausieren",
+  "SettingsTabletHide": "Taskleiste im Tablet-Modus ausblenden, solange ReStart geöffnet ist",
+  "SettingsTabletHelp": "Verwendet nach dem Speichern die Windows-Erkennung der Gerätehaltung. Kacheln und Start-Tastenkürzel bleiben erhalten. Bei unbekannter Haltung werden keine Tablet-Effekte aktiviert.",
   "RemoveFromThisList": "Aus dieser Liste entfernen",
   "DontShowInThisList": "Nicht in dieser Liste anzeigen",
   "ClearRecentList": "Liste löschen",

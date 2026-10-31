@@ -1,4 +1,11 @@
 {
+  "SettingsShowTaskbar": "ReStart 開啟時顯示自動隱藏的工作列",
+  "SettingsTaskbarHelp": "僅影響 ReStart 所在螢幕的工作列，不變更 Windows 自動隱藏設定。",
+  "SettingsTablet": "平板整合",
+  "SettingsTabletEnable": "啟用選用的平板整合",
+  "SettingsTabletKeyboard": "連接 USB 或藍牙鍵盤時暫停平板整合",
+  "SettingsTabletHide": "在平板模式下開啟 ReStart 時隱藏工作列",
+  "SettingsTabletHelp": "儲存後使用 Windows 的裝置姿態偵測。保留磚與桌面開始快捷鍵設定。無法確定姿態時不會啟用平板效果。",
   "RemoveFromThisList": "從此清單移除",
   "DontShowInThisList": "不要在此清單顯示",
   "ClearRecentList": "清除清單",

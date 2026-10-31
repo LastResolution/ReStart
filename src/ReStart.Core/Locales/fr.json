@@ -1,4 +1,11 @@
 {
+  "SettingsShowTaskbar": "Afficher la barre des tâches masquée automatiquement lorsque ReStart est ouvert",
+  "SettingsTaskbarHelp": "Seule la barre des tâches de l’écran de ReStart est concernée. Les réglages de masquage automatique de Windows restent inchangés.",
+  "SettingsTablet": "Intégration tablette",
+  "SettingsTabletEnable": "Activer l’intégration tablette facultative",
+  "SettingsTabletKeyboard": "Suspendre l’intégration tablette lorsqu’un clavier USB ou Bluetooth est connecté",
+  "SettingsTabletHide": "Masquer la barre des tâches lorsque ReStart est ouvert en mode tablette",
+  "SettingsTabletHelp": "Après enregistrement, utilise la détection de posture de Windows. Les tuiles et les raccourcis Démarrer du bureau sont conservés. Une posture inconnue n’active aucun effet tablette.",
   "RemoveFromThisList": "Supprimer de cette liste",
   "DontShowInThisList": "Ne pas afficher dans cette liste",
   "ClearRecentList": "Effacer la liste",

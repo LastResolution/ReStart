@@ -30,6 +30,7 @@ public partial class MainWindow
         try
         {
             fixture.Present(); await fixture.InitializeAsync(); fixture._clock.Stop();
+            checks += await VerifyTabletIntegrationAsync(fixture);
             checks += VerifyTouchPanningLease();
             checks += fixture.VerifyTouchDragRoutes();
             fixture.Document.Preferences.Animate = false;

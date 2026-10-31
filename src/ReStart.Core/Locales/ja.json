@@ -1,4 +1,11 @@
 {
+  "SettingsShowTaskbar": "ReStartを開いている間、自動的に隠すタスクバーを表示する",
+  "SettingsTaskbarHelp": "ReStartが表示される画面のタスクバーだけが対象です。Windowsの自動非表示設定は変更しません。",
+  "SettingsTablet": "タブレット連携",
+  "SettingsTabletEnable": "タブレット連携を有効にする",
+  "SettingsTabletKeyboard": "USB・Bluetoothキーボード接続時はタブレット連携を停止する",
+  "SettingsTabletHide": "タブレットモードでReStartを開いている間、タスクバーを隠す",
+  "SettingsTabletHelp": "保存後、Windowsの使用形態の検出に従って動作します。タイル配置とデスクトップのスタート操作設定は維持されます。使用形態を判定できない場合、タブレット連携は動作しません。",
   "RemoveFromThisList": "この一覧から削除",
   "DontShowInThisList": "この一覧に表示しない",
   "ClearRecentList": "一覧を消去",

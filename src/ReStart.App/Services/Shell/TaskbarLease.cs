@@ -51,23 +51,25 @@ internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBac
     internal bool IsActive => _state != null;
     internal bool RecoveryFailed { get; private set; }
     internal TaskbarLeaseMode? Mode => _state?.Mode;
+    internal TaskbarLeaseState? Snapshot => _state;
 
     /// <summary>Enforces an optional temporary effect; failure never bypasses recovery prerequisites.</summary>
     /// <param name="mode">Desired effect, or null to restore the original owned state.</param>
+    /// <param name="stillRequested">Optional current-request check, evaluated after recovery readiness and before shell mutation. False cancels and restores acquisition.</param>
     /// <returns>True when the requested effect is active, or restoration completed; false for unavailable/failed acquisition or recovery.</returns>
-    internal bool Synchronize(TaskbarLeaseMode? mode)
+    internal bool Synchronize(TaskbarLeaseMode? mode, Func<bool>? stillRequested = null)
     {
         if (_disposed) return mode == null && _state == null;
         if (mode == null && _state == null) return true;
         try
         {
             using var ownership = store.Acquire();
-            return SynchronizeLocked(mode);
+            return SynchronizeLocked(mode, stillRequested);
         }
         catch (Exception error) when (Expected(error)) { RecoveryFailed = _state != null; return false; }
     }
 
-    private bool SynchronizeLocked(TaskbarLeaseMode? mode)
+    private bool SynchronizeLocked(TaskbarLeaseMode? mode, Func<bool>? stillRequested)
     {
         try
         {
@@ -88,6 +90,7 @@ internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBac
                 _state = candidate;
                 _protection = protect(candidate) ?? throw new InvalidOperationException("Missing taskbar recovery watchdog.");
             }
+            if (stillRequested?.Invoke() == false) { Restore(); return false; }
             backend.Apply(_state);
             RecoveryFailed = false;
             return true;

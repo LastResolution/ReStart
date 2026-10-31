@@ -1,4 +1,11 @@
 {
+  "SettingsShowTaskbar": "ReStart 打开时显示自动隐藏的任务栏",
+  "SettingsTaskbarHelp": "仅影响 ReStart 所在显示器的任务栏，不更改 Windows 自动隐藏设置。",
+  "SettingsTablet": "平板集成",
+  "SettingsTabletEnable": "启用可选的平板集成",
+  "SettingsTabletKeyboard": "连接 USB 或蓝牙键盘时暂停平板集成",
+  "SettingsTabletHide": "在平板模式下打开 ReStart 时隐藏任务栏",
+  "SettingsTabletHelp": "保存后使用 Windows 的设备姿态检测。保留磁贴和桌面开始快捷键设置。无法确定姿态时不会启用平板效果。",
   "RemoveFromThisList": "从此列表中删除",
   "DontShowInThisList": "不在此列表中显示",
   "ClearRecentList": "清除列表",
