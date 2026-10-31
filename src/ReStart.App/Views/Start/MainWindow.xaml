@@ -97,6 +97,7 @@
                 <ListBox.ItemsPanel><ItemsPanelTemplate><StackPanel /></ItemsPanelTemplate></ListBox.ItemsPanel>
               </ListBox>
               <TextBlock x:Name="SearchResultHint" Text="{local:Loc Key=SearchHint}" Visibility="Collapsed" Margin="6" FontSize="13" />
+              <Button x:Name="WindowsSearchButton" Content="{local:Loc Key=SearchInWindows}" HorizontalAlignment="Left" Margin="0,16,0,6" Click="OpenWindowsSearch" Visibility="Collapsed" />
             </StackPanel>
           </Grid>
         </ScrollViewer>

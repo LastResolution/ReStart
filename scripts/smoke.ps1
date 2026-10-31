@@ -18,7 +18,11 @@ $arguments = @('--smoke-test', '--snapshot', ('"' + $snapshot + '"'))
 if ($SearchQuery) { $arguments += @('--search-query', ('"' + $SearchQuery + '"')) }
 $process = Start-Process -FilePath $Executable -ArgumentList $arguments -WindowStyle Hidden -PassThru
 if (-not $process.WaitForExit(60000)) { $process.Kill(); throw 'Smoke test timed out.' }
-if ($process.ExitCode -ne 0) { throw "Smoke test failed: $($process.ExitCode)" }
+if ($process.ExitCode -ne 0) {
+    $report = [IO.Path]::ChangeExtension($snapshot, '.json')
+    if (Test-Path -LiteralPath $report) { Get-Content -LiteralPath $report -Raw | Write-Output }
+    throw "Smoke test failed: $($process.ExitCode)"
+}
 $result = Get-Content -LiteralPath ([IO.Path]::ChangeExtension($snapshot, '.json')) -Raw | ConvertFrom-Json
 if (-not $result.success) { throw 'Smoke test reported failure.' }
 $result

@@ -81,7 +81,7 @@ public partial class MainWindow : Window
         _activationFixture = activation;
         _loadCatalog = catalogLoader ?? _catalog.LoadAsync;
         _scriptPackages = new(Path.GetDirectoryName(store.FilePath)!);
-        IsVisibleChanged += (_, _) => { if (!IsVisible) PauseScripts(keepWorkers: true); };
+        IsVisibleChanged += (_, _) => { if (!IsVisible) { PauseLegacyTiles(); PauseScripts(keepWorkers: true); } };
         InitializeComponent();
         InstallGroupBoundaries();
         InstallPlacementMotion();
@@ -233,6 +233,7 @@ public partial class MainWindow : Window
     /// <summary>Returns to the pinned home view and presents the launcher; existing owned dialogs retain focus and preview windows retain their size.</summary>
     public void Present()
     {
+        RefreshWindowsUsage();
         if (!_startupComplete && _startupWindow == null && IsReady && IconsReady && ScriptTileCount == 0) _startupComplete = true;
         if (!_startupComplete) { RequestStartupPresentation(); return; }
         var dialog = OwnedWindows.Cast<Window>().LastOrDefault(w => w.IsVisible);
@@ -415,6 +416,7 @@ public partial class MainWindow : Window
         GroupsPanel.Children.Clear();
         _selectionViews.Clear();
         _liveLabels.Clear();
+        _legacyViews.Clear();
         _scriptViews.Clear();
         _usedHtmlTiles.Clear();
         _folderThumbnailIds.Clear();
@@ -498,6 +500,7 @@ public partial class MainWindow : Window
     private Button CreateTileButton(Tile tile, bool studioPreview = false, bool folderThumbnail = false)
     {
         var webTile = tile.Widget == "script" && tile.Live && _scriptPackages.IsWeb(tile.ScriptId);
+        var nativeLive = Document.Preferences.LegacyUwpLiveTiles && tile.Live && LegacyEligible(tile);
         var displayName = TileDisplayName(tile);
         var button = new TileSurfaceButton { MotionAllowed = MotionEnabled, HoverHighlightEnabled = DisplayPreferences.TileHoverHighlight, Tag = tile, Padding = new(0), HorizontalContentAlignment = HorizontalAlignment.Stretch, VerticalContentAlignment = VerticalAlignment.Stretch, ToolTip = displayName };
         AutomationProperties.SetName(button, displayName + (tile.IsFolder && tile.Label.Length > 0 ? L.T(K.TileFolderSuffix) : ""));
@@ -556,9 +559,15 @@ public partial class MainWindow : Window
         {
             var (width, height) = TileLayout.Dimensions(tile.Size);
             var available = Math.Min(width * Cell - 4, height * Cell - 4) - 14 - (tile.Size == TileSize.Small ? 0 : 8);
-            grid.Children.Add(CreateIcon(tile, Math.Max(1, Math.Min(available, tile.Size == TileSize.Small ? 23 : tile.Size == TileSize.Large ? 60 : 40))));
+            var icon = CreateIcon(tile, Math.Max(1, Math.Min(available, tile.Size == TileSize.Small ? 23 : tile.Size == TileSize.Large ? 60 : 40)));
+            grid.Children.Add(icon);
+            if (nativeLive && (!studioPreview || folderThumbnail))
+            {
+                var native = new LegacyTileView { IsHitTestVisible = false, Focusable = false };
+                grid.Children.Add(native); _legacyViews.Add((tile, native, icon, button));
+            }
         }
-        if (tile.Size != TileSize.Small && !tile.IsFolder && !webTile && (tile.Widget.Length == 0 || DisplayPreferences.ShowLiveTileNames))
+        if (tile.Size != TileSize.Small && !tile.IsFolder && !webTile && (tile.Widget.Length == 0 && !nativeLive || DisplayPreferences.ShowLiveTileNames))
             grid.Children.Add(new TextBlock { Text = displayName, Tag = tile, FontSize = 12, VerticalAlignment = VerticalAlignment.Bottom, TextTrimming = TextTrimming.CharacterEllipsis, Margin = new(2, 0, 1, 0) });
         button.Content = grid;
         if (studioPreview) return button;
@@ -586,12 +595,13 @@ public partial class MainWindow : Window
             var image = new Image { Source = source, Width = size, Height = size, Stretch = Stretch.Uniform, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center, Margin = new(0, 0, 0, tile.Size == TileSize.Small ? 0 : 8) };
             RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.HighQuality); return image;
         }
-        var glyph = tile.Widget == "calendar" ? "\uE787" : tile.Widget == "clock" ? "\uE823" : tile.AppId == "restart:explorer" ? "\uE8B7" : tile.AppId == "restart:settings" || tile.Target.StartsWith("ms-settings:", StringComparison.OrdinalIgnoreCase) ? "\uE713" : "\uE71D";
+        var glyph = tile.Widget == "calendar" ? "\uE787" : tile.Widget == "clock" ? "\uE823" : tile.AppId == "restart:explorer" ? "\uE8B7" : tile.AppId == "restart:settings" || tile.AppId.StartsWith("restart:setting:", StringComparison.Ordinal) || tile.Target.StartsWith("ms-settings:", StringComparison.OrdinalIgnoreCase) ? "\uE713" : "\uE71D";
         return new TextBlock { Text = glyph, FontFamily = new("Segoe MDL2 Assets"), FontSize = size * 0.8, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center, Margin = new(0, 0, 0, tile.Size == TileSize.Small ? 0 : 8) };
     }
 
     private void UpdateLiveTiles()
     {
+        RefreshLegacyTiles();
         var now = _preview && _documentationNow is { } sampleTime ? sampleTime.DateTime : DateTime.Now;
         foreach (var (text, tile) in _liveLabels)
             text.Text = tile.Widget == "clock" ? now.ToString("HH:mm") : tile.Size == TileSize.Small ? now.Day.ToString(CultureInfo.CurrentCulture) : now.ToString("m", L.Culture) + "\n" + now.ToString("dddd", L.Culture);
@@ -627,7 +637,7 @@ public partial class MainWindow : Window
             var value = Prompt(L.T(K.PromptTileName), TileDisplayName(tile));
             if (value != null && value != TileDisplayName(tile)) { tile.Label = value; tile.UseLocalizedName = false; CommitLayout(); }
         });
-        if (tile.Widget.Length > 0)
+        if (tile.Widget.Length > 0 || Document.Preferences.LegacyUwpLiveTiles && LegacyEligible(tile))
         {
             var liveMenu = new MenuItem { Header = L.T(K.MenuMore), Tag = "live-more" };
             Add(liveMenu, tile.Live ? L.T(K.DisableLiveTile) : L.T(K.EnableLiveTile), () => { tile.Live = !tile.Live; CommitLayout(); }).Tag = "toggle-live";
@@ -1147,7 +1157,7 @@ public partial class MainWindow : Window
     private static bool IsAnyMenuOpen() => Mouse.Captured is ContextMenu || Mouse.Captured is System.Windows.Controls.Primitives.MenuBase;
     private void OnClosing(object? sender, CancelEventArgs e) { if (!_exit) { e.Cancel = true; Dismiss(); } }
     /// <summary>Stops timers and isolated script workers before permanently closing the launcher.</summary>
-    public void Exit() { _exit = true; StopFileShare(); CancelStartupPresentation(); StopMotion(); StopFolderDwell(); StopDragGhost(); StopWatchingDesktopAppearance(); _clock.Stop(); _nameRefreshTimer?.Stop(); _railHoverTimer?.Stop(); _dragScrolling = false; _fileSearchCancellation?.Cancel(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); RetireHtmlTiles(all: true); _liveSessions.Dispose(); Close(); }
+    public void Exit() { _exit = true; StopLegacyTiles(); StopWindowsUsage(); StopFileShare(); CancelStartupPresentation(); StopMotion(); StopFolderDwell(); StopDragGhost(); StopWatchingDesktopAppearance(); _clock.Stop(); _nameRefreshTimer?.Stop(); _railHoverTimer?.Stop(); _dragScrolling = false; _fileSearchCancellation?.Cancel(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); RetireHtmlTiles(all: true); _liveSessions.Dispose(); Close(); }
 
     /// <summary>Renders only the launcher root to a PNG for reproducible UI verification.</summary>
     /// <param name="path">Destination PNG path for the current preview visual; missing parent directories are created.</param>

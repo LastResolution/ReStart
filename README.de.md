@@ -50,6 +50,14 @@ Beim Ziehen folgt eine halbtransparente Kopie der Kachel, Gruppe oder Auswahl de
 
 Über das Zahnrad wählst du Design, Autostart, Windows-Tasten-/Startschaltflächen-Integration und Updates. Für die normale Nutzung sind keine Administratorrechte nötig. [SHA-256-Prüfsummen](https://github.com/LastResolution/ReStart/releases/latest) stehen bereit.
 
+## Windows-App-Integration
+
+Die Suche ergänzt Windows-eigene Einstellungsbegriffe und Systemsteuerungseinträge. Optionale Advanced Query Syntax bietet native Dateifilter und Relevanzsortierung; **In Windows suchen** übergibt weitere Quellen ausdrücklich an Windows.
+
+Zwei getrennte Optionen sind zunächst aus: vorhandene Windows-App-Nutzungszahlen für Meistverwendet und schreibgeschützte Windows-Kachel-/Abzeichenkompatibilität. Häufige Größenlayouts, lokale Rasterbilder und Datenbindungen werden unterstützt. Eingestellte Push-Dienste werden nicht wiederhergestellt; ohne Daten bleibt das App-Symbol sichtbar.
+
+[Einstellungen und Kompatibilität](docs/start-behavior.md) · [Abdeckung](docs/fidelity.md)
+
 ## Funktionen
 
 ![Öffnen und Schließen von ReStart](docs/images/start-motion.gif)

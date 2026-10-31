@@ -18,6 +18,7 @@ public partial class MainWindow
 
     private void RenderApps()
     {
+        RefreshWindowsUsage();
         var focusedFolder = (Keyboard.FocusedElement as AppFolderButton)?.FolderKey;
         var focusedApp = ((Keyboard.FocusedElement as Button)?.Tag as AppEntry)?.Id;
         AppsPanel.Children.Clear();
@@ -39,7 +40,7 @@ public partial class MainWindow
             }
         }
         if (DisplayPreferences.ShowRecentlyAdded) HistorySection(K.RecentlyAdded, Activity.Recent(_apps, DateTimeOffset.Now));
-        if (DisplayPreferences.ShowMostUsed) HistorySection(K.MostUsed, Activity.Frequent(_apps));
+        if (DisplayPreferences.ShowMostUsed) HistorySection(K.MostUsed, Activity.Frequent(_apps, _windowsUsage));
         var previousAlphabet = _appAlphabet;
         var focusedLetter = (Keyboard.FocusedElement as Button)?.Content as string;
         _appIndex = WindowsAppIndex.ForLanguage(L.Language);

@@ -557,5 +557,14 @@
   "WindowsSettingWindowsupdateHistory": "Historial de actualizaciones de Windows",
   "WindowsSettingWindowsupdateOptions": "Opciones avanzadas de Windows Update",
   "WindowsSettingGamingGamebar": "Game Bar",
-  "WindowsSettingGamingGamemode": "Modo Juego"
+  "WindowsSettingGamingGamemode": "Modo Juego",
+  "SettingsWindowsAppHistory": "Incluir el uso de aplicaciones registrado por Windows (solo lectura)",
+  "WindowsAppHistoryHelp": "Requiere el seguimiento de inicio de aplicaciones de Windows. Lee únicamente los registros de aplicaciones instaladas, sin guardarlos. Borrar el historial de ReStart no borra el de Windows.",
+  "SettingsWindowsSearchSyntax": "Usar consultas avanzadas de archivos de Windows",
+  "WindowsSearchSyntaxHelp": "Usa la sintaxis y el orden de relevancia de Windows. Las propiedades canónicas, como System.Kind:picture, funcionan en todos los idiomas. El contenido de documentos requiere activar su opción por separado.",
+  "SearchInWindows": "Abrir la búsqueda de Windows",
+  "SettingsWindowsSearchHandoff": "Mostrar acceso a la búsqueda de Windows",
+  "WindowsSearchHandoffHelp": "Abre la búsqueda de Windows con Win+S. Escribe tu consulta allí. Windows controla el acceso a la Web, la nube y las cuentas.",
+  "SettingsLegacyUwpTiles": "Mostrar mosaicos dinámicos de aplicaciones de Windows (compatibilidad)",
+  "LegacyUwpTilesHelp": "Lee datos activos de mosaicos e insignias solo para aplicaciones empaquetadas ancladas. Usa un almacén de Windows no documentado; si no está disponible, muestra los iconos. No lee notificaciones emergentes ni descarga imágenes remotas."
 }

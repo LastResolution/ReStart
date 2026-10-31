@@ -1,5 +1,7 @@
 # JavaScript live tiles
 
+Windows app tile compatibility is a separate, opt-in [Start behavior feature](start-behavior.md#windows-app-tile-compatibility). It reads existing Windows tile/badge data into an inert native renderer. Script packages do not receive that notification data or Windows app-usage observations.
+
 ![Bundled gallery](images/live-tiles.png)
 
 Right-click the background or a group → Add live tile, or open Settings → JavaScript tiles, to choose nineteen ready-to-use packages. Adding one does not open a code editor. Connected tiles open native connection settings; no requests start until you save an enabled connection. Normal clicks send a local event; right-click to edit JS/settings, reload, configure data or select a photo folder. Tile Studio is the built-in authoring workspace for HTML, CSS, JavaScript and the manifest. Its offline sample input and four size previews let you experiment before saving or pinning.

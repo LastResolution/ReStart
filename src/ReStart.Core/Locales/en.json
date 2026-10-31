@@ -557,5 +557,14 @@
   "WindowsSettingWindowsupdateHistory": "Windows update history",
   "WindowsSettingWindowsupdateOptions": "Windows Update advanced options",
   "WindowsSettingGamingGamebar": "Game Bar",
-  "WindowsSettingGamingGamemode": "Game Mode"
+  "WindowsSettingGamingGamemode": "Game Mode",
+  "SettingsWindowsAppHistory": "Include existing Windows app usage (read-only)",
+  "WindowsAppHistoryHelp": "Requires Windows app-launch tracking. Reads exact installed-app records without saving them. Clearing ReStart history does not clear Windows history.",
+  "SettingsWindowsSearchSyntax": "Use Windows advanced file queries",
+  "WindowsSearchSyntaxHelp": "Use Windows query syntax and relevance ranking. Canonical properties such as System.Kind:picture work across languages. Document contents still require the separate content option.",
+  "SearchInWindows": "Open Windows Search",
+  "SettingsWindowsSearchHandoff": "Show Windows Search handoff",
+  "WindowsSearchHandoffHelp": "Opens Windows Search with Win+S. Enter your query there. Windows controls Web, cloud and account access.",
+  "SettingsLegacyUwpTiles": "Show Windows app live tiles (compatibility)",
+  "LegacyUwpTilesHelp": "Reads active tile and badge data only for pinned packaged apps. Uses an undocumented Windows store; unavailable data falls back to icons. Toasts are not read and remote images are not downloaded."
 }

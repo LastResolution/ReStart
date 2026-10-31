@@ -84,6 +84,21 @@ public partial class MainWindow
             Check(VisualChildren<TextBlock>(fixture.AppsPanel).Any(t => t.Text == L.T(K.MostUsed)), "Most used was not rendered from local launch counts.");
             fixture.ClearAppHistory();
             Check(!VisualChildren<TextBlock>(fixture.AppsPanel).Any(t => t.Text == L.T(K.MostUsed)), "Cleared app history still appears.");
+            fixture._windowsUsageFixture = async (_, token) =>
+            {
+                await Task.Delay(40, token);
+                return new(true, new Dictionary<string, WindowsAppUsage> { ["beta"] = new(12, DateTimeOffset.UtcNow) });
+            };
+            fixture.Document.Preferences.UseWindowsAppHistory = true; fixture.RenderApps();
+            await Until(() => fixture._windowsUsage.ContainsKey("beta"));
+            Check(fixture.AppsPanel.Children.OfType<Button>().First(b => b.Uid == "history").Tag is AppEntry { Id: "beta" },
+                "Windows usage did not reach the Most used surface.");
+            fixture.Activity.HideFrequent("beta"); fixture.RenderApps();
+            Check(!fixture.AppsPanel.Children.OfType<Button>().Any(b => b.Uid == "history" && b.Tag is AppEntry { Id: "beta" }),
+                "An imported usage observation restored an excluded app.");
+            fixture.Document.Preferences.UseWindowsAppHistory = false; fixture.RenderApps();
+            Check(fixture._windowsUsage.Count == 0 && fixture._windowsUsageCancellation == null, "Disabling Windows usage retained history or its reader.");
+            fixture._windowsUsageFixture = null;
             fixture.SetRailOpen(true); Check(fixture.ExpandedRail.Visibility == Visibility.Visible && !fixture._railPinnedOpen, "Hover expansion was treated as a pinned-open sidebar.");
             fixture.SetRailOpen(true, true); Check(fixture._railPinnedOpen, "Explicit sidebar expansion did not stay open.");
             fixture.SetRailOpen(false);
@@ -168,6 +183,9 @@ public partial class MainWindow
                 [K.SettingsRailHover] = p => p.ExpandNavigationOnHover,
                 [K.SettingsSearchSettings] = p => p.SearchSettings,
                 [K.SearchFilesSetting] = p => p.SearchFiles,
+                [K.SettingsWindowsSearchSyntax] = p => p.SearchWindowsSyntax,
+                [K.SettingsWindowsSearchHandoff] = p => p.ShowWindowsSearchHandoff,
+                [K.SettingsLegacyUwpTiles] = p => p.LegacyUwpLiveTiles,
                 [K.SettingsJumpLists] = p => p.ShowJumpLists,
                 [K.SettingsAppTasks] = p => p.ShowAppTasks,
                 [K.SettingsPinnedJumpLists] = p => p.ShowPinnedJumpLists,
@@ -180,7 +198,8 @@ public partial class MainWindow
                 [K.SettingsDropHints] = p => p.ShowDropHints,
                 [K.SettingsDragShortcutHints] = p => p.ShowDragShortcutHints,
                 [K.SettingsShowRecentApps] = p => p.ShowRecentlyAdded,
-                [K.SettingsShowMostUsed] = p => p.ShowMostUsed
+                [K.SettingsShowMostUsed] = p => p.ShowMostUsed,
+                [K.SettingsWindowsAppHistory] = p => p.UseWindowsAppHistory
             };
             foreach (var enabled in new[] { false, true })
             {
@@ -283,12 +302,17 @@ public partial class MainWindow
             }
             await fixture.SaveSearchShowcaseAsync(directory);
             checks += await VerifySessionMenusAsync(fixture, directory);
+            checks += await VerifyLegacyTileRenderingAsync(fixture, directory);
+            checks += await VerifyWindowsSearchAsync(fixture, launched, directory);
             checks += await IndexedFileSearch.VerifyOwnedFieldsAsync();
             var indexed = await new IndexedFileSearch().FindAsync("ReStart_nonexistent_%_[fidelity]", CancellationToken.None);
             Check(indexed.Files.Count == 0, "The native index query ignored literal wildcard characters.");
             var contentIndex = await new IndexedFileSearch().FindAsync("ReStart_nonexistent_'[fidelity]", CancellationToken.None, true);
             Check(!indexed.Available || contentIndex.Available, "The native file-content query failed on an available Windows index.");
             Check(contentIndex.Files.Count == 0, "The native content query interpreted a literal fixture as SQL or full-text operators.");
+            var advanced = await new IndexedFileSearch().FindAsync("System.FileName:ReStartOwnedAbsent_fidelity_41f0d1", CancellationToken.None, false, true);
+            Check(!indexed.Available || advanced.Available, "A native advanced query failed on an available local Windows index.");
+            Check(advanced.Files.Count == 0, "The native AQS query escaped its fixed local projection.");
             // Reuse the bounded empty filename pattern to isolate wrapper lifetime;
             // broad leading-wildcard/content queries may legitimately reach the provider deadline.
             var repeated = await Task.WhenAll(Enumerable.Range(0, 6).Select(async _ =>

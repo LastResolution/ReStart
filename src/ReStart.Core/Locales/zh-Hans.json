@@ -557,5 +557,14 @@
   "WindowsSettingWindowsupdateHistory": "Windows 更新历史记录",
   "WindowsSettingWindowsupdateOptions": "Windows 更新高级选项",
   "WindowsSettingGamingGamebar": "游戏栏",
-  "WindowsSettingGamingGamemode": "游戏模式"
+  "WindowsSettingGamingGamemode": "游戏模式",
+  "SettingsWindowsAppHistory": "包含 Windows 已记录的应用使用情况（只读）",
+  "WindowsAppHistoryHelp": "需要启用 Windows 应用启动跟踪。仅读取与已安装应用匹配的记录，不保存副本。清除 ReStart 历史记录不会清除 Windows 历史记录。",
+  "SettingsWindowsSearchSyntax": "使用 Windows 高级文件查询",
+  "WindowsSearchSyntaxHelp": "使用 Windows 查询语法和相关性排序。System.Kind:picture 等规范属性名可跨语言使用。文档正文仍需单独启用内容搜索。",
+  "SearchInWindows": "打开 Windows 搜索",
+  "SettingsWindowsSearchHandoff": "显示 Windows 搜索入口",
+  "WindowsSearchHandoffHelp": "通过 Win+S 打开 Windows 搜索。请在 Windows 中输入搜索词。Web、云和帐户访问由 Windows 管理。",
+  "SettingsLegacyUwpTiles": "显示 Windows 应用动态磁贴（兼容功能）",
+  "LegacyUwpTilesHelp": "仅读取已固定的打包应用的有效磁贴和徽章数据。使用未公开的 Windows 存储格式；数据不可用时显示图标。不读取弹出通知，也不下载远程图像。"
 }

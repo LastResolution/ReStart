@@ -13,6 +13,9 @@ Open **ReStart settings → Start behavior** to choose how Start responds. Each 
 | Search Windows settings | On | Removes settings results; app search stays available |
 | Search indexed files | On | Cancels pending file search and removes file results |
 | Search indexed file contents | Off | Matches filenames only; enabling it also matches content already in the local Windows index |
+| Use Windows advanced file queries | Off | Uses literal filename/content matching instead of the native AQS parser and relevance order |
+| Show Windows Search handoff | On | Hides the explicit Windows Search action; typing never opens it |
+| Windows app live tiles (compatibility) | Off | Does not open the Windows notification store; package apps retain their ordinary icons |
 | Recent/frequent documents in app menus | On | Does not query Windows document history |
 | Application tasks in app menus | On | Hides actions registered by installed applications |
 | Application-defined jump-list categories | On | Hides registered categories without deleting their destinations |
@@ -27,6 +30,7 @@ Open **ReStart settings → Start behavior** to choose how Start responds. Each 
 | Show shortcut tips while dragging | On | Hides the five-second Alt/Shift toast; drag behavior is unchanged |
 | Recently added apps | On | Hides the optional app-list section |
 | Most used apps | Off | Stops recording successful ReStart launches and hides the section |
+| Include existing Windows app usage | Off | Uses only ReStart launch counts; enabling it reads exact installed-app UserAssist observations when Windows tracking policy permits |
 
 **Animation** in Appearance controls opening, closing, tile press transitions, local folder reveal and placement transitions. Windows reduced-motion and high-contrast settings take precedence. Hover brightening has its own switch.
 
@@ -68,6 +72,20 @@ App search matches the OS display name and additional executable filenames, with
 
 App results appear immediately. Settings results cover 63 documented Windows pages with names in all eight UI languages and English aliases. Page availability depends on the OS, edition and installed hardware. File search waits 200 ms after typing and queries only the local Windows index for up to fifty existing filesystem entries. It matches literal filenames; optional content matching uses Windows FREETEXT and the installed index filters. Content search starts off, does not enable indexing, and never recursively scans unindexed files. A disabled/unavailable index leaves app and settings search operational and displays a localized explanation. Arrow keys and Enter always operate on the selected visible result; late file results preserve that selection.
 
+After the first query, a background catalog also reads Windows-supplied settings labels/keywords and Control Panel applets. It accepts only documented settings URI identifiers from the OS metadata and restricted Control Panel namespace paths; it never executes arbitrary `DeepLink` commands or `.settingcontent-ms` files. Native labels follow Windows' display language, as installed app names do. The available catalog varies by Windows build; the 63 translated entries remain a fallback. Late results preserve selection and do not delay immediate app matches.
+
+**Use Windows advanced file queries** enables the public Windows AQS parser and native relevance ordering. Canonical queries such as `System.Kind:picture` and `System.Size:>1048576` avoid dependence on localized property aliases. The query stays in the local `SystemIndex`, with a fixed projection, fifty-result bound and existing three-second provider deadline. Turning content matching off rejects generated content/wildcard predicates even when the input explicitly names a content property. Unsupported syntax/providers fall back to literal matching.
+
+**Open Windows Search** dismisses ReStart and invokes Windows’ documented Win+S shortcut for additional local, Web and account-backed sources. Enter the query in Windows; ReStart does not inject query text or use the clipboard. Windows controls its own sources, accounts, network activity and policies. Typing in ReStart does not invoke this action. This does not reproduce Windows Search's proprietary ranking or cloud results inside ReStart.
+
+## Windows app tile compatibility
+
+**Show Windows app live tiles (compatibility)** is disabled by default. When enabled, it opens the current user's existing Windows notification database read-only and selects active tile/badge rows only for pinned package app identities (up to 32 visible identities per read). It does not select toast messages, enumerate unrelated app content, recover deleted rows, copy the database or create notification channels. Reads are bounded, cancelled when disabled/exiting and paused while the launcher is hidden. SQLite may maintain its ordinary shared reader-lock metadata; ReStart issues no notification-store writes.
+
+The renderer supports the common small/medium/wide/large adaptive and legacy bindings: inert text, groups/subgroups, local raster images, exact notification-data placeholders and badges. Missing size bindings, unknown schemas, expired records, unavailable data and unsupported content fall back to the app icon. Folder thumbnails use the small binding. Existing per-tile live-update controls and **Show live tile names** also apply. Package assets and `ms-appdata` local assets stay inside the owning package's roots; reparse points, external URLs, active image formats and oversized images are rejected. No remote images are downloaded. Repeated unchanged frames retain their visuals.
+
+This is compatibility with data Windows and the app still publish. It does not restore discontinued push services, schedule another app's background tasks, reproduce every XML presentation/queue animation, or guarantee that an old app still supplies updates on Windows 11. ReStart's HTML/CSS/JavaScript tiles remain a separate system and receive no Windows notification or app-usage data.
+
 ## Per-tile launch options
 
 Right-click an app tile and choose **ReStart → Launch options…**. Enable **Use custom launch options** to set additional arguments, **Start in**, and **Run as administrator**. Turning the switch off preserves the fields and uses the original launch behavior. Saved shortcut arguments remain managed by Windows. Quote paths containing spaces; arguments are passed to the app's Shell verb without adding a command interpreter.
@@ -78,7 +96,9 @@ Custom options are available for supported desktop applications and application 
 
 `activity.json` is stored beside `layout.json`. It holds a bounded catalog baseline, discovery dates and optional ReStart launch counts. Existing apps are baselined on the first run instead of appearing as newly added. New discoveries appear for seven days; Most used includes up to six apps launched through ReStart while recording is enabled. Removed apps disappear with the next catalog refresh.
 
-**Clear app history** clears counts and discovery dates while retaining the catalog baseline. Activity is separate from layout export and is not uploaded. Disabling Most used preserves existing counts so they can be resumed or explicitly cleared. Windows app-usage history is not imported.
+**Clear app history** clears ReStart counts and discovery dates while retaining the catalog baseline. Activity is separate from layout export and is not uploaded. Disabling Most used preserves existing counts so they can be resumed or explicitly cleared.
+
+**Include existing Windows app usage** is a separate opt-in source for Most used. It reads only exact identities and resolved executable/shortcut paths already present in the installed catalog, including Windows known-folder prefixes. It does not enumerate unrelated UserAssist value names, read document history, enable Windows tracking, write registry values or save the observations to disk. Windows app-launch tracking must be explicitly enabled and the relevant policies must allow it. Unknown record layouts and unavailable/disabled providers contribute no usage. Reads run away from the UI thread, are cached in memory for one minute and are cancelled on disabling the source or exiting. Local exclusions still apply. The larger of the local and Windows counts is used rather than adding counts that may describe the same launch. This approximates usage ordering, not Windows Start's private ranking formula. Clearing ReStart history does not erase Windows history; disable this source to hide it.
 
 Document destinations come from Windows Recent/Frequent lists only when allowed by the Windows document-history setting. ReStart does not copy those lists into its activity file. Registered tasks, Windows pins and up to eight app-defined categories of eight destinations each use the isolated native adapter. Category labels belong to the installed app and are preserved rather than translated by ReStart. Unsupported identities omit these sections. See [compatibility](fidelity.md).
 

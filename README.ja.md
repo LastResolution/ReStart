@@ -68,6 +68,14 @@ HTML/CSS/JavaScript製のライブタイルを19種類同梱。Tile Studioでソ
 | --- | --- | --- |
 | Windows キー、タスクバーの Start、<kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Space</kbd>、トレイから開いてそのまま検索。 | 4サイズのタイル、独立ピン、自由なグループ移動、インラインフォルダ、個別の色。 | 同梱19種類。グラフ、PC時刻、システム情報、写真、天気・RSS/Atom・Web API・ローカルファイル連携。 |
 
+## Windowsアプリとの連携
+
+Windows由来の設定の検索語とControl Panel項目も検索できます。任意の高度な検索構文でファイルを絞り込み、関連度順に表示できます。**Windowsで検索**を選ぶと、追加の検索先をWindowsへ引き継ぎます。
+
+「よく使うアプリ」にWindowsの使用回数を含める機能と、Windowsアプリのタイル・バッジを読み取る互換機能は、個別に有効化でき、初期値はOFFです。主なサイズ別レイアウト、ローカル画像、データバインディングに対応します。終了したプッシュ配信を復活させるものではなく、データがなければアプリアイコンを表示します。
+
+[設定と互換性の詳細](docs/start-behavior.md) · [対応範囲](docs/fidelity.md)
+
 ## 自分のスタートに
 
 ![アプリとライブタイルを表示する ReStart の開閉アニメーション](docs/images/start-motion.gif)
@@ -101,7 +109,7 @@ HTML/CSS/JavaScript製のライブタイルを19種類同梱。Tile Studioでソ
 
 </details>
 
-Microsoft とは独立したプロジェクトです。Explorer のパッチは行わず、解除可能な連携を使います。従来の UWP タイル通知、Windows Search 全体、Cortana は対象外です。対応アプリでは最近使った文書・よく使う文書を表示し、アプリの使用履歴は任意で有効にできます。[互換性](docs/fidelity.md)と[検証手順](docs/testing.md)を参照してください。
+Microsoft とは独立したプロジェクトです。Explorer のパッチは行わず、解除可能な連携を使います。Windowsアプリのタイル・バッジの互換表示と、既存の使用履歴の読み取りは任意で有効にできます。Windows Searchの全ランキングや従来のバックグラウンド配信を完全再現するものではありません。対応アプリでは最近使った文書・よく使う文書を表示し、アプリの使用履歴は任意で有効にできます。[互換性](docs/fidelity.md)と[検証手順](docs/testing.md)を参照してください。
 
 ## 全機能一覧
 

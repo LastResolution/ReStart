@@ -19,15 +19,22 @@ internal sealed partial class SettingsWindow
             });
         Heading(panel, L.T(K.SearchTitle));
         Check(panel, L.T(K.SettingsSearchSettings), _draft.SearchSettings, value => _draft.SearchSettings = value);
-        CheckBox? contentSearch = null;
-        Check(panel, L.T(K.SearchFilesSetting), _draft.SearchFiles, value => { _draft.SearchFiles = value; if (contentSearch != null) contentSearch.IsEnabled = value; });
+        CheckBox? contentSearch = null, windowsSyntax = null;
+        Check(panel, L.T(K.SearchFilesSetting), _draft.SearchFiles, value => { _draft.SearchFiles = value; if (contentSearch != null) contentSearch.IsEnabled = value; if (windowsSyntax != null) windowsSyntax.IsEnabled = value; });
         contentSearch = Check(panel, L.T(K.SearchFileContentsSetting), _draft.SearchFileContents, value => _draft.SearchFileContents = value);
         contentSearch.IsEnabled = _draft.SearchFiles;
+        windowsSyntax = Check(panel, L.T(K.SettingsWindowsSearchSyntax), _draft.SearchWindowsSyntax, value => _draft.SearchWindowsSyntax = value);
+        windowsSyntax.IsEnabled = _draft.SearchFiles;
+        Note(panel, L.T(K.WindowsSearchSyntaxHelp));
+        Check(panel, L.T(K.SettingsWindowsSearchHandoff), _draft.ShowWindowsSearchHandoff, value => _draft.ShowWindowsSearchHandoff = value);
+        Note(panel, L.T(K.WindowsSearchHandoffHelp));
         Check(panel, L.T(K.SettingsJumpLists), _draft.ShowJumpLists, value => _draft.ShowJumpLists = value);
         Check(panel, L.T(K.SettingsAppTasks), _draft.ShowAppTasks, value => _draft.ShowAppTasks = value);
         Check(panel, L.T(K.SettingsCustomJumpLists), _draft.ShowCustomJumpLists, value => _draft.ShowCustomJumpLists = value);
         Check(panel, L.T(K.SettingsPinnedJumpLists), _draft.ShowPinnedJumpLists, value => _draft.ShowPinnedJumpLists = value);
         Heading(panel, L.T(K.SettingsLayout));
+        Check(panel, L.T(K.SettingsLegacyUwpTiles), _draft.LegacyUwpLiveTiles, value => _draft.LegacyUwpLiveTiles = value);
+        Note(panel, L.T(K.LegacyUwpTilesHelp));
         Check(panel, L.T(K.LockLayout), _draft.LayoutLocked, value => _draft.LayoutLocked = value);
         Note(panel, L.T(K.LayoutLockHelp));
         Check(panel, L.T(K.SettingsTileHover), _draft.TileHoverHighlight, value => _draft.TileHoverHighlight = value);
@@ -45,7 +52,11 @@ internal sealed partial class SettingsWindow
         DataButton(panel, L.T(K.KeyboardShortcuts), () => _main.ShowKeyboardShortcuts(this));
         Heading(panel, L.T(K.NavAllApps));
         Check(panel, L.T(K.SettingsShowRecentApps), _draft.ShowRecentlyAdded, value => _draft.ShowRecentlyAdded = value);
-        Check(panel, L.T(K.SettingsShowMostUsed), _draft.ShowMostUsed, value => _draft.ShowMostUsed = value);
+        CheckBox? windowsHistory = null;
+        Check(panel, L.T(K.SettingsShowMostUsed), _draft.ShowMostUsed, value => { _draft.ShowMostUsed = value; if (windowsHistory != null) windowsHistory.IsEnabled = value; });
+        windowsHistory = Check(panel, L.T(K.SettingsWindowsAppHistory), _draft.UseWindowsAppHistory, value => _draft.UseWindowsAppHistory = value);
+        windowsHistory.IsEnabled = _draft.ShowMostUsed;
+        Note(panel, L.T(K.WindowsAppHistoryHelp));
         Note(panel, L.T(K.AppHistoryHelp));
         DataButton(panel, L.T(K.ClearAppHistory), _main.ClearAppHistory);
     }

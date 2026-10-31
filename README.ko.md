@@ -50,6 +50,14 @@ HTML/CSS/JavaScript 타일 19개를 제공합니다. Tile Studio에서 코드와
 
 톱니바퀴에서 테마, 로그인 시 시작, Windows 키/시작 버튼 연동, 업데이트를 설정합니다. 일반 사용에는 관리자 권한이 필요 없습니다. [SHA-256 체크섬](https://github.com/LastResolution/ReStart/releases/latest)을 제공합니다.
 
+## Windows 앱 연동
+
+Windows 설정의 검색어와 제어판 항목도 검색합니다. 선택적인 AQS는 기본 파일 필터와 관련도 정렬을 제공하며, **Windows에서 검색**을 선택하면 추가 검색 소스로 명시적으로 넘깁니다.
+
+Windows에 저장된 앱 사용 횟수와 Windows 앱 타일·배지의 읽기 전용 호환 기능은 별도 옵션이며 기본값은 꺼짐입니다. 일반적인 크기별 레이아웃, 로컬 이미지 및 데이터 바인딩을 지원합니다. 종료된 푸시 서비스를 복원하지 않으며 데이터가 없으면 앱 아이콘을 표시합니다.
+
+[설정 및 호환성 안내](docs/start-behavior.md) · [지원 범위](docs/fidelity.md)
+
 ## 기능
 
 ![ReStart 열기 및 닫기](docs/images/start-motion.gif)

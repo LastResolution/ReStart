@@ -557,5 +557,14 @@
   "WindowsSettingWindowsupdateHistory": "Windows-Updateverlauf",
   "WindowsSettingWindowsupdateOptions": "Erweiterte Windows Update-Optionen",
   "WindowsSettingGamingGamebar": "Game Bar",
-  "WindowsSettingGamingGamemode": "Spielmodus"
+  "WindowsSettingGamingGamemode": "Spielmodus",
+  "SettingsWindowsAppHistory": "Vorhandene Windows-App-Nutzung einbeziehen (schreibgeschützt)",
+  "WindowsAppHistoryHelp": "Erfordert die App-Startverfolgung von Windows. Liest nur passende Einträge installierter Apps, ohne sie zu speichern. Das Löschen des ReStart-Verlaufs löscht nicht den Windows-Verlauf.",
+  "SettingsWindowsSearchSyntax": "Erweiterte Windows-Dateiabfragen verwenden",
+  "WindowsSearchSyntaxHelp": "Verwendet Windows-Abfragesyntax und Relevanzsortierung. Kanonische Eigenschaften wie System.Kind:picture funktionieren sprachübergreifend. Dokumentinhalte benötigen weiterhin die separate Inhaltsoption.",
+  "SearchInWindows": "Windows-Suche öffnen",
+  "SettingsWindowsSearchHandoff": "Übergabe an die Windows-Suche anzeigen",
+  "WindowsSearchHandoffHelp": "Öffnet die Windows-Suche mit Win+S. Geben Sie dort Ihre Suchanfrage ein. Windows steuert Web-, Cloud- und Kontozugriffe.",
+  "SettingsLegacyUwpTiles": "Live-Kacheln von Windows-Apps anzeigen (Kompatibilität)",
+  "LegacyUwpTilesHelp": "Liest aktive Kachel- und Abzeichendaten nur für angeheftete Paket-Apps. Verwendet einen undokumentierten Windows-Speicher; nicht verfügbare Daten werden durch Symbole ersetzt. Toasts werden nicht gelesen, entfernte Bilder nicht heruntergeladen."
 }

@@ -11,6 +11,9 @@ public sealed record AppEntry(string Id, string Name, string LaunchTarget, bool 
     /// <summary>Gets the matched physical Start-menu shortcut used only for location/properties commands; empty when unavailable. It never replaces the launch identity or becomes a search alias.</summary>
     public string ShortcutPath { get; init; } = "";
 
+    /// <summary>Gets the OS-resolved executable path for an argument-free catalog entry, or empty when unavailable. Used only for exact Windows usage matching, never as a search alias or a replacement launch target.</summary>
+    public string ExecutablePath { get; init; } = "";
+
     /// <summary>Gets additional executable names supplied by Windows catalog metadata, never full paths or command arguments; empty by default. Producers own the list and must not mutate it after publishing the entry.</summary>
     public IReadOnlyList<string> SearchAliases { get; init; } = [];
 

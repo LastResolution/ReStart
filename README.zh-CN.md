@@ -50,6 +50,14 @@ https://github.com/user-attachments/assets/a893cd20-8c82-4c47-b5fb-bf22743f67e1
 
 齿轮设置中可选择主题、登录启动、Windows 键/开始按钮集成及更新。正常使用不需要管理员权限。提供 [SHA-256 校验值](https://github.com/LastResolution/ReStart/releases/latest)。
 
+## Windows 应用集成
+
+搜索还包含 Windows 提供的设置关键词及控制面板项目。可选 AQS 提供原生文件筛选及相关性排序；选择 **在 Windows 中搜索** 后，才会将查询交给 Windows 的其他搜索来源。
+
+Windows 应用使用次数与 Windows 磁贴、徽章的只读兼容是两个独立选项，默认均关闭。兼容常用尺寸布局、本地图像及数据绑定，不会恢复已停用的推送服务；没有可用数据时保留应用图标。
+
+[设置与兼容性说明](docs/start-behavior.md) · [支持范围](docs/fidelity.md)
+
 ## 功能
 
 ![ReStart 的打开和关闭动画](docs/images/start-motion.gif)

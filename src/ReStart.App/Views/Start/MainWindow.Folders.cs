@@ -30,7 +30,7 @@ public partial class MainWindow
             // changing miniature alignment. The persistent child is untouched.
             var copy = System.Text.Json.JsonSerializer.Deserialize<Tile>(System.Text.Json.JsonSerializer.Serialize(child, LayoutStore.JsonOptions), LayoutStore.JsonOptions)!;
             copy.Size = TileSize.Small;
-            if (copy.Widget.Length == 0)
+            if (copy.Widget.Length == 0 && !(Document.Preferences.LegacyUwpLiveTiles && copy.Live && LegacyEligible(copy)))
             {
                 var icon = CreateIcon(copy, extent / 3); icon.Margin = new(0);
                 mini.Children.Add(new Border { Child = icon, Margin = new(1) });
