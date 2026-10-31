@@ -9,6 +9,7 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
 {
     internal TaskbarBounds Scope { get; set; }
     internal nint LauncherWindow { get; set; }
+    private string? _appliedToken;
     /// <summary>Gets the last anonymous native recovery decision for explicit local verification.</summary>
     internal string? LastRecoveryDecision { get; private set; }
     /// <summary>Reports whether a top-level window precedes another in the current bounded desktop stacking order.</summary>
@@ -97,6 +98,7 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
 
     public void Apply(TaskbarLeaseState state)
     {
+        var firstReveal = _appliedToken != state.Token;
         foreach (var item in state.Windows)
         {
             if (!Matches(item)) throw new IOException("Taskbar identity changed.");
@@ -107,7 +109,7 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
                 if (!item.AutoHide || !AutoHideEnabled || AutoHideEdge(window, item.Monitor) == null) throw new IOException("Taskbar preference changed.");
                 if (LauncherWindow == 0) throw new IOException("Taskbar reveal requires a launcher window.");
                 var changed = false;
-                if (!Bounds(window, out var current) || current != item.Target || !IsWindowVisible(window) || !IsAbove(window, LauncherWindow))
+                if (firstReveal || !Bounds(window, out var current) || current != item.Target || !IsWindowVisible(window) || !IsAbove(window, LauncherWindow))
                 {
                     Position(window, item.Target, show: true, topmost: true);
                     changed = true;
@@ -128,6 +130,7 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
                 if (changed) RedrawWindow(window, 0, 0, 0x0585); // INVALIDATE | ERASE | ALLCHILDREN | UPDATENOW | FRAME.
             }
         }
+        _appliedToken = state.Token;
     }
 
     public void Restore(TaskbarLeaseState state)
