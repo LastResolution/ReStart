@@ -25,6 +25,11 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        if (e.Args is ["--taskbar-live-check", var monitorReport, var monitorText] && int.TryParse(monitorText, out var monitorIndex))
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            Shutdown(await TaskbarLiveCheck.RunAsync(monitorReport, monitorIndex)); return;
+        }
         if (e.Args is ["--taskbar-live-check", var taskbarReport])
         {
             ShutdownMode = ShutdownMode.OnExplicitShutdown;

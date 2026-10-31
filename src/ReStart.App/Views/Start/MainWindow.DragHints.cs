@@ -39,7 +39,7 @@ public partial class MainWindow
             _dragShortcutToast.SetResourceReference(Border.BorderBrushProperty, "BorderBrush");
             AutomationProperties.SetLiveSetting(_dragShortcutToast, AutomationLiveSetting.Polite);
             Panel.SetZIndex(_dragShortcutToast, int.MaxValue);
-            Root.Children.Add(_dragShortcutToast);
+            ContentArea.Children.Add(_dragShortcutToast);
             _dragShortcutTimer = new(DispatcherPriority.Normal) { Interval = DragShortcutHintDuration };
             _dragShortcutTimer.Tick += (_, _) => HideDragShortcutHint();
         }
