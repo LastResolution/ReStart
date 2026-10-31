@@ -93,6 +93,7 @@ public sealed class TaskbarLeaseTests
         store.FailDelete = deletionFailure; backend.FailRestore = !deletionFailure;
         Assert.False(lease.Synchronize(null));
         Assert.True(lease.RecoveryFailed); Assert.True(lease.IsActive); Assert.NotNull(store.State); Assert.False(released);
+        Assert.Null(lease.Snapshot); // Recovery ownership is not proof that the taskbar is still hidden/revealed.
         store.FailDelete = backend.FailRestore = false;
         Assert.True(lease.Synchronize(null)); Assert.Null(store.State); Assert.True(released);
     }

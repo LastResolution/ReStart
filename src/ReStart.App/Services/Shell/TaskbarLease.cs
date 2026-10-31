@@ -49,10 +49,12 @@ internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBac
     private TaskbarLeaseState? _state;
     private IDisposable? _protection;
     private bool _disposed;
+    private bool _applied;
     internal bool IsActive => _state != null;
     internal bool RecoveryFailed { get; private set; }
     internal TaskbarLeaseMode? Mode => _state?.Mode;
-    internal TaskbarLeaseState? Snapshot => _state;
+    /// <summary>Gets only successfully applied geometry; retained recovery ownership alone must not resize the launcher.</summary>
+    internal TaskbarLeaseState? Snapshot => _applied ? _state : null;
 
     /// <summary>Enforces an optional temporary effect; failure never bypasses recovery prerequisites.</summary>
     /// <param name="mode">Desired effect, or null to restore the original owned state.</param>
@@ -94,6 +96,7 @@ internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBac
             if (stillRequested?.Invoke() == false) { Restore(); return false; }
             if (protectionReady?.Invoke() == false) throw new IOException("Taskbar recovery watchdog is no longer ready.");
             backend.Apply(_state);
+            _applied = true;
             RecoveryFailed = false;
             return true;
         }
@@ -107,6 +110,7 @@ internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBac
     private bool Restore()
     {
         if (_state == null) return true;
+        _applied = false;
         try
         {
             backend.Restore(_state);
