@@ -41,9 +41,27 @@ public partial class MainWindow
             TaskbarNativeBackend.Position(handle, target, false);
             Native.GetWindowRect(handle, out var applied);
             Require(coerced == calls && applied.Left == target.X && applied.Top == target.Y, "The taskbar lease position was silently coerced instead of applied.");
-            TaskbarNativeBackend.Position(handle, original, false);
+            // Shell owns the release decision. The fixture deliberately selects
+            // a different position than the saved one, as a changed preference
+            // or display would. Recovery must not suppress that decision.
+            var releaseTarget = original with { Y = original.Y + 24 };
+            source.RemoveHook(Clamp);
+            nint Reconcile(nint _, int message, nint wParam, nint data, ref bool handled)
+            {
+                if (message == 0x46)
+                {
+                    var position = Marshal.PtrToStructure<TaskbarCheckPosition>(data);
+                    position.X = releaseTarget.X; position.Y = releaseTarget.Y;
+                    Marshal.StructureToPtr(position, data, false); coerced++;
+                }
+                return 0;
+            }
+            source.AddHook(Reconcile);
+            try { TaskbarNativeBackend.Handoff(handle, target, null); }
+            finally { source.RemoveHook(Reconcile); source.AddHook(Clamp); }
             Native.GetWindowRect(handle, out var restored);
-            Require(restored.Left == original.X && restored.Top == original.Y, "The owned taskbar rectangle was not restored.");
+            Require(coerced > calls && restored.Left == releaseTarget.X && restored.Top == releaseTarget.Y,
+                "Taskbar release bypassed the owning window's current position decision.");
             var cover = new Window { Left = window.Left, Top = window.Top, Width = 240, Height = 120, ShowActivated = false, ShowInTaskbar = false, Topmost = true };
             try
             {
@@ -101,10 +119,8 @@ public partial class MainWindow
         var preferences = fixture.Document.Preferences = new Preferences { Animate = false, ShowTaskbarWhileOpen = false, CaptureWindowsKey = true, CaptureStartButton = true };
         var layoutBefore = JsonSerializer.Serialize(fixture.Document.Groups);
         var backend = new TabletCheckBackend(); var store = new TabletCheckStore();
-        var input = new TabletInputSnapshot(DevicePosture.Slate, KeyboardPresence.Absent);
-        var reads = 0;
         var dependencies = new TabletIntegration.Dependencies(store, backend, b => backend.Scope = b,
-            _ => new TabletCheckLease(), () => true, () => { reads++; return input; }, () => true);
+            _ => new TabletCheckLease(), () => true, () => true);
         TabletIntegration? integration = null;
         async Task Settle(Func<bool> expected)
         {
@@ -116,21 +132,22 @@ public partial class MainWindow
         try
         {
             integration = new(fixture, HwndSource.FromHwnd(new WindowInteropHelper(fixture).EnsureHandle()), dependencies);
-            await Settle(() => !integration.TabletActive && integration.CurrentMode == null);
-            Check(reads == 0 && backend.Mutations == 0, "Default-off tablet initialization read devices or changed the shell.");
+            await Settle(() => integration.CurrentMode == null);
+            Check(backend.Mutations == 0, "The disabled reveal preference changed the shell.");
             preferences.TabletFeaturesEnabled = preferences.TabletHideTaskbar = true;
-            await Settle(() => integration.CurrentMode == TaskbarLeaseMode.Hide);
+            await Settle(() => integration.CurrentMode == null);
+            Check(backend.Mutations == 0, "Legacy tablet hide settings created a new taskbar hide lease.");
+            preferences.ShowTaskbarWhileOpen = true;
+            await Settle(() => integration.CurrentMode == TaskbarLeaseMode.Reveal);
             Check(store.State != null && backend.Applied?.Windows.All(w => w.Monitor == backend.Scope) == true,
                 "Tablet effects escaped the fixture monitor or recovery transaction.");
-            preferences.TabletKeyboardMeansDesktop = true; input = input with { Keyboard = KeyboardPresence.Present };
-            await Settle(() => !integration.TabletActive && integration.CurrentMode == null);
-            Check(store.State == null && backend.Applied == null, "A current keyboard did not restore tablet effects.");
-            input = input with { Keyboard = KeyboardPresence.Unknown };
-            await Settle(() => !integration.TabletActive);
-            input = input with { Keyboard = KeyboardPresence.Absent };
-            await Settle(() => integration.CurrentMode == TaskbarLeaseMode.Hide);
+            preferences.TabletKeyboardMeansDesktop = true;
+            await Settle(() => integration.CurrentMode == TaskbarLeaseMode.Reveal);
+            preferences.ShowTaskbarWhileOpen = false;
+            await Settle(() => integration.CurrentMode == null);
+            Check(store.State == null && backend.Applied == null, "Disabling reveal did not release its effect.");
             preferences.TabletFeaturesEnabled = false; preferences.ShowTaskbarWhileOpen = true;
-            await Settle(() => !integration.TabletActive && integration.CurrentMode == TaskbarLeaseMode.Reveal);
+            await Settle(() => integration.CurrentMode == TaskbarLeaseMode.Reveal);
             Check(preferences.CaptureWindowsKey && preferences.CaptureStartButton, "Tablet transitions rewrote desktop Start preferences.");
             Check(JsonSerializer.Serialize(fixture.Document.Groups) == layoutBefore, "Tablet initialization or transitions reseeded a layout.");
             fixture.Hide();

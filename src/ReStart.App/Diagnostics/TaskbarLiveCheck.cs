@@ -20,7 +20,7 @@ internal static class TaskbarLiveCheck
             ResizeMode = ResizeMode.NoResize,
             ShowInTaskbar = false,
             WindowStartupLocation = WindowStartupLocation.CenterScreen,
-            Content = new System.Windows.Controls.TextBlock { Text = "Checking the taskbar on this display.\nThe original state will be restored automatically.", Margin = new(24), TextWrapping = TextWrapping.Wrap }
+            Content = new System.Windows.Controls.TextBlock { Text = "Checking the taskbar on this display.\nWindows retains control of automatic hiding.", Margin = new(24), TextWrapping = TextWrapping.Wrap }
         };
         TaskbarLease? lease = null;
         var open = true;
@@ -29,14 +29,17 @@ internal static class TaskbarLiveCheck
         var overlay = true; var fullscreenStable = true;
         Exception? acquisitionFailure = null;
         var acquisitionAttempts = 0;
+        var repeatCycles = 0;
+        var autoHideBefore = TaskbarNativeBackend.AutoHideEnabled;
         var observations = new List<object>();
         try
         {
             directory = Path.GetFullPath(directory); TaskbarRecoveryStore.CheckLinks(directory); Directory.CreateDirectory(directory);
+            var launcher = new WindowInteropHelper(window).EnsureHandle();
+            TaskbarNativeBackend.PrepareLauncher(launcher, true);
             window.Show();
             var screen = System.Windows.Forms.Screen.FromHandle(new WindowInteropHelper(window).Handle);
             var bounds = screen.Bounds;
-            var launcher = new WindowInteropHelper(window).Handle;
             MonitorPlacement.FitWorkingArea(launcher, new nint(-1), bounds, 0x0040);
             var backend = new TaskbarNativeBackend { Scope = new(bounds.X, bounds.Y, bounds.Width, bounds.Height), LauncherWindow = launcher };
             available = await Task.Run(() => backend.Capture(TaskbarLeaseMode.Reveal) != null);
@@ -88,15 +91,52 @@ internal static class TaskbarLiveCheck
                         });
                     }
                     var saved = lease.Snapshot;
+                    window.Hide();
                     restored = await Task.Run(() =>
                     {
                         if (!lease.Synchronize(null)) return false;
                         var after = backend.Capture(TaskbarLeaseMode.Reveal);
-                        return saved != null && after != null && saved.Windows.All(w => after.Windows.Any(a => a.Window == w.Window && a.Original == w.Original));
+                        return saved != null && after != null && saved.Windows.All(w => after.Windows.Any(a => a.Window == w.Window && a.AutoHide));
                     });
+                    // A matching visible flag or saved rectangle does not prove
+                    // auto-hide recovered. Wait for Explorer's own animation
+                    // after closing the launcher; do not move the pointer.
+                    var hideDeadline = Environment.TickCount64 + 5000;
+                    var hidden = false;
+                    while (restored && !hidden && Environment.TickCount64 < hideDeadline)
+                    {
+                        await Task.Delay(200);
+                        var after = await Task.Run(() => backend.Capture(TaskbarLeaseMode.Reveal));
+                        hidden = after != null && after.Windows.All(w => w.AutoHide && w.Original != w.Target);
+                    }
+                    restored &= hidden;
+                    // Repeat with the same watchdog and actual native window,
+                    // starting from Explorer's hidden state each time.
+                    for (var cycle = 0; cycle < 3 && restored; cycle++)
+                    {
+                        window.Show();
+                        MonitorPlacement.FitWorkingArea(launcher, new nint(-1), bounds, 0x0040);
+                        var revealed = await Task.Run(() => lease.Synchronize(TaskbarLeaseMode.Reveal));
+                        await Task.Delay(400);
+                        var during = await Task.Run(() => backend.Capture(TaskbarLeaseMode.Reveal));
+                        held &= revealed && during != null && during.Windows.All(w => w.AutoHide && w.Original == w.Target
+                            && TaskbarNativeBackend.IsAbove((nint)w.Window, launcher));
+                        window.Hide();
+                        restored &= await Task.Run(() => lease.Synchronize(null));
+                        hidden = false; hideDeadline = Environment.TickCount64 + 5000;
+                        while (restored && !hidden && Environment.TickCount64 < hideDeadline)
+                        {
+                            await Task.Delay(200);
+                            var after = await Task.Run(() => backend.Capture(TaskbarLeaseMode.Reveal));
+                            hidden = after != null && after.Windows.All(w => w.AutoHide && w.Original != w.Target);
+                        }
+                        restored &= hidden;
+                        if (held && restored) repeatCycles++;
+                    }
                 }
             }
-            var success = available && !blocked && acquired && held && restored && overlay && fullscreenStable;
+            var autoHideAfter = TaskbarNativeBackend.AutoHideEnabled;
+            var success = autoHideBefore && autoHideAfter && available && !blocked && acquired && held && restored && overlay && fullscreenStable && repeatCycles == 3;
             var path = Path.Combine(directory, "taskbar-live.json"); TaskbarRecoveryStore.CheckLinks(path);
             await using (var output = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.Read))
                 await JsonSerializer.SerializeAsync(output, new
@@ -109,6 +149,9 @@ internal static class TaskbarLiveCheck
                     restored,
                     overlay,
                     fullscreenStable,
+                    autoHideBefore,
+                    autoHideAfter,
+                    repeatCycles,
                     acquisitionAttempts,
                     failure = acquisitionFailure?.Message,
                     nativeCode = (acquisitionFailure as System.ComponentModel.Win32Exception)?.NativeErrorCode,

@@ -34,7 +34,9 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
         var windows = new List<TaskbarWindowState>();
         foreach (var item in (observe ?? ObserveWindows)())
         {
-            if (item.Monitor != Scope) continue;
+            // This preference never overrides a fixed taskbar or creates a new
+            // hide operation. Hide remains readable for recovery of old leases.
+            if (mode != TaskbarLeaseMode.Reveal || !item.AutoHide || item.Monitor != Scope) continue;
             windows.Add(item);
         }
         return windows.Count == 0 ? null : new(1, Guid.NewGuid().ToString("N"), ParentId, ParentStarted, mode, windows.ToArray());
@@ -42,6 +44,7 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
 
     private static IEnumerable<TaskbarWindowState> ObserveWindows()
     {
+        if (!AutoHideEnabled) yield break;
         var monitors = MonitorBounds();
         if (monitors.Length == 0) yield break;
         foreach (var window in Taskbars())
@@ -85,7 +88,7 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
         var current = Capture(state.Mode);
         return current != null && current.Windows.Length == state.Windows.Length
             && state.Windows.All(saved => current.Windows.Any(observed => observed.Window == saved.Window && observed.ProcessId == saved.ProcessId
-                && observed.ProcessStarted == saved.ProcessStarted && observed.Monitor == saved.Monitor
+                && observed.ProcessStarted == saved.ProcessStarted && observed.Monitor == saved.Monitor && observed.AutoHide == saved.AutoHide
                 && (state.Mode != TaskbarLeaseMode.Reveal || observed.Target == saved.Target)));
     }
 
@@ -95,14 +98,10 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
         {
             if (!Matches(item)) throw new IOException("Taskbar identity changed.");
             var window = (nint)item.Window;
-            if (state.Mode == TaskbarLeaseMode.Hide)
-            {
-                if (IsWindowVisible(window)) ShowWindow(window, 0);
-                if (IsWindowVisible(window)) throw new IOException("Taskbar visibility change failed.");
-            }
+            if (state.Mode == TaskbarLeaseMode.Hide) throw new InvalidOperationException("New taskbar hide leases are not supported.");
             else
             {
-                if ((AutoHideEdge(window, item.Monitor) != null) != item.AutoHide) throw new IOException("Taskbar preference changed.");
+                if (!item.AutoHide || !AutoHideEnabled || AutoHideEdge(window, item.Monitor) == null) throw new IOException("Taskbar preference changed.");
                 if (LauncherWindow == 0) throw new IOException("Taskbar reveal requires a launcher window.");
                 if (!Bounds(window, out var current) || current != item.Target || !IsWindowVisible(window) || !IsAbove(window, LauncherWindow))
                     Position(window, item.Target, show: true, topmost: true);
@@ -124,13 +123,13 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
                 if (item.Visible && !IsWindowVisible(window)) ShowWindow(window, 8);
                 if (item.Visible && !IsWindowVisible(window)) throw new IOException("Taskbar visibility recovery failed.");
             }
-            else if ((AutoHideEdge(window, item.Monitor) != null) == item.AutoHide && Monitor(window, out var monitor) && monitor == item.Monitor
-                && Bounds(window, out var current) && current == item.Target)
+            else if (Bounds(window, out var current))
             {
-                // A changed Windows preference/monitor/rectangle belongs to the
-                // user or Explorer. Restore only the exact geometry we installed.
-                Position(window, item.Original, show: item.Visible, topmost: RestoreTopmost(item.Topmost, IsTopmost(window)));
-                if (!item.Visible && IsWindowVisible(window)) ShowWindow(window, 0);
+                // Never replay a captured visible/hidden rectangle. Explorer
+                // must receive WINDOWPOSCHANGING and reconcile its *current*
+                // preference, monitor and auto-hide state, including after a
+                // setting change, a display change or recovery of an old lease.
+                Handoff(window, current, RestoreTopmost(item.Topmost, IsTopmost(window)));
             }
         }
     }
@@ -168,6 +167,16 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
     internal static bool? RestoreTopmost(bool? original, bool current) => original == false && current ? false : null;
 
     private static bool IsTopmost(nint window) => (GetWindowLongPtr(window, -20).ToInt64() & 8) != 0;
+
+    /// <summary>Reads Windows' current global automatic-hiding preference without changing it.</summary>
+    internal static bool AutoHideEnabled
+    {
+        get
+        {
+            var query = new AppBarData { Size = (uint)Marshal.SizeOf<AppBarData>() };
+            return (SHAppBarMessage(4, ref query) & 1) != 0;
+        }
+    }
 
     private static IEnumerable<nint> Taskbars()
     {
@@ -233,20 +242,46 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
         2 => new(monitor.X + monitor.Width - bar.Width, monitor.Y, bar.Width, monitor.Height),
         _ => new(monitor.X, monitor.Y + monitor.Height - bar.Height, monitor.Width, bar.Height)
     };
-    /// <summary>Applies a lease rectangle without activation or position coercion; callers must first validate Explorer identity or own the fixture window.</summary>
+    /// <summary>Applies a temporary reveal without activation or position coercion; release must use Handoff instead.</summary>
     /// <param name="window">Revalidated taskbar HWND or a native verification window owned by this process.</param>
-    /// <param name="bounds">Exact physical screen rectangle, also used by conditional recovery.</param>
+    /// <param name="bounds">Exact visible physical screen rectangle for this active lease.</param>
     /// <param name="show">Whether to show without activating; false retains current visibility.</param>
     /// <param name="topmost">True raises above the launcher, false returns to the ordinary tier; null retains stacking order.</param>
     internal static void Position(nint window, TaskbarBounds bounds, bool show, bool? topmost = null)
     {
-        // The temporary lease supplies both target and recovery rectangles.
-        // Suppress WINDOWPOSCHANGING so Explorer cannot coerce the requested
+        // Suppress WINDOWPOSCHANGING only during reveal so Explorer cannot coerce the requested
         // visible rectangle back to its auto-hidden edge during this call.
         var after = topmost.HasValue ? new nint(topmost.Value ? -1 : -2) : 0;
         var flags = (uint)(0x0410 | (topmost.HasValue ? 0 : 0x0004) | (show ? 0x0040 : 0));
         if (!SetWindowPos(window, after, bounds.X, bounds.Y, bounds.Width, bounds.Height, flags))
             throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+    }
+
+    /// <summary>Returns position decisions to the owning window procedure without replaying saved geometry or changing visibility.</summary>
+    /// <param name="window">Revalidated Explorer taskbar, or an owned native test window.</param>
+    /// <param name="current">Fresh physical screen rectangle read immediately before this call; never a saved recovery rectangle.</param>
+    /// <param name="topmost">False only to undo an owned promotion; null preserves the current tier.</param>
+    internal static void Handoff(nint window, TaskbarBounds current, bool? topmost)
+    {
+        var after = topmost.HasValue ? new nint(topmost.Value ? -1 : -2) : 0;
+        var flags = (uint)(0x0010 | (topmost.HasValue ? 0 : 0x0004));
+        if (!SetWindowPos(window, after, current.X, current.Y, current.Width, current.Height, flags))
+            throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+    }
+
+    /// <summary>Opts an owned launcher out of Shell full-screen occlusion before it is shown; does not change any Explorer window or preference.</summary>
+    /// <param name="window">Launcher HWND owned by this process.</param>
+    /// <param name="showTaskbar">True opts out of automatic full-screen classification; false removes the owned property.</param>
+    internal static void PrepareLauncher(nint window, bool showTaskbar)
+    {
+        // Documented by ITaskbarList2::MarkFullscreenWindow. Without this,
+        // Explorer can lower its taskbar after our full-screen window opens.
+        if (showTaskbar)
+        {
+            if (!SetProp(window, "NonRudeHWND", new nint(1)))
+                throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+        }
+        else RemoveProp(window, "NonRudeHWND");
     }
 
     [StructLayout(LayoutKind.Sequential)] private struct Rect { public int Left, Top, Right, Bottom; }
@@ -268,4 +303,6 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
     [DllImport("user32.dll", CharSet = CharSet.Unicode)][return: MarshalAs(UnmanagedType.Bool)] private static extern bool GetMonitorInfo(nint monitor, ref MonitorData data);
     [DllImport("user32.dll", SetLastError = true)][return: MarshalAs(UnmanagedType.Bool)] private static extern bool SetWindowPos(nint window, nint after, int x, int y, int width, int height, uint flags);
     [DllImport("shell32.dll")] private static extern nuint SHAppBarMessage(uint message, ref AppBarData data);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)][return: MarshalAs(UnmanagedType.Bool)] private static extern bool SetProp(nint window, string name, nint value);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern nint RemoveProp(nint window, string name);
 }

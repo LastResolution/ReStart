@@ -32,7 +32,7 @@ https://github.com/user-attachments/assets/a893cd20-8c82-4c47-b5fb-bf22743f67e1
 
 [Explore the tiles](#give-your-tiles-something-to-say) · [Connect your data](#connect-weather-headlines-and-app-data) · [Write a tile](#write-your-own) · [Build from source](#build-it-yourself)
 
-**Tablet and taskbar choices.** Startup settings can reveal an auto-hidden taskbar on ReStart’s display while it is open. Optional tablet integration starts off and preserves your layout and desktop Start shortcuts; keyboard-aware behavior and taskbar hiding have separate switches. Host data connections require **Save and approve** for each placed tile. Changed access requests need approval again. [Behavior and measured coverage](docs/fidelity.md).
+**Touch and taskbar.** Touch supports tile and group dragging, long-press menus, folders and scrolling. Startup settings can show an automatically hidden taskbar on ReStart’s display while it is open. Windows controls automatic hiding; ReStart has no separate hide option. Host data connections require **Save and approve** for each placed tile. Changed access requests need approval again. [Behavior and measured coverage](docs/fidelity.md).
 
 ## Reliability and private backups
 

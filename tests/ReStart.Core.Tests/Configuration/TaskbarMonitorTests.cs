@@ -16,12 +16,10 @@ public sealed class TaskbarMonitorTests
     }
     private static TaskbarWindowState Window(long id, TaskbarBounds monitor, TaskbarBounds target, bool autoHide = true)
         => new(id, 1, 1, true, autoHide, monitor, target with { Y = monitor.Y + monitor.Height - 2 }, target);
-    [Theory]
-    [InlineData(0)]
-    [InlineData(1)]
-    public void CaptureIsRestrictedToTheLauncherMonitor(int value)
+    [Fact]
+    public void CaptureIsRestrictedToTheLauncherMonitor()
     {
-        var mode = (TaskbarLeaseMode)value;
+        var mode = TaskbarLeaseMode.Reveal;
         var first = new TaskbarBounds(0, 0, 1280, 800); var second = new TaskbarBounds(-900, 0, 900, 1440);
         var windows = new[] { Window(1, first, new(0, 752, 1280, 48)), Window(2, second, new(-900, 1392, 900, 48)) };
         var backend = new TaskbarNativeBackend(() => windows) { Scope = first };
@@ -34,14 +32,19 @@ public sealed class TaskbarMonitorTests
         Assert.Null(backend.Capture(mode));
     }
     [Fact]
-    public void FixedTaskbarCanBeRaisedAndExplorerChangesInvalidateOldOwnership()
+    public void FixedTaskbarAndLegacyHideAreNeverAcquiredAndPreferenceChangesInvalidateOwnership()
     {
         var monitor = new TaskbarBounds(0, 0, 1280, 800);
         var observed = Window(1, monitor, new(0, 752, 1280, 48), false);
         var backend = new TaskbarNativeBackend(() => [observed]) { Scope = monitor };
-        Assert.False(Assert.Single(backend.Capture(TaskbarLeaseMode.Reveal)!.Windows).AutoHide);
+        Assert.Null(backend.Capture(TaskbarLeaseMode.Reveal));
+        Assert.Null(backend.Capture(TaskbarLeaseMode.Hide));
         observed = observed with { AutoHide = true };
         var saved = backend.Capture(TaskbarLeaseMode.Reveal)!;
+        Assert.Null(backend.Capture(TaskbarLeaseMode.Hide));
+        observed = observed with { AutoHide = false };
+        Assert.False(backend.IsCurrent(saved));
+        observed = observed with { AutoHide = true };
         observed = observed with { ProcessStarted = 2 };
         Assert.False(backend.IsCurrent(saved));
         observed = observed with { ProcessStarted = 1, Monitor = new(0, 0, 800, 1280) };

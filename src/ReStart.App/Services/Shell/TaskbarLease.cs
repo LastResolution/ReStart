@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace ReStart.App.Services;
 
-/// <summary>Chooses a temporary window-visibility effect; neither mode changes Windows auto-hide configuration.</summary>
+/// <summary>Chooses temporary reveal or identifies a legacy hide record for recovery; new native hide operations are disabled.</summary>
 internal enum TaskbarLeaseMode { Reveal, Hide }
 /// <summary>Stores physical screen pixels in private recovery state only.</summary>
 internal readonly record struct TaskbarBounds(int X, int Y, int Width, int Height);
@@ -59,7 +59,7 @@ internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBac
     internal TaskbarLeaseState? Snapshot => _applied ? _state : null;
 
     /// <summary>Enforces an optional temporary effect; failure never bypasses recovery prerequisites.</summary>
-    /// <param name="mode">Desired effect, or null to restore the original owned state.</param>
+    /// <param name="mode">Desired effect, or null to release ownership and return control to the backend's current native policy.</param>
     /// <param name="stillRequested">Optional current-request check, evaluated after recovery readiness and before shell mutation. False cancels and restores acquisition.</param>
     /// <returns>True when the requested effect is active, or restoration completed; false for unavailable/failed acquisition or recovery.</returns>
     internal bool Synchronize(TaskbarLeaseMode? mode, Func<bool>? stillRequested = null)

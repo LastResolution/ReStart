@@ -248,6 +248,7 @@ public partial class MainWindow : Window
         ResetToPinnedView();
         var handle = new WindowInteropHelper(this).EnsureHandle();
         _focusOnActivation = true;
+        if (!_preview) TaskbarNativeBackend.PrepareLauncher(handle, Document.Preferences.ShowTaskbarWhileOpen);
         if (wasHidden && MotionEnabled) Opacity = EntranceOpacity;
         if (!IsVisible) Show();
         if (!_preview)

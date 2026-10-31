@@ -20,7 +20,7 @@ Vermisst du das Vollbild-Startmenü von Windows 10? ReStart gibt deinen Apps unt
 
 **Portabel · JavaScript-Live-Kacheln · x64 und ARM64 · Acht Sprachen · Keine separate .NET-Installation**
 
-**Tablet und Taskleiste.** In den Starteinstellungen lässt sich die automatisch ausgeblendete Taskleiste auf ReStarts Bildschirm anzeigen, solange ReStart geöffnet ist. Die optionale Tablet-Integration ist zunächst deaktiviert und bewahrt Layout und Start-Tastenkürzel. Tastaturerkennung und Ausblenden der Taskleiste sind separat wählbar. Host-Datenverbindungen erfordern „Speichern und erlauben“ für jede platzierte Kachel. Geänderte Zugriffsanfragen brauchen eine neue Erlaubnis. [Verhalten und geprüfte Abdeckung (Englisch)](docs/fidelity.md).
+**Touch und Taskleiste.** Touch unterstützt das Ziehen von Kacheln und Gruppen, Menüs durch langes Drücken, Ordner und Scrollen. Die Starteinstellungen können die automatisch ausgeblendete Taskleiste auf ReStarts Bildschirm anzeigen, solange ReStart geöffnet ist. Windows steuert das automatische Ausblenden; ReStart hat keine eigene Ausblendeoption. Host-Datenverbindungen erfordern „Speichern und erlauben“ für jede platzierte Kachel. Geänderte Zugriffsanfragen brauchen eine neue Erlaubnis. [Verhalten und geprüfte Abdeckung (Englisch)](docs/fidelity.md).
 
 ## Zuverlässigkeit und private Sicherungen
 

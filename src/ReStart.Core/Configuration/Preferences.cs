@@ -3,11 +3,11 @@ namespace ReStart.Core;
 /// <summary>Stores local UI and integration choices; imported layouts do not replace these settings.</summary>
 public sealed class Preferences
 {
-    /// <summary>Gets or sets explicit consent to optional tablet integration; false by default. Posture detection alone never enables it or replaces layouts.</summary>
+    /// <summary>Gets or sets a legacy tablet preference retained for layout compatibility; current shell integration ignores it. False by default.</summary>
     public bool TabletFeaturesEnabled { get; set; }
-    /// <summary>Gets or sets whether tablet effects require confirmed absence of a USB/Bluetooth keyboard. False by default; unknown detection pauses effects when enabled.</summary>
+    /// <summary>Gets or sets a legacy keyboard-policy preference retained for layout compatibility; current shell integration ignores it. False by default.</summary>
     public bool TabletKeyboardMeansDesktop { get; set; }
-    /// <summary>Gets or sets whether opted-in, active tablet integration hides this launcher's monitor taskbar while Start is open, after recovery is durably saved. False by default.</summary>
+    /// <summary>Gets or sets a legacy taskbar-hide preference retained for layout compatibility; it never creates a new hide operation. False by default.</summary>
     public bool TabletHideTaskbar { get; set; }
     /// <summary>Gets or sets whether an automatically hidden taskbar is revealed while Start is open; true by default, independently of tablet opt-in.</summary>
     public bool ShowTaskbarWhileOpen { get; set; } = true;

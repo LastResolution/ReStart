@@ -20,7 +20,7 @@ https://github.com/user-attachments/assets/a893cd20-8c82-4c47-b5fb-bf22743f67e1
 
 **Portátil · Mosaicos JavaScript · x64 y ARM64 · Ocho idiomas · Sin instalar .NET por separado**
 
-**Tabletas y barra de tareas.** Los ajustes de inicio permiten mostrar la barra de tareas oculta automáticamente en la pantalla de ReStart mientras está abierto. La integración opcional con tabletas está desactivada inicialmente y conserva la distribución y los accesos de Inicio. La detección de teclado y la ocultación de la barra tienen opciones independientes. Las conexiones de datos requieren «Guardar y autorizar» para cada mosaico colocado; los cambios de acceso requieren una nueva autorización. [Comportamiento y cobertura comprobada (inglés)](docs/fidelity.md).
+**Funciones táctiles y barra de tareas.** El uso táctil admite arrastrar mosaicos y grupos, menús con pulsación larga, carpetas y desplazamiento. Los ajustes de inicio permiten mostrar la barra de tareas oculta automáticamente en la pantalla de ReStart mientras está abierto. Windows controla la ocultación automática; ReStart no tiene una opción independiente para ocultarla. Las conexiones de datos requieren «Guardar y autorizar» para cada mosaico colocado; los cambios de acceso requieren una nueva autorización. [Comportamiento y cobertura comprobada (inglés)](docs/fidelity.md).
 
 ## Fiabilidad y copias privadas
 
