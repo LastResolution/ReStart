@@ -126,6 +126,8 @@ The native check optionally accepts a third argument: `--taskbar-live-check <own
 
 The content-reservation fixture checks the power controls with both collapsed and expanded rails at all four taskbar edges and four injected DPI conversion scales (100%, 125%, 150%, 200%). It requires unchanged native window and background dimensions, checks actual WPF control bounds, and renders dark/light verification images with a fictional taskbar band. These are geometry/conversion checks, not additional physical mixed-DPI coverage. Core tests also verify no double reservation, no reservation on another display and preservation of unrelated appbar space.
 
+Native visibility checks also inspect the drawable clipping region. A real secondary tray reproduced the previous false positive: matching visible geometry and visible composition content, but a 1920-by-2-pixel region excluded almost the entire surface. The strengthened local check fails that case and requires an unrestricted rectangular surface during each reveal, plus recovery of a captured strip after closing. Owned native windows reproduce all four clipping edges, position-only failure, removal and exact restoration, including distinct empty, absent and complex regions. Core tests cover bounded serialization, old records without region data, invalid rectangles, custom regions, lease invalidation and exact secondary-edge resolution. Successful geometry, content style and clipping checks still require the normal launcher's visual verification before publishing.
+
 ## Manual coverage still required
 
 | Area | Check |

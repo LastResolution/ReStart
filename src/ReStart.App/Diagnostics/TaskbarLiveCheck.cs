@@ -54,7 +54,8 @@ internal static class TaskbarLiveCheck
             && before.Windows.All(saved => after.Windows.Any(actual => actual.Window == saved.Window && actual.AutoHide
                 && TaskbarNativeBackend.HiddenAtEdge(actual.Monitor, actual.Original,
                     actual.Target.Width >= actual.Monitor.Width / 2 ? actual.Target.Y <= actual.Monitor.Y ? 1 : 3 : actual.Target.X <= actual.Monitor.X ? 0 : 2)
-                && (saved.Content ?? []).All(child => child.Visible || !(actual.Content ?? []).Any(current => current.Window == child.Window && current.Visible))));
+                && (saved.Content ?? []).All(child => child.Visible || !(actual.Content ?? []).Any(current => current.Window == child.Window && current.Visible))
+                && (saved.Clip == null || !saved.Clip.HasRegion || TaskbarNativeRegion.Same(saved.Clip, actual.Clip))));
         try
         {
             directory = Path.GetFullPath(directory); TaskbarRecoveryStore.CheckLinks(directory); Directory.CreateDirectory(directory);
@@ -107,6 +108,7 @@ internal static class TaskbarLiveCheck
                                     observations.Add(new
                                     {
                                         actual.Visible,
+                                        clip = actual.Clip,
                                         content = actual.Content?.Select(c => new { c.Visible }).ToArray(),
                                         dx = actual.Original.X - target.X,
                                         dy = actual.Original.Y - target.Y,
@@ -114,7 +116,7 @@ internal static class TaskbarLiveCheck
                                         dh = actual.Original.Height - target.Height
                                     });
                                 }
-                            var visible = current != null && original != null && current.Windows.All(w => w.Visible && (w.Content == null || w.Content.All(c => c.Visible))
+                            var visible = current != null && original != null && current.Windows.All(w => w.Visible && TaskbarNativeRegion.FullSurface(w.Clip, w.Target) && (w.Content == null || w.Content.All(c => c.Visible))
                                 && original.Windows.Any(o => o.Window == w.Window && o.Target == w.Original));
                             return lease.Synchronize(TaskbarLeaseMode.Reveal, () => Volatile.Read(ref open)) && visible;
                         });
@@ -150,7 +152,7 @@ internal static class TaskbarLiveCheck
                         var revealed = await Task.Run(() => lease.Synchronize(TaskbarLeaseMode.Reveal));
                         await Task.Delay(400);
                         var during = await Task.Run(() => backend.Capture(TaskbarLeaseMode.Reveal));
-                        held &= revealed && during != null && during.Windows.All(w => w.AutoHide && w.Original == w.Target && (w.Content == null || w.Content.All(c => c.Visible))
+                        held &= revealed && during != null && during.Windows.All(w => w.AutoHide && w.Original == w.Target && TaskbarNativeRegion.FullSurface(w.Clip, w.Target) && (w.Content == null || w.Content.All(c => c.Visible))
                             && TaskbarNativeBackend.IsAbove((nint)w.Window, launcher));
                         var cycleSaved = lease.Snapshot;
                         window.Hide();

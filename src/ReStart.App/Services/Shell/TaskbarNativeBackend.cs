@@ -59,7 +59,7 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
             var resolved = ResolveMonitor(monitor, monitors, bounds => AutoHideEdge(window, bounds));
             monitor = resolved.Monitor; var edge = resolved.Edge;
             var target = edge == null ? original : VisibleBounds(monitor, original, edge.Value);
-            yield return new(window, pid, started, IsWindowVisible(window), edge != null, monitor, original, target, IsTopmost(window), ContentWindows(window, pid));
+            yield return new(window, pid, started, IsWindowVisible(window), edge != null, monitor, original, target, IsTopmost(window), ContentWindows(window, pid), TaskbarNativeRegion.Read(window));
         }
     }
 
@@ -93,8 +93,14 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
             && state.Windows.All(saved => current.Windows.Any(observed => observed.Window == saved.Window && observed.ProcessId == saved.ProcessId
                 && observed.ProcessStarted == saved.ProcessStarted && observed.Monitor == saved.Monitor && observed.AutoHide == saved.AutoHide
                 && (observed.Content ?? []).Select(child => child.Window).Order().SequenceEqual((saved.Content ?? []).Select(child => child.Window).Order())
+                && ClipCurrent(saved, observed)
                 && (state.Mode != TaskbarLeaseMode.Reveal || observed.Target == saved.Target)));
     }
+
+    private static bool ClipCurrent(TaskbarWindowState saved, TaskbarWindowState current) => saved.Clip == null
+        || TaskbarNativeRegion.Same(saved.Clip, current.Clip)
+        || current.Clip is { HasRegion: false } && SecondaryEdge(saved.Monitor, saved.Target) is { } edge
+            && TaskbarNativeRegion.AutoHideStrip(saved.Clip, saved.Target, edge);
 
     public void Apply(TaskbarLeaseState state)
     {
@@ -106,10 +112,23 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
             if (state.Mode == TaskbarLeaseMode.Hide) throw new InvalidOperationException("New taskbar hide leases are not supported.");
             else
             {
-                if (!item.AutoHide || !AutoHideEnabled || AutoHideEdge(window, item.Monitor) == null) throw new IOException("Taskbar preference changed.");
+                if (!item.AutoHide || !AutoHideEnabled || AutoHideEdge(window, item.Monitor) is not { } edge) throw new IOException("Taskbar preference changed.");
                 if (LauncherWindow == 0) throw new IOException("Taskbar reveal requires a launcher window.");
                 var changed = false;
-                if (firstReveal || !Bounds(window, out var current) || current != item.Target || !IsWindowVisible(window) || !IsAbove(window, LauncherWindow))
+                if (TaskbarNativeRegion.AutoHideStrip(item.Clip, item.Target, edge))
+                {
+                    var currentClip = TaskbarNativeRegion.Read(window);
+                    if (TaskbarNativeRegion.AutoHideStrip(currentClip, item.Target, edge))
+                    {
+                        // A secondary tray can retain its two-pixel region even
+                        // after its HWND and content are visible. Persisted
+                        // recovery precedes this scoped, reversible correction.
+                        TaskbarNativeRegion.Write(window, new(false, []));
+                        changed = true;
+                    }
+                    else if (!TaskbarNativeRegion.FullSurface(currentClip, item.Target)) throw new IOException("Taskbar clipping changed.");
+                }
+                if (firstReveal || changed || !Bounds(window, out var current) || current != item.Target || !IsWindowVisible(window) || !IsAbove(window, LauncherWindow))
                 {
                     Position(window, item.Target, show: true, topmost: true);
                     changed = true;
@@ -128,6 +147,8 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
                 if (!IsWindowVisible(window)) throw new IOException("Taskbar reveal visibility was not applied.");
                 if (!IsAbove(window, LauncherWindow)) throw new IOException("Taskbar reveal stacking was not applied.");
                 if (changed) RedrawWindow(window, 0, 0, 0x0585); // INVALIDATE | ERASE | ALLCHILDREN | UPDATENOW | FRAME.
+                if (TaskbarNativeRegion.AutoHideStrip(item.Clip, item.Target, edge) && !TaskbarNativeRegion.FullSurface(TaskbarNativeRegion.Read(window), item.Target))
+                    throw new IOException("Taskbar content remains clipped.");
             }
         }
         _appliedToken = state.Token;
@@ -153,6 +174,7 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
                 Handoff(window, current, RestoreTopmost(item.Topmost, IsTopmost(window)));
                 LastRecoveryDecision = ReturnSecondaryTrayToHiddenEdge(item);
                 RestoreContent(item);
+                RestoreClip(item);
             }
         }
     }
@@ -295,6 +317,18 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
         }
     }
 
+    private static void RestoreClip(TaskbarWindowState item)
+    {
+        if (!AutoHideEnabled || !Matches(item) || !Bounds((nint)item.Window, out var current)
+            || AutoHideEdge((nint)item.Window, item.Monitor) is not { } edge || !HiddenAtEdge(item.Monitor, current, edge)
+            || !TaskbarNativeRegion.AutoHideStrip(item.Clip, item.Target, edge)) return;
+        // Native transitions, a new region, a visible tray or a changed Windows
+        // preference take precedence. Undo only our removal of this exact strip.
+        if (TaskbarNativeRegion.Read((nint)item.Window).HasRegion) return;
+        TaskbarNativeRegion.Write((nint)item.Window, item.Clip!);
+        if (!TaskbarNativeRegion.Same(TaskbarNativeRegion.Read((nint)item.Window), item.Clip)) throw new IOException("Taskbar clipping recovery failed.");
+    }
+
     private static string ReturnSecondaryTrayToHiddenEdge(TaskbarWindowState item)
     {
         // Unlike the primary tray, some secondary trays do not reconcile an
@@ -379,7 +413,32 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
             };
             if ((nint)SHAppBarMessage(11, ref query) == window) return (int)edge;
         }
-        return null;
+        // Some secondary Explorer trays do not appear in the appbar registry,
+        // despite Windows' global auto-hide preference being enabled. Accept
+        // only their exact visible/hidden edge geometry, never an arbitrary
+        // nearby window or a partially animated rectangle.
+        var name = new StringBuilder(64); GetClassName(window, name, name.Capacity);
+        return AutoHideEnabled && name.ToString() == "Shell_SecondaryTrayWnd" && Bounds(window, out var bar)
+            ? SecondaryEdge(monitor, bar) : null;
+    }
+
+    /// <summary>Resolves an unregistered secondary tray only at an exact full-length visible or two-pixel hidden edge.</summary>
+    /// <param name="monitor">Candidate monitor in physical desktop pixels.</param>
+    /// <param name="bar">Fresh secondary Explorer tray rectangle in physical desktop pixels.</param>
+    /// <returns>The unique docking edge, or null for partial movement, ambiguous or unrelated geometry.</returns>
+    internal static int? SecondaryEdge(TaskbarBounds monitor, TaskbarBounds bar)
+    {
+        int? result = null;
+        for (var edge = 0; edge < 4; edge++)
+        {
+            var horizontal = edge is 1 or 3;
+            if (horizontal ? bar.Width != monitor.Width || bar.Height >= monitor.Height / 2
+                : bar.Height != monitor.Height || bar.Width >= monitor.Width / 2) continue;
+            if (bar != VisibleBounds(monitor, bar, edge) && bar != HiddenBounds(monitor, bar, edge)) continue;
+            if (result != null) return null;
+            result = edge;
+        }
+        return result;
     }
     private static TaskbarBounds VisibleBounds(TaskbarBounds monitor, TaskbarBounds bar, int edge) => edge switch
     {

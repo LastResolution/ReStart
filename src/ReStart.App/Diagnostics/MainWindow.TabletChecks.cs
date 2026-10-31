@@ -82,7 +82,34 @@ public partial class MainWindow
                 Require(Native.GetForegroundWindow() == foreground, "Repeated taskbar reveal stole foreground activation.");
                 TaskbarNativeBackend.Position(handle, original, false, topmost: false);
                 Require(TaskbarNativeBackend.IsAbove(coverHandle, handle), "The taskbar fixture did not return to its original ordinary tier.");
-                return 11;
+                var clipChecks = 0;
+                void ClipCheck(bool condition, string message) { Require(condition, message); clipChecks++; }
+                foreach (var edge in new[] { 0, 1, 2, 3 })
+                {
+                    var strip = edge switch
+                    {
+                        0 => new TaskbarBounds(original.Width - 2, 0, 2, original.Height),
+                        1 => new TaskbarBounds(0, original.Height - 2, original.Width, 2),
+                        2 => new TaskbarBounds(0, 0, 2, original.Height),
+                        _ => new TaskbarBounds(0, 0, original.Width, 2)
+                    };
+                    var captured = new TaskbarClipState(true, [strip]);
+                    TaskbarNativeRegion.Write(handle, captured);
+                    ClipCheck(TaskbarNativeRegion.Same(captured, TaskbarNativeRegion.Read(handle)), "The owned native clipping strip did not round trip.");
+                    TaskbarNativeBackend.Position(handle, original, true, topmost: true);
+                    ClipCheck(!TaskbarNativeRegion.FullSurface(TaskbarNativeRegion.Read(handle), original), "The old position-only path did not reproduce clipped taskbar content.");
+                    TaskbarNativeRegion.Write(handle, new(false, []));
+                    ClipCheck(TaskbarNativeRegion.FullSurface(TaskbarNativeRegion.Read(handle), original), "The owned native surface remained clipped after removing the hidden strip.");
+                    TaskbarNativeRegion.Write(handle, captured);
+                    ClipCheck(TaskbarNativeRegion.Same(captured, TaskbarNativeRegion.Read(handle)), "Native clipping recovery did not restore the exact captured strip.");
+                }
+                var complex = new TaskbarClipState(true, [new(0, 0, 10, 10), new(20, 20, 10, 10)]);
+                TaskbarNativeRegion.Write(handle, complex);
+                ClipCheck(TaskbarNativeRegion.Same(complex, TaskbarNativeRegion.Read(handle)), "Bounded complex recovery geometry did not round trip.");
+                TaskbarNativeRegion.Write(handle, new(true, []));
+                ClipCheck(TaskbarNativeRegion.Same(new(true, []), TaskbarNativeRegion.Read(handle)), "An empty region was confused with an unrestricted window.");
+                TaskbarNativeRegion.Write(handle, new(false, []));
+                return 11 + clipChecks;
             }
             finally { cover.Close(); }
         }

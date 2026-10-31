@@ -9,16 +9,23 @@ internal enum TaskbarLeaseMode { Reveal, Hide }
 internal readonly record struct TaskbarBounds(int X, int Y, int Width, int Height);
 /// <summary>Identifies a direct native taskbar content child and its captured visibility for conditional recovery.</summary>
 internal sealed record TaskbarContentState(long Window, bool Visible);
+/// <summary>Stores a bounded window-local native clipping snapshot; a missing region means the normal rectangular surface.</summary>
+internal sealed record TaskbarClipState(bool HasRegion, TaskbarBounds[] Rectangles)
+{
+    internal bool IsValid() => Rectangles is { Length: <= 256 } && (HasRegion || Rectangles.Length == 0)
+        && Rectangles.All(rect => rect.Width is > 0 and <= 65536 && rect.Height is > 0 and <= 65536
+            && rect.X is >= -262144 and <= 262144 && rect.Y is >= -262144 and <= 262144);
+}
 /// <summary>Identifies the exact Explorer window and its original and intended geometry for conditional recovery.</summary>
 internal sealed record TaskbarWindowState(long Window, int ProcessId, long ProcessStarted, bool Visible, bool AutoHide,
-    TaskbarBounds Monitor, TaskbarBounds Original, TaskbarBounds Target, bool? Topmost = null, TaskbarContentState[]? Content = null);
+    TaskbarBounds Monitor, TaskbarBounds Original, TaskbarBounds Target, bool? Topmost = null, TaskbarContentState[]? Content = null, TaskbarClipState? Clip = null);
 /// <summary>Stores a private, process-bound recovery transaction; never sent to tiles or shared diagnostics.</summary>
 internal sealed record TaskbarLeaseState(int Version, string Token, int ParentId, long ParentStarted, TaskbarLeaseMode Mode, TaskbarWindowState[] Windows)
 {
     internal bool IsValid() => Version == 1 && Guid.TryParseExact(Token, "N", out _) && ParentId > 0 && ParentStarted > 0
         && Enum.IsDefined(Mode) && Windows is { Length: > 0 and <= 32 }
         && Windows.All(item => item != null && item.Window > 0 && item.ProcessId > 0 && item.ProcessStarted > 0
-            && Valid(item.Monitor) && Valid(item.Original) && Valid(item.Target)
+            && Valid(item.Monitor) && Valid(item.Original) && Valid(item.Target) && (item.Clip == null || item.Clip.IsValid())
             && (item.Content == null || item.Content.Length <= 4 && item.Content.All(child => child != null && child.Window > 0 && child.Window != item.Window)
                 && item.Content.Select(child => child.Window).Distinct().Count() == item.Content.Length))
         && Windows.Select(item => item.Window).Distinct().Count() == Windows.Length;
