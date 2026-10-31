@@ -557,5 +557,7 @@
   "WindowsSettingWindowsupdateHistory": "Windows 更新履歴",
   "WindowsSettingWindowsupdateOptions": "Windows Update 詳細オプション",
   "WindowsSettingGamingGamebar": "ゲーム バー",
-  "WindowsSettingGamingGamemode": "ゲーム モード"
+  "WindowsSettingGamingGamemode": "ゲーム モード",
+  "SettingsWindowsAppHistory": "Windowsに保存されたアプリ使用履歴を含める（読み取り専用）",
+  "WindowsAppHistoryHelp": "Windowsのアプリ起動の追跡が有効な場合に使用します。インストール済みアプリに一致する記録だけを読み、保存はしません。ReStartの履歴を消去してもWindowsの履歴は消えません。"
 }

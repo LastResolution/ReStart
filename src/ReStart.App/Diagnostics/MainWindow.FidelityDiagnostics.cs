@@ -84,6 +84,21 @@ public partial class MainWindow
             Check(VisualChildren<TextBlock>(fixture.AppsPanel).Any(t => t.Text == L.T(K.MostUsed)), "Most used was not rendered from local launch counts.");
             fixture.ClearAppHistory();
             Check(!VisualChildren<TextBlock>(fixture.AppsPanel).Any(t => t.Text == L.T(K.MostUsed)), "Cleared app history still appears.");
+            fixture._windowsUsageFixture = async (_, token) =>
+            {
+                await Task.Delay(40, token);
+                return new(true, new Dictionary<string, WindowsAppUsage> { ["beta"] = new(12, DateTimeOffset.UtcNow) });
+            };
+            fixture.Document.Preferences.UseWindowsAppHistory = true; fixture.RenderApps();
+            await Until(() => fixture._windowsUsage.ContainsKey("beta"));
+            Check(fixture.AppsPanel.Children.OfType<Button>().First(b => b.Uid == "history").Tag is AppEntry { Id: "beta" },
+                "Windows usage did not reach the Most used surface.");
+            fixture.Activity.HideFrequent("beta"); fixture.RenderApps();
+            Check(!fixture.AppsPanel.Children.OfType<Button>().Any(b => b.Uid == "history" && b.Tag is AppEntry { Id: "beta" }),
+                "An imported usage observation restored an excluded app.");
+            fixture.Document.Preferences.UseWindowsAppHistory = false; fixture.RenderApps();
+            Check(fixture._windowsUsage.Count == 0 && fixture._windowsUsageCancellation == null, "Disabling Windows usage retained history or its reader.");
+            fixture._windowsUsageFixture = null;
             fixture.SetRailOpen(true); Check(fixture.ExpandedRail.Visibility == Visibility.Visible && !fixture._railPinnedOpen, "Hover expansion was treated as a pinned-open sidebar.");
             fixture.SetRailOpen(true, true); Check(fixture._railPinnedOpen, "Explicit sidebar expansion did not stay open.");
             fixture.SetRailOpen(false);

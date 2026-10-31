@@ -6,6 +6,10 @@ researched from Open-Shell's JumpLists.cpp at revision
 https://github.com/Open-Shell/Open-Shell-Menu/blob/9dfa7fa5c3614de15d0ff4f3eba7edd9e2dcbd24/Src/StartMenu/StartMenuDLL/JumpLists.cpp
 
 ReStart's C# implementation runs these interfaces in an isolated helper.
+The read-only UserAssist adapter also references the known-folder identities,
+ROT13 name encoding and 72-byte record layout documented in ItemManager.cpp
+and ItemManager.h at the same revision. It performs only exact catalog lookups
+and does not reuse Open-Shell's history enumeration or ranking implementation.
 No Open-Shell binary, Explorer patch, injected DLL or source asset is included.
 The applicable source-code license is reproduced below.
 

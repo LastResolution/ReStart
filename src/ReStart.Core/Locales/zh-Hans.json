@@ -557,5 +557,7 @@
   "WindowsSettingWindowsupdateHistory": "Windows 更新历史记录",
   "WindowsSettingWindowsupdateOptions": "Windows 更新高级选项",
   "WindowsSettingGamingGamebar": "游戏栏",
-  "WindowsSettingGamingGamemode": "游戏模式"
+  "WindowsSettingGamingGamemode": "游戏模式",
+  "SettingsWindowsAppHistory": "包含 Windows 已记录的应用使用情况（只读）",
+  "WindowsAppHistoryHelp": "需要启用 Windows 应用启动跟踪。仅读取与已安装应用匹配的记录，不保存副本。清除 ReStart 历史记录不会清除 Windows 历史记录。"
 }

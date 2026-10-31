@@ -27,6 +27,7 @@ Open **ReStart settings → Start behavior** to choose how Start responds. Each 
 | Show shortcut tips while dragging | On | Hides the five-second Alt/Shift toast; drag behavior is unchanged |
 | Recently added apps | On | Hides the optional app-list section |
 | Most used apps | Off | Stops recording successful ReStart launches and hides the section |
+| Include existing Windows app usage | Off | Uses only ReStart launch counts; enabling it reads exact installed-app UserAssist observations when Windows tracking policy permits |
 
 **Animation** in Appearance controls opening, closing, tile press transitions, local folder reveal and placement transitions. Windows reduced-motion and high-contrast settings take precedence. Hover brightening has its own switch.
 
@@ -78,7 +79,9 @@ Custom options are available for supported desktop applications and application 
 
 `activity.json` is stored beside `layout.json`. It holds a bounded catalog baseline, discovery dates and optional ReStart launch counts. Existing apps are baselined on the first run instead of appearing as newly added. New discoveries appear for seven days; Most used includes up to six apps launched through ReStart while recording is enabled. Removed apps disappear with the next catalog refresh.
 
-**Clear app history** clears counts and discovery dates while retaining the catalog baseline. Activity is separate from layout export and is not uploaded. Disabling Most used preserves existing counts so they can be resumed or explicitly cleared. Windows app-usage history is not imported.
+**Clear app history** clears ReStart counts and discovery dates while retaining the catalog baseline. Activity is separate from layout export and is not uploaded. Disabling Most used preserves existing counts so they can be resumed or explicitly cleared.
+
+**Include existing Windows app usage** is a separate opt-in source for Most used. It reads only exact identities and resolved executable/shortcut paths already present in the installed catalog, including Windows known-folder prefixes. It does not enumerate unrelated UserAssist value names, read document history, enable Windows tracking, write registry values or save the observations to disk. Windows app-launch tracking must be explicitly enabled and the relevant policies must allow it. Unknown record layouts and unavailable/disabled providers contribute no usage. Reads run away from the UI thread, are cached in memory for one minute and are cancelled on disabling the source or exiting. Local exclusions still apply. The larger of the local and Windows counts is used rather than adding counts that may describe the same launch. This approximates usage ordering, not Windows Start's private ranking formula. Clearing ReStart history does not erase Windows history; disable this source to hide it.
 
 Document destinations come from Windows Recent/Frequent lists only when allowed by the Windows document-history setting. ReStart does not copy those lists into its activity file. Registered tasks, Windows pins and up to eight app-defined categories of eight destinations each use the isolated native adapter. Category labels belong to the installed app and are preserved rather than translated by ReStart. Unsupported identities omit these sections. See [compatibility](fidelity.md).
 

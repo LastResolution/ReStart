@@ -33,7 +33,8 @@ public static class AppCatalogLayout
             .ToDictionary(s => s.AppId, StringComparer.OrdinalIgnoreCase);
         var registered = (appPaths ?? []).GroupBy(p => p.TargetPath.Replace('/', '\\'), StringComparer.OrdinalIgnoreCase)
             .ToDictionary(g => g.Key, g => g.Select(p => p.ExecutableName).ToArray(), StringComparer.OrdinalIgnoreCase);
-        AppEntry WithTarget(AppEntry app, string target, string arguments) => AppSearchAliases.AddExecutables(app,
+        AppEntry WithTarget(AppEntry app, string target, string arguments) => AppSearchAliases.AddExecutables(app with
+        { ExecutablePath = string.IsNullOrWhiteSpace(arguments) ? target.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? target : app.ExecutablePath : "" },
             new[] { target }.Concat(registered.GetValueOrDefault(target.Replace('/', '\\')) ?? []), !string.IsNullOrWhiteSpace(arguments));
         foreach (var target in metadata.Values) entries[target.AppId] = WithTarget(entries[target.AppId], target.TargetPath, target.Arguments);
         var byTarget = metadata.Values.Where(s => !string.IsNullOrWhiteSpace(s.TargetPath))

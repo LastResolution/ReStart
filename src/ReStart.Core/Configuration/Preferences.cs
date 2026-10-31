@@ -49,6 +49,8 @@ public sealed class Preferences
     public bool ShowRecentlyAdded { get; set; } = true;
     /// <summary>Gets or sets whether successful ReStart app launches are counted locally and shown in Most used.</summary>
     public bool ShowMostUsed { get; set; }
+    /// <summary>Gets or sets whether Most used also reads existing Windows UserAssist counts for exact installed app identities. Defaults to false; Windows tracking policies are respected and no Windows history is changed or copied to disk.</summary>
+    public bool UseWindowsAppHistory { get; set; }
     /// <summary>Gets or sets the optional navigation folders; unknown identifiers are ignored and null restores the default pair.</summary>
     public List<string>? NavigationFolders { get; set; }
     /// <summary>Gets or sets whether a per-user Explorer command pins files, directories and shortcuts to ReStart.</summary>

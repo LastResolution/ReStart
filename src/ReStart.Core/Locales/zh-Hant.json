@@ -557,5 +557,7 @@
   "WindowsSettingWindowsupdateHistory": "Windows 更新歷程記錄",
   "WindowsSettingWindowsupdateOptions": "Windows Update 進階選項",
   "WindowsSettingGamingGamebar": "遊戲列",
-  "WindowsSettingGamingGamemode": "遊戲模式"
+  "WindowsSettingGamingGamemode": "遊戲模式",
+  "SettingsWindowsAppHistory": "包含 Windows 已記錄的應用程式使用情況（唯讀）",
+  "WindowsAppHistoryHelp": "需要啟用 Windows 應用程式啟動追蹤。僅讀取與已安裝應用程式相符的記錄，不儲存副本。清除 ReStart 歷程記錄不會清除 Windows 歷程記錄。"
 }

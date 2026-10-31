@@ -45,7 +45,11 @@ internal sealed partial class SettingsWindow
         DataButton(panel, L.T(K.KeyboardShortcuts), () => _main.ShowKeyboardShortcuts(this));
         Heading(panel, L.T(K.NavAllApps));
         Check(panel, L.T(K.SettingsShowRecentApps), _draft.ShowRecentlyAdded, value => _draft.ShowRecentlyAdded = value);
-        Check(panel, L.T(K.SettingsShowMostUsed), _draft.ShowMostUsed, value => _draft.ShowMostUsed = value);
+        CheckBox? windowsHistory = null;
+        Check(panel, L.T(K.SettingsShowMostUsed), _draft.ShowMostUsed, value => { _draft.ShowMostUsed = value; if (windowsHistory != null) windowsHistory.IsEnabled = value; });
+        windowsHistory = Check(panel, L.T(K.SettingsWindowsAppHistory), _draft.UseWindowsAppHistory, value => _draft.UseWindowsAppHistory = value);
+        windowsHistory.IsEnabled = _draft.ShowMostUsed;
+        Note(panel, L.T(K.WindowsAppHistoryHelp));
         Note(panel, L.T(K.AppHistoryHelp));
         DataButton(panel, L.T(K.ClearAppHistory), _main.ClearAppHistory);
     }

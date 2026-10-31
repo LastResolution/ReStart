@@ -557,5 +557,7 @@
   "WindowsSettingWindowsupdateHistory": "Historial de actualizaciones de Windows",
   "WindowsSettingWindowsupdateOptions": "Opciones avanzadas de Windows Update",
   "WindowsSettingGamingGamebar": "Game Bar",
-  "WindowsSettingGamingGamemode": "Modo Juego"
+  "WindowsSettingGamingGamemode": "Modo Juego",
+  "SettingsWindowsAppHistory": "Incluir el uso de aplicaciones registrado por Windows (solo lectura)",
+  "WindowsAppHistoryHelp": "Requiere el seguimiento de inicio de aplicaciones de Windows. Lee únicamente los registros de aplicaciones instaladas, sin guardarlos. Borrar el historial de ReStart no borra el de Windows."
 }

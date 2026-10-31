@@ -42,13 +42,21 @@ public sealed class AppActivity
         .Where(a => Entries.TryGetValue(a.Id, out var e) && e.FirstSeen > now.AddDays(-7) && e.FirstSeen <= now)
         .OrderByDescending(a => Entries[a.Id].FirstSeen).ThenBy(a => a.Name, StringComparer.CurrentCultureIgnoreCase).Take(3).ToArray();
 
-    /// <summary>Returns up to six still-installed apps with recorded successful ReStart launches.</summary>
+    /// <summary>Returns up to six still-installed apps with local launches or an explicitly supplied Windows usage snapshot.</summary>
     /// <param name="apps">Current catalog used to exclude missing apps and resolve current display names.</param>
+    /// <param name="windows">Optional transient Windows usage keyed by exact catalog identity; null uses local counts only. Observations are never stored or mutated. The larger count is used to avoid double-counting launches recorded by both sources.</param>
     /// <returns>A new list ordered by descending launch count, latest launch and then current display name.</returns>
-    public IReadOnlyList<AppEntry> Frequent(IReadOnlyCollection<AppEntry> apps) => apps
-        .Where(a => Entries.TryGetValue(a.Id, out var e) && e.Launches > 0 && !e.HiddenFromMostUsed)
-        .OrderByDescending(a => Entries[a.Id].Launches).ThenByDescending(a => Entries[a.Id].LastLaunched)
-        .ThenBy(a => a.Name, StringComparer.CurrentCultureIgnoreCase).Take(6).ToArray();
+    public IReadOnlyList<AppEntry> Frequent(IReadOnlyCollection<AppEntry> apps, IReadOnlyDictionary<string, WindowsAppUsage>? windows = null) => apps
+        .Select(a =>
+        {
+            Entries.TryGetValue(a.Id, out var local);
+            var native = windows?.GetValueOrDefault(a.Id);
+            return (App: a, Hidden: local?.HiddenFromMostUsed == true, Count: Math.Max(local?.Launches ?? 0, native?.Launches ?? 0),
+                Last: (local?.LastLaunched ?? default) > (native?.LastLaunched ?? default) ? local!.LastLaunched : native?.LastLaunched ?? default);
+        })
+        .Where(a => !a.Hidden && a.Count > 0)
+        .OrderByDescending(a => a.Count).ThenByDescending(a => a.Last)
+        .ThenBy(a => a.App.Name, StringComparer.CurrentCultureIgnoreCase).Take(6).Select(a => a.App).ToArray();
 
     /// <summary>Removes one observed app from Recently added without changing its launch counts or installed catalog entry.</summary>
     /// <param name="appId">Observed catalog identity, matched without case sensitivity; unknown identities leave history unchanged.</param>

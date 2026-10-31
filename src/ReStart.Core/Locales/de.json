@@ -557,5 +557,7 @@
   "WindowsSettingWindowsupdateHistory": "Windows-Updateverlauf",
   "WindowsSettingWindowsupdateOptions": "Erweiterte Windows Update-Optionen",
   "WindowsSettingGamingGamebar": "Game Bar",
-  "WindowsSettingGamingGamemode": "Spielmodus"
+  "WindowsSettingGamingGamemode": "Spielmodus",
+  "SettingsWindowsAppHistory": "Vorhandene Windows-App-Nutzung einbeziehen (schreibgeschützt)",
+  "WindowsAppHistoryHelp": "Erfordert die App-Startverfolgung von Windows. Liest nur passende Einträge installierter Apps, ohne sie zu speichern. Das Löschen des ReStart-Verlaufs löscht nicht den Windows-Verlauf."
 }

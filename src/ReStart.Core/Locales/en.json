@@ -557,5 +557,7 @@
   "WindowsSettingWindowsupdateHistory": "Windows update history",
   "WindowsSettingWindowsupdateOptions": "Windows Update advanced options",
   "WindowsSettingGamingGamebar": "Game Bar",
-  "WindowsSettingGamingGamemode": "Game Mode"
+  "WindowsSettingGamingGamemode": "Game Mode",
+  "SettingsWindowsAppHistory": "Include existing Windows app usage (read-only)",
+  "WindowsAppHistoryHelp": "Requires Windows app-launch tracking. Reads exact installed-app records without saving them. Clearing ReStart history does not clear Windows history."
 }
