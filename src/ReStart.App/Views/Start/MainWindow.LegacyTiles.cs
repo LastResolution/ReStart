@@ -69,7 +69,10 @@ public partial class MainWindow
                 button.Foreground, source => _legacyImages.GetValueOrDefault((tile.AppId, source)), _legacyImages);
             icon.Visibility = view.HasTileContent ? Visibility.Collapsed : Visibility.Visible;
             if (button.Content is Grid grid && grid.Children.OfType<TextBlock>().FirstOrDefault(label => ReferenceEquals(label.Tag, tile)) is { } name)
+            {
                 name.Margin = new(2, 0, frame?.Badge.Length > 0 ? (frame.Badge.Length * 7 + 6) * DisplayPreferences.TileScale : 1, 0);
+                name.Foreground = view.ContentForeground ?? button.Foreground;
+            }
         }
     }
 

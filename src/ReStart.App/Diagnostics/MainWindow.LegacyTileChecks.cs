@@ -17,7 +17,7 @@ public partial class MainWindow
         const string xml = "<tile><visual><binding template='TileSmall'><text>7</text></binding>"
             + "<binding template='TileMedium'><text hint-style='subtitle'>Native tile</text><text>Owned update</text></binding>"
             + "<binding template='TileWide'><group><subgroup><text hint-style='subtitle'>Wide tile</text><text>Left column</text></subgroup><subgroup><image src='Assets/owned.png'/></subgroup></group></binding>"
-            + "<binding template='TileLarge'><text hint-style='title'>Native live tile</text><text hint-wrap='true'>This is fictional, local notification data for the renderer fixture.</text></binding></visual></tile>";
+            + "<binding template='TileLarge'><image src='Assets/owned.png' placement='background'/><text hint-style='title'>Native live tile</text><text hint-wrap='true'>This is fictional, local notification data for the renderer fixture.</text></binding></visual></tile>";
         var checks = 0; var reads = 0;
         void Check(bool value, string message) { Require(value, message); checks++; }
         var rasterPath = Path.Combine(directory, "legacy-owned.scale-200.png");
@@ -57,7 +57,11 @@ public partial class MainWindow
             fixture.Document.Preferences.Theme = theme; fixture.ApplyAppearance(); fixture.RenderGroups(); fixture.UpdateLayout();
             await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Render);
             Check(fixture._legacyViews.All(v => v.View.HasTileContent), "Native tile content was lost on a theme change.");
+            var large = fixture._legacyViews.Single(v => v.Tile.Size == TileSize.Large);
             SaveFixtureElement(fixture.Root, Path.Combine(directory, "legacy-tiles-" + theme + ".png"));
+            Check(SystemParameters.HighContrast || VisualChildren<TextBlock>(large.Button).Where(t => t.IsVisible)
+                .All(t => t.Foreground is SolidColorBrush brush && brush.Color == Colors.White),
+                "A native image background left its app name or badge unreadable in the selected theme.");
         }
         var retained = fixture._legacyViews.Select(v => v.View.Content).ToArray();
         fixture.RefreshLegacyTiles(); fixture.RefreshLegacyTiles();

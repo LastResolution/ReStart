@@ -22,6 +22,7 @@ internal sealed class LegacyTileView : ContentControl
     private double _scale;
     private bool _showName;
     internal bool HasTileContent { get; private set; }
+    internal Brush? ContentForeground { get; private set; }
 
     internal void Apply(LegacyTileBinding? binding, string badge, TileSize size, double scale, bool showName, Brush foreground,
         Func<string, ImageSource?> image, object imagesVersion)
@@ -37,9 +38,10 @@ internal sealed class LegacyTileView : ContentControl
         var root = new Grid { ClipToBounds = true, IsHitTestVisible = false };
         var body = new StackPanel { Margin = new(3 * scale, 2 * scale, 3 * scale, size == TileSize.Small || !showName ? 0 : 19 * scale), ClipToBounds = true };
         var images = new Grid { ClipToBounds = true }; root.Children.Add(images); root.Children.Add(body);
-        var hasBackground = binding != null && Sources(binding.Elements).Any(s => image(s) != null)
-            && binding.Elements.Any(e => e.Kind == "image" && e.Placement is "background" or "peek");
-        var ink = hasBackground && !SystemParameters.HighContrast ? Brushes.White : foreground;
+        var hasBackground = !SystemParameters.HighContrast && binding != null
+            && binding.Elements.Any(e => e.Kind == "image" && e.Placement is "background" or "peek" && image(e.Source) != null);
+        var ink = hasBackground ? Brushes.White : foreground;
+        ContentForeground = ink;
         if (binding != null)
             foreach (var element in binding.Elements)
                 if (element.Kind == "image" && element.Placement is "background" or "peek" && image(element.Source) is { } background && !SystemParameters.HighContrast)
@@ -50,7 +52,7 @@ internal sealed class LegacyTileView : ContentControl
                 else if (Build(element, ink, image, size, scale) is { } visual) { body.Children.Add(visual); HasTileContent = true; }
         if (badge.Length > 0)
         {
-            var label = new TextBlock { Text = badge, Foreground = foreground, FontWeight = FontWeights.SemiBold, FontSize = 11 * scale };
+            var label = new TextBlock { Text = badge, Foreground = ink, FontWeight = FontWeights.SemiBold, FontSize = 11 * scale };
             root.Children.Add(new Border { Child = label, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom, Padding = new(2), Margin = new(2) });
         }
         Content = root;
