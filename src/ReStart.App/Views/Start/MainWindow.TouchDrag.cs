@@ -13,7 +13,7 @@ public partial class MainWindow
     private TouchInputCounters? _touchInput;
     private sealed class TouchInputCounters
     {
-        public int Down, Move, Up, PanningSuspensions, MouseMoves, PressedMouseMoves, DragStarts, AcceptedDrops, CancelledDrags, ScrollChanges, FinalPanningMode;
+        public int Down, Move, Up, PanningSuspensions, MouseMoves, PressedMouseMoves, DragStarts, AcceptedDrops, CancelledDrags, ScrollChanges, FinalPanningMode, BoundaryFeedback;
     }
 
     private void InstallTouchDrag()
@@ -32,6 +32,13 @@ public partial class MainWindow
         AddHandler(LostTouchCaptureEvent, new EventHandler<TouchEventArgs>((_, e) => { if (!_dragging) _touchPanning.Release(e.TouchDevice); }), true);
         AddHandler(ContextMenuOpeningEvent, new ContextMenuEventHandler((_, _) => _touchPanning.Release()), true);
         Deactivated += (_, _) => _touchPanning.Release();
+        // Keep scroll inertia, but prevent WPF's default edge feedback from
+        // moving the entire launcher window when a finger reaches a boundary.
+        ContentScroll.AddHandler(ManipulationBoundaryFeedbackEvent, new EventHandler<ManipulationBoundaryFeedbackEventArgs>((_, e) =>
+        {
+            if (_touchInput != null) _touchInput.BoundaryFeedback++;
+            e.Handled = true;
+        }), true);
         ContentScroll.ScrollChanged += (_, e) =>
         {
             if (_touchInput != null && (e.HorizontalChange != 0 || e.VerticalChange != 0)) _touchInput.ScrollChanges++;

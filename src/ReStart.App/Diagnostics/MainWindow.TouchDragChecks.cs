@@ -69,6 +69,16 @@ public partial class MainWindow
             Routed(button, PreviewTouchDownEvent); Hide();
             Check(ContentScroll.PanningMode == initial, "Hiding the fixture stranded touch panning.");
             Present();
+            // WPF constructs these arguments internally. Creating only the event
+            // arguments does not activate a manipulation device or inject input.
+            var constructor = typeof(ManipulationBoundaryFeedbackEventArgs)
+                .GetConstructors(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .Single(c => c.GetParameters().Length == 4);
+            var boundary = (ManipulationBoundaryFeedbackEventArgs)constructor.Invoke(
+                [null, 0, ContentScroll, new ManipulationDelta(new(20, 20), 0, new(1, 1), new())]);
+            ContentScroll.RaiseEvent(boundary);
+            Check(boundary.Handled, "Touch boundary feedback reached the native window movement handler.");
+            Check(ContentScroll.PanningMode == initial, "Suppressing window feedback changed normal panning.");
         }
         finally
         {
