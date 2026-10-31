@@ -48,7 +48,7 @@ internal sealed class TabletIntegration : IDisposable
         _lease = new(dependencies.Store, dependencies.Backend, dependencies.Protect, dependencies.ProtectionReady);
         _timer = new(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(350) };
         _timer.Tick += (_, _) => Refresh();
-        _source.AddHook(OnMessage); _window.NativeWorkingArea = WorkingArea;
+        _source.AddHook(OnMessage); _window.NativeWorkingArea = WorkingArea; _window.NativeContentArea = ContentArea;
         _timer.Start(); Refresh();
     }
 
@@ -116,6 +116,12 @@ internal sealed class TabletIntegration : IDisposable
         return TaskbarNativeBackend.AvailableArea(screen.WorkingArea, _published, new(bounds.X, bounds.Y, bounds.Width, bounds.Height));
     }
 
+    private Drawing.Rectangle ContentArea(System.Windows.Forms.Screen screen)
+    {
+        var bounds = screen.Bounds;
+        return TaskbarNativeBackend.ContentSafeArea(WorkingArea(screen), _published, new(bounds.X, bounds.Y, bounds.Width, bounds.Height));
+    }
+
     private static bool SameArea(TaskbarLeaseState? a, TaskbarLeaseState? b) => a?.Mode == b?.Mode
         && (a == null && b == null || a != null && b != null && a.Windows.Select(w => (w.Monitor, w.Target)).SequenceEqual(b.Windows.Select(w => (w.Monitor, w.Target))));
 
@@ -124,6 +130,8 @@ internal sealed class TabletIntegration : IDisposable
         if (_disposed) return 0;
         if (message == 0x47) // WINDOWPOSCHANGED: supersede an old monitor request promptly.
             _source.Dispatcher.BeginInvoke(Refresh, DispatcherPriority.Background);
+        if (message == 0x2E0) // Recompute physical-to-DIP content insets after WPF accepts the new DPI.
+            _source.Dispatcher.BeginInvoke(_window.RefitNativeBounds, DispatcherPriority.Loaded);
         if (message is 0x219 or 0x1A or 0x7E || (uint)message == _taskbarCreated)
             _source.Dispatcher.BeginInvoke(DeviceStateChanged, DispatcherPriority.Background);
         return 0;
@@ -141,6 +149,8 @@ internal sealed class TabletIntegration : IDisposable
         _disposed = true; _timer.Stop();
         if (!_source.IsDisposed) _source.RemoveHook(OnMessage);
         _window.NativeWorkingArea = null;
+        _window.NativeContentArea = null;
+        _window.ClearTaskbarContentInsets();
         if (!_busy) _ = Task.Run(Cleanup);
     }
 

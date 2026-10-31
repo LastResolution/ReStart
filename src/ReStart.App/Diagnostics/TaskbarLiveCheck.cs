@@ -30,6 +30,16 @@ internal static class TaskbarLiveCheck
             WindowStartupLocation = WindowStartupLocation.Manual,
             Content = new System.Windows.Controls.TextBlock { Text = "Checking the taskbar on this display.\nWindows retains control of automatic hiding.", Margin = new(24), TextWrapping = TextWrapping.Wrap }
         };
+        var background = new Window
+        {
+            Title = "ReStart — Recovery fixture",
+            Width = 360,
+            Height = 120,
+            ShowInTaskbar = false,
+            WindowStartupLocation = WindowStartupLocation.Manual,
+            Content = new System.Windows.Controls.TextBlock { Text = "Checking automatic hiding after closing Start.", Margin = new(16), TextWrapping = TextWrapping.Wrap }
+        };
+        string? recoveryDecision = null;
         TaskbarLease? lease = null;
         var open = true;
         window.Closed += (_, _) => Volatile.Write(ref open, false);
@@ -40,9 +50,17 @@ internal static class TaskbarLiveCheck
         var repeatCycles = 0;
         var autoHideBefore = TaskbarNativeBackend.AutoHideEnabled;
         var observations = new List<object>();
+        static bool Recovered(TaskbarLeaseState? before, TaskbarLeaseState? after) => before != null && after != null
+            && before.Windows.All(saved => after.Windows.Any(actual => actual.Window == saved.Window && actual.AutoHide
+                && TaskbarNativeBackend.HiddenAtEdge(actual.Monitor, actual.Original,
+                    actual.Target.Width >= actual.Monitor.Width / 2 ? actual.Target.Y <= actual.Monitor.Y ? 1 : 3 : actual.Target.X <= actual.Monitor.X ? 0 : 2)
+                && (saved.Content ?? []).All(child => child.Visible || !(actual.Content ?? []).Any(current => current.Window == child.Window && current.Visible))));
         try
         {
             directory = Path.GetFullPath(directory); TaskbarRecoveryStore.CheckLinks(directory); Directory.CreateDirectory(directory);
+            background.Show();
+            var backgroundHandle = new WindowInteropHelper(background).Handle;
+            Native.SetWindowPos(backgroundHandle, 0, selected.Bounds.X + 100, selected.Bounds.Y + 100, 360, 120, 0x0040);
             var launcher = new WindowInteropHelper(window).EnsureHandle();
             TaskbarNativeBackend.PrepareLauncher(launcher, true);
             MonitorPlacement.FitWorkingArea(launcher, 0, selected.Bounds, 0x0014, screen => screen.Bounds);
@@ -103,6 +121,7 @@ internal static class TaskbarLiveCheck
                     }
                     var saved = lease.Snapshot;
                     window.Hide();
+                    background.Activate();
                     restored = await Task.Run(() =>
                     {
                         if (!lease.Synchronize(null)) return false;
@@ -118,9 +137,10 @@ internal static class TaskbarLiveCheck
                     {
                         await Task.Delay(200);
                         var after = await Task.Run(() => backend.Capture(TaskbarLeaseMode.Reveal));
-                        hidden = after != null && after.Windows.All(w => w.AutoHide && w.Original != w.Target && (w.Content == null || w.Content.All(c => !c.Visible)));
+                        hidden = Recovered(saved, after);
                     }
                     restored &= hidden;
+                    recoveryDecision = backend.LastRecoveryDecision;
                     // Repeat with the same watchdog and actual native window,
                     // starting from Explorer's hidden state each time.
                     for (var cycle = 0; cycle < 3 && restored; cycle++)
@@ -132,16 +152,19 @@ internal static class TaskbarLiveCheck
                         var during = await Task.Run(() => backend.Capture(TaskbarLeaseMode.Reveal));
                         held &= revealed && during != null && during.Windows.All(w => w.AutoHide && w.Original == w.Target && (w.Content == null || w.Content.All(c => c.Visible))
                             && TaskbarNativeBackend.IsAbove((nint)w.Window, launcher));
+                        var cycleSaved = lease.Snapshot;
                         window.Hide();
+                        background.Activate();
                         restored &= await Task.Run(() => lease.Synchronize(null));
                         hidden = false; hideDeadline = Environment.TickCount64 + 5000;
                         while (restored && !hidden && Environment.TickCount64 < hideDeadline)
                         {
                             await Task.Delay(200);
                             var after = await Task.Run(() => backend.Capture(TaskbarLeaseMode.Reveal));
-                            hidden = after != null && after.Windows.All(w => w.AutoHide && w.Original != w.Target && (w.Content == null || w.Content.All(c => !c.Visible)));
+                            hidden = Recovered(cycleSaved, after);
                         }
                         restored &= hidden;
+                        recoveryDecision = backend.LastRecoveryDecision;
                         if (held && restored) repeatCycles++;
                     }
                 }
@@ -163,6 +186,7 @@ internal static class TaskbarLiveCheck
                     autoHideBefore,
                     autoHideAfter,
                     repeatCycles,
+                    recoveryDecision,
                     acquisitionAttempts,
                     failure = acquisitionFailure?.Message,
                     nativeCode = (acquisitionFailure as System.ComponentModel.Win32Exception)?.NativeErrorCode,
@@ -171,6 +195,6 @@ internal static class TaskbarLiveCheck
             return success ? 0 : 1;
         }
         catch (Exception error) when (TaskbarLease.Expected(error) || error is ArgumentException) { return 1; }
-        finally { if (lease != null) await Task.Run(lease.Dispose); window.Close(); }
+        finally { if (lease != null) await Task.Run(lease.Dispose); window.Close(); background.Close(); }
     }
 }

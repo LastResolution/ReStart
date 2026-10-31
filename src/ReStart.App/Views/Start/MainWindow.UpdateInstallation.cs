@@ -81,11 +81,11 @@ public partial class MainWindow
     private void RefreshPreparedUpdateNotice()
     {
         if (PreparedUpdate == null || UpdatePreparation != PreparationState.Ready) return;
-        if (_updateNotice != null) Root.Children.Remove(_updateNotice);
+        if (_updateNotice != null) ContentArea.Children.Remove(_updateNotice);
         _updateNotice = new(PreparedUpdate.Version, AppBuildInfo.Version, RequestPreparedUpdate,
             () => { _readyNoticeExpanded = false; RefreshPreparedUpdateNotice(); }, prepared: true, compact: !_readyNoticeExpanded)
-        { HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new(24), MaxWidth = Math.Max(240, (Root.ActualWidth > 0 ? Root.ActualWidth : 488) - 48) };
-        Root.Children.Add(_updateNotice);
+        { HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new(24), MaxWidth = Math.Max(240, (ContentArea.ActualWidth > 0 ? ContentArea.ActualWidth : 488) - 48) };
+        ContentArea.Children.Add(_updateNotice);
     }
 
     /// <summary>Shows explicit restart consent or brings an open settings editor to its Updates section.</summary>

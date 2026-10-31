@@ -124,6 +124,7 @@ public partial class MainWindow : Window
             Native.DwmSetWindowAttribute(new WindowInteropHelper(this).Handle, 33, ref square, sizeof(int));
         };
         SizeChanged += (_, _) => FitPanels();
+        ContentArea.SizeChanged += (_, _) => FitPanels();
         ContentScroll.SizeChanged += (_, _) => FitPanels();
         _clock = new(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(250) };
         _clock.Tick += async (_, _) => { UpdateLiveTiles(); if (IsVisible) RequestCatalogRefresh(); if (!_startupPreparing) await UpdateScriptTilesAsync(); };
@@ -257,6 +258,7 @@ public partial class MainWindow : Window
             var area = NativeWorkingArea?.Invoke(screen) ?? screen.WorkingArea;
             _wallpaperMonitor = screen.Bounds;
             MonitorPlacement.FitWorkingArea(handle, new nint(-1), area, 0x0040, NativeWorkingArea);
+            ApplyTaskbarContentInsets(area, NativeContentArea?.Invoke(screen) ?? area, VisualTreeHelper.GetDpi(this));
         }
         if (!_preview || _openingWallpaperFixture != null) QueueOpeningWallpaperRefresh();
         if (!_preview || _verifyNativeActivation) ForegroundActivation.Request(handle);
@@ -490,7 +492,7 @@ public partial class MainWindow : Window
         if (CollapsedFolderScroll != null)
         {
             // Four top actions, three fixed footer actions and the footer/gap margins.
-            var available = Math.Max(0, Root.ActualHeight - (4 * 48 + 3 * 48 + 24));
+            var available = Math.Max(0, ContentArea.ActualHeight - (4 * 48 + 3 * 48 + 24));
             CollapsedFolderScroll.MaxHeight = available; ExpandedFolderScroll.MaxHeight = available;
         }
         if (ContentScroll.ActualWidth < 1) return;

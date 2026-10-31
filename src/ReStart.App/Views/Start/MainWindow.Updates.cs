@@ -34,11 +34,11 @@ public partial class MainWindow
 
     private void ShowUpdateNotice(UpdateRelease release)
     {
-        if (_updateNotice != null) Root.Children.Remove(_updateNotice);
+        if (_updateNotice != null) ContentArea.Children.Remove(_updateNotice);
         _updateNotice = new(release.Version.ToString(), AppBuildInfo.Version, ReviewAvailableUpdate, () =>
-        { Root.Children.Remove(_updateNotice!); _updateNotice = null; })
-        { HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new(24), MaxWidth = Math.Max(240, (Root.ActualWidth > 0 ? Root.ActualWidth : 488) - 48) };
-        Root.Children.Add(_updateNotice);
+        { ContentArea.Children.Remove(_updateNotice!); _updateNotice = null; })
+        { HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new(24), MaxWidth = Math.Max(240, (ContentArea.ActualWidth > 0 ? ContentArea.ActualWidth : 488) - 48) };
+        ContentArea.Children.Add(_updateNotice);
     }
 
     /// <summary>Opens the in-app update choice without downloading, launching a browser or discarding an existing settings draft.</summary>
@@ -46,7 +46,7 @@ public partial class MainWindow
     {
         if (_exit) return;
         if (UpdatePreparation != PreparationState.Ready && _updateNotice != null)
-        { Root.Children.Remove(_updateNotice); _updateNotice = null; }
+        { ContentArea.Children.Remove(_updateNotice); _updateNotice = null; }
         PresentSettings(K.SettingsUpdates);
     }
 

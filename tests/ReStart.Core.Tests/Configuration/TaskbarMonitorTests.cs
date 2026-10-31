@@ -67,6 +67,34 @@ public sealed class TaskbarMonitorTests
         Assert.Equal(new Rectangle(0, 0, 1920, 1080), TaskbarNativeBackend.AvailableArea(new(0, 0, 1920, 1080), state, another));
     }
     [Theory]
+    [InlineData(0, 752, 1280, 48, 0, 0, 1280, 752)]
+    [InlineData(0, 0, 1280, 48, 0, 48, 1280, 752)]
+    [InlineData(0, 0, 48, 800, 48, 0, 1232, 800)]
+    [InlineData(1232, 0, 48, 800, 0, 0, 1232, 800)]
+    public void RevealedTaskbarReservesInteractiveContentOnly(int x, int y, int width, int height, int safeX, int safeY, int safeWidth, int safeHeight)
+    {
+        var monitor = new TaskbarBounds(-1280, -800, 1280, 800);
+        var area = new Rectangle(monitor.X, monitor.Y, monitor.Width, monitor.Height);
+        var state = new TaskbarLeaseState(1, Guid.NewGuid().ToString("N"), 1, 1, TaskbarLeaseMode.Reveal,
+            [Window(1, monitor, new(x - 1280, y - 800, width, height))]);
+        var safe = new Rectangle(safeX - 1280, safeY - 800, safeWidth, safeHeight);
+        Assert.Equal(safe, TaskbarNativeBackend.ContentSafeArea(area, state, monitor));
+        Assert.Equal(area, TaskbarNativeBackend.AvailableArea(area, state, monitor));
+        Assert.Equal(safe, TaskbarNativeBackend.ContentSafeArea(safe, state, monitor));
+        Assert.Equal(area, TaskbarNativeBackend.ContentSafeArea(area, null, monitor));
+        Assert.Equal(area, TaskbarNativeBackend.ContentSafeArea(area, state with { Mode = TaskbarLeaseMode.Hide }, monitor));
+        Assert.Equal(area, TaskbarNativeBackend.ContentSafeArea(area, state, new(0, 0, 1920, 1080)));
+    }
+    [Fact]
+    public void ContentReservationPreservesOtherAppbarsAndDeductsOnlyTheActualOverlap()
+    {
+        var monitor = new TaskbarBounds(0, 0, 1280, 800);
+        var state = new TaskbarLeaseState(1, Guid.NewGuid().ToString("N"), 1, 1, TaskbarLeaseMode.Reveal,
+            [Window(1, monitor, new(0, 752, 1280, 48))]);
+        Assert.Equal(new Rectangle(40, 30, 1240, 722), TaskbarNativeBackend.ContentSafeArea(new(40, 30, 1240, 768), state, monitor));
+        Assert.Equal(new Rectangle(0, 0, 1280, 720), TaskbarNativeBackend.ContentSafeArea(new(0, 0, 1280, 720), state, monitor));
+    }
+    [Theory]
     [InlineData(null, false, null)]
     [InlineData(null, true, null)]
     [InlineData(false, true, false)]
@@ -93,6 +121,19 @@ public sealed class TaskbarMonitorTests
     {
         var monitor = new TaskbarBounds(-1280, -800, 1280, 800);
         Assert.Equal(hidden, TaskbarNativeBackend.HiddenAtEdge(monitor, new(x - 1280, y - 800, width, height), edge));
+    }
+    [Theory]
+    [InlineData(0, -1326, -800, 48, 800)]
+    [InlineData(1, -1280, -846, 1280, 48)]
+    [InlineData(2, -2, -800, 48, 800)]
+    [InlineData(3, -1280, -2, 1280, 48)]
+    public void RecoveryUsesTheCurrentRegisteredEdgeRatherThanCapturedPositions(int edge, int x, int y, int width, int height)
+    {
+        var monitor = new TaskbarBounds(-1280, -800, 1280, 800);
+        var bounds = TaskbarNativeBackend.HiddenBounds(monitor, new(9999, 9999, edge is 0 or 2 ? 48 : 1280, edge is 0 or 2 ? 800 : 48), edge);
+        Assert.Equal(new TaskbarBounds(x, y, width, height), bounds);
+        Assert.True(TaskbarNativeBackend.HiddenAtEdge(monitor, bounds, edge));
+        Assert.Throws<ArgumentOutOfRangeException>(() => TaskbarNativeBackend.HiddenBounds(monitor, bounds, 4));
     }
     [Fact]
     public void ReplacedCompositionContentInvalidatesTheLease()

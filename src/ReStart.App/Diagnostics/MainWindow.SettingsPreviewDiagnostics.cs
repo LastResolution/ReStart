@@ -152,7 +152,7 @@ public partial class MainWindow
             fixture.PreparedUpdate = new(Guid.NewGuid().ToString("N"), directory, "9.0.0"); fixture.UpdatePreparation = PreparationState.Ready; fixture.PresentPreparedUpdate();
             Check(readyEvents == 1 && fixture._updateNotice != null, "Finishing preparation did not announce a persistent ready notice.");
             fixture._updateNotice!.LaterButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            Check(fixture._updateNotice.LaterButton.Visibility == Visibility.Collapsed && fixture.Root.Children.Contains(fixture._updateNotice), "Not now removed the ready indicator.");
+            Check(fixture._updateNotice.LaterButton.Visibility == Visibility.Collapsed && fixture.ContentArea.Children.Contains(fixture._updateNotice), "Not now removed the ready indicator.");
             fixture.UpdateLayout(); fixture.SaveScreenshot(Path.Combine(directory, "update-ready-compact.png"));
             var readySettings = new SettingsWindow(fixture, store) { Owner = fixture }; Exception? readyError = null;
             readySettings.Loaded += (_, _) => readySettings.Dispatcher.BeginInvoke(() =>
