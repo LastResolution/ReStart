@@ -31,10 +31,15 @@ public static class UserAssistFormat
     /// <summary>Applies the reversible ASCII ROT13 transformation used for UserAssist registry value names.</summary>
     /// <param name="name">A known catalog identity or absolute app path; non-ASCII characters and punctuation are preserved.</param>
     /// <returns>A new transformed string; applying the operation twice restores the input.</returns>
-    public static string TransformName(string name) => string.Concat(name.Select(c => c switch
+    /// <exception cref="ArgumentNullException">The identity is null.</exception>
+    public static string TransformName(string name)
     {
-        >= 'A' and <= 'Z' => (char)('A' + (c - 'A' + 13) % 26),
-        >= 'a' and <= 'z' => (char)('a' + (c - 'a' + 13) % 26),
-        _ => c
-    }));
+        ArgumentNullException.ThrowIfNull(name);
+        return string.Concat(name.Select(c => c switch
+        {
+            >= 'A' and <= 'Z' => (char)('A' + (c - 'A' + 13) % 26),
+            >= 'a' and <= 'z' => (char)('a' + (c - 'a' + 13) % 26),
+            _ => c
+        }));
+    }
 }

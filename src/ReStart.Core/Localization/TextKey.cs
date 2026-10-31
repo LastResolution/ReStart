@@ -826,6 +826,20 @@ public enum TextKey
     SettingsShowMostUsed,
     /// <summary>Include existing Windows app usage (read-only)</summary>
     SettingsWindowsAppHistory,
+    /// <summary>Use Windows advanced file queries</summary>
+    SettingsWindowsSearchSyntax,
+    /// <summary>Use Windows query syntax and relevance ranking. Canonical properties such as System.Kind:picture work across languages. Document contents still require the separate content option.</summary>
+    WindowsSearchSyntaxHelp,
+    /// <summary>Search in Windows</summary>
+    SearchInWindows,
+    /// <summary>Show Windows Search handoff</summary>
+    SettingsWindowsSearchHandoff,
+    /// <summary>Windows Search opens only when selected. Windows controls Web, cloud and account access.</summary>
+    WindowsSearchHandoffHelp,
+    /// <summary>Show Windows app live tiles (compatibility)</summary>
+    SettingsLegacyUwpTiles,
+    /// <summary>Reads active tile and badge data only for pinned packaged apps. Uses an undocumented Windows store; unavailable data falls back to icons. Toasts are not read and remote images are not downloaded.</summary>
+    LegacyUwpTilesHelp,
     /// <summary>Windows usage is read only when Windows app tracking is enabled. Nothing is imported to disk. Clearing ReStart history does not clear Windows history.</summary>
     WindowsAppHistoryHelp,
     /// <summary>Clear app history</summary>

@@ -24,6 +24,8 @@
     <Compile Include="..\..\src\ReStart.App\Services\Shell\StartupRegistration.cs" Link="Services/Shell/StartupRegistration.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\Shell\NativeJumpContract.cs" Link="Services/Shell/NativeJumpContract.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\Search\SettingsSearch.cs" Link="Services/Search/SettingsSearch.cs" />
+    <Compile Include="..\..\src\ReStart.App\Services\Search\WindowsSearchQuery.cs" Link="Services/Search/WindowsSearchQuery.cs" />
+    <Compile Include="..\..\src\ReStart.App\Services\Search\WindowsSettingsCatalog.cs" Link="Services/Search/WindowsSettingsCatalog.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\Catalog\WindowsUsageHistory.cs" Link="Services/Catalog/WindowsUsageHistory.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\Shell\ExplorerPinRegistration.cs" Link="Services/Shell/ExplorerPinRegistration.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\Catalog\SeedLayout.cs" Link="Services/Catalog/SeedLayout.cs" />
@@ -32,6 +34,8 @@
     <Compile Include="..\..\src\ReStart.App\Services\LiveTiles\SystemMetricsSampler.cs" Link="Services/LiveTiles/SystemMetricsSampler.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\LiveTiles\ScriptTilePackages.cs" Link="Services/LiveTiles/ScriptTilePackages.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\LiveTiles\TileStudioContext.cs" Link="Services/LiveTiles/TileStudioContext.cs" />
+    <Compile Include="..\..\src\ReStart.App\Services\LiveTiles\ReadOnlySqlite.cs" Link="Services/LiveTiles/ReadOnlySqlite.cs" />
+    <Compile Include="..\..\src\ReStart.App\Services\LiveTiles\LegacyNotificationStore.cs" Link="Services/LiveTiles/LegacyNotificationStore.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\LiveTiles\WorkerJob.cs" Link="Services/LiveTiles/WorkerJob.cs" />
   </ItemGroup>
 

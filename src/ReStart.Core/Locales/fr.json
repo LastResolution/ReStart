@@ -559,5 +559,12 @@
   "WindowsSettingGamingGamebar": "Game Bar",
   "WindowsSettingGamingGamemode": "Mode Jeu",
   "SettingsWindowsAppHistory": "Inclure l’utilisation des applications enregistrée par Windows (lecture seule)",
-  "WindowsAppHistoryHelp": "Nécessite le suivi des lancements d’applications de Windows. Lit uniquement les entrées des applications installées, sans les enregistrer. Effacer l’historique de ReStart n’efface pas celui de Windows."
+  "WindowsAppHistoryHelp": "Nécessite le suivi des lancements d’applications de Windows. Lit uniquement les entrées des applications installées, sans les enregistrer. Effacer l’historique de ReStart n’efface pas celui de Windows.",
+  "SettingsWindowsSearchSyntax": "Utiliser les requêtes de fichiers avancées de Windows",
+  "WindowsSearchSyntaxHelp": "Utilise la syntaxe et le classement par pertinence de Windows. Les propriétés canoniques comme System.Kind:picture fonctionnent dans toutes les langues. Le contenu des documents nécessite toujours son option distincte.",
+  "SearchInWindows": "Rechercher dans Windows",
+  "SettingsWindowsSearchHandoff": "Afficher le relais vers la recherche Windows",
+  "WindowsSearchHandoffHelp": "La recherche Windows ne s’ouvre que sur sélection. Windows contrôle l’accès au Web, au cloud et aux comptes.",
+  "SettingsLegacyUwpTiles": "Afficher les vignettes dynamiques des applications Windows (compatibilité)",
+  "LegacyUwpTilesHelp": "Lit uniquement les données actives de vignettes et badges des applications empaquetées épinglées. Utilise un stockage Windows non documenté ; les icônes sont affichées si les données sont indisponibles. Ne lit pas les notifications toast et ne télécharge pas d’images distantes."
 }

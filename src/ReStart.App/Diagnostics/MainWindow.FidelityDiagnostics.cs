@@ -183,6 +183,9 @@ public partial class MainWindow
                 [K.SettingsRailHover] = p => p.ExpandNavigationOnHover,
                 [K.SettingsSearchSettings] = p => p.SearchSettings,
                 [K.SearchFilesSetting] = p => p.SearchFiles,
+                [K.SettingsWindowsSearchSyntax] = p => p.SearchWindowsSyntax,
+                [K.SettingsWindowsSearchHandoff] = p => p.ShowWindowsSearchHandoff,
+                [K.SettingsLegacyUwpTiles] = p => p.LegacyUwpLiveTiles,
                 [K.SettingsJumpLists] = p => p.ShowJumpLists,
                 [K.SettingsAppTasks] = p => p.ShowAppTasks,
                 [K.SettingsPinnedJumpLists] = p => p.ShowPinnedJumpLists,
@@ -195,7 +198,8 @@ public partial class MainWindow
                 [K.SettingsDropHints] = p => p.ShowDropHints,
                 [K.SettingsDragShortcutHints] = p => p.ShowDragShortcutHints,
                 [K.SettingsShowRecentApps] = p => p.ShowRecentlyAdded,
-                [K.SettingsShowMostUsed] = p => p.ShowMostUsed
+                [K.SettingsShowMostUsed] = p => p.ShowMostUsed,
+                [K.SettingsWindowsAppHistory] = p => p.UseWindowsAppHistory
             };
             foreach (var enabled in new[] { false, true })
             {
@@ -298,12 +302,17 @@ public partial class MainWindow
             }
             await fixture.SaveSearchShowcaseAsync(directory);
             checks += await VerifySessionMenusAsync(fixture, directory);
+            checks += await VerifyLegacyTileRenderingAsync(fixture, directory);
+            checks += await VerifyWindowsSearchAsync(fixture, launched, directory);
             checks += await IndexedFileSearch.VerifyOwnedFieldsAsync();
             var indexed = await new IndexedFileSearch().FindAsync("ReStart_nonexistent_%_[fidelity]", CancellationToken.None);
             Check(indexed.Files.Count == 0, "The native index query ignored literal wildcard characters.");
             var contentIndex = await new IndexedFileSearch().FindAsync("ReStart_nonexistent_'[fidelity]", CancellationToken.None, true);
             Check(!indexed.Available || contentIndex.Available, "The native file-content query failed on an available Windows index.");
             Check(contentIndex.Files.Count == 0, "The native content query interpreted a literal fixture as SQL or full-text operators.");
+            var advanced = await new IndexedFileSearch().FindAsync("System.FileName:ReStartOwnedAbsent_fidelity_41f0d1", CancellationToken.None, false, true);
+            Check(!indexed.Available || advanced.Available, "A native advanced query failed on an available local Windows index.");
+            Check(advanced.Files.Count == 0, "The native AQS query escaped its fixed local projection.");
             // Reuse the bounded empty filename pattern to isolate wrapper lifetime;
             // broad leading-wildcard/content queries may legitimately reach the provider deadline.
             var repeated = await Task.WhenAll(Enumerable.Range(0, 6).Select(async _ =>

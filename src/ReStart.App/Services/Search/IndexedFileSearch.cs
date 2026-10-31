@@ -9,7 +9,7 @@ internal sealed partial class IndexedFileSearch
 {
     private static readonly SemaphoreSlim Gate = new(1);
     internal int LastFailureCode { get; private set; }
-    internal async Task<(IReadOnlyList<AppEntry> Files, bool Available)> FindAsync(string query, CancellationToken token, bool includeContents = false)
+    internal async Task<(IReadOnlyList<AppEntry> Files, bool Available)> FindAsync(string query, CancellationToken token, bool includeContents = false, bool windowsSyntax = false, int locale = 1033)
     {
         var sql = IndexedFileQuery.Build(query, includeContents);
         if (sql == null) return ([], true);
@@ -27,6 +27,7 @@ internal sealed partial class IndexedFileSearch
                 try
                 {
                     token.ThrowIfCancellationRequested();
+                    if (windowsSyntax) sql = WindowsSearchQuery.Build(query, includeContents, locale) ?? sql;
                     connection = Activator.CreateInstance(Type.GetTypeFromProgID("ADODB.Connection", true)!);
                     Set(connection!, "ConnectionTimeout", 3); Set(connection!, "CommandTimeout", 3);
                     Call(connection!, "Open", "Provider=Search.CollatorDSO;Extended Properties='Application=Windows';");

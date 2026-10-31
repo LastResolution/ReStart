@@ -559,5 +559,12 @@
   "WindowsSettingGamingGamebar": "遊戲列",
   "WindowsSettingGamingGamemode": "遊戲模式",
   "SettingsWindowsAppHistory": "包含 Windows 已記錄的應用程式使用情況（唯讀）",
-  "WindowsAppHistoryHelp": "需要啟用 Windows 應用程式啟動追蹤。僅讀取與已安裝應用程式相符的記錄，不儲存副本。清除 ReStart 歷程記錄不會清除 Windows 歷程記錄。"
+  "WindowsAppHistoryHelp": "需要啟用 Windows 應用程式啟動追蹤。僅讀取與已安裝應用程式相符的記錄，不儲存副本。清除 ReStart 歷程記錄不會清除 Windows 歷程記錄。",
+  "SettingsWindowsSearchSyntax": "使用 Windows 進階檔案查詢",
+  "WindowsSearchSyntaxHelp": "使用 Windows 查詢語法及相關性排序。System.Kind:picture 等標準屬性名稱可跨語言使用。文件內文仍需另外啟用內容搜尋。",
+  "SearchInWindows": "在 Windows 中搜尋",
+  "SettingsWindowsSearchHandoff": "顯示 Windows 搜尋入口",
+  "WindowsSearchHandoffHelp": "僅在選取後開啟 Windows 搜尋。Web、雲端與帳戶存取由 Windows 管理。",
+  "SettingsLegacyUwpTiles": "顯示 Windows 應用程式動態磚（相容功能）",
+  "LegacyUwpTilesHelp": "僅讀取已釘選封裝應用程式的有效動態磚與徽章資料。使用未公開的 Windows 儲存格式；資料無法使用時顯示圖示。不讀取快顯通知，也不下載遠端影像。"
 }

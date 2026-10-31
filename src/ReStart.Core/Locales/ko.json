@@ -559,5 +559,12 @@
   "WindowsSettingGamingGamebar": "게임 바",
   "WindowsSettingGamingGamemode": "게임 모드",
   "SettingsWindowsAppHistory": "Windows에 저장된 앱 사용 기록 포함(읽기 전용)",
-  "WindowsAppHistoryHelp": "Windows 앱 실행 추적이 켜져 있어야 합니다. 설치된 앱과 일치하는 기록만 읽으며 저장하지 않습니다. ReStart 기록을 지워도 Windows 기록은 지워지지 않습니다."
+  "WindowsAppHistoryHelp": "Windows 앱 실행 추적이 켜져 있어야 합니다. 설치된 앱과 일치하는 기록만 읽으며 저장하지 않습니다. ReStart 기록을 지워도 Windows 기록은 지워지지 않습니다.",
+  "SettingsWindowsSearchSyntax": "Windows 고급 파일 검색 구문 사용",
+  "WindowsSearchSyntaxHelp": "Windows 검색 구문과 관련도 정렬을 사용합니다. System.Kind:picture 같은 정식 속성명은 모든 언어에서 사용할 수 있습니다. 문서 본문 검색은 별도 옵션을 켜야 합니다.",
+  "SearchInWindows": "Windows에서 검색",
+  "SettingsWindowsSearchHandoff": "Windows 검색으로 넘기기 표시",
+  "WindowsSearchHandoffHelp": "선택할 때만 Windows 검색을 엽니다. 웹, 클라우드 및 계정 접근은 Windows에서 관리합니다.",
+  "SettingsLegacyUwpTiles": "Windows 앱 라이브 타일 표시(호환 기능)",
+  "LegacyUwpTilesHelp": "고정된 패키지 앱의 활성 타일과 배지 데이터만 읽습니다. 문서화되지 않은 Windows 저장소를 사용하며 데이터가 없으면 아이콘을 표시합니다. 토스트 알림은 읽지 않으며 원격 이미지를 다운로드하지 않습니다."
 }

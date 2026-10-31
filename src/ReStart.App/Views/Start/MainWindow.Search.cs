@@ -16,6 +16,14 @@ public partial class MainWindow
     private bool _fileIndexAvailable = true;
     private bool _fileSearchPending;
     private bool _fileSearchIncludesContents;
+    private bool _fileSearchWindowsSyntax;
+    private int _fileSearchLocale;
+    private IReadOnlyList<WindowsSettingsCatalog.Entry> _windowsSettings = [];
+    private bool _windowsSettingsLoading;
+    private bool _windowsSettingsLoaded;
+    private Func<Task<IReadOnlyList<WindowsSettingsCatalog.Entry>>>? _windowsSettingsFixture = null;
+    private bool? _windowsSearchAvailable;
+    private bool CanHandoffToWindows => _preview || (_windowsSearchAvailable ??= WindowsSearchAvailability.IsRegistered());
     private Func<string, CancellationToken, Task<(IReadOnlyList<AppEntry> Files, bool Available)>>? _fileSearchFixture;
 
     /// <summary>Rebuilds the visible results, retaining the selected app only when the query has not changed.</summary>
@@ -29,12 +37,17 @@ public partial class MainWindow
         _renderedSearchQuery = query;
         SearchResultHint.Visibility = Visibility.Collapsed;
         SearchResultHeading.Text = "";
+        WindowsSearchButton.Visibility = query.Length > 0 && Document.Preferences.ShowWindowsSearchHandoff && CanHandoffToWindows ? Visibility.Visible : Visibility.Collapsed;
+        WindowsSearchButton.ToolTip = L.T(K.WindowsSearchHandoffHelp);
         if (query.Length == 0) return;
+        EnsureWindowsSettingsCatalog();
         var apps = AppSearch.Find(_apps, query);
-        var settings = Document.Preferences.SearchSettings ? SettingsSearch.Find(query) : [];
+        var settings = Document.Preferences.SearchSettings ? SettingsSearch.Find(query).Concat(WindowsSettingsCatalog.Find(_windowsSettings, query))
+            .DistinctBy(a => a.LaunchTarget, StringComparer.OrdinalIgnoreCase).ToArray() : [];
         var results = apps.Concat(settings).Concat(_fileSearchResults).DistinctBy(a => a.Id, StringComparer.OrdinalIgnoreCase).ToArray();
         var loading = !_ready && _apps.Count == 0;
-        SearchResultHeading.Text = loading ? L.T(K.StatusLoading) : results.Length == 0 ? L.T(_fileSearchPending ? K.SearchIndexSearching : K.SearchNoMatches) : L.T(K.SearchBestMatch);
+        var settingsPending = Document.Preferences.SearchSettings && _windowsSettingsLoading && !_windowsSettingsLoaded;
+        SearchResultHeading.Text = loading || results.Length == 0 && settingsPending ? L.T(K.StatusLoading) : results.Length == 0 ? L.T(_fileSearchPending ? K.SearchIndexSearching : K.SearchNoMatches) : L.T(K.SearchBestMatch);
         var shownCategories = new HashSet<K>();
         foreach (var app in results)
         {
@@ -56,32 +69,58 @@ public partial class MainWindow
             SearchResults.Items.Add(button);
         }
         SearchResultHint.Text = !_fileIndexAvailable ? L.T(K.SearchIndexUnavailable) : L.T(K.SearchHint);
-        SearchResultHint.Visibility = !loading && !_fileSearchPending && (results.Length == 0 || !_fileIndexAvailable) ? Visibility.Visible : Visibility.Collapsed;
+        SearchResultHint.Visibility = !loading && !settingsPending && !_fileSearchPending && (results.Length == 0 || !_fileIndexAvailable) ? Visibility.Visible : Visibility.Collapsed;
         SearchResults.SelectedItem = SearchResults.Items.OfType<Button>().FirstOrDefault(b => b.Tag is AppEntry app && app.Id == selectedId?.Id)
             ?? SearchResults.Items.OfType<Button>().FirstOrDefault();
         if (restoreFocus && ResultsPanel.IsVisible) FocusSearchResult();
+    }
+
+    private void OpenWindowsSearch(object sender, RoutedEventArgs e)
+    {
+        if (Document.Preferences.ShowWindowsSearchHandoff && CanHandoffToWindows && (!_preview || _activationFixture != null) && WindowsSearchHandoff.ForQuery(SearchBox.Text) is { } uri)
+            Launch(new("restart:windows-search", L.T(K.SearchInWindows), uri.AbsoluteUri, false));
+    }
+
+    private async void EnsureWindowsSettingsCatalog()
+    {
+        if (_exit || !Document.Preferences.SearchSettings || _preview && _windowsSettingsFixture == null || _windowsSettingsLoading || _windowsSettingsLoaded) return;
+        _windowsSettingsLoading = true;
+        try
+        {
+            var entries = await (_windowsSettingsFixture?.Invoke() ?? WindowsSettingsCatalog.ReadAsync());
+            if (_exit) return;
+            _windowsSettings = entries; _windowsSettingsLoaded = true;
+            RefreshSearchResults();
+            await _catalog.LoadIconsAsync(entries.Select(e => e.App).Where(a => a.Id.StartsWith("restart:setting:control-panel:", StringComparison.Ordinal)).ToArray());
+            if (!_exit) RefreshSearchResults();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.Runtime.InteropServices.COMException)
+        { _windowsSettingsLoaded = true; }
+        finally { _windowsSettingsLoading = false; if (!_exit && ResultsPanel.IsVisible) RefreshSearchResults(); }
     }
 
     private void ScheduleIndexedSearch(string query)
     {
         var requested = Document.Preferences.SearchFiles && (!_preview || _fileSearchFixture != null) && IndexedFileQuery.Build(query) != null ? query : "";
         var contents = Document.Preferences.SearchFileContents;
-        if (requested == _fileSearchQuery && contents == _fileSearchIncludesContents) return;
+        var syntax = Document.Preferences.SearchWindowsSyntax; var locale = L.Culture.LCID;
+        if (requested == _fileSearchQuery && contents == _fileSearchIncludesContents && syntax == _fileSearchWindowsSyntax && locale == _fileSearchLocale) return;
         _fileSearchIncludesContents = contents;
+        _fileSearchWindowsSyntax = syntax; _fileSearchLocale = locale;
         _fileSearchQuery = requested;
         _fileSearchCancellation?.Cancel(); _fileSearchCancellation?.Dispose(); _fileSearchCancellation = null;
         _fileSearchResults = []; _fileIndexAvailable = true; _fileSearchPending = requested.Length > 0;
         if (requested.Length == 0) return;
         var cancellation = new CancellationTokenSource(); _fileSearchCancellation = cancellation;
-        _ = LoadIndexedResultsAsync(requested, contents, cancellation.Token);
+        _ = LoadIndexedResultsAsync(requested, contents, syntax, locale, cancellation.Token);
     }
 
-    private async Task LoadIndexedResultsAsync(string query, bool includeContents, CancellationToken token)
+    private async Task LoadIndexedResultsAsync(string query, bool includeContents, bool windowsSyntax, int locale, CancellationToken token)
     {
         try
         {
             await Task.Delay(200, token);
-            var result = await (_fileSearchFixture?.Invoke(query, token) ?? _indexedFiles.FindAsync(query, token, includeContents));
+            var result = await (_fileSearchFixture?.Invoke(query, token) ?? _indexedFiles.FindAsync(query, token, includeContents, windowsSyntax, locale));
             token.ThrowIfCancellationRequested();
             if (_exit || SearchBox.Text.Trim() != query) return;
             _fileSearchResults = result.Files; _fileIndexAvailable = result.Available; _fileSearchPending = false;

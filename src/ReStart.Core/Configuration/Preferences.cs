@@ -11,6 +11,8 @@ public sealed class Preferences
     public bool LayoutLocked { get; set; }
     /// <summary>Gets or sets whether live tiles show their bottom name; defaults to true. Browser packages receive the preference and a title marker contract.</summary>
     public bool ShowLiveTileNames { get; set; } = true;
+    /// <summary>Gets or sets the read-only compatibility adapter for active Windows tile/badge notifications of pinned package apps. Defaults to false; it does not read toast messages, change notification registrations or download remote images.</summary>
+    public bool LegacyUwpLiveTiles { get; set; }
     /// <summary>Gets or sets stable IDs of groups whose geometry and membership are protected independently of the global lock. Locks are outside undo history.</summary>
     public List<string> LockedGroupIds { get; set; } = [];
     /// <summary>Gets or sets whether search includes localized Windows settings entry points.</summary>
@@ -45,6 +47,10 @@ public sealed class Preferences
     public bool SearchFiles { get; set; } = true;
     /// <summary>Gets or sets whether enabled file search also matches Windows-indexed document contents. Defaults to false; never enables Windows indexing or reads unindexed contents.</summary>
     public bool SearchFileContents { get; set; }
+    /// <summary>Gets or sets whether file queries use the Windows Advanced Query Syntax parser and native relevance ranking. Defaults to false; unsupported or content-disabled syntax falls back to literal matching.</summary>
+    public bool SearchWindowsSyntax { get; set; }
+    /// <summary>Gets or sets whether query results include an explicit Windows Search handoff for additional local, Web and cloud sources. Defaults to true; typing alone never invokes Windows Search.</summary>
+    public bool ShowWindowsSearchHandoff { get; set; } = true;
     /// <summary>Gets or sets whether apps first observed after the initial catalog appear in Recently added for seven days.</summary>
     public bool ShowRecentlyAdded { get; set; } = true;
     /// <summary>Gets or sets whether successful ReStart app launches are counted locally and shown in Most used.</summary>
