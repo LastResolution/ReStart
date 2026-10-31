@@ -82,7 +82,7 @@ public partial class MainWindow
         var input = new TabletInputSnapshot(DevicePosture.Slate, KeyboardPresence.Absent);
         var reads = 0;
         var dependencies = new TabletIntegration.Dependencies(store, backend, b => backend.Scope = b,
-            _ => new TabletCheckLease(), () => { reads++; return input; }, () => true);
+            _ => new TabletCheckLease(), () => true, () => { reads++; return input; }, () => true);
         TabletIntegration? integration = null;
         async Task Settle(Func<bool> expected)
         {

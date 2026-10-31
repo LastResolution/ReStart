@@ -5,6 +5,15 @@ namespace ReStart.Core.Tests;
 
 public sealed class TaskbarMonitorTests
 {
+    [Fact]
+    public void AutoHiddenRegistrationWinsWhenItsHiddenRectangleOverlapsAnotherDisplay()
+    {
+        var owner = new TaskbarBounds(0, 0, 1280, 800);
+        var neighbor = new TaskbarBounds(0, 800, 1280, 800);
+        var resolved = TaskbarNativeBackend.ResolveMonitor(neighbor, new[] { neighbor, owner }, monitor => monitor == owner ? 3 : null);
+        Assert.Equal(owner, resolved.Monitor); Assert.Equal(3, resolved.Edge);
+        Assert.Equal(neighbor, TaskbarNativeBackend.ResolveMonitor(neighbor, new[] { owner, neighbor }, _ => null).Monitor);
+    }
     private static TaskbarWindowState Window(long id, TaskbarBounds monitor, TaskbarBounds target, bool autoHide = true)
         => new(id, 1, 1, true, autoHide, monitor, target with { Y = monitor.Y + monitor.Height - 2 }, target);
     [Theory]

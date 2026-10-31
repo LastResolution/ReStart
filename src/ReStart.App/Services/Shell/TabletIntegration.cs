@@ -14,10 +14,11 @@ internal sealed class TabletIntegration : IDisposable
     /// <param name="Backend">Real identity-validated backend or inert fixture backend.</param>
     /// <param name="SetScope">Sets only the current launcher monitor on the supplied backend.</param>
     /// <param name="Protect">Returns only after crash recovery is ready; fixtures use an inert lease.</param>
+    /// <param name="ProtectionReady">Rechecks live recovery readiness before each mutation; fixtures return true for an inert guard.</param>
     /// <param name="ReadInput">Fresh anonymous posture/keyboard reader.</param>
     /// <param name="Recover">Attempts startup recovery without touching any live owner.</param>
     internal sealed record Dependencies(ITaskbarRecoveryStore Store, ITaskbarLeaseBackend Backend, Action<TaskbarBounds> SetScope,
-        Func<TaskbarLeaseState, IDisposable> Protect, Func<TabletInputSnapshot> ReadInput, Func<bool> Recover);
+        Func<TaskbarLeaseState, IDisposable> Protect, Func<bool> ProtectionReady, Func<TabletInputSnapshot> ReadInput, Func<bool> Recover);
     private sealed record Request(bool Open, bool Enabled, bool KeyboardPolicy, bool Hide, bool Reveal, TaskbarBounds Monitor, int DeviceRevision);
     private sealed class Release(Action release) : IDisposable { public void Dispose() => release(); }
     private readonly MainWindow _window;
@@ -51,7 +52,7 @@ internal sealed class TabletIntegration : IDisposable
     {
         _window = window; _source = source;
         _dependencies = dependencies;
-        _lease = new(dependencies.Store, dependencies.Backend, dependencies.Protect);
+        _lease = new(dependencies.Store, dependencies.Backend, dependencies.Protect, dependencies.ProtectionReady);
         _tablet = new([() => new Release(() => { if (_lease.Mode == TaskbarLeaseMode.Hide) _lease.Synchronize(null); })]);
         _timer = new(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(350) };
         _timer.Tick += (_, _) => Refresh();
@@ -64,7 +65,7 @@ internal sealed class TabletIntegration : IDisposable
         var store = new TaskbarRecoveryStore(TaskbarWatchdog.Profile);
         var backend = new TaskbarNativeBackend();
         var watchdog = new TaskbarWatchdog(store);
-        return new(store, backend, value => backend.Scope = value, watchdog.Protect, TabletInputDevices.Read,
+        return new(store, backend, value => backend.Scope = value, watchdog.Protect, () => watchdog.IsReady, TabletInputDevices.Read,
             () => TaskbarRecovery.Run(store, backend, TaskbarWatchdog.IsAlive));
     }
 
@@ -79,6 +80,7 @@ internal sealed class TabletIntegration : IDisposable
         var monitor = System.Windows.Forms.Screen.FromHandle(_source.Handle).Bounds;
         var request = new Request(_window.IsPresenting, preferences.TabletFeaturesEnabled, preferences.TabletKeyboardMeansDesktop,
             preferences.TabletHideTaskbar, preferences.ShowTaskbarWhileOpen, new(monitor.X, monitor.Y, monitor.Width, monitor.Height), _deviceRevision);
+        _timer.Interval = request.Open || _published != null ? TimeSpan.FromMilliseconds(350) : TimeSpan.FromSeconds(2);
         if (_wanted != request) Volatile.Write(ref _wanted, request);
         else request = _wanted!;
         if (_busy) return;
@@ -133,6 +135,9 @@ internal sealed class TabletIntegration : IDisposable
 
     private nint OnMessage(nint window, int message, nint wParam, nint lParam, ref bool handled)
     {
+        if (_disposed) return 0;
+        if (message == 0x47) // WINDOWPOSCHANGED: supersede an old monitor request promptly.
+            _source.Dispatcher.BeginInvoke(Refresh, DispatcherPriority.Background);
         if (message is 0x219 or 0x1A or 0x7E || (uint)message == _taskbarCreated)
             _source.Dispatcher.BeginInvoke(DeviceStateChanged, DispatcherPriority.Background);
         return 0;
@@ -148,7 +153,9 @@ internal sealed class TabletIntegration : IDisposable
     public void Dispose()
     {
         if (_disposed) return;
-        _disposed = true; _timer.Stop(); _source.RemoveHook(OnMessage); _window.NativeWorkingArea = null;
+        _disposed = true; _timer.Stop();
+        if (!_source.IsDisposed) _source.RemoveHook(OnMessage);
+        _window.NativeWorkingArea = null;
         if (!_busy) _ = Task.Run(Cleanup);
     }
 

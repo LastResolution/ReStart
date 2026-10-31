@@ -39,7 +39,7 @@ internal static class TaskbarLiveCheck
                 if (!blocked)
                 {
                     var watchdog = new TaskbarWatchdog(store);
-                    lease = new(store, backend, watchdog.Protect);
+                    lease = new(store, backend, watchdog.Protect, () => watchdog.IsReady);
                     acquired = await Task.Run(() => lease.Synchronize(TaskbarLeaseMode.Reveal, () => Volatile.Read(ref open)));
                     held = acquired;
                     for (var index = 0; index < 8 && open && acquired; index++)

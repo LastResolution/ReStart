@@ -10,10 +10,12 @@ namespace ReStart.App.Services;
 internal sealed class TaskbarWatchdog(TaskbarRecoveryStore store, bool ownedFixture = false)
 {
     private Process? _process;
+    private TaskbarLeaseState? _protectedOwner;
     private string _nonce = Guid.NewGuid().ToString("N");
     private sealed record Ready(int ParentId, long ParentStarted, string Nonce);
     private sealed class Protection : IDisposable { public void Dispose() { } }
     internal static string Profile => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ReStart");
+    internal bool IsReady => _process is { HasExited: false } && _protectedOwner is { } state && ReadReady(state);
 
     /// <summary>Waits on a background worker for a validated readiness handshake; a missing guard prevents native mutation.</summary>
     /// <param name="state">Verified recovery transaction belonging to the calling process.</param>
@@ -25,10 +27,11 @@ internal sealed class TaskbarWatchdog(TaskbarRecoveryStore store, bool ownedFixt
             throw new InvalidOperationException("Unexpected taskbar owner.");
         if (_process is { HasExited: false })
         {
-            if (ReadReady(state)) return new Protection();
+            if (ReadReady(state)) { _protectedOwner = state; return new Protection(); }
             _process.Kill();
         }
         _process?.Dispose();
+        _process = null; _protectedOwner = null;
         _nonce = Guid.NewGuid().ToString("N");
         var start = new ProcessStartInfo(Environment.ProcessPath!) { UseShellExecute = false, CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden };
         foreach (var argument in new[] { ownedFixture ? "--taskbar-watchdog-fixture" : "--taskbar-watchdog", state.ParentId.ToString(CultureInfo.InvariantCulture), state.ParentStarted.ToString(CultureInfo.InvariantCulture), _nonce })
@@ -38,7 +41,7 @@ internal sealed class TaskbarWatchdog(TaskbarRecoveryStore store, bool ownedFixt
         var deadline = Stopwatch.StartNew();
         while (deadline.Elapsed < TimeSpan.FromSeconds(10) && !_process.HasExited)
         {
-            if (ReadReady(state)) return new Protection();
+            if (ReadReady(state)) { _protectedOwner = state; return new Protection(); }
             Thread.Sleep(50);
         }
         // This reference is only the helper started above; no user process is terminated.

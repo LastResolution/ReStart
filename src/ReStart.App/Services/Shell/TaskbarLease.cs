@@ -43,7 +43,8 @@ internal interface ITaskbarLeaseBackend
 /// <param name="store">Private recovery store, owned by the caller.</param>
 /// <param name="backend">Window-identity-scoped backend; tests supply an inert fake.</param>
 /// <param name="protect">Starts a recovery watchdog and returns only after readiness; its disposable signals completion after successful restore.</param>
-internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBackend backend, Func<TaskbarLeaseState, IDisposable> protect) : IDisposable
+/// <param name="protectionReady">Optional live guard check before each mutation. Production supplies it; null permits trusted inert test guards.</param>
+internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBackend backend, Func<TaskbarLeaseState, IDisposable> protect, Func<bool>? protectionReady = null) : IDisposable
 {
     private TaskbarLeaseState? _state;
     private IDisposable? _protection;
@@ -91,6 +92,7 @@ internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBac
                 _protection = protect(candidate) ?? throw new InvalidOperationException("Missing taskbar recovery watchdog.");
             }
             if (stillRequested?.Invoke() == false) { Restore(); return false; }
+            if (protectionReady?.Invoke() == false) throw new IOException("Taskbar recovery watchdog is no longer ready.");
             backend.Apply(_state);
             RecoveryFailed = false;
             return true;

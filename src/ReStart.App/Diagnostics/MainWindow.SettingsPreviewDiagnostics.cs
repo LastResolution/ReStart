@@ -59,12 +59,13 @@ public partial class MainWindow
                             {
                                 Check(!editor.HasPendingChanges, "An untouched settings editor has unsaved changes.");
                                 editor.SelectSection(L.T(K.SettingsStartup));
+                                Named<CheckBox>(editor, K.SettingsShowTaskbar).IsChecked = false;
+                                editor.SelectSection(L.T(K.SettingsTablet));
                                 Check(!Named<CheckBox>(editor, K.SettingsTabletKeyboard).IsEnabled && !Named<CheckBox>(editor, K.SettingsTabletHide).IsEnabled,
                                     "Tablet effects were editable before explicit opt-in.");
                                 Named<CheckBox>(editor, K.SettingsTabletEnable).IsChecked = true;
                                 Named<CheckBox>(editor, K.SettingsTabletKeyboard).IsChecked = true;
                                 Named<CheckBox>(editor, K.SettingsTabletHide).IsChecked = true;
-                                Named<CheckBox>(editor, K.SettingsShowTaskbar).IsChecked = false;
                                 Check(Named<CheckBox>(editor, K.SettingsTabletKeyboard).IsEnabled && Named<CheckBox>(editor, K.SettingsTabletHide).IsEnabled,
                                     "Opt-in did not enable the separate tablet choices.");
                                 editor.SelectSection(L.T(K.SettingsAppearance));
@@ -85,8 +86,10 @@ public partial class MainWindow
                                 editor.ApplyDraftPreview();
                                 Check(L.Language == tag && editor.Title == L.T(K.SettingsTitle) && editor.HasPendingChanges, "Language preview lost the draft or the active language section.");
                                 editor.SelectSection(L.T(K.SettingsStartup)); editor.UpdateLayout();
+                                Check(Named<CheckBox>(editor, K.SettingsShowTaskbar).IsChecked == false, "Rebuilding settings lost the independent taskbar choice.");
+                                editor.SelectSection(L.T(K.SettingsTablet)); editor.UpdateLayout();
                                 Check(Named<CheckBox>(editor, K.SettingsTabletEnable).IsChecked == true && Named<CheckBox>(editor, K.SettingsTabletKeyboard).IsChecked == true
-                                    && Named<CheckBox>(editor, K.SettingsTabletHide).IsChecked == true && Named<CheckBox>(editor, K.SettingsShowTaskbar).IsChecked == false,
+                                    && Named<CheckBox>(editor, K.SettingsTabletHide).IsChecked == true,
                                     "Rebuilding translated settings lost tablet consent or taskbar choices.");
                                 if (tag == "en" && decision == SettingsCloseChoice.Discard)
                                     SaveStartupScreenshot(editor, Path.Combine(directory, $"tablet-settings-{mode}.png"));

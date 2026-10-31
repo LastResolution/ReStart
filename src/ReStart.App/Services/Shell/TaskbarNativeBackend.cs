@@ -25,13 +25,42 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
 
     private static IEnumerable<TaskbarWindowState> ObserveWindows()
     {
+        var monitors = MonitorBounds();
+        if (monitors.Length == 0) yield break;
         foreach (var window in Taskbars())
         {
             if (!Identity(window, out var pid, out var started) || !Bounds(window, out var original) || !Monitor(window, out var monitor)) continue;
-            var edge = AutoHideEdge(window, monitor);
+            // An auto-hidden rectangle can sit mostly on a neighboring display.
+            // Its appbar registration identifies the owner more reliably than
+            // MonitorFromWindow's geometric overlap in that state.
+            var resolved = ResolveMonitor(monitor, monitors, bounds => AutoHideEdge(window, bounds));
+            monitor = resolved.Monitor; var edge = resolved.Edge;
             var target = edge == null ? original : VisibleBounds(monitor, original, edge.Value);
             yield return new(window, pid, started, IsWindowVisible(window), edge != null, monitor, original, target);
         }
+    }
+
+    /// <summary>Prefers appbar ownership over a hidden window's overlap with a neighboring display.</summary>
+    /// <param name="geometric">Monitor selected by the current window rectangle, used only for an unregistered fixed taskbar.</param>
+    /// <param name="monitors">Current bounded physical monitor inventory.</param>
+    /// <param name="registeredEdge">Read-only monitor registration lookup returning the edge, or null when this taskbar is not registered there.</param>
+    /// <returns>The registered owner and edge, or the geometric monitor and null for a fixed taskbar.</returns>
+    internal static (TaskbarBounds Monitor, int? Edge) ResolveMonitor(TaskbarBounds geometric, IEnumerable<TaskbarBounds> monitors, Func<TaskbarBounds, int?> registeredEdge)
+    {
+        foreach (var monitor in monitors)
+            if (registeredEdge(monitor) is { } edge) return (monitor, edge);
+        return (geometric, null);
+    }
+
+    private static TaskbarBounds[] MonitorBounds()
+    {
+        var result = new List<TaskbarBounds>();
+        bool Add(nint monitor, nint hdc, ref Rect rect, nint data)
+        {
+            if (rect.Right > rect.Left && rect.Bottom > rect.Top) result.Add(new(rect.Left, rect.Top, rect.Right - rect.Left, rect.Bottom - rect.Top));
+            return result.Count < 32;
+        }
+        return EnumDisplayMonitors(0, 0, Add, 0) ? result.ToArray() : [];
     }
 
     public bool IsCurrent(TaskbarLeaseState state)
@@ -205,6 +234,8 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern nint FindWindowEx(nint parent, nint after, string? className, string? title);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetClassName(nint window, StringBuilder name, int length);
     [DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(nint window, out uint process);
+    private delegate bool MonitorCallback(nint monitor, nint hdc, ref Rect rect, nint data);
+    [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] private static extern bool EnumDisplayMonitors(nint hdc, nint clip, MonitorCallback callback, nint data);
     [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] private static extern bool IsWindowVisible(nint window);
     [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] private static extern bool ShowWindow(nint window, int command);
     [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] private static extern bool GetWindowRect(nint window, out Rect rect);

@@ -24,20 +24,27 @@ internal static class TaskbarWatchdogFixture
         }
     }
 
+    private static bool IsFixtureDirectory(string directory)
+    {
+        var name = Path.GetFileName(Path.TrimEndingDirectorySeparator(Path.GetFullPath(directory)));
+        return name.StartsWith("watchdog-", StringComparison.Ordinal) && Guid.TryParseExact(name[9..], "N", out _);
+    }
+
     internal static Task<int> RecoverAsync(string parentId, string parentStarted, string nonce, string directory)
-        => TaskbarWatchdog.RunCoreAsync(parentId, parentStarted, nonce, new TaskbarRecoveryStore(directory), new Backend(directory, true));
+        => IsFixtureDirectory(directory) ? TaskbarWatchdog.RunCoreAsync(parentId, parentStarted, nonce, new TaskbarRecoveryStore(directory), new Backend(directory, true))
+            : Task.FromResult(1);
 
     internal static async Task<int> OwnAsync(string directory)
     {
         try
         {
             directory = Path.GetFullPath(directory); TaskbarRecoveryStore.CheckLinks(directory);
-            if (Directory.Exists(directory)) return 1;
+            if (!IsFixtureDirectory(directory) || Directory.Exists(directory)) return 1;
             var store = new TaskbarRecoveryStore(directory);
             var watchdog = new TaskbarWatchdog(store, ownedFixture: true);
             // Deliberately leave this inert lease undisposed to model lost normal
             // cleanup. Only the independent helper can clear its durable marker.
-            var lease = new TaskbarLease(store, new Backend(directory, false), watchdog.Protect);
+            var lease = new TaskbarLease(store, new Backend(directory, false), watchdog.Protect, () => watchdog.IsReady);
             if (!lease.Synchronize(TaskbarLeaseMode.Hide) || !lease.Synchronize(TaskbarLeaseMode.Reveal)
                 || Directory.GetFiles(directory, "taskbar-watchdog-*.ready").Length != 1) return 1;
             using (var ready = new FileStream(Path.Combine(directory, "owner-ready"), FileMode.CreateNew, FileAccess.Write, FileShare.Read))

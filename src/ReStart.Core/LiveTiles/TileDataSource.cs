@@ -43,7 +43,7 @@ public sealed class TileDataSource : IDisposable
     /// <param name="definition">Validated package data-source declaration with format, selector and refresh interval.</param>
     /// <param name="binding">Explicit user-selected local connection, including enabled state and any protected credential.</param>
     /// <param name="budget">Maximum data budget in bytes, from 512 through 8192 for this source.</param>
-    /// <param name="authorization">Host-owned current-approval callback. Null means the trusted caller directly authorizes its explicit binding; package hosts must supply a callback. Return null to deny, or an opaque approval revision that changes on reapproval. No revision is exposed to tile contexts.</param>
+    /// <param name="authorization">Host-owned, thread-safe current-approval callback, called from rendering and I/O threads. Null means the trusted caller directly authorizes its explicit binding; package hosts must supply a callback. Return null to deny, or an opaque approval revision that changes on reapproval. No revision is exposed to tile contexts.</param>
     /// <exception cref="ArgumentException">The source definition, local binding, or byte budget is invalid.</exception>
     public TileDataSource(TileDataTransport transport, TileDataDefinition definition, TileDataBinding binding, int budget = 8192, Func<string?>? authorization = null)
     {

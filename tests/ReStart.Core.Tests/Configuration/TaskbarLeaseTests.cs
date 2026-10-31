@@ -44,6 +44,18 @@ public sealed class TaskbarLeaseTests
         Assert.Equal(0, backend.Applied); Assert.Equal(0, backend.Restored); Assert.Equal(0, guards);
     }
     [Fact]
+    public void LossOfAnEstablishedGuardRestoresInsteadOfApplyingAnotherMutation()
+    {
+        var store = new Store(); var backend = new Backend(); var ready = true;
+        using var lease = new TaskbarLease(store, backend, _ => new Guard(() => { }), () => ready);
+        Assert.True(lease.Synchronize(TaskbarLeaseMode.Hide)); Assert.Equal(1, backend.Applied);
+        ready = false;
+        Assert.False(lease.Synchronize(TaskbarLeaseMode.Hide));
+        Assert.Equal(1, backend.Applied); Assert.Equal(1, backend.Restored); Assert.Null(store.State);
+        ready = true;
+        Assert.True(lease.Synchronize(TaskbarLeaseMode.Hide)); Assert.Equal(2, backend.Applied);
+    }
+    [Fact]
     public void ClosingOrChangingScopeDuringWatchdogReadinessPreventsLateMutation()
     {
         var store = new Store(); var backend = new Backend(); var requested = true; var released = false;
