@@ -1,4 +1,6 @@
 using System.Text.Json;
+using System.Runtime.InteropServices;
+using System.Windows;
 using System.Windows.Interop;
 using ReStart.App.Services;
 using ReStart.Core;
@@ -7,6 +9,45 @@ namespace ReStart.App;
 
 public partial class MainWindow
 {
+    [StructLayout(LayoutKind.Sequential)] private struct TaskbarCheckPosition { public nint Window, After; public int X, Y, Width, Height; public uint Flags; }
+
+    private int VerifyTaskbarPositionCoercion()
+    {
+        var window = new Window { Owner = this, Width = 240, Height = 120, ShowActivated = false, ShowInTaskbar = false, Topmost = false };
+        window.Show(); window.UpdateLayout();
+        var handle = new WindowInteropHelper(window).Handle;
+        var source = HwndSource.FromHwnd(handle);
+        Native.GetWindowRect(handle, out var before);
+        var original = new TaskbarBounds(before.Left, before.Top, before.Right - before.Left, before.Bottom - before.Top);
+        var target = original with { X = original.X + 8, Y = original.Y + 8 };
+        var coerced = 0;
+        nint Clamp(nint _, int message, nint wParam, nint data, ref bool handled)
+        {
+            if (message == 0x46)
+            {
+                var position = Marshal.PtrToStructure<TaskbarCheckPosition>(data);
+                position.X = original.X; position.Y = original.Y;
+                Marshal.StructureToPtr(position, data, false); coerced++;
+            }
+            return 0;
+        }
+        source.AddHook(Clamp);
+        try
+        {
+            Native.SetWindowPos(handle, 0, target.X, target.Y, target.Width, target.Height, 0x0014);
+            Native.GetWindowRect(handle, out var rejected);
+            Require(coerced > 0 && rejected.Left == original.X && rejected.Top == original.Y, "The owned taskbar fixture did not reproduce position coercion.");
+            var calls = coerced;
+            TaskbarNativeBackend.Position(handle, target, false);
+            Native.GetWindowRect(handle, out var applied);
+            Require(coerced == calls && applied.Left == target.X && applied.Top == target.Y, "The taskbar lease position was silently coerced instead of applied.");
+            TaskbarNativeBackend.Position(handle, original, false);
+            Native.GetWindowRect(handle, out var restored);
+            Require(restored.Left == original.X && restored.Top == original.Y, "The owned taskbar rectangle was not restored.");
+            return 3;
+        }
+        finally { source.RemoveHook(Clamp); window.Close(); }
+    }
     private sealed class TabletCheckLease : IDisposable { public void Dispose() { } }
     private sealed class TabletCheckStore : ITaskbarRecoveryStore
     {

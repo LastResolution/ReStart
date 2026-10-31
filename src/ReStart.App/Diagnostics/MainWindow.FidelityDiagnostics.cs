@@ -31,6 +31,8 @@ public partial class MainWindow
         {
             fixture.Present(); await fixture.InitializeAsync(); fixture._clock.Stop();
             checks += await VerifyTabletIntegrationAsync(fixture);
+            checks += await TaskbarWatchdogFixture.VerifyAsync(directory);
+            checks += fixture.VerifyTaskbarPositionCoercion();
             checks += VerifyTouchPanningLease();
             checks += fixture.VerifyTouchDragRoutes();
             fixture.Document.Preferences.Animate = false;

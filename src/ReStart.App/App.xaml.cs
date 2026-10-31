@@ -25,6 +25,23 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        if (e.Args is ["--taskbar-live-check", var taskbarReport])
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            Shutdown(await TaskbarLiveCheck.RunAsync(taskbarReport)); return;
+        }
+        if (e.Args.Contains("--taskbar-live-check")) { Shutdown(1); return; }
+        if (e.Args is ["--taskbar-watchdog-fixture", var fixtureParent, var fixtureStarted, var fixtureNonce, var fixtureDirectory])
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            Shutdown(await TaskbarWatchdogFixture.RecoverAsync(fixtureParent, fixtureStarted, fixtureNonce, fixtureDirectory)); return;
+        }
+        if (e.Args is ["--taskbar-watchdog-owner-fixture", var ownerDirectory])
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            Shutdown(await TaskbarWatchdogFixture.OwnAsync(ownerDirectory)); return;
+        }
+        if (e.Args.Contains("--taskbar-watchdog-fixture") || e.Args.Contains("--taskbar-watchdog-owner-fixture")) { Shutdown(1); return; }
         if (e.Args is ["--taskbar-watchdog", var parentId, var parentStarted, var nonce])
         {
             ShutdownMode = ShutdownMode.OnExplicitShutdown;

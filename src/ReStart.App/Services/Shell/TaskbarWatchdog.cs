@@ -6,7 +6,8 @@ namespace ReStart.App.Services;
 
 /// <summary>Keeps one independent, ready recovery process alive before any temporary taskbar mutation.</summary>
 /// <param name="store">Normal local recovery store, never a caller-supplied helper path.</param>
-internal sealed class TaskbarWatchdog(TaskbarRecoveryStore store)
+/// <param name="ownedFixture">Uses the inert diagnostic recovery entry point with the explicit fixture store; false for production.</param>
+internal sealed class TaskbarWatchdog(TaskbarRecoveryStore store, bool ownedFixture = false)
 {
     private Process? _process;
     private string _nonce = Guid.NewGuid().ToString("N");
@@ -30,8 +31,9 @@ internal sealed class TaskbarWatchdog(TaskbarRecoveryStore store)
         _process?.Dispose();
         _nonce = Guid.NewGuid().ToString("N");
         var start = new ProcessStartInfo(Environment.ProcessPath!) { UseShellExecute = false, CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden };
-        foreach (var argument in new[] { "--taskbar-watchdog", state.ParentId.ToString(CultureInfo.InvariantCulture), state.ParentStarted.ToString(CultureInfo.InvariantCulture), _nonce })
+        foreach (var argument in new[] { ownedFixture ? "--taskbar-watchdog-fixture" : "--taskbar-watchdog", state.ParentId.ToString(CultureInfo.InvariantCulture), state.ParentStarted.ToString(CultureInfo.InvariantCulture), _nonce })
             start.ArgumentList.Add(argument);
+        if (ownedFixture) start.ArgumentList.Add(store.DirectoryPath);
         _process = Process.Start(start) ?? throw new IOException("Taskbar watchdog could not start.");
         var deadline = Stopwatch.StartNew();
         while (deadline.Elapsed < TimeSpan.FromSeconds(10) && !_process.HasExited)
@@ -62,12 +64,21 @@ internal sealed class TaskbarWatchdog(TaskbarRecoveryStore store)
     /// <param name="parentStarted">Parent UTC process-start ticks; reused process IDs do not match.</param>
     /// <param name="nonce">Exactly one N-format GUID used only for the private readiness file.</param>
     /// <returns>Zero after safe completion; one for invalid identity, readiness failure or blocked recovery.</returns>
-    internal static async Task<int> RunAsync(string parentId, string parentStarted, string nonce)
+    internal static Task<int> RunAsync(string parentId, string parentStarted, string nonce)
+        => RunCoreAsync(parentId, parentStarted, nonce, new TaskbarRecoveryStore(Profile), new TaskbarNativeBackend());
+
+    /// <summary>Runs the same identity, readiness and orphan lifecycle with explicit inert fixture dependencies.</summary>
+    /// <param name="parentId">Expected parent process ID.</param>
+    /// <param name="parentStarted">Expected parent UTC start ticks.</param>
+    /// <param name="nonce">N-format readiness nonce.</param>
+    /// <param name="store">Owned fixture recovery store or the fixed production profile.</param>
+    /// <param name="backend">Identity-validating production backend or completely inert fixture backend.</param>
+    /// <returns>Zero after completion, or one after invalid identity/readiness/recovery failure.</returns>
+    internal static async Task<int> RunCoreAsync(string parentId, string parentStarted, string nonce, TaskbarRecoveryStore store, ITaskbarLeaseBackend backend)
     {
         if (!int.TryParse(parentId, NumberStyles.None, CultureInfo.InvariantCulture, out var id) || id <= 0
             || !long.TryParse(parentStarted, NumberStyles.None, CultureInfo.InvariantCulture, out var started) || started <= 0
             || !Guid.TryParseExact(nonce, "N", out _)) return 1;
-        var store = new TaskbarRecoveryStore(Profile);
         var path = ReadyPath(store, nonce);
         var created = false;
         try
@@ -81,7 +92,6 @@ internal sealed class TaskbarWatchdog(TaskbarRecoveryStore store)
             using (var ready = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.Read))
             { created = true; ready.Write(bytes); ready.Flush(flushToDisk: true); }
             await parent.WaitForExitAsync();
-            var backend = new TaskbarNativeBackend();
             for (var attempt = 0; attempt < 30; attempt++)
             {
                 if (TaskbarRecovery.Run(store, backend, IsAlive, (id, started))) return 0;

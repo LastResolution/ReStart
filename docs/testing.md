@@ -114,6 +114,14 @@ Core tests use generated archives and temporary distributions for checksums, mal
 
 ## Manual coverage still required
 
+### Tablet and taskbar regressions
+
+The fidelity suite explicitly initializes `TabletIntegration` with a complete inert dependency set, rather than relying on preview startup (which skips normal shell initialization). It covers default-off behavior, saved opt-in, keyboard presence/absence/unknown, separate taskbar choices, hide/close/disposal, failed recovery saves and unchanged layout/desktop Start preferences. Core tests also cover partial initialization, repeated transitions, live keyboard provider failures, exact monitor scoping, negative/portrait geometry, preserved other-appbar reservations, recovery locks, invalid records and stale process identities. A separate owned WPF window reproduces native position coercion so taskbar positioning cannot silently regress to an ignored rectangle.
+
+The watchdog process fixture runs the actual parent/child readiness handshake in an isolated directory. It verifies one reused guard across mode changes, then deliberately exits the parent without normal lease cleanup and requires independent orphan recovery. Its backend never calls a real taskbar API. CI does not change taskbar settings or visibility. An explicit local `--taskbar-live-check <owned-output-directory>` additionally checks reveal/short sustained geometry/recovery when Windows already has auto-hide enabled on that display; it never enables auto-hide itself. Do not run that live option as part of CI or infer untested Windows builds from a local pass.
+
+Settings preview checks include tablet consent and taskbar Save/Discard behavior across eight languages and both themes. Data-source checks exercise the native approval editor, encrypted per-tile grants, revocation cache clearing, copied identities, changed requests and changed destinations. Fake-provider tests cover integration/entity/action scope and approval changes during in-flight calls; no real credentials or service are used.
+
 | Area | Check |
 | --- | --- |
 | Monitors | Beyond measured 100%/125%/150% placement and mixed portrait/landscape: 200% DPI, reconnects, live configuration changes and production launcher/taskbar behavior |

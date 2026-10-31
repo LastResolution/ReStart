@@ -59,6 +59,8 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
                 if (AutoHideEdge(window, item.Monitor) == null) throw new IOException("Taskbar preference changed.");
                 if (!Bounds(window, out var current) || current != item.Target || !IsWindowVisible(window))
                     Position(window, item.Target, show: true);
+                if (!Bounds(window, out var applied) || applied != item.Target || !IsWindowVisible(window))
+                    throw new IOException("Taskbar reveal was not applied.");
             }
         }
     }
@@ -183,9 +185,16 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
         2 => new(monitor.X + monitor.Width - bar.Width, monitor.Y, bar.Width, monitor.Height),
         _ => new(monitor.X, monitor.Y + monitor.Height - bar.Height, monitor.Width, bar.Height)
     };
-    private static void Position(nint window, TaskbarBounds bounds, bool show)
+    /// <summary>Applies a lease rectangle without activation or position coercion; callers must first validate Explorer identity or own the fixture window.</summary>
+    /// <param name="window">Revalidated taskbar HWND or a native verification window owned by this process.</param>
+    /// <param name="bounds">Exact physical screen rectangle, also used by conditional recovery.</param>
+    /// <param name="show">Whether to show without activating; false retains current visibility.</param>
+    internal static void Position(nint window, TaskbarBounds bounds, bool show)
     {
-        if (!SetWindowPos(window, 0, bounds.X, bounds.Y, bounds.Width, bounds.Height, (uint)(0x0014 | (show ? 0x0040 : 0))))
+        // The temporary lease supplies both target and recovery rectangles.
+        // Suppress WINDOWPOSCHANGING so Explorer cannot coerce the requested
+        // visible rectangle back to its auto-hidden edge during this call.
+        if (!SetWindowPos(window, 0, bounds.X, bounds.Y, bounds.Width, bounds.Height, (uint)(0x0414 | (show ? 0x0040 : 0))))
             throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
     }
 
