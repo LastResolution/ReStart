@@ -50,6 +50,14 @@ Al arrastrar, una copia semitransparente del mosaico, grupo o selección sigue a
 
 El engranaje permite elegir temas, inicio con Windows, integración de la tecla Windows/botón Inicio y actualizaciones. El uso normal no requiere permisos de administrador. Se incluyen [sumas SHA-256](https://github.com/LastResolution/ReStart/releases/latest).
 
+## Integración con aplicaciones de Windows
+
+La búsqueda añade palabras clave de los ajustes de Windows y elementos del Panel de control. La sintaxis AQS opcional ofrece filtros y relevancia nativos; **Buscar en Windows** deriva explícitamente la consulta a otras fuentes de Windows.
+
+Dos opciones independientes están desactivadas al principio: los contadores de uso de Windows para las aplicaciones más usadas y la compatibilidad de solo lectura con mosaicos e insignias de Windows. Se admiten formatos habituales, imágenes locales y enlaces de datos. No se restauran servicios push retirados; si no hay datos, se conserva el icono.
+
+[Ajustes y compatibilidad](docs/start-behavior.md) · [Alcance](docs/fidelity.md)
+
 ## Funciones
 
 ![Apertura y cierre de ReStart](docs/images/start-motion.gif)

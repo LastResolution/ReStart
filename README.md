@@ -67,6 +67,14 @@ Drag shortcut tips appear briefly at the bottom of Start and can be disabled in 
 
 </details>
 
+## Windows app integration
+
+Search now also uses Windows-provided settings keywords and Control Panel entries. Optional Advanced Query Syntax adds native file filtering and relevance order; **Search in Windows** explicitly hands additional sources to Windows.
+
+Two options are off by default: counts of app launches recorded by Windows for Most used, and a read-only compatibility reader for Windows app tiles and badges. The tile renderer supports common size bindings, local raster images and literal data bindings. It does not restore discontinued push services; unavailable data keeps the app icon.
+
+[Settings and compatibility details](docs/start-behavior.md) · [Coverage](docs/fidelity.md)
+
 ## More control, more room to create
 
 - **Protect your layout:** lock every placement or one group. Use <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>L</kbd> for the global lock.
@@ -94,7 +102,7 @@ Preview appearance, tile scale, group width and language before saving. Closing 
 | Layout editing | Global/per-group placement locks, keyboard placement/resize/group moves, edit mode, multi-selection and session Undo/Redo; cancelled drags preserve the original layout |
 | Drag feedback | Distinct group/folder/drop destinations, dwell progress, optional hints, hover boundaries and stationary edge scrolling; automatic group/folder creation can be switched off |
 | Pin anything | Apps, files, directories, shortcuts and websites; Explorer's Pin to ReStart, app/search context menus, drag from app lists, and explicit destinations |
-| Search | Normalized app names, executable filenames and OS-declared aliases; 63 localized Windows settings pages with English aliases, optional local indexed filenames and opt-in indexed document contents (up to 50 local results), selected-result Enter/arrow navigation and cancellation of stale queries |
+| Search | App names, executable aliases, 63 translated settings fallbacks plus Windows-provided keywords/Control Panel, bounded indexed files, opt-in content and native AQS, retained selection and an explicit Windows Search handoff |
 | Windows session | Switch user through Windows sign-in; policy/capability-aware Sleep and Hibernate, Shut down/Restart, and Windows Update completion actions when a restart is required |
 | All apps | Responsive columns with Windows language-specific alphabetical headings (including kana, Hangul, pinyin and stroke counts), Start-menu directory expansion, scrollable letter picker, Unicode initial-key navigation, live installation/removal refresh, optional Recently added and opt-in Most used |
 | App commands | Context-aware menus: Start actions under More, direct search actions, file/folder location, package management/review and available Windows verbs. Optional Recent/Frequent documents, Windows-synchronized Jump List pins and registered application Tasks have their own actions. Pin/unpin documents from their menus; app-history removal and navigation customization are also available. See the [menu guide and Windows 10 coverage](docs/context-menus.md). File Share is limited to accessible files on supported Windows systems; Properties requires an existing file, folder or source shortcut. Unsupported actions are omitted. Application-defined Jump List categories retain their registered labels and original actions. |

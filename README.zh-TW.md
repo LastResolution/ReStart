@@ -50,6 +50,14 @@ https://github.com/user-attachments/assets/a893cd20-8c82-4c47-b5fb-bf22743f67e1
 
 齒輪設定可選擇佈景主題、登入時啟動、Windows 鍵/開始按鈕整合與更新。一般使用不需要系統管理員權限。提供 [SHA-256 校驗值](https://github.com/LastResolution/ReStart/releases/latest)。
 
+## Windows 應用程式整合
+
+搜尋也包含 Windows 提供的設定關鍵字及控制台項目。選用 AQS 可使用原生檔案篩選及相關性排序；選取 **在 Windows 中搜尋** 後，才會將查詢交給 Windows 的其他搜尋來源。
+
+Windows 應用程式使用次數，以及 Windows 動態磚與徽章的唯讀相容功能，是兩個獨立選項，預設皆關閉。支援常用尺寸配置、本機影像及資料繫結，不會恢復已停用的推播服務；沒有可用資料時會保留應用程式圖示。
+
+[設定與相容性說明](docs/start-behavior.md) · [支援範圍](docs/fidelity.md)
+
 ## 功能
 
 ![ReStart 的開啟與關閉動畫](docs/images/start-motion.gif)

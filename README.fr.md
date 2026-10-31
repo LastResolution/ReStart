@@ -50,6 +50,14 @@ Pendant le déplacement, une copie semi-transparente de la vignette, du groupe o
 
 La roue dentée permet de régler les thèmes, le lancement à l’ouverture de session, l’intégration de la touche Windows/du bouton Démarrer et les mises à jour. L’usage normal ne nécessite pas de droits administrateur. Les [sommes SHA-256](https://github.com/LastResolution/ReStart/releases/latest) sont fournies.
 
+## Intégration des applications Windows
+
+La recherche ajoute les mots-clés des paramètres Windows et les éléments du Panneau de configuration. La syntaxe AQS facultative apporte filtres de fichiers et pertinence natifs ; **Rechercher dans Windows** transmet explicitement la recherche aux sources supplémentaires de Windows.
+
+Deux options distinctes sont désactivées au départ : les compteurs Windows existants pour les applications les plus utilisées, et la compatibilité en lecture seule des vignettes et badges Windows. Les formats courants, images locales et liaisons de données sont pris en charge. Les services push arrêtés ne sont pas rétablis ; sans données, l’icône reste affichée.
+
+[Paramètres et compatibilité](docs/start-behavior.md) · [Couverture](docs/fidelity.md)
+
 ## Fonctionnalités
 
 ![Ouverture et fermeture de ReStart](docs/images/start-motion.gif)

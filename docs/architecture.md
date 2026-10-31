@@ -57,6 +57,9 @@ The native Jump List adapter launches the same executable with `--jump-list-work
 | Catalog and icons | `AppCatalog` | Dedicated STA enumeration; completed snapshots and frozen images cross to UI |
 | Launch and Jump List effects | `AppShellCommands` / `AppJumpLists` / `NativeJumpBroker` | Canonical verbs and public history APIs; undocumented task/pin ABI is isolated in a bounded helper, and translated menu text is never evaluated |
 | Optional app activity | `AppActivity` / App persistence | Bounded local state; separate from exported layout and Windows document history |
+| Existing Windows app usage | `WindowsUsageHistory` | Opt-in, exact installed identities only; read-only UserAssist observations remain in memory and respect Windows tracking policy |
+| Windows settings and advanced file queries | `WindowsSettingsCatalog` / `WindowsSearchQuery` | OS labels and allowlisted actions; native AQS on an owned STA with a fixed local index, columns and result limit |
+| Windows app tile compatibility | `LegacyNotificationStore` / `LegacyTileAssets` / `LegacyTileView` | Opt-in read-only SQLite queries for visible pinned package identities; inert bounded XML and approved local raster assets, no toast rows or script access |
 | Script processes and data reads | App worker pool / data services | Parent owns cancellation, limits and process lifetime; worker sees bounded snapshots |
 | Documentation images | Dedicated render entry point | English curated fixtures, no visible windows or real settings; matched installed icons, not an exported app inventory |
 
