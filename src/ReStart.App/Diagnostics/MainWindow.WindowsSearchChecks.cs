@@ -14,9 +14,9 @@ public partial class MainWindow
         static bool TextRenders(Button button) => VisualChildren<TextBlock>(button).Any(t => t.Text == System.Windows.Automation.AutomationProperties.GetName(button)
             && t.ActualWidth > 10 && t.ActualHeight > 10);
         fixture.Document.Preferences.SearchSettings = true;
-        var webSearches = new List<Uri>();
+        var webSearches = new List<Uri>(); var windowsQueries = new List<string>();
         fixture._webSearchFixture = uri => { webSearches.Add(uri); return true; };
-        fixture._windowsSearchFixture = () => { handoffs++; return true; };
+        fixture._windowsSearchFixture = query => { handoffs++; windowsQueries.Add(query); return true; };
         fixture._windowsSettingsFixture = async () =>
         {
             loads++; await Task.Delay(35);
@@ -42,9 +42,13 @@ public partial class MainWindow
         Check(((Button)fixture.SearchResults.SelectedItem).Tag is AppEntry { Id: "restart:setting:native:owned" }, "Late native settings lost the visible result selection.");
         fixture.WindowsSearchButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         Check(handoffs == 1 && launched.Count == beforeLaunch, "The explicit Windows Search action did not use the native shortcut route.");
+        Check(windowsQueries.SequenceEqual(new[] { "owned keyword" }), "Windows Search did not receive the selected current query.");
+        fixture.SetSmokeSearch("owned 日本語 & ? 😀"); fixture.WindowsSearchButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Check(windowsQueries.Last() == "owned 日本語 & ? 😀", "Windows Search altered Unicode or reused a stale query.");
+        fixture.SetSmokeSearch("owned keyword");
         fixture.Document.Preferences.ShowWindowsSearchHandoff = false; fixture.RefreshSearchResults();
         var afterLaunch = launched.Count; fixture.WindowsSearchButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-        Check(fixture.WindowsSearchButton.Visibility == Visibility.Collapsed && launched.Count == afterLaunch && handoffs == 1, "A disabled handoff remained visible or invokable.");
+        Check(fixture.WindowsSearchButton.Visibility == Visibility.Collapsed && launched.Count == afterLaunch && handoffs == 2, "A disabled handoff remained visible or invokable.");
         fixture.Document.Preferences.SearchSettings = false; fixture.RefreshSearchResults();
         Check(!fixture.SearchResultNames.Contains("Owned Windows setting"), "Native settings ignored the settings search switch.");
         fixture.Document.Preferences.SearchSettings = true; fixture.Document.Preferences.ShowWindowsSearchHandoff = true;
@@ -96,7 +100,37 @@ public partial class MainWindow
         checks += VerifyAppHistorySearch(fixture, directory);
         checks += await AppJumpLists.VerifyOwnedAppFlagsAsync(directory);
         checks += await VerifySearchActionKeysAsync(fixture);
+        checks += await VerifySearchQueryProviderAsync(fixture);
         fixture._windowsSettingsFixture = null; fixture._windowsSearchFixture = null; fixture._webSearchFixture = null; fixture.ResetToPinnedView();
         return checks;
+    }
+
+    private static async Task<int> VerifySearchQueryProviderAsync(MainWindow fixture)
+    {
+        var checks = 0;
+        void Check(bool value, string message) { Require(value, message); checks++; }
+        var verifyActivation = fixture._verifyNativeActivation;
+        fixture._verifyNativeActivation = true;
+        fixture.Present(); fixture.SetSmokeSearch("owned seed"); fixture.FocusSearchInput(); fixture.UpdateLayout();
+        await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Input);
+        var handle = new System.Windows.Interop.WindowInteropHelper(fixture).Handle;
+        const string query = "owned 日本語 & ? 😀";
+        var transferred = await Task.Run(() => WindowsSearchNativeBackend.TrySetFocusedQuery(query, handle, () => handle, CancellationToken.None));
+        Check(transferred && fixture.SearchBox.Text == query,
+            $"The production Value provider did not preserve literal query text in the owned input (active={fixture.IsActive}, focused={fixture.SearchBox.IsKeyboardFocused}, foreground={Native.GetForegroundWindow() == handle}).");
+        var wrongWindow = await Task.Run(() => WindowsSearchNativeBackend.TrySetFocusedQuery("wrong target", new nint(-1), () => new nint(-1), CancellationToken.None));
+        Check(!wrongWindow && fixture.SearchBox.Text == query, "A different window received search text.");
+        fixture.SearchBox.IsReadOnly = true;
+        var readOnly = await Task.Run(() => WindowsSearchNativeBackend.TrySetFocusedQuery("read only", handle, () => handle, CancellationToken.None));
+        Check(!readOnly && fixture.SearchBox.Text == query, "A read-only search provider accepted text.");
+        fixture.SearchBox.IsReadOnly = false;
+        using var cancelled = new CancellationTokenSource(); cancelled.Cancel();
+        var stopped = await Task.Run(() => WindowsSearchNativeBackend.TrySetFocusedQuery("cancelled", handle, () => handle, cancelled.Token));
+        Check(!stopped && fixture.SearchBox.Text == query, "A cancelled handoff typed after returning to the launcher.");
+        var reads = 0;
+        var changed = await Task.Run(() => WindowsSearchNativeBackend.TrySetFocusedQuery("changed foreground", handle, () => ++reads == 1 ? handle : 0, CancellationToken.None));
+        Check(!changed && reads >= 2 && fixture.SearchBox.Text == query, "Foreground changed before text transfer but the old input was still modified.");
+        fixture._verifyNativeActivation = verifyActivation;
+        fixture.ResetToPinnedView(); return checks;
     }
 }

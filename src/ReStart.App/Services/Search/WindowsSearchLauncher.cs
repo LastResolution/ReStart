@@ -3,7 +3,7 @@ using System.Runtime.Versioning;
 
 namespace ReStart.App.Services;
 
-/// <summary>Opens the Windows-owned search interface through its documented global shortcut, without injecting query text or using the clipboard.</summary>
+/// <summary>Builds balanced native search keys and recognizes only known protected Windows Search executable locations.</summary>
 [SupportedOSPlatform("windows")]
 internal static class WindowsSearchLauncher
 {
@@ -13,6 +13,21 @@ internal static class WindowsSearchLauncher
     [
         Key(0x5B, false), Key(0x53, false), Key(0x53, true), Key(0x5B, true)
     ];
+
+    internal static Native.Input[] CreateDismissInputs() => [Key(0x1B, false), Key(0x1B, true)];
+
+    internal static bool IsSearchExecutable(string? path, string windowsDirectory)
+    {
+        if (string.IsNullOrEmpty(path) || string.IsNullOrEmpty(windowsDirectory)) return false;
+        var packages = new[]
+        {
+            ("MicrosoftWindows.Client.CBS_cw5n1h2txyewy", "SearchHost.exe"),
+            ("MicrosoftWindows.Client.Core_cw5n1h2txyewy", "SearchHost.exe"),
+            ("Microsoft.Windows.Search_cw5n1h2txyewy", "SearchApp.exe"),
+            ("Microsoft.Windows.Cortana_cw5n1h2txyewy", "SearchUI.exe")
+        };
+        return packages.Any(package => path.Equals(Path.Combine(windowsDirectory, "SystemApps", package.Item1, package.Item2), StringComparison.OrdinalIgnoreCase));
+    }
 
     internal static bool TryOpen()
     {

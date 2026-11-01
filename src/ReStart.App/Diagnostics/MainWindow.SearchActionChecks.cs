@@ -31,7 +31,7 @@ public partial class MainWindow
             p.SearchFiles = false; p.SearchSettings = false; p.ShowWebSearch = true; p.ShowWindowsSearchHandoff = true;
             fixture._apps = [new("action-local", "Owned action sample", "")];
             fixture._webSearchFixture = _ => { webCalls++; return true; };
-            fixture._windowsSearchFixture = () => { windowsCalls++; return true; };
+            fixture._windowsSearchFixture = _ => { windowsCalls++; return true; };
             foreach (var language in TextCatalog.SupportedLanguages)
             {
                 LocalizationResources.Apply(language);

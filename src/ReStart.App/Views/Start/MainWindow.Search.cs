@@ -27,7 +27,10 @@ public partial class MainWindow
     private bool _windowsSettingsLoading;
     private bool _windowsSettingsLoaded;
     private Func<Task<IReadOnlyList<WindowsSettingsCatalog.Entry>>>? _windowsSettingsFixture = null;
-    private Func<bool>? _windowsSearchFixture;
+    private Func<string, bool>? _windowsSearchFixture;
+    private readonly WindowsSearchHandoff _windowsSearchHandoff = new(new WindowsSearchNativeBackend());
+    private bool _returningFromWindowsSearch;
+    private bool _windowsSearchQueryUnavailable;
     private Func<Uri, bool>? _webSearchFixture;
     private bool CanHandoffToWindows => _preview || WindowsSearchLauncher.IsAvailable();
     private Func<string, CancellationToken, Task<(IReadOnlyList<AppEntry> Files, bool Available)>>? _fileSearchFixture;
@@ -140,12 +143,26 @@ public partial class MainWindow
         return button;
     }
 
-    private void OpenWindowsSearch(object sender, RoutedEventArgs e)
+    private async void OpenWindowsSearch(object sender, RoutedEventArgs e)
     {
         if (!Document.Preferences.ShowWindowsSearchHandoff || !CanHandoffToWindows || _preview && _windowsSearchFixture == null) return;
-        if (_windowsSearchFixture != null) { _windowsSearchFixture(); return; }
+        var query = WindowsSearchHandoff.NormalizeQuery(SearchBox.Text);
+        if (query == null) return;
+        if (_windowsSearchFixture != null) { _windowsSearchFixture(query); return; }
         Dismiss(immediately: true);
-        if (!WindowsSearchLauncher.TryOpen()) { Present(); SetStatus(L.T(K.ErrorLaunch) + L.T(K.SearchInWindows)); }
+        var result = await _windowsSearchHandoff.OpenAsync(query);
+        if (_exit || result == WindowsSearchHandoffResult.Cancelled) return;
+        if (result == WindowsSearchHandoffResult.Failed) { Present(); SetStatus(L.T(K.ErrorLaunch) + L.T(K.SearchInWindows)); }
+        else _windowsSearchQueryUnavailable = result == WindowsSearchHandoffResult.OpenedWithoutQuery;
+    }
+
+    private async Task PresentAfterWindowsSearchAsync()
+    {
+        if (_returningFromWindowsSearch) return;
+        _returningFromWindowsSearch = true;
+        try { await _windowsSearchHandoff.ReturnAsync(); }
+        finally { _returningFromWindowsSearch = false; }
+        if (!_exit) PresentCore();
     }
 
     private void OpenWebSearch(object sender, RoutedEventArgs e)

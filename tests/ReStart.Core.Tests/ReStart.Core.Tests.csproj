@@ -33,6 +33,7 @@
     <Compile Include="..\..\src\ReStart.App\Services\Search\SettingsSearch.cs" Link="Services/Search/SettingsSearch.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\Search\WindowsSearchQuery.cs" Link="Services/Search/WindowsSearchQuery.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\Search\WindowsSearchLauncher.cs" Link="Services/Search/WindowsSearchLauncher.cs" />
+    <Compile Include="..\..\src\ReStart.App\Services\Search\WindowsSearchHandoff.cs" Link="Services/Search/WindowsSearchHandoff.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\Shell\Native.cs" Link="Services/Shell/Native.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\Search\WindowsSettingsCatalog.cs" Link="Services/Search/WindowsSettingsCatalog.cs" />
     <Compile Include="..\..\src\ReStart.App\Services\Catalog\WindowsUsageHistory.cs" Link="Services/Catalog/WindowsUsageHistory.cs" />

@@ -866,8 +866,10 @@ public enum TextKey
     RecentAppsShowLess,
     /// <summary>Show Windows Search handoff</summary>
     SettingsWindowsSearchHandoff,
-    /// <summary>Opens Windows Search with Win+S. Enter your query there. Cloud results depend on Windows permissions and connected accounts; ReStart does not access cloud files.</summary>
+    /// <summary>Opens Windows Search and transfers the current query when its focused input is available. Cloud results depend on Windows permissions and connected accounts.</summary>
     WindowsSearchHandoffHelp,
+    /// <summary>Windows Search opened but did not accept the query. Enter it in Windows Search.</summary>
+    WindowsSearchQueryUnavailable,
     /// <summary>Show Windows app live tiles (compatibility)</summary>
     SettingsLegacyUwpTiles,
     /// <summary>Reads active tile and badge data only for pinned packaged apps. Uses an undocumented Windows store; unavailable data falls back to icons. Toasts are not read and remote images are not downloaded.</summary>
