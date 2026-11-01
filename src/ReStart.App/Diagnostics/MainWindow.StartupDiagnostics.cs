@@ -34,10 +34,10 @@ public partial class MainWindow
         { Owner = this, Width = 1280, Height = 800, Topmost = false, _startupComplete = false };
         var language = L.Language; var checks = 0; var languageCases = 0;
         void Check(bool condition, string message) { Require(condition, message); checks++; }
-        async Task Until(Func<bool> done)
+        async Task Until(Func<bool> done, [System.Runtime.CompilerServices.CallerArgumentExpression(nameof(done))] string condition = "")
         {
             var watch = Stopwatch.StartNew();
-            while (!done()) { if (watch.Elapsed > TimeSpan.FromSeconds(25)) throw new InvalidOperationException("Startup fixture timed out."); await Task.Delay(50); }
+            while (!done()) { if (watch.Elapsed > TimeSpan.FromSeconds(25)) throw new InvalidOperationException("Startup fixture timed out: " + condition); await Task.Delay(50); }
         }
         try
         {
