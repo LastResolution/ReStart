@@ -65,6 +65,8 @@ public partial class MainWindow
         {
             fixture.Document.Preferences.Theme = theme; fixture.ApplyAppearance(); fixture.RefreshSearchResults(); fixture.UpdateLayout();
             await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Render);
+            Check(fixture.WebSearchButton.ActualWidth > 30 && fixture.WebSearchButton.ActualHeight > 10
+                && fixture.WebSearchButton.Content is TextBlock { ActualWidth: > 10, ActualHeight: > 10 }, "The web action was visible in state but had no rendered text extent.");
             SaveFixtureElement(fixture.Root, Path.Combine(directory, "windows-search-" + theme + ".png"));
         }
         Check(loads == 1, "Repeated searches re-enumerated the native settings catalog.");
@@ -74,8 +76,9 @@ public partial class MainWindow
             fixture.Width = viewport;
             fixture.SetSmokeSearch(new string('x', 500)); fixture.UpdateLayout();
             await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Render);
-            Check(fixture.WebSearchButton.ActualWidth <= fixture.ResultsPanel.ActualWidth + 1,
-                "A long web query escaped the narrow search panel.");
+            Check(fixture.WebSearchButton.ActualWidth > 30 && fixture.WebSearchButton.ActualWidth <= fixture.ResultsPanel.ActualWidth + 1
+                && fixture.WebSearchButton.Content is TextBlock { ActualWidth: > 10, ActualHeight: > 10 },
+                "A long web query escaped the narrow search panel or lost its rendered text extent.");
         }
         fixture.Width = width;
         fixture.ResetToPinnedView();
