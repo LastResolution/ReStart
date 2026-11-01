@@ -86,7 +86,8 @@ public partial class MainWindow
             Require(FocusAppInitial("Z") && ((Keyboard.FocusedElement as Button)?.Tag as AppEntry)?.Id == "zulu"
                 && SearchBox.Text.Length == 0, "An alphabet key did not navigate the focused app list.");
             SetSmokeSearch("Gamma");
-            Require(SearchResultNames.SequenceEqual(new[] { "Gamma sample" }), "Search lost a hidden app inside nested directories.");
+            Require(SearchResults.Items.OfType<Button>().Where(b => b.Tag is AppEntry).Select(AutomationProperties.GetName)
+                .SequenceEqual(new[] { "Gamma sample" }), "Search lost a hidden app inside nested directories.");
             ShowAllApps(this, new());
             _appFolderRows[root.Key].SetExpanded(true);
             _appFolderRows[nested.Key].SetExpanded(true);

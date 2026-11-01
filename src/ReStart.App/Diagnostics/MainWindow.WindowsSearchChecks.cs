@@ -11,6 +11,8 @@ public partial class MainWindow
     {
         var checks = 0; var loads = 0; var handoffs = 0;
         void Check(bool value, string message) { Require(value, message); checks++; }
+        static bool TextRenders(Button button) => VisualChildren<TextBlock>(button).Any(t => t.Text == System.Windows.Automation.AutomationProperties.GetName(button)
+            && t.ActualWidth > 10 && t.ActualHeight > 10);
         fixture.Document.Preferences.SearchSettings = true;
         var webSearches = new List<Uri>();
         fixture._webSearchFixture = uri => { webSearches.Add(uri); return true; };
@@ -66,7 +68,14 @@ public partial class MainWindow
             fixture.Document.Preferences.Theme = theme; fixture.ApplyAppearance(); fixture.RefreshSearchResults(); fixture.UpdateLayout();
             await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Render);
             Check(fixture.WebSearchButton.ActualWidth > 30 && fixture.WebSearchButton.ActualHeight > 10
-                && fixture.WebSearchButton.Content is TextBlock { ActualWidth: > 10, ActualHeight: > 10 }, "The web action was visible in state but had no rendered text extent.");
+                && TextRenders(fixture.WebSearchButton), "The web action was visible in state but had no rendered text extent.");
+            foreach (var action in new[] { fixture.WebSearchButton, fixture.WindowsSearchButton })
+            {
+                var row = (ListBoxItem)fixture.SearchResults.ItemContainerGenerator.ContainerFromItem(action);
+                var text = VisualChildren<TextBlock>(action).Single(t => t.Text == System.Windows.Automation.AutomationProperties.GetName(action));
+                Check(text.Foreground is System.Windows.Media.SolidColorBrush ink && row.Foreground is System.Windows.Media.SolidColorBrush expected && ink.Color == expected.Color,
+                    "An online action did not inherit its native row's theme/selection text color.");
+            }
             SaveFixtureElement(fixture.Root, Path.Combine(directory, "windows-search-" + theme + ".png"));
         }
         Check(loads == 1, "Repeated searches re-enumerated the native settings catalog.");
@@ -77,7 +86,7 @@ public partial class MainWindow
             fixture.SetSmokeSearch(new string('x', 500)); fixture.UpdateLayout();
             await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Render);
             Check(fixture.WebSearchButton.ActualWidth > 30 && fixture.WebSearchButton.ActualWidth <= fixture.ResultsPanel.ActualWidth + 1
-                && fixture.WebSearchButton.Content is TextBlock { ActualWidth: > 10, ActualHeight: > 10 },
+                && TextRenders(fixture.WebSearchButton),
                 "A long web query escaped the narrow search panel or lost its rendered text extent.");
         }
         fixture.Width = width;
@@ -86,6 +95,7 @@ public partial class MainWindow
             "Returning home retained online-search actions.");
         checks += VerifyAppHistorySearch(fixture, directory);
         checks += await AppJumpLists.VerifyOwnedAppFlagsAsync(directory);
+        checks += await VerifySearchActionKeysAsync(fixture);
         fixture._windowsSettingsFixture = null; fixture._windowsSearchFixture = null; fixture._webSearchFixture = null; fixture.ResetToPinnedView();
         return checks;
     }

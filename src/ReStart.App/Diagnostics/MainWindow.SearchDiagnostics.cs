@@ -38,6 +38,8 @@ public partial class MainWindow
         try
         {
             fixture.Present(); await fixture.InitializeAsync(); fixture._clock.Stop();
+            // Keep the local-only regression matrix; online action traversal has its own routed fixture coverage.
+            fixture.Document.Preferences.ShowWebSearch = false; fixture.Document.Preferences.ShowWindowsSearchHandoff = false;
             fixture.SetSmokeSearch("Editor"); fixture.UpdateLayout();
             Check(Selected() == "alpha" && fixture.SearchBox.IsKeyboardFocused && Row().IsSelected,
                 "Typing did not visibly select the first result while retaining the text caret.");
