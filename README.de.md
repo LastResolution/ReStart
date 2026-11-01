@@ -99,7 +99,7 @@ Beim Ziehen erscheinen kurz Tastentipps am unteren Rand. Sie lassen sich in den 
 
 ## Suchen und konfigurieren
 
-**Web und Cloud.** **Im Web nach … suchen** öffnet die aktuelle Suche in Bing im Standardbrowser. **Windows und Cloud durchsuchen** öffnet die Windows-Suche; geben Sie die Anfrage dort ein. Cloud-Ergebnisse hängen von Windows und verbundenen Konten ab. Beim Tippen wird nichts extern übertragen. Beide Aktionen lassen sich abschalten.
+**Web und Cloud.** **Im Web nach … suchen** öffnet die aktuelle Suche in Bing im Standardbrowser. **Windows und Cloud durchsuchen** öffnet die Windows-Suche und überträgt die aktuelle Anfrage, wenn das Eingabefeld verfügbar ist. Andernfalls geben Sie sie dort ein. Bei der Rückkehr zu ReStart wird dieses Suchfenster geschlossen. Cloud-Ergebnisse hängen von Windows und verbundenen Konten ab. Beim Tippen wird nichts extern übertragen. Beide Aktionen lassen sich abschalten.
 
 Mit <kbd>↑</kbd>/<kbd>↓</kbd> oder <kbd>Tab</kbd>/<kbd>Shift</kbd>+<kbd>Tab</kbd> wählen Sie lokale, Web- und Windows-/Cloud-Aktionen; <kbd>Enter</kbd> führt die ausgewählte Zeile aus. Gibt es nach Abschluss der lokalen Suche keinen Treffer, wird eine aktivierte Online-Aktion markiert. Tippen allein öffnet sie nicht.
 

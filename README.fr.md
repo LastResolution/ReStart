@@ -99,7 +99,7 @@ Des astuces clavier apparaissent brièvement en bas pendant le déplacement des 
 
 ## Rechercher et configurer
 
-**Web et cloud.** **Rechercher … sur le Web** ouvre la requête actuelle dans Bing avec le navigateur par défaut. **Rechercher dans Windows et le cloud** ouvre la recherche Windows : saisissez votre requête dans cette fenêtre. Le cloud dépend de Windows et des comptes connectés. La saisie seule n’envoie rien à l’extérieur. Les deux actions peuvent être désactivées.
+**Web et cloud.** **Rechercher … sur le Web** ouvre la requête actuelle dans Bing avec le navigateur par défaut. **Rechercher dans Windows et le cloud** ouvre la recherche Windows et transfère la requête actuelle si son champ est disponible. Sinon, saisissez-la dans cette fenêtre. Le retour à ReStart ferme cette fenêtre de recherche. Le cloud dépend de Windows et des comptes connectés. La saisie seule n’envoie rien à l’extérieur. Les deux actions peuvent être désactivées.
 
 Utilisez <kbd>↑</kbd>/<kbd>↓</kbd> ou <kbd>Tab</kbd>/<kbd>Shift</kbd>+<kbd>Tab</kbd> pour choisir un résultat local, Web ou Windows/cloud ; <kbd>Enter</kbd> exécute la ligne sélectionnée. Si la recherche locale terminée ne trouve rien, une action en ligne activée est surlignée. La saisie seule ne l’ouvre jamais.
 

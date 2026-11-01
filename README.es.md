@@ -99,7 +99,7 @@ Al arrastrar aparecen brevemente consejos de teclado en la parte inferior. Se pu
 
 ## Buscar y configurar
 
-**Web y nube.** **Buscar … en la Web** abre la consulta actual en Bing con el navegador predeterminado. **Buscar en Windows y en la nube** abre la búsqueda de Windows; introduce allí la consulta. La disponibilidad de la nube depende de Windows y de las cuentas conectadas. Escribir no envía nada al exterior. Ambas acciones pueden desactivarse.
+**Web y nube.** **Buscar … en la Web** abre la consulta actual en Bing con el navegador predeterminado. **Buscar en Windows y en la nube** abre la búsqueda de Windows y transfiere la consulta actual si el campo está disponible. Si no, introdúcela allí. Al volver a ReStart se cierra esa ventana de búsqueda. La disponibilidad de la nube depende de Windows y de las cuentas conectadas. Escribir no envía nada al exterior. Ambas acciones pueden desactivarse.
 
 Usa <kbd>↑</kbd>/<kbd>↓</kbd> o <kbd>Tab</kbd>/<kbd>Shift</kbd>+<kbd>Tab</kbd> para elegir resultados locales o acciones web y de Windows/nube; <kbd>Enter</kbd> ejecuta la fila seleccionada. Si la búsqueda local termina sin coincidencias, se resalta una acción en línea habilitada. Escribir por sí solo nunca la abre.
 
