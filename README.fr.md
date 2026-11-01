@@ -99,6 +99,10 @@ Des astuces clavier apparaissent brièvement en bas pendant le déplacement des 
 
 ## Rechercher et configurer
 
+**Web et cloud.** **Rechercher … sur le Web** ouvre la requête actuelle dans Bing avec le navigateur par défaut. **Rechercher dans Windows et le cloud** ouvre la recherche Windows : saisissez votre requête dans cette fenêtre. Le cloud dépend de Windows et des comptes connectés. La saisie seule n’envoie rien à l’extérieur. Les deux actions peuvent être désactivées.
+
+**Historique des applications.** L’historique activé des applications les plus utilisées peut classer les correspondances équivalentes ; les noms et alias exécutables exacts restent prioritaires. Les ajouts récents commencent par trois entrées avec **Afficher plus / Afficher moins**. Les exclusions d’historique des raccourcis Windows sont respectées. Le classement interne et l’historique d’installation de Windows Start ne sont pas copiés. [Comportement et limites (anglais)](docs/start-behavior.md#app-and-document-history).
+
 ![Résultats d’applications, de paramètres Windows et de fichiers locaux](docs/images/unified-search.png)
 
 Dans **Settings → Start behavior**, désactivez séparément la recherche de paramètres/fichiers, les menus de documents, les effets de survol, les groupes/dossiers automatiques, le défilement aux bords et les indications. L’enregistrement des applications fréquentes est désactivé par défaut.

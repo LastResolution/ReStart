@@ -127,6 +127,10 @@ Preview appearance, tile scale, group width and language before saving. Closing 
 
 Find apps by their displayed name or a Windows-supplied executable name: for example, `notepad` or `cmd` can find the corresponding installed app even when its name is translated. Search uses Start-menu targets, matching App Paths registrations and package-declared execution aliases. Availability depends on installed metadata; this is ReStart's local ranking, not Windows Search's complete results. Shortcuts with launch arguments rank below the ordinary app for a shared executable name.
 
+**Web and cloud.** Choose **Search the web for…** to open the current query in Bing using your default browser. **Search Windows and cloud** opens Windows Search; enter your query there, with cloud availability controlled by Windows and connected accounts. Typing alone sends nothing externally. Both actions can be switched off.
+
+**App history.** Enabled Most used history can sort equally strong app matches; exact names and executable aliases keep priority. Recently added starts with three entries and offers **Show more / Show less**. Windows shortcut history exclusions are respected. Windows Start’s private ranking and installation history are not duplicated; see [behavior and limits](docs/start-behavior.md#app-and-document-history).
+
 ![App, Windows setting and local file results in the complete search screen](docs/images/unified-search.png)
 
 <details>

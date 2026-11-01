@@ -99,6 +99,10 @@ Beim Ziehen erscheinen kurz Tastentipps am unteren Rand. Sie lassen sich in den 
 
 ## Suchen und konfigurieren
 
+**Web und Cloud.** **Im Web nach … suchen** öffnet die aktuelle Suche in Bing im Standardbrowser. **Windows und Cloud durchsuchen** öffnet die Windows-Suche; geben Sie die Anfrage dort ein. Cloud-Ergebnisse hängen von Windows und verbundenen Konten ab. Beim Tippen wird nichts extern übertragen. Beide Aktionen lassen sich abschalten.
+
+**App-Verlauf.** Der aktivierte Verlauf häufig verwendeter Apps kann gleichwertige Treffer sortieren; genaue Namen und ausführbare Aliase behalten Vorrang. „Zuletzt hinzugefügt“ zeigt zunächst drei Einträge mit **Mehr anzeigen / Weniger anzeigen**. Windows-Verknüpfungsregeln für Verlaufsausschlüsse werden berücksichtigt. Interne Windows-Start-Ranglisten und Installationsverläufe werden nicht kopiert. [Verhalten und Grenzen (Englisch)](docs/start-behavior.md#app-and-document-history).
+
 ![Apps, Windows-Einstellungen und lokale Dateien suchen](docs/images/unified-search.png)
 
 Unter **Settings → Start behavior** lassen sich Einstellungs-/Dateisuche, Dokumentmenüs, Hover-Effekte, automatische Gruppen/Ordner, Randscrollen und Ziehhinweise einzeln deaktivieren. Die Erfassung häufig genutzter Apps ist standardmäßig aus.

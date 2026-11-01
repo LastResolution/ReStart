@@ -119,23 +119,31 @@ public partial class MainWindow
 
     private async Task SaveSearchShowcaseAsync(string directory)
     {
-        Document.Preferences.Theme = ReStart.Core.ThemeMode.Dark; RefreshLayout(); ResetToPinnedView();
-        var powerShell = new AppEntry("powershell", "Windows PowerShell", Path.Combine(Environment.SystemDirectory, @"WindowsPowerShell\v1.0\powershell.exe"), false);
-        var notes = Path.Combine(directory, "Power plan.txt"); File.WriteAllText(notes, "Fictional power plan document.");
-        var noteEntry = FilePinning.FromPath(notes);
-        _apps = [powerShell];
-        await _catalog.LoadIconsAsync([powerShell, noteEntry]);
-        _fileSearchFixture = (_, _) => Task.FromResult<(IReadOnlyList<AppEntry>, bool)>((new[] { noteEntry }, true));
-        SetSmokeSearch("Power");
-        for (var attempt = 0; attempt < 100 && !SearchResultNames.Contains("Power plan.txt"); attempt++) await Task.Delay(25);
-        Require(SearchResultNames.Contains("Power plan.txt"), "The offline search showcase did not render its file fixture.");
-        SetStatus("");
-        foreach (var theme in new[] { ReStart.Core.ThemeMode.Dark, ReStart.Core.ThemeMode.Light })
+        var previousSize = (Width, Height);
+        try
         {
-            Document.Preferences.Theme = theme; ApplyAppearance(); UpdateLayout();
-            SaveScreenshot(Path.Combine(directory, "unified-search-" + theme.ToString().ToLowerInvariant() + ".png"));
+            // Render the owned English fixture at the website's advertised dimensions.
+            Width = 1920; Height = 1080;
+            Document.Preferences.Theme = ReStart.Core.ThemeMode.Dark; RefreshLayout(); ResetToPinnedView();
+            var powerShell = new AppEntry("powershell", "Windows PowerShell", Path.Combine(Environment.SystemDirectory, @"WindowsPowerShell\v1.0\powershell.exe"), false);
+            var notes = Path.Combine(directory, "Power plan.txt"); File.WriteAllText(notes, "Fictional power plan document.");
+            var noteEntry = FilePinning.FromPath(notes);
+            _apps = [powerShell];
+            await _catalog.LoadIconsAsync([powerShell, noteEntry]);
+            _fileSearchFixture = (_, _) => Task.FromResult<(IReadOnlyList<AppEntry>, bool)>((new[] { noteEntry }, true));
+            SetSmokeSearch("Power");
+            for (var attempt = 0; attempt < 100 && !SearchResultNames.Contains("Power plan.txt"); attempt++) await Task.Delay(25);
+            Require(SearchResultNames.Contains("Power plan.txt"), "The offline search showcase did not render its file fixture.");
+            SetStatus("");
+            foreach (var theme in new[] { ReStart.Core.ThemeMode.Dark, ReStart.Core.ThemeMode.Light })
+            {
+                Document.Preferences.Theme = theme; ApplyAppearance(); UpdateLayout();
+                await Dispatcher.Yield(DispatcherPriority.Render);
+                SaveScreenshot(Path.Combine(directory, "unified-search-" + theme.ToString().ToLowerInvariant() + ".png"));
+            }
+            SaveScreenshot(Path.Combine(directory, "unified-search.png"));
         }
-        SaveScreenshot(Path.Combine(directory, "unified-search.png"));
+        finally { Width = previousSize.Width; Height = previousSize.Height; UpdateLayout(); }
     }
 
     /// <summary>Captures the complete launcher with a fixed, nonpersonal app list and demonstration live data.</summary>

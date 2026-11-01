@@ -99,6 +99,10 @@ Al arrastrar aparecen brevemente consejos de teclado en la parte inferior. Se pu
 
 ## Buscar y configurar
 
+**Web y nube.** **Buscar … en la Web** abre la consulta actual en Bing con el navegador predeterminado. **Buscar en Windows y en la nube** abre la búsqueda de Windows; introduce allí la consulta. La disponibilidad de la nube depende de Windows y de las cuentas conectadas. Escribir no envía nada al exterior. Ambas acciones pueden desactivarse.
+
+**Historial de aplicaciones.** El historial activado de las aplicaciones más usadas puede ordenar coincidencias equivalentes; los nombres y alias ejecutables exactos conservan la prioridad. Los elementos recientes muestran inicialmente tres entradas con **Mostrar más / Mostrar menos**. Se respetan las exclusiones de historial de los accesos directos de Windows. No se copian el orden interno ni el historial de instalación de Windows Start. [Comportamiento y límites (inglés)](docs/start-behavior.md#app-and-document-history).
+
 ![Resultados de aplicaciones, configuración y archivos locales](docs/images/unified-search.png)
 
 En **Settings → Start behavior** puedes desactivar por separado la búsqueda de ajustes/archivos, menús de documentos, efectos al pasar el puntero, grupos/carpetas automáticos, desplazamiento en bordes e indicaciones. El registro de aplicaciones más usadas está desactivado inicialmente.
