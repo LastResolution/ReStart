@@ -129,6 +129,8 @@ Find apps by their displayed name or a Windows-supplied executable name: for exa
 
 **Web and cloud.** Choose **Search the web for…** to open the current query in Bing using your default browser. **Search Windows and cloud** opens Windows Search; enter your query there, with cloud availability controlled by Windows and connected accounts. Typing alone sends nothing externally. Both actions can be switched off.
 
+Use <kbd>↑</kbd>/<kbd>↓</kbd> or <kbd>Tab</kbd>/<kbd>Shift</kbd>+<kbd>Tab</kbd> to select local, Web or Windows/cloud actions; <kbd>Enter</kbd> invokes the selected row. When local searches finish without a match, an enabled online action is highlighted for Enter. Typing alone never opens it.
+
 **App history.** Enabled Most used history can sort equally strong app matches; exact names and executable aliases keep priority. Recently added starts with three entries and offers **Show more / Show less**. Windows shortcut history exclusions are respected. Windows Start’s private ranking and installation history are not duplicated; see [behavior and limits](docs/start-behavior.md#app-and-document-history).
 
 ![App, Windows setting and local file results in the complete search screen](docs/images/unified-search.png)

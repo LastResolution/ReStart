@@ -101,6 +101,8 @@ Al arrastrar aparecen brevemente consejos de teclado en la parte inferior. Se pu
 
 **Web y nube.** **Buscar … en la Web** abre la consulta actual en Bing con el navegador predeterminado. **Buscar en Windows y en la nube** abre la búsqueda de Windows; introduce allí la consulta. La disponibilidad de la nube depende de Windows y de las cuentas conectadas. Escribir no envía nada al exterior. Ambas acciones pueden desactivarse.
 
+Usa <kbd>↑</kbd>/<kbd>↓</kbd> o <kbd>Tab</kbd>/<kbd>Shift</kbd>+<kbd>Tab</kbd> para elegir resultados locales o acciones web y de Windows/nube; <kbd>Enter</kbd> ejecuta la fila seleccionada. Si la búsqueda local termina sin coincidencias, se resalta una acción en línea habilitada. Escribir por sí solo nunca la abre.
+
 **Historial de aplicaciones.** El historial activado de las aplicaciones más usadas puede ordenar coincidencias equivalentes; los nombres y alias ejecutables exactos conservan la prioridad. Los elementos recientes muestran inicialmente tres entradas con **Mostrar más / Mostrar menos**. Se respetan las exclusiones de historial de los accesos directos de Windows. No se copian el orden interno ni el historial de instalación de Windows Start. [Comportamiento y límites (inglés)](docs/start-behavior.md#app-and-document-history).
 
 ![Resultados de aplicaciones, configuración y archivos locales](docs/images/unified-search.png)

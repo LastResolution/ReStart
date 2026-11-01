@@ -101,6 +101,8 @@ Des astuces clavier apparaissent brièvement en bas pendant le déplacement des 
 
 **Web et cloud.** **Rechercher … sur le Web** ouvre la requête actuelle dans Bing avec le navigateur par défaut. **Rechercher dans Windows et le cloud** ouvre la recherche Windows : saisissez votre requête dans cette fenêtre. Le cloud dépend de Windows et des comptes connectés. La saisie seule n’envoie rien à l’extérieur. Les deux actions peuvent être désactivées.
 
+Utilisez <kbd>↑</kbd>/<kbd>↓</kbd> ou <kbd>Tab</kbd>/<kbd>Shift</kbd>+<kbd>Tab</kbd> pour choisir un résultat local, Web ou Windows/cloud ; <kbd>Enter</kbd> exécute la ligne sélectionnée. Si la recherche locale terminée ne trouve rien, une action en ligne activée est surlignée. La saisie seule ne l’ouvre jamais.
+
 **Historique des applications.** L’historique activé des applications les plus utilisées peut classer les correspondances équivalentes ; les noms et alias exécutables exacts restent prioritaires. Les ajouts récents commencent par trois entrées avec **Afficher plus / Afficher moins**. Les exclusions d’historique des raccourcis Windows sont respectées. Le classement interne et l’historique d’installation de Windows Start ne sont pas copiés. [Comportement et limites (anglais)](docs/start-behavior.md#app-and-document-history).
 
 ![Résultats d’applications, de paramètres Windows et de fichiers locaux](docs/images/unified-search.png)
