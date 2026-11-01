@@ -571,9 +571,16 @@
   "WindowsAppHistoryHelp": "Windowsのアプリ起動の追跡が有効な場合に使用します。インストール済みアプリに一致する記録だけを読み、保存はしません。ReStartの履歴を消去してもWindowsの履歴は消えません。",
   "SettingsWindowsSearchSyntax": "Windowsの高度なファイル検索構文を使用",
   "WindowsSearchSyntaxHelp": "Windowsの検索構文と関連度順を使用します。System.Kind:pictureなどの正規プロパティ名は言語を問わず使用できます。本文の検索には別途本文検索の設定が必要です。",
-  "SearchInWindows": "Windows検索を開く",
+  "SearchInWindows": "Windows・クラウドを検索",
   "SettingsWindowsSearchHandoff": "Windows検索への引き継ぎを表示",
-  "WindowsSearchHandoffHelp": "Win+SでWindows検索を開きます。検索語はWindows側で入力してください。Web・クラウド・アカウントへのアクセスはWindowsが管理します。",
+  "WindowsSearchHandoffHelp": "Win+SでWindows検索を開きます。検索語はWindows側で入力してください。クラウドの結果はWindows検索の権限と接続済みアカウントに従います。ReStartがサインインしたりクラウドのファイルを読み取ったりすることはありません。",
   "SettingsLegacyUwpTiles": "Windowsアプリのライブタイルを表示（互換機能）",
-  "LegacyUwpTilesHelp": "ピン留めしたパッケージアプリの有効なタイルとバッジだけを読み取ります。Windowsの非公開データ形式を使用し、利用できない場合はアイコンを表示します。トースト通知は取得せず、外部画像もダウンロードしません。"
+  "LegacyUwpTilesHelp": "ピン留めしたパッケージアプリの有効なタイルとバッジだけを読み取ります。Windowsの非公開データ形式を使用し、利用できない場合はアイコンを表示します。トースト通知は取得せず、外部画像もダウンロードしません。",
+  "SearchWebFor": "「{0}」をWebで検索",
+  "SettingsWebSearch": "既定のブラウザーでWeb検索する項目を表示",
+  "WebSearchHelp": "この操作を選んだときだけ、既定のブラウザーでBingを開きます。入力するだけでは検索語を外部へ送信しません。",
+  "SettingsPersonalizeAppSearch": "有効なアプリ履歴で同程度の検索候補を並べる",
+  "AppSearchRankingHelp": "下の「よく使うアプリ」の履歴が必要です。名前や実行ファイル名の完全一致を優先します。Windows Start独自の順位を再現するものではありません。",
+  "RecentAppsShowMore": "もっと見る",
+  "RecentAppsShowLess": "表示を減らす"
 }

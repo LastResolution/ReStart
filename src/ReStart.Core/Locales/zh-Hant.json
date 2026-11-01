@@ -571,9 +571,16 @@
   "WindowsAppHistoryHelp": "需要啟用 Windows 應用程式啟動追蹤。僅讀取與已安裝應用程式相符的記錄，不儲存副本。清除 ReStart 歷程記錄不會清除 Windows 歷程記錄。",
   "SettingsWindowsSearchSyntax": "使用 Windows 進階檔案查詢",
   "WindowsSearchSyntaxHelp": "使用 Windows 查詢語法及相關性排序。System.Kind:picture 等標準屬性名稱可跨語言使用。文件內文仍需另外啟用內容搜尋。",
-  "SearchInWindows": "開啟 Windows 搜尋",
+  "SearchInWindows": "搜尋 Windows 和雲端",
   "SettingsWindowsSearchHandoff": "顯示 Windows 搜尋入口",
-  "WindowsSearchHandoffHelp": "透過 Win+S 開啟 Windows 搜尋。請在 Windows 中輸入搜尋字詞。Web、雲端與帳戶存取由 Windows 管理。",
+  "WindowsSearchHandoffHelp": "透過 Win+S 開啟 Windows 搜尋。請在該視窗中輸入搜尋字詞。雲端結果取決於 Windows 搜尋權限和已連線的帳戶。ReStart 不會登入或存取雲端檔案。",
   "SettingsLegacyUwpTiles": "顯示 Windows 應用程式動態磚（相容功能）",
-  "LegacyUwpTilesHelp": "僅讀取已釘選封裝應用程式的有效動態磚與徽章資料。使用未公開的 Windows 儲存格式；資料無法使用時顯示圖示。不讀取快顯通知，也不下載遠端影像。"
+  "LegacyUwpTilesHelp": "僅讀取已釘選封裝應用程式的有效動態磚與徽章資料。使用未公開的 Windows 儲存格式；資料無法使用時顯示圖示。不讀取快顯通知，也不下載遠端影像。",
+  "SearchWebFor": "在網路上搜尋「{0}」",
+  "SettingsWebSearch": "顯示透過預設瀏覽器進行網頁搜尋的選項",
+  "WebSearchHelp": "僅在選擇此操作時使用預設瀏覽器開啟 Bing。僅輸入文字不會將搜尋字詞傳送到網路。",
+  "SettingsPersonalizeAppSearch": "使用已啟用的應用程式歷程記錄排列同等符合的結果",
+  "AppSearchRankingHelp": "需要啟用下方的常用應用程式歷程記錄。完全符合的名稱和執行檔別名優先。不重現 Windows 開始功能表的內部排名。",
+  "RecentAppsShowMore": "顯示更多",
+  "RecentAppsShowLess": "收合"
 }

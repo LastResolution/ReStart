@@ -31,6 +31,7 @@ public partial class MainWindow
             if (_exit || !Document.Preferences.ShowMostUsed || !Document.Preferences.UseWindowsAppHistory) return;
             _windowsUsage = snapshot.Entries;
             RenderApps();
+            RefreshSearchResults();
         }
         catch (OperationCanceledException) { }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException) { _windowsUsage = new Dictionary<string, WindowsAppUsage>(); }
@@ -70,5 +71,5 @@ public partial class MainWindow
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
     }
-    internal void ClearAppHistory() { Activity.Clear(); SaveActivity(); RenderApps(); SetStatus(L.T(K.HistoryCleared)); }
+    internal void ClearAppHistory() { Activity.Clear(); SaveActivity(); RenderApps(); RefreshSearchResults(); SetStatus(L.T(K.HistoryCleared)); }
 }

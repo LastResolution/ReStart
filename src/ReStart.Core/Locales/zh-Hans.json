@@ -571,9 +571,16 @@
   "WindowsAppHistoryHelp": "需要启用 Windows 应用启动跟踪。仅读取与已安装应用匹配的记录，不保存副本。清除 ReStart 历史记录不会清除 Windows 历史记录。",
   "SettingsWindowsSearchSyntax": "使用 Windows 高级文件查询",
   "WindowsSearchSyntaxHelp": "使用 Windows 查询语法和相关性排序。System.Kind:picture 等规范属性名可跨语言使用。文档正文仍需单独启用内容搜索。",
-  "SearchInWindows": "打开 Windows 搜索",
+  "SearchInWindows": "搜索 Windows 和云端",
   "SettingsWindowsSearchHandoff": "显示 Windows 搜索入口",
-  "WindowsSearchHandoffHelp": "通过 Win+S 打开 Windows 搜索。请在 Windows 中输入搜索词。Web、云和帐户访问由 Windows 管理。",
+  "WindowsSearchHandoffHelp": "通过 Win+S 打开 Windows 搜索。请在该窗口中输入搜索词。云端结果取决于 Windows 搜索权限和已连接的帐户。ReStart 不会登录或访问云端文件。",
   "SettingsLegacyUwpTiles": "显示 Windows 应用动态磁贴（兼容功能）",
-  "LegacyUwpTilesHelp": "仅读取已固定的打包应用的有效磁贴和徽章数据。使用未公开的 Windows 存储格式；数据不可用时显示图标。不读取弹出通知，也不下载远程图像。"
+  "LegacyUwpTilesHelp": "仅读取已固定的打包应用的有效磁贴和徽章数据。使用未公开的 Windows 存储格式；数据不可用时显示图标。不读取弹出通知，也不下载远程图像。",
+  "SearchWebFor": "在网上搜索“{0}”",
+  "SettingsWebSearch": "显示通过默认浏览器进行网页搜索的选项",
+  "WebSearchHelp": "仅在选择此操作时使用默认浏览器打开 Bing。仅输入文字不会将搜索词发送到网络。",
+  "SettingsPersonalizeAppSearch": "使用已启用的应用历史记录排列同等匹配的结果",
+  "AppSearchRankingHelp": "需要启用下方的常用应用历史记录。完全匹配的名称和可执行文件别名优先。不复现 Windows 开始菜单的内部排名。",
+  "RecentAppsShowMore": "显示更多",
+  "RecentAppsShowLess": "收起"
 }

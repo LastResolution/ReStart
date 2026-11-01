@@ -26,6 +26,10 @@ internal sealed partial class SettingsWindow
         windowsSyntax = Check(panel, L.T(K.SettingsWindowsSearchSyntax), _draft.SearchWindowsSyntax, value => _draft.SearchWindowsSyntax = value);
         windowsSyntax.IsEnabled = _draft.SearchFiles;
         Note(panel, L.T(K.WindowsSearchSyntaxHelp));
+        Check(panel, L.T(K.SettingsWebSearch), _draft.ShowWebSearch, value => _draft.ShowWebSearch = value);
+        Note(panel, L.T(K.WebSearchHelp));
+        Check(panel, L.T(K.SettingsPersonalizeAppSearch), _draft.PersonalizeAppSearch, value => _draft.PersonalizeAppSearch = value);
+        Note(panel, L.T(K.AppSearchRankingHelp));
         Check(panel, L.T(K.SettingsWindowsSearchHandoff), _draft.ShowWindowsSearchHandoff, value => _draft.ShowWindowsSearchHandoff = value);
         Note(panel, L.T(K.WindowsSearchHandoffHelp));
         Check(panel, L.T(K.SettingsJumpLists), _draft.ShowJumpLists, value => _draft.ShowJumpLists = value);

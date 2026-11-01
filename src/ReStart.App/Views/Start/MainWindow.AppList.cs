@@ -15,12 +15,14 @@ public partial class MainWindow
     private readonly Dictionary<string, AppFolderButton> _appFolderRows = new(StringComparer.OrdinalIgnoreCase);
     private WindowsAppIndex _appIndex = WindowsAppIndex.ForLanguage(L.Language);
     private string[] _appAlphabet = [];
+    private bool _recentAppsExpanded;
 
     private void RenderApps()
     {
         RefreshWindowsUsage();
         var focusedFolder = (Keyboard.FocusedElement as AppFolderButton)?.FolderKey;
         var focusedApp = ((Keyboard.FocusedElement as Button)?.Tag as AppEntry)?.Id;
+        var focusedRecentToggle = (Keyboard.FocusedElement as Button)?.Uid == "recent-expand";
         AppsPanel.Children.Clear();
         _sections.Clear();
         _appFolderRows.Clear();
@@ -39,7 +41,27 @@ public partial class MainWindow
                 AppsPanel.Children.Add(row);
             }
         }
-        if (DisplayPreferences.ShowRecentlyAdded) HistorySection(K.RecentlyAdded, Activity.Recent(_apps, DateTimeOffset.Now));
+        var allRecent = DisplayPreferences.ShowRecentlyAdded ? Activity.Recent(_apps, DateTimeOffset.Now, 4096) : [];
+        if (allRecent.Count <= 3) _recentAppsExpanded = false;
+        HistorySection(K.RecentlyAdded, _recentAppsExpanded ? allRecent : allRecent.Take(3).ToArray());
+        if (allRecent.Count > 3)
+        {
+            var expand = new Button
+            {
+                Content = L.T(_recentAppsExpanded ? K.RecentAppsShowLess : K.RecentAppsShowMore),
+                Uid = "recent-expand",
+                HorizontalContentAlignment = HorizontalAlignment.Left,
+                Padding = new(8, 8, 0, 8)
+            };
+            AutomationProperties.SetName(expand, (string)expand.Content);
+            AutomationProperties.SetItemStatus(expand, L.T(K.RecentlyAdded));
+            expand.Click += (_, _) =>
+            {
+                _recentAppsExpanded = !_recentAppsExpanded; RenderApps();
+                AppsPanel.Children.OfType<Button>().FirstOrDefault(b => b.Uid == "recent-expand")?.Focus();
+            };
+            AppsPanel.Children.Add(expand);
+        }
         if (DisplayPreferences.ShowMostUsed) HistorySection(K.MostUsed, Activity.Frequent(_apps, _windowsUsage));
         var previousAlphabet = _appAlphabet;
         var focusedLetter = (Keyboard.FocusedElement as Button)?.Content as string;
@@ -92,6 +114,7 @@ public partial class MainWindow
             if (_allApps && SearchBox.Text.Length == 0) AppsPanel.Children.OfType<Button>()
                 .FirstOrDefault(b => b.Tag is AppEntry app && app.Id == focusedApp)?.Focus();
         }, DispatcherPriority.Input);
+        else if (focusedRecentToggle) AppsPanel.Children.OfType<Button>().FirstOrDefault(b => b.Uid == "recent-expand")?.Focus();
     }
 
     private void FocusAppFolder(string key) => Dispatcher.BeginInvoke(() =>

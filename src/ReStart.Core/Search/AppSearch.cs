@@ -10,14 +10,19 @@ public static class AppSearch
     /// <param name="apps">Flat catalog of installed app identities, display names and search-only executable aliases; entries and alias lists are not mutated.</param>
     /// <param name="query">Search text; matching normalizes case, Unicode width, and hiragana/katakana forms.</param>
     /// <param name="limit">Maximum number of ranked apps to return.</param>
-    /// <returns>Ranked matching apps, limited to the requested count; a blank query returns the first culture-sorted catalog entries.</returns>
-    public static IReadOnlyList<AppEntry> Find(IEnumerable<AppEntry> apps, string query, int limit = 80)
+    /// <param name="usage">Optional opt-in app usage snapshot; only equally strong text matches are ordered by descending usage and last launch. Null preserves name-only tie breaking. Neither observations nor apps are mutated.</param>
+    /// <param name="names">Optional name comparer for final ties, such as Windows NLS collation. Null uses the current culture's case-insensitive comparer.</param>
+    /// <returns>Ranked matching apps, limited to the requested count; a blank query returns name-sorted entries without usage weighting.</returns>
+    public static IReadOnlyList<AppEntry> Find(IEnumerable<AppEntry> apps, string query, int limit = 80,
+        IReadOnlyDictionary<string, WindowsAppUsage>? usage = null, IComparer<string>? names = null)
     {
         var words = Fold(query).Split(' ', StringSplitOptions.RemoveEmptyEntries);
         return apps.Select(app => (App: app, Rank: Rank(app, words)))
             .Where(x => x.Rank < int.MaxValue)
             .OrderBy(x => x.Rank)
-            .ThenBy(x => x.App.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ThenByDescending(x => words.Length == 0 ? 0 : Math.Clamp(usage?.GetValueOrDefault(x.App.Id)?.Launches ?? 0, 0, 1_000_000))
+            .ThenByDescending(x => words.Length == 0 ? default : usage?.GetValueOrDefault(x.App.Id)?.LastLaunched ?? default)
+            .ThenBy(x => x.App.Name, names ?? StringComparer.CurrentCultureIgnoreCase)
             .Take(limit).Select(x => x.App).ToList();
     }
 

@@ -12,6 +12,8 @@ public partial class MainWindow
         var checks = 0; var loads = 0; var handoffs = 0;
         void Check(bool value, string message) { Require(value, message); checks++; }
         fixture.Document.Preferences.SearchSettings = true;
+        var webSearches = new List<Uri>();
+        fixture._webSearchFixture = uri => { webSearches.Add(uri); return true; };
         fixture._windowsSearchFixture = () => { handoffs++; return true; };
         fixture._windowsSettingsFixture = async () =>
         {
@@ -21,6 +23,17 @@ public partial class MainWindow
         var beforeLaunch = launched.Count;
         fixture.SetSmokeSearch("owned keyword");
         Check(launched.Count == beforeLaunch && handoffs == 0, "Typing automatically invoked Windows Search.");
+        Check(webSearches.Count == 0 && fixture.WebSearchButton.Visibility == Visibility.Visible,
+            "Typing invoked the browser or failed to offer the explicit web action.");
+        fixture.WebSearchButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Check(webSearches.Count == 1 && webSearches[0] == WebSearchQuery.Build("owned keyword"), "Web search lost or altered the current query.");
+        fixture.SetSmokeSearch("owned & updated?value=1");
+        fixture.WebSearchButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Check(webSearches.Count == 2 && webSearches[1] == WebSearchQuery.Build(fixture.SearchBox.Text), "Web search reused a stale query or accepted query injection.");
+        fixture.Document.Preferences.ShowWebSearch = false; fixture.RefreshSearchResults();
+        fixture.WebSearchButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Check(webSearches.Count == 2 && fixture.WebSearchButton.Visibility == Visibility.Collapsed, "A disabled web action remained invokable.");
+        fixture.Document.Preferences.ShowWebSearch = true; fixture.SetSmokeSearch("owned keyword");
         var deadline = Environment.TickCount64 + 2000;
         while (!fixture._windowsSettingsLoaded && Environment.TickCount64 < deadline) await Task.Delay(20);
         Check(fixture.SearchResultNames.Contains("Owned Windows setting"), "Native settings keywords did not appear in categorized results.");
@@ -43,6 +56,9 @@ public partial class MainWindow
             Check(WindowsSearchQuery.Build("System.Search.Contents:ReStartOwnedAbsent", false, L.Culture.LCID) == null,
                 "Explicit AQS properties bypassed disabled document-content matching.");
             Check(!string.IsNullOrWhiteSpace(L.T(K.SearchInWindows)) && !string.IsNullOrWhiteSpace(L.T(K.SettingsWindowsSearchSyntax)), "A Windows Search action lost its translated text.");
+            fixture.RefreshSearchResults();
+            Check(System.Windows.Automation.AutomationProperties.GetName(fixture.WebSearchButton).Contains("owned keyword", StringComparison.Ordinal)
+                && fixture.WebSearchButton.ToolTip is string { Length: > 0 }, "A translated web action lost its query or privacy description.");
         }
         fixture.Document.Preferences.Language = "en"; LocalizationResources.Apply("en");
         foreach (var theme in new[] { ReStart.Core.ThemeMode.Dark, ReStart.Core.ThemeMode.Light })
@@ -52,7 +68,22 @@ public partial class MainWindow
             SaveFixtureElement(fixture.Root, Path.Combine(directory, "windows-search-" + theme + ".png"));
         }
         Check(loads == 1, "Repeated searches re-enumerated the native settings catalog.");
-        fixture._windowsSettingsFixture = null; fixture._windowsSearchFixture = null; fixture.ResetToPinnedView();
+        var width = fixture.Width;
+        foreach (var viewport in new[] { 360d, 768d })
+        {
+            fixture.Width = viewport;
+            fixture.SetSmokeSearch(new string('x', 500)); fixture.UpdateLayout();
+            await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Render);
+            Check(fixture.WebSearchButton.ActualWidth <= fixture.ResultsPanel.ActualWidth + 1,
+                "A long web query escaped the narrow search panel.");
+        }
+        fixture.Width = width;
+        fixture.ResetToPinnedView();
+        Check(fixture.WebSearchButton.Visibility == Visibility.Collapsed && fixture.WindowsSearchButton.Visibility == Visibility.Collapsed,
+            "Returning home retained online-search actions.");
+        checks += VerifyAppHistorySearch(fixture, directory);
+        checks += await AppJumpLists.VerifyOwnedAppFlagsAsync(directory);
+        fixture._windowsSettingsFixture = null; fixture._windowsSearchFixture = null; fixture._webSearchFixture = null; fixture.ResetToPinnedView();
         return checks;
     }
 }

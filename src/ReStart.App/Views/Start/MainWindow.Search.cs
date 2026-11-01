@@ -23,6 +23,7 @@ public partial class MainWindow
     private bool _windowsSettingsLoaded;
     private Func<Task<IReadOnlyList<WindowsSettingsCatalog.Entry>>>? _windowsSettingsFixture = null;
     private Func<bool>? _windowsSearchFixture;
+    private Func<Uri, bool>? _webSearchFixture;
     private bool CanHandoffToWindows => _preview || WindowsSearchLauncher.IsAvailable();
     private Func<string, CancellationToken, Task<(IReadOnlyList<AppEntry> Files, bool Available)>>? _fileSearchFixture;
 
@@ -39,9 +40,16 @@ public partial class MainWindow
         SearchResultHeading.Text = "";
         WindowsSearchButton.Visibility = query.Length > 0 && Document.Preferences.ShowWindowsSearchHandoff && CanHandoffToWindows ? Visibility.Visible : Visibility.Collapsed;
         WindowsSearchButton.ToolTip = L.T(K.WindowsSearchHandoffHelp);
+        WebSearchButton.Visibility = Document.Preferences.ShowWebSearch && WebSearchQuery.Build(query) != null ? Visibility.Visible : Visibility.Collapsed;
+        var webLabel = L.F(K.SearchWebFor, query);
+        WebSearchButton.Content = new TextBlock { Text = webLabel, TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = 580 };
+        System.Windows.Automation.AutomationProperties.SetName(WebSearchButton, webLabel);
+        WebSearchButton.ToolTip = L.T(K.WebSearchHelp);
         if (query.Length == 0) return;
         EnsureWindowsSettingsCatalog();
-        var apps = AppSearch.Find(_apps, query);
+        var usage = Document.Preferences.PersonalizeAppSearch && Document.Preferences.ShowMostUsed
+            ? Activity.Usage(_apps, Document.Preferences.UseWindowsAppHistory ? _windowsUsage : null) : null;
+        var apps = AppSearch.Find(_apps, query, usage: usage, names: WindowsAppIndex.ForLanguage(L.Language).Names);
         var settings = Document.Preferences.SearchSettings ? SettingsSearch.Find(query).Concat(WindowsSettingsCatalog.Find(_windowsSettings, query))
             .DistinctBy(a => a.LaunchTarget, StringComparer.OrdinalIgnoreCase).ToArray() : [];
         var results = apps.Concat(settings).Concat(_fileSearchResults).DistinctBy(a => a.Id, StringComparer.OrdinalIgnoreCase).ToArray();
@@ -81,6 +89,16 @@ public partial class MainWindow
         if (_windowsSearchFixture != null) { _windowsSearchFixture(); return; }
         Dismiss(immediately: true);
         if (!WindowsSearchLauncher.TryOpen()) { Present(); SetStatus(L.T(K.ErrorLaunch) + L.T(K.SearchInWindows)); }
+    }
+
+    private void OpenWebSearch(object sender, RoutedEventArgs e)
+    {
+        if (!Document.Preferences.ShowWebSearch || WebSearchQuery.Build(SearchBox.Text) is not { } uri) return;
+        if (_webSearchFixture != null) { _webSearchFixture(uri); return; }
+        if (_preview) return;
+        try { ShellLauncher.Launch(uri.AbsoluteUri); Dismiss(immediately: true); }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or IOException)
+        { SetStatus(L.T(K.ErrorLaunch) + ex.Message); }
     }
 
     private async void EnsureWindowsSettingsCatalog()

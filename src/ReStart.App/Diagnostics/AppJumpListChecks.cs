@@ -92,9 +92,43 @@ internal static partial class AppJumpLists
         }
     });
 
+    internal static Task<int> VerifyOwnedAppFlagsAsync(string directory) => AppShellCommands.OnSta(() =>
+    {
+        Directory.CreateDirectory(directory);
+        var target = Path.Combine(directory, "Owned app metadata.txt");
+        File.WriteAllText(target, "owned metadata fixture; never executed");
+        var checks = 0;
+        for (var state = 0; state < 4; state++)
+        {
+            object? shellLink = null;
+            try
+            {
+                shellLink = Activator.CreateInstance(Type.GetTypeFromCLSID(new("00021401-0000-0000-c000-000000000046"))!)!;
+                Marshal.ThrowExceptionForHR(((IShellLink)shellLink).SetPath(target));
+                var properties = (IHistoryPropertyStore)shellLink;
+                for (uint id = 8; id <= 9; id++)
+                {
+                    var key = new HistoryPropertyKey { Format = new("9f4c2855-9f79-4b39-a8d0-e1d42de1d5f3"), Id = id };
+                    var value = new HistoryStringVariant { Type = 11, Boolean = (short)((state & (id == 8 ? 1 : 2)) != 0 ? -1 : 0) };
+                    Marshal.ThrowExceptionForHR(properties.SetValue(ref key, ref value));
+                }
+                Marshal.ThrowExceptionForHR(properties.Commit());
+                var path = Path.Combine(directory, "Owned app flags " + state + ".lnk");
+                ((System.Runtime.InteropServices.ComTypes.IPersistFile)shellLink).Save(path, true);
+                var metadata = AppCatalog.ReadShortcutMetadata(path);
+                if (metadata.ExcludeFromRecentlyAdded != ((state & 1) != 0) || metadata.ExcludeFromMostUsed != ((state & 2) != 0)
+                    || !metadata.TargetPath.Equals(target, StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException("The owned shortcut did not retain its Windows history exclusions and target.");
+                checks++;
+            }
+            finally { Release(shellLink); }
+        }
+        return checks;
+    });
+
     [StructLayout(LayoutKind.Sequential)] private struct HistoryAppIdLink { internal nint Link; internal nint AppId; }
     [StructLayout(LayoutKind.Sequential)] private struct HistoryPropertyKey { internal Guid Format; internal uint Id; }
-    [StructLayout(LayoutKind.Explicit, Size = 24)] private struct HistoryStringVariant { [FieldOffset(0)] internal ushort Type; [FieldOffset(8)] internal nint Text; }
+    [StructLayout(LayoutKind.Explicit, Size = 24)] private struct HistoryStringVariant { [FieldOffset(0)] internal ushort Type; [FieldOffset(8)] internal nint Text; [FieldOffset(8)] internal short Boolean; }
     [ComImport, Guid("886d8eeb-8cf2-4446-8d02-cdba1dbdcf99"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     private interface IHistoryPropertyStore
     {

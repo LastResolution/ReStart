@@ -571,9 +571,16 @@
   "WindowsAppHistoryHelp": "Requires Windows app-launch tracking. Reads exact installed-app records without saving them. Clearing ReStart history does not clear Windows history.",
   "SettingsWindowsSearchSyntax": "Use Windows advanced file queries",
   "WindowsSearchSyntaxHelp": "Use Windows query syntax and relevance ranking. Canonical properties such as System.Kind:picture work across languages. Document contents still require the separate content option.",
-  "SearchInWindows": "Open Windows Search",
+  "SearchInWindows": "Search Windows and cloud",
   "SettingsWindowsSearchHandoff": "Show Windows Search handoff",
-  "WindowsSearchHandoffHelp": "Opens Windows Search with Win+S. Enter your query there. Windows controls Web, cloud and account access.",
+  "WindowsSearchHandoffHelp": "Opens Windows Search with Win+S. Enter your query there. Cloud results depend on Windows search permissions and connected accounts. ReStart does not sign in or access cloud files.",
   "SettingsLegacyUwpTiles": "Show Windows app live tiles (compatibility)",
-  "LegacyUwpTilesHelp": "Reads active tile and badge data only for pinned packaged apps. Uses an undocumented Windows store; unavailable data falls back to icons. Toasts are not read and remote images are not downloaded."
+  "LegacyUwpTilesHelp": "Reads active tile and badge data only for pinned packaged apps. Uses an undocumented Windows store; unavailable data falls back to icons. Toasts are not read and remote images are not downloaded.",
+  "SearchWebFor": "Search the web for “{0}”",
+  "SettingsWebSearch": "Show web search in the default browser",
+  "WebSearchHelp": "Opens Bing in your default browser only when you choose this action. Typing does not send search text to the Web.",
+  "SettingsPersonalizeAppSearch": "Rank equal app matches using enabled app history",
+  "AppSearchRankingHelp": "Requires Most used app history below. Exact names and executable aliases keep priority. Windows Start’s private ranking is not reproduced.",
+  "RecentAppsShowMore": "Show more",
+  "RecentAppsShowLess": "Show less"
 }

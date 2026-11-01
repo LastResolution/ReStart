@@ -59,6 +59,10 @@ public sealed class Preferences
     public bool SearchWindowsSyntax { get; set; }
     /// <summary>Gets or sets whether query results include an explicit Windows Search handoff for additional local, Web and cloud sources. Defaults to true; typing alone never invokes Windows Search.</summary>
     public bool ShowWindowsSearchHandoff { get; set; } = true;
+    /// <summary>Gets or sets whether search offers an explicit Bing action in the default browser. True by default; typing never sends a query externally.</summary>
+    public bool ShowWebSearch { get; set; } = true;
+    /// <summary>Gets or sets whether enabled Most used history breaks equally strong app search matches. True by default; no history is recorded or read unless its separate usage options are enabled.</summary>
+    public bool PersonalizeAppSearch { get; set; } = true;
     /// <summary>Gets or sets whether apps first observed after the initial catalog appear in Recently added for seven days.</summary>
     public bool ShowRecentlyAdded { get; set; } = true;
     /// <summary>Gets or sets whether successful ReStart app launches are counted locally and shown in Most used.</summary>

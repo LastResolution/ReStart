@@ -191,6 +191,8 @@ public partial class MainWindow
                 [K.SearchFilesSetting] = p => p.SearchFiles,
                 [K.SettingsWindowsSearchSyntax] = p => p.SearchWindowsSyntax,
                 [K.SettingsWindowsSearchHandoff] = p => p.ShowWindowsSearchHandoff,
+                [K.SettingsWebSearch] = p => p.ShowWebSearch,
+                [K.SettingsPersonalizeAppSearch] = p => p.PersonalizeAppSearch,
                 [K.SettingsLegacyUwpTiles] = p => p.LegacyUwpLiveTiles,
                 [K.SettingsJumpLists] = p => p.ShowJumpLists,
                 [K.SettingsAppTasks] = p => p.ShowAppTasks,
