@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using ReStart.Core;
 using ReStart.App.Services;
 
@@ -9,6 +10,10 @@ namespace ReStart.App;
 public partial class MainWindow
 {
     private string _renderedSearchQuery = "";
+    private bool _searchSelectionExplicit;
+    private int _searchRefreshDepth;
+    private Button WebSearchButton = null!;
+    private Button WindowsSearchButton = null!;
     private string _fileSearchQuery = "";
     private CancellationTokenSource? _fileSearchCancellation;
     private readonly IndexedFileSearch _indexedFiles = new();
@@ -22,26 +27,58 @@ public partial class MainWindow
     private bool _windowsSettingsLoading;
     private bool _windowsSettingsLoaded;
     private Func<Task<IReadOnlyList<WindowsSettingsCatalog.Entry>>>? _windowsSettingsFixture = null;
-    private Func<bool>? _windowsSearchFixture;
+    private Func<string, bool>? _windowsSearchFixture;
+    private readonly WindowsSearchHandoff _windowsSearchHandoff = new(new WindowsSearchNativeBackend());
+    private bool _returningFromWindowsSearch;
+    private bool _windowsSearchQueryUnavailable;
+    private Func<Uri, bool>? _webSearchFixture;
     private bool CanHandoffToWindows => _preview || WindowsSearchLauncher.IsAvailable();
     private Func<string, CancellationToken, Task<(IReadOnlyList<AppEntry> Files, bool Available)>>? _fileSearchFixture;
 
     /// <summary>Rebuilds the visible results, retaining the selected app only when the query has not changed.</summary>
     private void RefreshSearchResults()
     {
+        _searchRefreshDepth++;
+        try { RefreshSearchResultsCore(); }
+        finally { _searchRefreshDepth--; }
+    }
+
+    private static string? SearchResultKey(object? item) => (item as Button)?.Tag switch { AppEntry app => app.Id, string action => action, _ => null };
+
+    private void SearchResultSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_searchRefreshDepth == 0 && e.AddedItems.Count > 0) _searchSelectionExplicit = true;
+    }
+
+    private void SelectSearchAction(object sender, MouseButtonEventArgs e)
+    {
+        SearchResults.SelectedItem = sender; _searchSelectionExplicit = true; FocusSearchResult();
+    }
+
+    private void RefreshSearchResultsCore()
+    {
         var query = SearchBox.Text.Trim();
         ScheduleIndexedSearch(query);
-        var selectedId = query == _renderedSearchQuery ? (SearchResults.SelectedItem as Button)?.Tag as AppEntry : null;
+        var selected = SearchResults.SelectedItem as Button;
+        var selectedId = query == _renderedSearchQuery && (selected?.Tag is AppEntry || _searchSelectionExplicit)
+            ? SearchResultKey(selected) : null;
+        if (query != _renderedSearchQuery) _searchSelectionExplicit = false;
         var restoreFocus = SearchResults.IsKeyboardFocusWithin;
         SearchResults.Items.Clear();
         _renderedSearchQuery = query;
         SearchResultHint.Visibility = Visibility.Collapsed;
         SearchResultHeading.Text = "";
+        WebSearchButton = SearchAction("restart:search:web", L.F(K.SearchWebFor, query), "\uE774", OpenWebSearch);
+        WindowsSearchButton = SearchAction("restart:search:windows", L.T(K.SearchInWindows), "\uE721", OpenWindowsSearch);
         WindowsSearchButton.Visibility = query.Length > 0 && Document.Preferences.ShowWindowsSearchHandoff && CanHandoffToWindows ? Visibility.Visible : Visibility.Collapsed;
         WindowsSearchButton.ToolTip = L.T(K.WindowsSearchHandoffHelp);
+        WebSearchButton.Visibility = Document.Preferences.ShowWebSearch && WebSearchQuery.Build(query) != null ? Visibility.Visible : Visibility.Collapsed;
+        WebSearchButton.ToolTip = L.T(K.WebSearchHelp);
         if (query.Length == 0) return;
         EnsureWindowsSettingsCatalog();
-        var apps = AppSearch.Find(_apps, query);
+        var usage = Document.Preferences.PersonalizeAppSearch && Document.Preferences.ShowMostUsed
+            ? Activity.Usage(_apps, Document.Preferences.UseWindowsAppHistory ? _windowsUsage : null) : null;
+        var apps = AppSearch.Find(_apps, query, usage: usage, names: WindowsAppIndex.ForLanguage(L.Language).Names);
         var settings = Document.Preferences.SearchSettings ? SettingsSearch.Find(query).Concat(WindowsSettingsCatalog.Find(_windowsSettings, query))
             .DistinctBy(a => a.LaunchTarget, StringComparer.OrdinalIgnoreCase).ToArray() : [];
         var results = apps.Concat(settings).Concat(_fileSearchResults).DistinctBy(a => a.Id, StringComparer.OrdinalIgnoreCase).ToArray();
@@ -65,22 +102,77 @@ public partial class MainWindow
             content.Children.Add(originalContent); button.Content = content;
             if (category == K.SearchFiles) button.ToolTip = app.LaunchTarget;
             button.Style = (Style)FindResource("SearchResultAction");
-            button.PreviewMouseDown += (_, _) => { SearchResults.SelectedItem = button; FocusSearchResult(); };
+            button.PreviewMouseDown += SelectSearchAction;
             SearchResults.Items.Add(button);
         }
+        if (WebSearchButton.Visibility == Visibility.Visible) SearchResults.Items.Add(WebSearchButton);
+        if (WindowsSearchButton.Visibility == Visibility.Visible) SearchResults.Items.Add(WindowsSearchButton);
         SearchResultHint.Text = !_fileIndexAvailable ? L.T(K.SearchIndexUnavailable) : L.T(K.SearchHint);
         SearchResultHint.Visibility = !loading && !settingsPending && !_fileSearchPending && (results.Length == 0 || !_fileIndexAvailable) ? Visibility.Visible : Visibility.Collapsed;
-        SearchResults.SelectedItem = SearchResults.Items.OfType<Button>().FirstOrDefault(b => b.Tag is AppEntry app && app.Id == selectedId?.Id)
-            ?? SearchResults.Items.OfType<Button>().FirstOrDefault();
+        SearchResults.SelectedItem = selectedId == null ? null : SearchResults.Items.OfType<Button>().FirstOrDefault(b => SearchResultKey(b) == selectedId);
+        SearchResults.SelectedItem ??= SearchResults.Items.OfType<Button>().FirstOrDefault(b => b.Tag is AppEntry)
+            ?? (loading || settingsPending || _fileSearchPending ? null : SearchResults.Items.OfType<Button>().FirstOrDefault());
         if (restoreFocus && ResultsPanel.IsVisible) FocusSearchResult();
     }
 
-    private void OpenWindowsSearch(object sender, RoutedEventArgs e)
+    private Button SearchAction(string id, string name, string glyph, RoutedEventHandler invoke)
+    {
+        var button = new Button
+        {
+            Tag = id,
+            Height = 44,
+            Padding = new(4, 3, 4, 3),
+            HorizontalContentAlignment = HorizontalAlignment.Stretch,
+            Style = (Style)FindResource("SearchResultAction")
+        };
+        System.Windows.Automation.AutomationProperties.SetName(button, name);
+        var panel = new DockPanel();
+        var icon = new TextBlock
+        {
+            Text = glyph,
+            FontFamily = new FontFamily("Segoe MDL2 Assets"),
+            FontSize = 20,
+            Width = 32,
+            TextAlignment = TextAlignment.Center,
+            Margin = new(0, 0, 12, 0),
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        DockPanel.SetDock(icon, Dock.Left); panel.Children.Add(icon);
+        panel.Children.Add(new TextBlock { Text = name, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center });
+        button.Content = panel; button.Click += invoke; button.PreviewMouseDown += SelectSearchAction;
+        return button;
+    }
+
+    private async void OpenWindowsSearch(object sender, RoutedEventArgs e)
     {
         if (!Document.Preferences.ShowWindowsSearchHandoff || !CanHandoffToWindows || _preview && _windowsSearchFixture == null) return;
-        if (_windowsSearchFixture != null) { _windowsSearchFixture(); return; }
+        var query = WindowsSearchHandoff.NormalizeQuery(SearchBox.Text);
+        if (query == null) return;
+        if (_windowsSearchFixture != null) { _windowsSearchFixture(query); return; }
         Dismiss(immediately: true);
-        if (!WindowsSearchLauncher.TryOpen()) { Present(); SetStatus(L.T(K.ErrorLaunch) + L.T(K.SearchInWindows)); }
+        var result = await _windowsSearchHandoff.OpenAsync(query);
+        if (_exit || result == WindowsSearchHandoffResult.Cancelled) return;
+        if (result == WindowsSearchHandoffResult.Failed) { Present(); SetStatus(L.T(K.ErrorLaunch) + L.T(K.SearchInWindows)); }
+        else _windowsSearchQueryUnavailable = result == WindowsSearchHandoffResult.OpenedWithoutQuery;
+    }
+
+    private async Task PresentAfterWindowsSearchAsync()
+    {
+        if (_returningFromWindowsSearch) return;
+        _returningFromWindowsSearch = true;
+        try { await _windowsSearchHandoff.ReturnAsync(); }
+        finally { _returningFromWindowsSearch = false; }
+        if (!_exit) PresentCore();
+    }
+
+    private void OpenWebSearch(object sender, RoutedEventArgs e)
+    {
+        if (!Document.Preferences.ShowWebSearch || WebSearchQuery.Build(SearchBox.Text) is not { } uri) return;
+        if (_webSearchFixture != null) { _webSearchFixture(uri); return; }
+        if (_preview) return;
+        try { ShellLauncher.Launch(uri.AbsoluteUri); Dismiss(immediately: true); }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or IOException)
+        { SetStatus(L.T(K.ErrorLaunch) + ex.Message); }
     }
 
     private async void EnsureWindowsSettingsCatalog()
@@ -153,20 +245,27 @@ public partial class MainWindow
     private bool HandleSearchSelectionKey(KeyEventArgs e)
     {
         if (!ResultsPanel.IsVisible || SearchBox.Text.Trim().Length == 0 || !(SearchBox.IsKeyboardFocused || SearchResults.IsKeyboardFocusWithin)) return false;
-        if (e.Key == Key.Enter || e.Key == Key.Space && SearchResults.IsKeyboardFocusWithin)
+        if (e.Key == Key.Tab && (Keyboard.Modifiers & ~ModifierKeys.Shift) == ModifierKeys.None)
+        {
+            if (!MoveSearchTab(Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))) return false;
+        }
+        else if (e.Key == Key.Enter || e.Key == Key.Space && SearchResults.IsKeyboardFocusWithin)
         {
             // Launch the selected rendered action, never rerank a separate Enter-only result.
             if (SearchResults.SelectedItem is Button selected) selected.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         }
-        else if (e.Key == Key.Down && SearchBox.IsKeyboardFocused)
+        else if (e.Key == Key.Down)
         {
             // The first row is already selected while typing. Move from that
             // selection before transferring keyboard focus into the results.
             if (SearchResults.Items.Count > 0)
                 SearchResults.SelectedIndex = Math.Min(SearchResults.SelectedIndex + 1, SearchResults.Items.Count - 1);
+            _searchSelectionExplicit = true;
             FocusSearchResult();
         }
         else if (e.Key == Key.Up && SearchResults.IsKeyboardFocusWithin && SearchResults.SelectedIndex == 0) FocusSearchInput();
+        else if (e.Key == Key.Up && SearchResults.IsKeyboardFocusWithin)
+        { SearchResults.SelectedIndex = Math.Max(0, SearchResults.SelectedIndex - 1); _searchSelectionExplicit = true; FocusSearchResult(); }
         else if (e.Key == Key.Back && SearchResults.IsKeyboardFocusWithin && Keyboard.Modifiers == ModifierKeys.None)
         {
             FocusSearchInput();
@@ -177,5 +276,22 @@ public partial class MainWindow
         else return false;
         e.Handled = true;
         return true;
+    }
+
+    private bool MoveSearchTab(bool backward)
+    {
+        if (SearchResults.Items.Count == 0 || SearchBox.IsKeyboardFocused && backward) return false;
+        if (SearchBox.IsKeyboardFocused)
+        {
+            if (SearchResults.SelectedIndex < 0) SearchResults.SelectedIndex = 0;
+        }
+        else if (backward && SearchResults.SelectedIndex == 0) { FocusSearchInput(); return true; }
+        else
+        {
+            var next = SearchResults.SelectedIndex + (backward ? -1 : 1);
+            if (next < 0 || next >= SearchResults.Items.Count) return false;
+            SearchResults.SelectedIndex = next;
+        }
+        _searchSelectionExplicit = true; FocusSearchResult(); return true;
     }
 }

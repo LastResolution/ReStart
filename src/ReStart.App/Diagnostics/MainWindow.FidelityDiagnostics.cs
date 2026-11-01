@@ -64,7 +64,8 @@ public partial class MainWindow
                 return (new AppEntry[] { new("restart:file:" + query, query + " document", "", false) }, true);
             };
             fixture.SetSmokeSearch("Editor");
-            Check(fixture.SearchResultNames.SequenceEqual(new[] { "Alpha Editor", "Beta Editor" }), "File search delayed immediate app results.");
+            Check(fixture.SearchResults.Items.OfType<Button>().Where(b => b.Tag is AppEntry).Select(AutomationProperties.GetName)
+                .SequenceEqual(new[] { "Alpha Editor", "Beta Editor" }), "File search delayed immediate app results.");
             await Until(() => fixture.SearchResultNames.Contains("Editor document"));
             Check(((Button)fixture.SearchResults.SelectedItem).Tag is AppEntry { Id: "alpha" }, "Async file results displaced the selected app.");
             fixture.SetSmokeSearch("obsolete"); await Task.Delay(230); fixture.SetSmokeSearch("current");
@@ -191,6 +192,8 @@ public partial class MainWindow
                 [K.SearchFilesSetting] = p => p.SearchFiles,
                 [K.SettingsWindowsSearchSyntax] = p => p.SearchWindowsSyntax,
                 [K.SettingsWindowsSearchHandoff] = p => p.ShowWindowsSearchHandoff,
+                [K.SettingsWebSearch] = p => p.ShowWebSearch,
+                [K.SettingsPersonalizeAppSearch] = p => p.PersonalizeAppSearch,
                 [K.SettingsLegacyUwpTiles] = p => p.LegacyUwpLiveTiles,
                 [K.SettingsJumpLists] = p => p.ShowJumpLists,
                 [K.SettingsAppTasks] = p => p.ShowAppTasks,

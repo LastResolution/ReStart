@@ -8,6 +8,12 @@ namespace ReStart.Core;
 /// <param name="FolderPath">OS-provided relative Start-menu display folders, separated by slashes; empty for root apps.</param>
 public sealed record AppEntry(string Id, string Name, string LaunchTarget, bool IsShellApp = true, string FolderPath = "")
 {
+    /// <summary>Gets whether Windows shortcut metadata excludes this entry from new-install highlighting. False when not supplied.</summary>
+    public bool ExcludeFromRecentlyAdded { get; init; }
+
+    /// <summary>Gets whether Windows shortcut metadata opts this entry out of the Start most-used list. Search and explicit launch remain available.</summary>
+    public bool ExcludeFromMostUsed { get; init; }
+
     /// <summary>Gets the matched physical Start-menu shortcut used only for location/properties commands; empty when unavailable. It never replaces the launch identity or becomes a search alias.</summary>
     public string ShortcutPath { get; init; } = "";
 

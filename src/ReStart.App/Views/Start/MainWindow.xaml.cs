@@ -235,6 +235,13 @@ public partial class MainWindow : Window
     /// <summary>Returns to the pinned home view and presents the launcher; existing owned dialogs retain focus and preview windows retain their size.</summary>
     public void Present()
     {
+        if (_returningFromWindowsSearch) return;
+        if (!_preview && _windowsSearchHandoff.HasHandoff) { _ = PresentAfterWindowsSearchAsync(); return; }
+        PresentCore();
+    }
+
+    private void PresentCore()
+    {
         RefreshWindowsUsage();
         if (!_startupComplete && _startupWindow == null && IsReady && IconsReady && ScriptTileCount == 0) _startupComplete = true;
         if (!_startupComplete) { RequestStartupPresentation(); return; }
@@ -269,6 +276,7 @@ public partial class MainWindow : Window
         FocusSearchInput();
         QueueTileResume();
         RequestCatalogRefresh(opening: true);
+        if (_windowsSearchQueryUnavailable) { _windowsSearchQueryUnavailable = false; SetStatus(L.T(K.WindowsSearchQueryUnavailable)); }
         Dispatcher.BeginInvoke(() =>
         {
             if (IsActive && _dialogDepth == 0 && SearchBox.Text.Length == 0)
@@ -1167,7 +1175,7 @@ public partial class MainWindow : Window
     private static bool IsAnyMenuOpen() => Mouse.Captured is ContextMenu || Mouse.Captured is System.Windows.Controls.Primitives.MenuBase;
     private void OnClosing(object? sender, CancelEventArgs e) { if (!_exit) { e.Cancel = true; Dismiss(); } }
     /// <summary>Stops timers and isolated script workers before permanently closing the launcher.</summary>
-    public void Exit() { _exit = true; StopLegacyTiles(); StopWindowsUsage(); StopFileShare(); CancelStartupPresentation(); StopMotion(); StopFolderDwell(); StopDragGhost(); StopWatchingDesktopAppearance(); _clock.Stop(); _nameRefreshTimer?.Stop(); _railHoverTimer?.Stop(); _dragScrolling = false; _fileSearchCancellation?.Cancel(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); RetireHtmlTiles(all: true); _liveSessions.Dispose(); Close(); }
+    public void Exit() { _exit = true; _windowsSearchHandoff.Dispose(); StopLegacyTiles(); StopWindowsUsage(); StopFileShare(); CancelStartupPresentation(); StopMotion(); StopFolderDwell(); StopDragGhost(); StopWatchingDesktopAppearance(); _clock.Stop(); _nameRefreshTimer?.Stop(); _railHoverTimer?.Stop(); _dragScrolling = false; _fileSearchCancellation?.Cancel(); _updateCancellation.Cancel(); _releaseHttp.Dispose(); PauseScripts(); RetireHtmlTiles(all: true); _liveSessions.Dispose(); Close(); }
 
     /// <summary>Renders only the launcher root to a PNG for reproducible UI verification.</summary>
     /// <param name="path">Destination PNG path for the current preview visual; missing parent directories are created.</param>

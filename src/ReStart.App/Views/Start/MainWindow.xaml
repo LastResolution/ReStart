@@ -16,7 +16,7 @@
       <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-      <Setter Property="AutomationProperties.Name" Value="{Binding Content.Tag.Name, RelativeSource={RelativeSource Self}}" />
+      <Setter Property="AutomationProperties.Name" Value="{Binding Content.(AutomationProperties.Name), RelativeSource={RelativeSource Self}}" />
       <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem">
         <Border x:Name="Chrome" Background="{TemplateBinding Background}">
           <Grid>
@@ -93,12 +93,11 @@
               <StackPanel x:Name="ResultsPanel" Width="{Binding ViewportWidth, ElementName=ContentScroll}" MaxWidth="720" HorizontalAlignment="Left" Visibility="Collapsed">
                 <TextBlock x:Name="SearchResultHeading" Margin="6,10,0,14" Foreground="{DynamicResource MutedBrush}" />
                 <ListBox x:Name="SearchResults" AutomationProperties.Name="{local:Loc Key=SearchTitle}" Background="Transparent" BorderThickness="0" Padding="0"
-                         ItemContainerStyle="{StaticResource SearchResultContainer}" KeyboardNavigation.TabNavigation="Once" KeyboardNavigation.DirectionalNavigation="Contained">
+                         ItemContainerStyle="{StaticResource SearchResultContainer}" KeyboardNavigation.TabNavigation="Once" KeyboardNavigation.DirectionalNavigation="Contained" SelectionChanged="SearchResultSelectionChanged">
                   <ListBox.Template><ControlTemplate TargetType="ListBox"><ItemsPresenter /></ControlTemplate></ListBox.Template>
                   <ListBox.ItemsPanel><ItemsPanelTemplate><StackPanel /></ItemsPanelTemplate></ListBox.ItemsPanel>
                 </ListBox>
                 <TextBlock x:Name="SearchResultHint" Text="{local:Loc Key=SearchHint}" Visibility="Collapsed" Margin="6" FontSize="13" />
-                <Button x:Name="WindowsSearchButton" Content="{local:Loc Key=SearchInWindows}" HorizontalAlignment="Left" Margin="0,16,0,6" Click="OpenWindowsSearch" Visibility="Collapsed" />
               </StackPanel>
             </Grid>
           </ScrollViewer>

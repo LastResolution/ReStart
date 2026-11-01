@@ -571,9 +571,17 @@
   "WindowsAppHistoryHelp": "Erfordert die App-Startverfolgung von Windows. Liest nur passende Einträge installierter Apps, ohne sie zu speichern. Das Löschen des ReStart-Verlaufs löscht nicht den Windows-Verlauf.",
   "SettingsWindowsSearchSyntax": "Erweiterte Windows-Dateiabfragen verwenden",
   "WindowsSearchSyntaxHelp": "Verwendet Windows-Abfragesyntax und Relevanzsortierung. Kanonische Eigenschaften wie System.Kind:picture funktionieren sprachübergreifend. Dokumentinhalte benötigen weiterhin die separate Inhaltsoption.",
-  "SearchInWindows": "Windows-Suche öffnen",
+  "SearchInWindows": "Windows und Cloud durchsuchen",
   "SettingsWindowsSearchHandoff": "Übergabe an die Windows-Suche anzeigen",
-  "WindowsSearchHandoffHelp": "Öffnet die Windows-Suche mit Win+S. Geben Sie dort Ihre Suchanfrage ein. Windows steuert Web-, Cloud- und Kontozugriffe.",
+  "WindowsSearchHandoffHelp": "Öffnet die Windows-Suche und überträgt die aktuelle Suchanfrage, wenn das Eingabefeld verfügbar ist. Bei der Rückkehr zu ReStart wird dieses Suchfenster geschlossen. Cloud-Ergebnisse hängen von Windows-Berechtigungen und verbundenen Konten ab; ReStart greift nicht auf Cloud-Dateien zu.",
+  "WindowsSearchQueryUnavailable": "Die Windows-Suche wurde geöffnet, hat die Suchanfrage aber nicht übernommen. Geben Sie sie dort ein.",
   "SettingsLegacyUwpTiles": "Live-Kacheln von Windows-Apps anzeigen (Kompatibilität)",
-  "LegacyUwpTilesHelp": "Liest aktive Kachel- und Abzeichendaten nur für angeheftete Paket-Apps. Verwendet einen undokumentierten Windows-Speicher; nicht verfügbare Daten werden durch Symbole ersetzt. Toasts werden nicht gelesen, entfernte Bilder nicht heruntergeladen."
+  "LegacyUwpTilesHelp": "Liest aktive Kachel- und Abzeichendaten nur für angeheftete Paket-Apps. Verwendet einen undokumentierten Windows-Speicher; nicht verfügbare Daten werden durch Symbole ersetzt. Toasts werden nicht gelesen, entfernte Bilder nicht heruntergeladen.",
+  "SearchWebFor": "Im Web nach „{0}“ suchen",
+  "SettingsWebSearch": "Websuche im Standardbrowser anbieten",
+  "WebSearchHelp": "Öffnet Bing nur bei Auswahl dieser Aktion im Standardbrowser. Beim Tippen wird kein Suchtext an das Web gesendet.",
+  "SettingsPersonalizeAppSearch": "Gleichwertige App-Treffer anhand des aktivierten Verlaufs sortieren",
+  "AppSearchRankingHelp": "Erfordert den unten aktivierten Verlauf für häufig verwendete Apps. Genaue Namen und ausführbare Aliase haben Vorrang. Die interne Rangfolge von Windows Start wird nicht nachgebildet.",
+  "RecentAppsShowMore": "Mehr anzeigen",
+  "RecentAppsShowLess": "Weniger anzeigen"
 }

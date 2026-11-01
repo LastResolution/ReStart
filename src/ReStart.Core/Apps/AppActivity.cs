@@ -34,29 +34,44 @@ public sealed class AppActivity
         entry.Launches = Math.Clamp(entry.Launches, 0, 999_999) + 1; entry.LastLaunched = now;
     }
 
-    /// <summary>Returns up to three still-installed apps first discovered during the last seven days.</summary>
+    /// <summary>Returns still-installed apps discovered during the last seven days, excluding Windows new-install opt-outs; defaults to three collapsed rows.</summary>
     /// <param name="apps">Current catalog used to exclude missing apps and resolve current display names.</param>
     /// <param name="now">Wall-clock instant defining the seven-day visibility window; future observations are excluded.</param>
+    /// <param name="limit">Maximum number of entries; defaults to the three-row collapsed view. Nonpositive limits return no entries.</param>
     /// <returns>A new read-only view of matching catalog entries ordered by discovery date.</returns>
-    public IReadOnlyList<AppEntry> Recent(IReadOnlyCollection<AppEntry> apps, DateTimeOffset now) => apps
-        .Where(a => Entries.TryGetValue(a.Id, out var e) && e.FirstSeen > now.AddDays(-7) && e.FirstSeen <= now)
-        .OrderByDescending(a => Entries[a.Id].FirstSeen).ThenBy(a => a.Name, StringComparer.CurrentCultureIgnoreCase).Take(3).ToArray();
+    public IReadOnlyList<AppEntry> Recent(IReadOnlyCollection<AppEntry> apps, DateTimeOffset now, int limit = 3) => apps
+        .Where(a => !a.ExcludeFromRecentlyAdded && Entries.TryGetValue(a.Id, out var e) && e.FirstSeen > now.AddDays(-7) && e.FirstSeen <= now)
+        .OrderByDescending(a => Entries[a.Id].FirstSeen).ThenBy(a => a.Name, StringComparer.CurrentCultureIgnoreCase).Take(Math.Clamp(limit, 0, 4096)).ToArray();
+
+    /// <summary>Builds a transient usage view for current app identities without copying Windows observations into persisted history.</summary>
+    /// <param name="apps">Current catalog; missing app identities are excluded. Entries are not mutated.</param>
+    /// <param name="windows">Optional in-memory Windows usage snapshot. Null uses local observations only; the maximum count avoids counting the same launch twice.</param>
+    /// <returns>A new identity-keyed map of positive counts capped at one million and latest launch times. Most-used exclusions do not remove apps from search personalization.</returns>
+    public IReadOnlyDictionary<string, WindowsAppUsage> Usage(IReadOnlyCollection<AppEntry> apps, IReadOnlyDictionary<string, WindowsAppUsage>? windows = null)
+    {
+        var result = new Dictionary<string, WindowsAppUsage>(StringComparer.OrdinalIgnoreCase);
+        foreach (var app in apps)
+        {
+            Entries.TryGetValue(app.Id, out var local);
+            var native = windows?.GetValueOrDefault(app.Id);
+            var count = Math.Clamp(Math.Max(local?.Launches ?? 0, native?.Launches ?? 0), 0, 1_000_000);
+            var last = (local?.LastLaunched ?? default) > (native?.LastLaunched ?? default) ? local!.LastLaunched : native?.LastLaunched ?? default;
+            if (count > 0) result[app.Id] = new(count, last);
+        }
+        return result;
+    }
 
     /// <summary>Returns up to six still-installed apps with local launches or an explicitly supplied Windows usage snapshot.</summary>
     /// <param name="apps">Current catalog used to exclude missing apps and resolve current display names.</param>
     /// <param name="windows">Optional transient Windows usage keyed by exact catalog identity; null uses local counts only. Observations are never stored or mutated. The larger count is used to avoid double-counting launches recorded by both sources.</param>
     /// <returns>A new list ordered by descending launch count, latest launch and then current display name.</returns>
-    public IReadOnlyList<AppEntry> Frequent(IReadOnlyCollection<AppEntry> apps, IReadOnlyDictionary<string, WindowsAppUsage>? windows = null) => apps
-        .Select(a =>
-        {
-            Entries.TryGetValue(a.Id, out var local);
-            var native = windows?.GetValueOrDefault(a.Id);
-            return (App: a, Hidden: local?.HiddenFromMostUsed == true, Count: Math.Max(local?.Launches ?? 0, native?.Launches ?? 0),
-                Last: (local?.LastLaunched ?? default) > (native?.LastLaunched ?? default) ? local!.LastLaunched : native?.LastLaunched ?? default);
-        })
-        .Where(a => !a.Hidden && a.Count > 0)
-        .OrderByDescending(a => a.Count).ThenByDescending(a => a.Last)
-        .ThenBy(a => a.App.Name, StringComparer.CurrentCultureIgnoreCase).Take(6).Select(a => a.App).ToArray();
+    public IReadOnlyList<AppEntry> Frequent(IReadOnlyCollection<AppEntry> apps, IReadOnlyDictionary<string, WindowsAppUsage>? windows = null)
+    {
+        var usage = Usage(apps, windows);
+        return apps.Where(a => !a.ExcludeFromMostUsed && Entries.GetValueOrDefault(a.Id)?.HiddenFromMostUsed != true && usage.ContainsKey(a.Id))
+            .OrderByDescending(a => usage[a.Id].Launches).ThenByDescending(a => usage[a.Id].LastLaunched)
+            .ThenBy(a => a.Name, StringComparer.CurrentCultureIgnoreCase).Take(6).ToArray();
+    }
 
     /// <summary>Removes one observed app from Recently added without changing its launch counts or installed catalog entry.</summary>
     /// <param name="appId">Observed catalog identity, matched without case sensitivity; unknown identities leave history unchanged.</param>

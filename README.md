@@ -71,7 +71,7 @@ Drag shortcut tips appear briefly at the bottom of Start and can be disabled in 
 
 ## Windows app integration
 
-Search now also uses Windows-provided settings keywords and Control Panel entries. Optional Advanced Query Syntax adds native file filtering and relevance order. **Open Windows Search** opens the Windows interface with <kbd>Win</kbd> + <kbd>S</kbd>; enter your query there for additional sources.
+Search now also uses Windows-provided settings keywords and Control Panel entries. Optional Advanced Query Syntax adds native file filtering and relevance order. **Search Windows and cloud** opens the Windows interface with <kbd>Win</kbd> + <kbd>S</kbd> and transfers the current query when its input is available.
 
 Two options are off by default: counts of app launches recorded by Windows for Most used, and a read-only compatibility reader for Windows app tiles and badges. The tile renderer supports common size bindings, local raster images and literal data bindings. It does not restore discontinued push services; unavailable data keeps the app icon.
 
@@ -126,6 +126,12 @@ Preview appearance, tile scale, group width and language before saving. Closing 
 ### Search, configure, launch
 
 Find apps by their displayed name or a Windows-supplied executable name: for example, `notepad` or `cmd` can find the corresponding installed app even when its name is translated. Search uses Start-menu targets, matching App Paths registrations and package-declared execution aliases. Availability depends on installed metadata; this is ReStart's local ranking, not Windows Search's complete results. Shortcuts with launch arguments rank below the ordinary app for a shared executable name.
+
+**Web and cloud.** Choose **Search the web for…** to open the current query in Bing using your default browser. **Search Windows and cloud** opens Windows Search and transfers the current query when its input is available; otherwise, enter it there. Returning to ReStart dismisses that search window. Cloud availability is controlled by Windows and connected accounts. Typing alone sends nothing externally. Both actions can be switched off.
+
+Use <kbd>↑</kbd>/<kbd>↓</kbd> or <kbd>Tab</kbd>/<kbd>Shift</kbd>+<kbd>Tab</kbd> to select local, Web or Windows/cloud actions; <kbd>Enter</kbd> invokes the selected row. When local searches finish without a match, an enabled online action is highlighted for Enter. Typing alone never opens it.
+
+**App history.** Enabled Most used history can sort equally strong app matches; exact names and executable aliases keep priority. Recently added starts with three entries and offers **Show more / Show less**. Windows shortcut history exclusions are respected. Windows Start’s private ranking and installation history are not duplicated; see [behavior and limits](docs/start-behavior.md#app-and-document-history).
 
 ![App, Windows setting and local file results in the complete search screen](docs/images/unified-search.png)
 

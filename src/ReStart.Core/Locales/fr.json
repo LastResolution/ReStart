@@ -571,9 +571,17 @@
   "WindowsAppHistoryHelp": "Nécessite le suivi des lancements d’applications de Windows. Lit uniquement les entrées des applications installées, sans les enregistrer. Effacer l’historique de ReStart n’efface pas celui de Windows.",
   "SettingsWindowsSearchSyntax": "Utiliser les requêtes de fichiers avancées de Windows",
   "WindowsSearchSyntaxHelp": "Utilise la syntaxe et le classement par pertinence de Windows. Les propriétés canoniques comme System.Kind:picture fonctionnent dans toutes les langues. Le contenu des documents nécessite toujours son option distincte.",
-  "SearchInWindows": "Ouvrir la recherche Windows",
+  "SearchInWindows": "Rechercher dans Windows et le cloud",
   "SettingsWindowsSearchHandoff": "Afficher le relais vers la recherche Windows",
-  "WindowsSearchHandoffHelp": "Ouvre la recherche Windows avec Win+S. Saisissez votre recherche dans cette fenêtre. Windows contrôle l’accès au Web, au cloud et aux comptes.",
+  "WindowsSearchHandoffHelp": "Ouvre la recherche Windows et transfère la requête actuelle si son champ est disponible. Le retour à ReStart ferme cette fenêtre de recherche. Les résultats cloud dépendent des autorisations Windows et des comptes connectés ; ReStart n’accède pas aux fichiers cloud.",
+  "WindowsSearchQueryUnavailable": "La recherche Windows s’est ouverte sans accepter la requête. Saisissez-la dans la recherche Windows.",
   "SettingsLegacyUwpTiles": "Afficher les vignettes dynamiques des applications Windows (compatibilité)",
-  "LegacyUwpTilesHelp": "Lit uniquement les données actives de vignettes et badges des applications empaquetées épinglées. Utilise un stockage Windows non documenté ; les icônes sont affichées si les données sont indisponibles. Ne lit pas les notifications toast et ne télécharge pas d’images distantes."
+  "LegacyUwpTilesHelp": "Lit uniquement les données actives de vignettes et badges des applications empaquetées épinglées. Utilise un stockage Windows non documenté ; les icônes sont affichées si les données sont indisponibles. Ne lit pas les notifications toast et ne télécharge pas d’images distantes.",
+  "SearchWebFor": "Rechercher « {0} » sur le Web",
+  "SettingsWebSearch": "Proposer la recherche Web dans le navigateur par défaut",
+  "WebSearchHelp": "Ouvre Bing dans le navigateur par défaut uniquement si vous choisissez cette action. La saisie seule n’envoie aucun texte au Web.",
+  "SettingsPersonalizeAppSearch": "Classer les résultats d’applications équivalents avec l’historique activé",
+  "AppSearchRankingHelp": "Nécessite l’historique des applications les plus utilisées ci-dessous. Les noms et alias exécutables exacts restent prioritaires. Le classement interne de Windows Start n’est pas reproduit.",
+  "RecentAppsShowMore": "Afficher plus",
+  "RecentAppsShowLess": "Afficher moins"
 }

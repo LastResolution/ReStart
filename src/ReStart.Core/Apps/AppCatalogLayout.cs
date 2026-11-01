@@ -12,7 +12,13 @@ public sealed record StartMenuShortcut(string RelativeKey, AppEntry App, string 
 /// <param name="AppId">AppsFolder identity owning this metadata.</param>
 /// <param name="TargetPath">Resolved filesystem launch target, or empty when unavailable.</param>
 /// <param name="Arguments">Launch arguments used to distinguish links with a shared target.</param>
-public sealed record ShellAppLink(string AppId, string TargetPath, string Arguments = "");
+public sealed record ShellAppLink(string AppId, string TargetPath, string Arguments = "")
+{
+    /// <summary>Gets the shortcut's Windows exclusion from new-install highlighting, or false when unavailable.</summary>
+    public bool ExcludeFromRecentlyAdded { get; init; }
+    /// <summary>Gets the shortcut's Windows PreventPinning flag, which also excludes it from the most-used list.</summary>
+    public bool ExcludeFromMostUsed { get; init; }
+}
 
 /// <summary>Attaches Start-menu folders while retaining existing AppsFolder identities and launch targets.</summary>
 public static class AppCatalogLayout
@@ -70,7 +76,13 @@ public static class AppCatalogLayout
         for (var i = 0; i < links.Length; i++)
         {
             var link = links[i];
-            if (assignments[i] is { } id) entries[id] = WithTarget(entries[id] with { FolderPath = link.App.FolderPath, ShortcutPath = link.App.LaunchTarget }, link.TargetPath, link.Arguments);
+            if (assignments[i] is { } id) entries[id] = WithTarget(entries[id] with
+            {
+                FolderPath = link.App.FolderPath,
+                ShortcutPath = link.App.LaunchTarget,
+                ExcludeFromRecentlyAdded = entries[id].ExcludeFromRecentlyAdded || link.App.ExcludeFromRecentlyAdded,
+                ExcludeFromMostUsed = entries[id].ExcludeFromMostUsed || link.App.ExcludeFromMostUsed
+            }, link.TargetPath, link.Arguments);
             else entries.TryAdd(link.App.Id, WithTarget(link.App, link.TargetPath, link.Arguments));
         }
         return entries.Values.OrderBy(a => a.Name, StringComparer.CurrentCultureIgnoreCase).ToArray();

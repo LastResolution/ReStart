@@ -115,7 +115,11 @@ public sealed class AppCatalog
                     string name = item.Name;
                     string path = item.Path;
                     if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(path)) continue;
-                    var app = new AppEntry(path, name, path);
+                    var app = new AppEntry(path, name, path)
+                    {
+                        ExcludeFromRecentlyAdded = ShellFlag(itemObject, "System.AppUserModel.ExcludeFromShowInNewInstall"),
+                        ExcludeFromMostUsed = ShellFlag(itemObject, "System.AppUserModel.PreventPinning")
+                    };
                     entries.TryAdd(path, app);
                     shellLinks.Add(new(path, ShellProperty(itemObject, "System.Link.TargetParsingPath"), ShellProperty(itemObject, "System.Link.Arguments")));
                 }
@@ -151,7 +155,9 @@ public sealed class AppCatalog
                 var name = ShellDisplayName(file, Path.GetFileNameWithoutExtension(file));
                 if (name == Path.GetFileName(file)) name = Path.GetFileNameWithoutExtension(name);
                 var identity = metadata.Read(file);
-                shortcuts.Add(new(relative, new(file, name, file, false, string.Join('\\', folders)), identity.AppId, identity.TargetPath, identity.Arguments));
+                var shortcutApp = new AppEntry(file, name, file, false, string.Join('\\', folders))
+                { ExcludeFromRecentlyAdded = identity.ExcludeFromRecentlyAdded, ExcludeFromMostUsed = identity.ExcludeFromMostUsed };
+                shortcuts.Add(new(relative, shortcutApp, identity.AppId, identity.TargetPath, identity.Arguments));
             }
         }
         var merged = AppCatalogLayout.Merge(_executables.AddPackageAliases(entries.Values), shortcuts, shellLinks, AppExecutionMetadata.ReadAppPaths()).ToList();
@@ -164,6 +170,12 @@ public sealed class AppCatalog
     {
         try { return ((dynamic)item).ExtendedProperty(property) as string ?? ""; }
         catch (Exception ex) when (ex is COMException or Microsoft.CSharp.RuntimeBinder.RuntimeBinderException) { return ""; }
+    }
+
+    private static bool ShellFlag(object item, string property)
+    {
+        try { return ((dynamic)item).ExtendedProperty(property) is bool value && value; }
+        catch (Exception ex) when (ex is COMException or Microsoft.CSharp.RuntimeBinder.RuntimeBinderException) { return false; }
     }
 
     internal static ShellAppLink ReadShortcutMetadata(string path)
@@ -194,7 +206,11 @@ public sealed class AppCatalog
                 if (folder == null) return new("", "");
                 item = ((dynamic)folder).ParseName(Path.GetFileName(path));
                 return item == null ? new("", "") : new(ShellProperty(item, "System.AppUserModel.ID"),
-                    ShellProperty(item, "System.Link.TargetParsingPath"), ShellProperty(item, "System.Link.Arguments"));
+                    ShellProperty(item, "System.Link.TargetParsingPath"), ShellProperty(item, "System.Link.Arguments"))
+                {
+                    ExcludeFromRecentlyAdded = ShellFlag(item, "System.AppUserModel.ExcludeFromShowInNewInstall"),
+                    ExcludeFromMostUsed = ShellFlag(item, "System.AppUserModel.PreventPinning")
+                };
             }
             catch (Exception ex) when (ex is COMException or Microsoft.CSharp.RuntimeBinder.RuntimeBinderException) { return new("", ""); }
             finally { Release(item); }

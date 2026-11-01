@@ -848,12 +848,28 @@ public enum TextKey
     SettingsWindowsSearchSyntax,
     /// <summary>Use Windows query syntax and relevance ranking. Canonical properties such as System.Kind:picture work across languages. Document contents still require the separate content option.</summary>
     WindowsSearchSyntaxHelp,
-    /// <summary>Open Windows Search</summary>
+    /// <summary>Search Windows and cloud</summary>
     SearchInWindows,
+    /// <summary>Search the web for “{0}”</summary>
+    SearchWebFor,
+    /// <summary>Show web search in the default browser</summary>
+    SettingsWebSearch,
+    /// <summary>Opens Bing in your default browser only when you choose the action. Typing does not send search text to the Web.</summary>
+    WebSearchHelp,
+    /// <summary>Rank equal app matches using enabled app history</summary>
+    SettingsPersonalizeAppSearch,
+    /// <summary>Requires Most used app history below. Exact names and executable aliases keep priority. Windows Start's private ranking is not reproduced.</summary>
+    AppSearchRankingHelp,
+    /// <summary>Show more</summary>
+    RecentAppsShowMore,
+    /// <summary>Show less</summary>
+    RecentAppsShowLess,
     /// <summary>Show Windows Search handoff</summary>
     SettingsWindowsSearchHandoff,
-    /// <summary>Opens Windows Search with Win+S. Enter your query there. Windows controls Web, cloud and account access.</summary>
+    /// <summary>Opens Windows Search and transfers the current query when its focused input is available. Cloud results depend on Windows permissions and connected accounts.</summary>
     WindowsSearchHandoffHelp,
+    /// <summary>Windows Search opened but did not accept the query. Enter it in Windows Search.</summary>
+    WindowsSearchQueryUnavailable,
     /// <summary>Show Windows app live tiles (compatibility)</summary>
     SettingsLegacyUwpTiles,
     /// <summary>Reads active tile and badge data only for pinned packaged apps. Uses an undocumented Windows store; unavailable data falls back to icons. Toasts are not read and remote images are not downloaded.</summary>

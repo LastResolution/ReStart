@@ -571,9 +571,17 @@
   "WindowsAppHistoryHelp": "Windows 앱 실행 추적이 켜져 있어야 합니다. 설치된 앱과 일치하는 기록만 읽으며 저장하지 않습니다. ReStart 기록을 지워도 Windows 기록은 지워지지 않습니다.",
   "SettingsWindowsSearchSyntax": "Windows 고급 파일 검색 구문 사용",
   "WindowsSearchSyntaxHelp": "Windows 검색 구문과 관련도 정렬을 사용합니다. System.Kind:picture 같은 정식 속성명은 모든 언어에서 사용할 수 있습니다. 문서 본문 검색은 별도 옵션을 켜야 합니다.",
-  "SearchInWindows": "Windows 검색 열기",
+  "SearchInWindows": "Windows 및 클라우드 검색",
   "SettingsWindowsSearchHandoff": "Windows 검색으로 넘기기 표시",
-  "WindowsSearchHandoffHelp": "Win+S로 Windows 검색을 엽니다. 검색어는 Windows에서 입력하세요. 웹, 클라우드 및 계정 접근은 Windows가 관리합니다.",
+  "WindowsSearchHandoffHelp": "Windows 검색을 열고 입력란을 사용할 수 있으면 현재 검색어를 전달합니다. ReStart로 돌아오면 해당 검색 창을 닫습니다. 클라우드 결과는 Windows 권한과 연결된 계정에 따라 달라지며 ReStart는 클라우드 파일에 접근하지 않습니다.",
+  "WindowsSearchQueryUnavailable": "Windows 검색이 열렸지만 검색어를 전달하지 못했습니다. Windows 검색에서 입력하세요.",
   "SettingsLegacyUwpTiles": "Windows 앱 라이브 타일 표시(호환 기능)",
-  "LegacyUwpTilesHelp": "고정된 패키지 앱의 활성 타일과 배지 데이터만 읽습니다. 문서화되지 않은 Windows 저장소를 사용하며 데이터가 없으면 아이콘을 표시합니다. 토스트 알림은 읽지 않으며 원격 이미지를 다운로드하지 않습니다."
+  "LegacyUwpTilesHelp": "고정된 패키지 앱의 활성 타일과 배지 데이터만 읽습니다. 문서화되지 않은 Windows 저장소를 사용하며 데이터가 없으면 아이콘을 표시합니다. 토스트 알림은 읽지 않으며 원격 이미지를 다운로드하지 않습니다.",
+  "SearchWebFor": "웹에서 “{0}” 검색",
+  "SettingsWebSearch": "기본 브라우저에서 웹 검색 항목 표시",
+  "WebSearchHelp": "이 작업을 선택할 때만 기본 브라우저에서 Bing을 엽니다. 입력만으로 검색어를 웹에 전송하지 않습니다.",
+  "SettingsPersonalizeAppSearch": "활성화된 앱 기록으로 동등한 검색 결과 정렬",
+  "AppSearchRankingHelp": "아래의 자주 사용하는 앱 기록이 필요합니다. 정확한 이름과 실행 파일 별칭을 우선합니다. Windows 시작의 내부 순위를 재현하지 않습니다.",
+  "RecentAppsShowMore": "더 보기",
+  "RecentAppsShowLess": "간략히 보기"
 }
