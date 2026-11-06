@@ -21,6 +21,7 @@ public partial class MainWindow
     private TextKey? _startupSettingsSection;
     internal Action? PresentationVisibilityChanged { get; set; }
     internal bool IsPresenting => IsVisible || _startupWindow?.IsVisible == true;
+    internal nint PresentationHandle => new WindowInteropHelper(_startupWindow?.IsVisible == true ? _startupWindow : this).Handle;
 
     private void ReportStartup(TextKey stage, double fraction)
     {

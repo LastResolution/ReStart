@@ -15,7 +15,7 @@ internal static class TaskbarWatchdogFixture
                 [new(1, 1, 1, true, true, new(0, 0, 320, 200), new(0, 198, 320, 40), new(0, 160, 320, 40))]);
         }
         public bool IsCurrent(TaskbarLeaseState state) => true;
-        public void Apply(TaskbarLeaseState state) { }
+        public void Apply(TaskbarLeaseState state, Action armRecovery) => armRecovery();
         public void Restore(TaskbarLeaseState state)
         {
             if (!recovery) return;

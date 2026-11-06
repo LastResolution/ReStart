@@ -50,12 +50,15 @@ internal static class TaskbarLiveCheck
         var repeatCycles = 0;
         var autoHideBefore = TaskbarNativeBackend.AutoHideEnabled;
         var observations = new List<object>();
+        static int Edge(TaskbarWindowState item) => item.Target.Width >= item.Monitor.Width / 2
+            ? item.Target.Y <= item.Monitor.Y ? 1 : 3 : item.Target.X <= item.Monitor.X ? 0 : 2;
         static bool Recovered(TaskbarLeaseState? before, TaskbarLeaseState? after) => before != null && after != null
             && before.Windows.All(saved => after.Windows.Any(actual => actual.Window == saved.Window && actual.AutoHide
-                && TaskbarNativeBackend.HiddenAtEdge(actual.Monitor, actual.Original,
-                    actual.Target.Width >= actual.Monitor.Width / 2 ? actual.Target.Y <= actual.Monitor.Y ? 1 : 3 : actual.Target.X <= actual.Monitor.X ? 0 : 2)
+                && TaskbarNativeBackend.HiddenAtEdge(actual.Monitor, actual.Original, Edge(actual))
                 && (saved.Content ?? []).All(child => child.Visible || !(actual.Content ?? []).Any(current => current.Window == child.Window && current.Visible))
-                && (saved.Clip == null || !saved.Clip.HasRegion || TaskbarNativeRegion.Same(saved.Clip, actual.Clip))));
+                // Only a hidden strip we removed is our clipping effect.
+                // Native empty/full regions may legitimately change on hiding.
+                && (!TaskbarNativeRegion.AutoHideStrip(saved.Clip, saved.Target, Edge(saved)) || TaskbarNativeRegion.Same(saved.Clip, actual.Clip))));
         try
         {
             directory = Path.GetFullPath(directory); TaskbarRecoveryStore.CheckLinks(directory); Directory.CreateDirectory(directory);
@@ -142,6 +145,14 @@ internal static class TaskbarLiveCheck
                         hidden = Recovered(saved, after);
                     }
                     restored &= hidden;
+                    if (restored && saved != null)
+                    {
+                        // A retained marker can replay release after an IO failure.
+                        // Replaying it must not keep resetting a pending hide timer.
+                        await Task.Run(() => { backend.Restore(saved); backend.Restore(saved); });
+                        await Task.Delay(200);
+                        restored &= Recovered(saved, await Task.Run(() => backend.Capture(TaskbarLeaseMode.Reveal)));
+                    }
                     recoveryDecision = backend.LastRecoveryDecision;
                     // Repeat with the same watchdog and actual native window,
                     // starting from Explorer's hidden state each time.

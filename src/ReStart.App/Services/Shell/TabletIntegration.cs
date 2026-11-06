@@ -69,7 +69,7 @@ internal sealed class TabletIntegration : IDisposable
     {
         if (_disposed) return;
         var preferences = _window.Document.Preferences;
-        var monitor = System.Windows.Forms.Screen.FromHandle(_source.Handle).Bounds;
+        var monitor = System.Windows.Forms.Screen.FromHandle(_window.PresentationHandle).Bounds;
         var request = new Request(_window.IsPresenting, preferences.ShowTaskbarWhileOpen,
             new(monitor.X, monitor.Y, monitor.Width, monitor.Height), _deviceRevision);
         TaskbarNativeBackend.PrepareLauncher(_source.Handle, request.Reveal);

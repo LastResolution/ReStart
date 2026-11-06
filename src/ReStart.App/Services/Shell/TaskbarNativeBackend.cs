@@ -5,11 +5,13 @@ using System.Text;
 namespace ReStart.App.Services;
 
 /// <summary>Applies temporary window effects only to revalidated Explorer taskbars; never writes auto-hide configuration or injects Explorer code.</summary>
-internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>? observe = null) : ITaskbarLeaseBackend
+internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>? observe = null,
+    Action<nint, uint, nint, nint>? sendMessage = null, Func<nint, bool>? menuActive = null) : ITaskbarLeaseBackend
 {
     internal TaskbarBounds Scope { get; set; }
     internal nint LauncherWindow { get; set; }
     private string? _appliedToken;
+    private string? _releasedToken;
     /// <summary>Gets the last anonymous native recovery decision for explicit local verification.</summary>
     internal string? LastRecoveryDecision { get; private set; }
     /// <summary>Reports whether a top-level window precedes another in the current bounded desktop stacking order.</summary>
@@ -42,7 +44,8 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
             if (mode != TaskbarLeaseMode.Reveal || !item.AutoHide || item.Monitor != Scope) continue;
             windows.Add(item);
         }
-        return windows.Count == 0 ? null : new(1, Guid.NewGuid().ToString("N"), ParentId, ParentStarted, mode, windows.ToArray());
+        return windows.Count == 0 ? null : new(windows.Any(item => item.HoldAutoHide) ? 2 : 1,
+            Guid.NewGuid().ToString("N"), ParentId, ParentStarted, mode, windows.ToArray());
     }
 
     private static IEnumerable<TaskbarWindowState> ObserveWindows()
@@ -59,7 +62,8 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
             var resolved = ResolveMonitor(monitor, monitors, bounds => AutoHideEdge(window, bounds));
             monitor = resolved.Monitor; var edge = resolved.Edge;
             var target = edge == null ? original : VisibleBounds(monitor, original, edge.Value);
-            yield return new(window, pid, started, IsWindowVisible(window), edge != null, monitor, original, target, IsTopmost(window), ContentWindows(window, pid), TaskbarNativeRegion.Read(window));
+            yield return new(window, pid, started, IsWindowVisible(window), edge != null, monitor, original, target, IsTopmost(window), ContentWindows(window, pid), TaskbarNativeRegion.Read(window),
+                HoldAutoHide: window == FindWindow("Shell_TrayWnd", null));
         }
     }
 
@@ -102,7 +106,7 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
         || current.Clip is { HasRegion: false } && SecondaryEdge(saved.Monitor, saved.Target) is { } edge
             && TaskbarNativeRegion.AutoHideStrip(saved.Clip, saved.Target, edge);
 
-    public void Apply(TaskbarLeaseState state)
+    public void Apply(TaskbarLeaseState state, Action armRecovery)
     {
         var firstReveal = _appliedToken != state.Token;
         foreach (var item in state.Windows)
@@ -114,6 +118,15 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
             {
                 if (!item.AutoHide || !AutoHideEnabled || AutoHideEdge(window, item.Monitor) is not { } edge) throw new IOException("Taskbar preference changed.");
                 if (LauncherWindow == 0) throw new IOException("Taskbar reveal requires a launcher window.");
+                if (item.HoldAutoHide)
+                {
+                    _releasedToken = null;
+                    // Moving the HWND alone leaves Explorer's hidden state intact.
+                    // Ask it to unhide first. The minimized notification flag
+                    // suppresses DefWindowProc's focus transfer; no window is minimized.
+                    HoldTimer(window, firstReveal || Bounds(window, out var observed) && HiddenAtEdge(item.Monitor, observed, edge), armRecovery);
+                }
+                else armRecovery();
                 var changed = false;
                 if (TaskbarNativeRegion.AutoHideStrip(item.Clip, item.Target, edge))
                 {
@@ -131,6 +144,7 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
                 if (firstReveal || changed || !Bounds(window, out var current) || current != item.Target || !IsWindowVisible(window) || !IsAbove(window, LauncherWindow))
                 {
                     Position(window, item.Target, show: true, topmost: true);
+                    if (item.HoldAutoHide) HoldTimer(window, reveal: false, armRecovery);
                     changed = true;
                 }
                 // On Windows 11 the tray HWND can be visible and correctly
@@ -160,6 +174,11 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
         {
             if (!Matches(item)) continue; // Dead Explorer / reused HWND is not owned.
             var window = (nint)item.Window;
+            if (item.HoldAutoHide && window == FindWindow("Shell_TrayWnd", null) && _releasedToken != state.Token)
+            {
+                ReleaseTimer(window, TaskbarInteraction(window, item.Target, item.Monitor), GetForegroundWindow());
+                _releasedToken = state.Token;
+            }
             if (state.Mode == TaskbarLeaseMode.Hide)
             {
                 if (item.Visible && !IsWindowVisible(window)) ShowWindow(window, 8);
@@ -176,6 +195,51 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
                 RestoreContent(item);
                 RestoreClip(item);
             }
+        }
+    }
+
+    internal void HoldTimer(nint window, bool reveal, Action armRecovery)
+    {
+        RequireMenuIdle(window);
+        armRecovery();
+        if (reveal) TrayMessage(window, 0x0006, 0x10001, LauncherWindow);
+        TrayMessage(window, 0x0211, 1, 0);
+    }
+
+    internal void ReleaseTimer(nint window, bool interacting, nint foreground)
+    {
+        RequireMenuIdle(window);
+        if (!interacting)
+        {
+            TrayMessage(window, 0x0006, 0, foreground);
+            RequireMenuIdle(window);
+        }
+        TrayMessage(window, 0x0212, 1, 0);
+    }
+
+    private void RequireMenuIdle(nint window)
+    {
+        if ((menuActive ?? NativeMenuActive)(window)) throw new IOException("Explorer is using a taskbar menu.");
+    }
+
+    private static bool NativeMenuActive(nint window)
+    {
+        var thread = GetWindowThreadProcessId(window, out _);
+        var info = new GuiThreadInfo { Size = (uint)Marshal.SizeOf<GuiThreadInfo>() };
+        if (thread == 0 || !GetGUIThreadInfo(thread, ref info)) throw new IOException("Explorer menu state is unavailable.");
+        return (info.Flags & 0x1c) != 0; // GUI_INMENUMODE | GUI_SYSTEMMENUMODE | GUI_POPUPMENUMODE
+    }
+
+    private void TrayMessage(nint window, uint message, nint wParam, nint lParam)
+        => (sendMessage ?? SendTrayMessage)(window, message, wParam, lParam);
+
+    private static void SendTrayMessage(nint window, uint message, nint wParam, nint lParam)
+    {
+        if (SendMessageTimeout(window, message, wParam, lParam, 0x0022, 250, out _) == 0)
+        {
+            var error = Marshal.GetLastWin32Error();
+            if (error == 0) throw new IOException("Explorer did not acknowledge the taskbar lifecycle message.");
+            throw new System.ComponentModel.Win32Exception(error);
         }
     }
 
@@ -506,6 +570,17 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
     [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] private static extern bool GetCursorPos(out Point point);
     [DllImport("user32.dll")] private static extern nint WindowFromPoint(Point point);
     [DllImport("user32.dll")] private static extern nint GetForegroundWindow();
+    [StructLayout(LayoutKind.Sequential)]
+    private struct GuiThreadInfo
+    {
+        public uint Size, Flags;
+        public nint Active, Focus, Capture, MenuOwner, MoveSize, Caret;
+        public Rect CaretBounds;
+    }
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetGUIThreadInfo(uint thread, ref GuiThreadInfo info);
+    [DllImport("user32.dll", EntryPoint = "SendMessageTimeoutW", SetLastError = true)] private static extern nint SendMessageTimeout(nint window, uint message, nint wParam, nint lParam, uint flags, uint timeout, out nint result);
     [DllImport("user32.dll")] private static extern nint GetAncestor(nint window, uint flags);
     [DllImport("user32.dll")][return: MarshalAs(UnmanagedType.Bool)] private static extern bool RedrawWindow(nint window, nint rect, nint region, uint flags);
     [DllImport("user32.dll", CharSet = CharSet.Unicode, EntryPoint = "GetWindowLongPtrW")] private static extern nint GetWindowLongPtr(nint window, int index);

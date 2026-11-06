@@ -5,6 +5,8 @@ namespace ReStart.App.Services;
 
 /// <summary>Chooses temporary reveal or identifies a legacy hide record for recovery; new native hide operations are disabled.</summary>
 internal enum TaskbarLeaseMode { Reveal, Hide }
+/// <summary>Distinguishes a reservation, possibly applied effects, and completed recovery.</summary>
+internal enum TaskbarRecoveryPhase { Legacy, Prepared, RestorePending, Restored }
 /// <summary>Stores physical screen pixels in private recovery state only.</summary>
 internal readonly record struct TaskbarBounds(int X, int Y, int Width, int Height);
 /// <summary>Identifies a direct native taskbar content child and its captured visibility for conditional recovery.</summary>
@@ -16,19 +18,25 @@ internal sealed record TaskbarClipState(bool HasRegion, TaskbarBounds[] Rectangl
         && Rectangles.All(rect => rect.Width is > 0 and <= 65536 && rect.Height is > 0 and <= 65536
             && rect.X is >= -262144 and <= 262144 && rect.Y is >= -262144 and <= 262144);
 }
-/// <summary>Identifies the exact Explorer window and its original and intended geometry for conditional recovery.</summary>
+/// <summary>Identifies the exact Explorer window and recoverable effects; older records without HoldAutoHide never release an unowned timer hold.</summary>
 internal sealed record TaskbarWindowState(long Window, int ProcessId, long ProcessStarted, bool Visible, bool AutoHide,
-    TaskbarBounds Monitor, TaskbarBounds Original, TaskbarBounds Target, bool? Topmost = null, TaskbarContentState[]? Content = null, TaskbarClipState? Clip = null);
+    TaskbarBounds Monitor, TaskbarBounds Original, TaskbarBounds Target, bool? Topmost = null, TaskbarContentState[]? Content = null, TaskbarClipState? Clip = null,
+    bool HoldAutoHide = false);
 /// <summary>Stores a private, process-bound recovery transaction; never sent to tiles or shared diagnostics.</summary>
-internal sealed record TaskbarLeaseState(int Version, string Token, int ParentId, long ParentStarted, TaskbarLeaseMode Mode, TaskbarWindowState[] Windows)
+internal sealed record TaskbarLeaseState(int Version, string Token, int ParentId, long ParentStarted, TaskbarLeaseMode Mode,
+    TaskbarWindowState[] Windows, TaskbarRecoveryPhase Phase = TaskbarRecoveryPhase.Legacy)
 {
-    internal bool IsValid() => Version == 1 && Guid.TryParseExact(Token, "N", out _) && ParentId > 0 && ParentStarted > 0
+    internal bool IsValid() => Version is 1 or 2 or 3 && Guid.TryParseExact(Token, "N", out _) && ParentId > 0 && ParentStarted > 0
+        && (Version == 3 ? Phase is TaskbarRecoveryPhase.Prepared or TaskbarRecoveryPhase.RestorePending or TaskbarRecoveryPhase.Restored
+            : Phase == TaskbarRecoveryPhase.Legacy)
         && Enum.IsDefined(Mode) && Windows is { Length: > 0 and <= 32 }
         && Windows.All(item => item != null && item.Window > 0 && item.ProcessId > 0 && item.ProcessStarted > 0
             && Valid(item.Monitor) && Valid(item.Original) && Valid(item.Target) && (item.Clip == null || item.Clip.IsValid())
             && (item.Content == null || item.Content.Length <= 4 && item.Content.All(child => child != null && child.Window > 0 && child.Window != item.Window)
                 && item.Content.Select(child => child.Window).Distinct().Count() == item.Content.Length))
-        && Windows.Select(item => item.Window).Distinct().Count() == Windows.Length;
+        && Windows.Select(item => item.Window).Distinct().Count() == Windows.Length
+        && (Version != 2 && Windows.All(item => !item.HoldAutoHide)
+            || Version != 1 && Mode == TaskbarLeaseMode.Reveal && Windows.All(item => item.HoldAutoHide));
     private static bool Valid(TaskbarBounds bounds) => bounds.Width is > 0 and <= 65536 && bounds.Height is > 0 and <= 65536
         && bounds.X is >= -262144 and <= 262144 && bounds.Y is >= -262144 and <= 262144;
 }
@@ -39,6 +47,7 @@ internal interface ITaskbarRecoveryStore
     IDisposable Acquire();
     TaskbarLeaseState? Read();
     void Save(TaskbarLeaseState state);
+    void Update(TaskbarLeaseState state);
     void Delete(string token);
 }
 /// <summary>Provides scoped shell operations; Restore must revalidate identities and preserve changes no longer owned by the lease.</summary>
@@ -46,7 +55,7 @@ internal interface ITaskbarLeaseBackend
 {
     TaskbarLeaseState? Capture(TaskbarLeaseMode mode);
     bool IsCurrent(TaskbarLeaseState state);
-    void Apply(TaskbarLeaseState state);
+    void Apply(TaskbarLeaseState state, Action armRecovery);
     void Restore(TaskbarLeaseState state);
 }
 
@@ -90,7 +99,7 @@ internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBac
     {
         try
         {
-            if (_state != null && (_state.Mode != mode || !backend.IsCurrent(_state)))
+            if (_state != null && (RecoveryFailed || _state.Mode != mode || !backend.IsCurrent(_state)))
                 if (!Restore()) return false;
             if (mode == null) return true;
             if (_state == null)
@@ -98,18 +107,15 @@ internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBac
                 var candidate = backend.Capture(mode.Value);
                 if (candidate == null) return false;
                 if (!candidate.IsValid()) throw new InvalidDataException("Invalid taskbar recovery snapshot.");
+                candidate = candidate with { Version = 3, Phase = TaskbarRecoveryPhase.Prepared };
                 store.Save(candidate);
-                var saved = store.Read();
-                if (saved == null || !saved.IsValid() || JsonSerializer.Serialize(candidate) != JsonSerializer.Serialize(saved))
-                    throw new InvalidDataException("Taskbar recovery verification failed.");
-                // Ownership starts after durable verification, before the first
-                // external mutation. A partially failing Apply can then be undone.
+                VerifyStored(candidate);
                 _state = candidate;
                 _protection = protect(candidate) ?? throw new InvalidOperationException("Missing taskbar recovery watchdog.");
             }
             if (stillRequested?.Invoke() == false) { Restore(); return false; }
             if (protectionReady?.Invoke() == false) throw new IOException("Taskbar recovery watchdog is no longer ready.");
-            backend.Apply(_state);
+            backend.Apply(_state, ArmRecovery);
             _applied = true;
             RecoveryFailed = false;
             return true;
@@ -122,14 +128,34 @@ internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBac
         }
     }
 
+    private void ArmRecovery()
+    {
+        if (_state is not { Phase: TaskbarRecoveryPhase.Prepared } state) return;
+        // A timeout can occur after Explorer starts handling a message. Leave
+        // a durable recovery obligation before the first external effect.
+        var armed = state with { Phase = TaskbarRecoveryPhase.RestorePending };
+        store.Update(armed);
+        VerifyStored(armed);
+        _state = armed;
+    }
+
+    private void VerifyStored(TaskbarLeaseState expected)
+    {
+        var saved = store.Read();
+        if (saved == null || !saved.IsValid() || JsonSerializer.Serialize(expected) != JsonSerializer.Serialize(saved))
+            throw new InvalidDataException("Taskbar recovery verification failed.");
+    }
+
     private bool Restore()
     {
         if (_state == null) return true;
         _applied = false;
         try
         {
-            backend.Restore(_state);
-            store.Delete(_state.Token);
+            var saved = store.Read();
+            if (saved == null || !saved.IsValid() || saved.Token != _state.Token)
+                throw new InvalidDataException("Taskbar recovery ownership changed.");
+            TaskbarRecovery.Complete(store, backend, saved);
             _state = null;
             _protection?.Dispose(); _protection = null;
             RecoveryFailed = false;

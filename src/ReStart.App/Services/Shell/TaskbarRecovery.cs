@@ -20,10 +20,21 @@ internal static class TaskbarRecovery
             if (!state.IsValid()) return false;
             if (expectedParent is { } parent && (state.ParentId != parent.Id || state.ParentStarted != parent.Started)) return true;
             if (isAlive(state.ParentId, state.ParentStarted)) return false;
-            backend.Restore(state);
-            store.Delete(state.Token);
+            Complete(store, backend, state);
             return true;
         }
         catch (Exception error) when (TaskbarLease.Expected(error)) { return false; }
+    }
+
+    internal static void Complete(ITaskbarRecoveryStore store, ITaskbarLeaseBackend backend, TaskbarLeaseState state)
+    {
+        if (state.Phase is not (TaskbarRecoveryPhase.Prepared or TaskbarRecoveryPhase.Restored))
+        {
+            backend.Restore(state);
+            // Checkpoint completion before deleting. A different watchdog can
+            // then retry a failed deletion without replaying shell messages.
+            if (state.Version >= 2) store.Update(state with { Version = 3, Phase = TaskbarRecoveryPhase.Restored });
+        }
+        store.Delete(state.Token);
     }
 }

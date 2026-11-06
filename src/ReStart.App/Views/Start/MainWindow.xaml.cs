@@ -258,15 +258,17 @@ public partial class MainWindow : Window
         _focusOnActivation = true;
         if (!_preview) TaskbarNativeBackend.PrepareLauncher(handle, Document.Preferences.ShowTaskbarWhileOpen);
         if (wasHidden && MotionEnabled) Opacity = EntranceOpacity;
-        if (!IsVisible) Show();
         if (!_preview)
         {
             var screen = System.Windows.Forms.Screen.FromPoint(_startButtonPoint ?? System.Windows.Forms.Cursor.Position);
             var area = NativeWorkingArea?.Invoke(screen) ?? screen.WorkingArea;
             _wallpaperMonitor = screen.Bounds;
-            MonitorPlacement.FitWorkingArea(handle, new nint(-1), area, 0x0040, NativeWorkingArea);
+            // Place the hidden HWND first so visibility observers do not acquire
+            // a taskbar on the previous display during a cross-monitor opening.
+            MonitorPlacement.FitWorkingArea(handle, new nint(-1), area, 0x0010, NativeWorkingArea);
             ApplyTaskbarContentInsets(area, NativeContentArea?.Invoke(screen) ?? area, VisualTreeHelper.GetDpi(this));
         }
+        if (!IsVisible) Show();
         if (!_preview || _openingWallpaperFixture != null) QueueOpeningWallpaperRefresh();
         if (!_preview || _verifyNativeActivation) ForegroundActivation.Request(handle);
         Activate();
