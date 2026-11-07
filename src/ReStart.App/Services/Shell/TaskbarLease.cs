@@ -66,10 +66,12 @@ internal interface ITaskbarLeaseBackend
 /// <param name="protectionReady">Optional live guard check before each mutation. Production supplies it; null permits trusted inert test guards.</param>
 internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBackend backend, Func<TaskbarLeaseState, IDisposable> protect, Func<bool>? protectionReady = null) : IDisposable
 {
+    private const int MaxRevealFailures = 2;
     private TaskbarLeaseState? _state;
     private IDisposable? _protection;
     private bool _disposed;
     private bool _applied;
+    private int _revealRequestId, _revealFailures;
     internal bool IsActive => _state != null;
     internal bool RecoveryFailed { get; private set; }
     /// <summary>Retains the last local acquisition/recovery exception for explicit owned diagnostics; never exported to tiles or shared reports.</summary>
@@ -81,11 +83,17 @@ internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBac
     /// <summary>Enforces an optional temporary effect; failure never bypasses recovery prerequisites.</summary>
     /// <param name="mode">Desired effect, or null to release ownership and return control to the backend's current native policy.</param>
     /// <param name="stillRequested">Optional current-request check, evaluated after recovery readiness and before shell mutation. False cancels and restores acquisition.</param>
+    /// <param name="revealRequestId">Identifies an opening and its reveal scope across monitoring ticks.</param>
     /// <returns>True when the requested effect is active, or restoration completed; false for unavailable/failed acquisition or recovery.</returns>
-    internal bool Synchronize(TaskbarLeaseMode? mode, Func<bool>? stillRequested = null)
+    internal bool Synchronize(TaskbarLeaseMode? mode, Func<bool>? stillRequested = null, int revealRequestId = 0)
     {
         LastFailure = null;
         if (_disposed) return mode == null && _state == null;
+        if (mode != TaskbarLeaseMode.Reveal || _revealRequestId != revealRequestId)
+        {
+            _revealRequestId = revealRequestId;
+            _revealFailures = 0;
+        }
         if (mode == null && _state == null) return true;
         try
         {
@@ -97,6 +105,7 @@ internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBac
 
     private bool SynchronizeLocked(TaskbarLeaseMode? mode, Func<bool>? stillRequested)
     {
+        var attemptedReveal = false;
         try
         {
             if (_state != null && (RecoveryFailed || _state.Mode != mode || !backend.IsCurrent(_state)))
@@ -104,6 +113,7 @@ internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBac
             if (mode == null) return true;
             if (_state == null)
             {
+                if (mode == TaskbarLeaseMode.Reveal && _revealFailures >= MaxRevealFailures) return false;
                 var candidate = backend.Capture(mode.Value);
                 if (candidate == null) return false;
                 if (!candidate.IsValid()) throw new InvalidDataException("Invalid taskbar recovery snapshot.");
@@ -115,7 +125,11 @@ internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBac
             }
             if (stillRequested?.Invoke() == false) { Restore(); return false; }
             if (protectionReady?.Invoke() == false) throw new IOException("Taskbar recovery watchdog is no longer ready.");
-            backend.Apply(_state, ArmRecovery);
+            backend.Apply(_state, () =>
+            {
+                ArmRecovery();
+                attemptedReveal = mode == TaskbarLeaseMode.Reveal;
+            });
             _applied = true;
             RecoveryFailed = false;
             return true;
@@ -123,6 +137,7 @@ internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBac
         catch (Exception error) when (Expected(error))
         {
             LastFailure = error;
+            if (attemptedReveal) _revealFailures++;
             if (_state != null) Restore();
             return false;
         }

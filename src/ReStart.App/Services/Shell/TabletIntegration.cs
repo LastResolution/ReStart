@@ -17,7 +17,7 @@ internal sealed class TabletIntegration : IDisposable
     /// <param name="Recover">Attempts startup recovery without touching any live owner.</param>
     internal sealed record Dependencies(ITaskbarRecoveryStore Store, ITaskbarLeaseBackend Backend, Action<TaskbarBounds> SetScope,
         Func<TaskbarLeaseState, IDisposable> Protect, Func<bool> ProtectionReady, Func<bool> Recover);
-    private sealed record Request(bool Open, bool Reveal, TaskbarBounds Monitor, int DeviceRevision);
+    private sealed record Request(bool Open, bool Reveal, TaskbarBounds Monitor, int DeviceRevision, int RevealRequestId);
     private readonly MainWindow _window;
     private readonly HwndSource _source;
     private readonly DispatcherTimer _timer;
@@ -70,8 +70,12 @@ internal sealed class TabletIntegration : IDisposable
         if (_disposed) return;
         var preferences = _window.Document.Preferences;
         var monitor = System.Windows.Forms.Screen.FromHandle(_window.PresentationHandle).Bounds;
+        var previous = _wanted;
         var request = new Request(_window.IsPresenting, preferences.ShowTaskbarWhileOpen,
-            new(monitor.X, monitor.Y, monitor.Width, monitor.Height), _deviceRevision);
+            new(monitor.X, monitor.Y, monitor.Width, monitor.Height), _deviceRevision, previous?.RevealRequestId ?? 0);
+        // An opening can change while the worker is busy, even if it never sees the intervening close.
+        if (previous != null && (request.Open != previous.Open || request.Reveal != previous.Reveal || request.Monitor != previous.Monitor))
+            request = request with { RevealRequestId = request.RevealRequestId + 1 };
         TaskbarNativeBackend.PrepareLauncher(_source.Handle, request.Reveal);
         _timer.Interval = request.Open || _published != null ? TimeSpan.FromMilliseconds(350) : TimeSpan.FromSeconds(2);
         if (_wanted != request) Volatile.Write(ref _wanted, request);
@@ -106,7 +110,7 @@ internal sealed class TabletIntegration : IDisposable
         if (_disposed || !ReferenceEquals(request, Volatile.Read(ref _wanted))) return _lease.Snapshot;
         _dependencies.SetScope(request.Monitor);
         TaskbarLeaseMode? mode = request.Open && request.Reveal ? TaskbarLeaseMode.Reveal : null;
-        _lease.Synchronize(mode, () => !_disposed && ReferenceEquals(request, Volatile.Read(ref _wanted)));
+        _lease.Synchronize(mode, () => !_disposed && ReferenceEquals(request, Volatile.Read(ref _wanted)), request.RevealRequestId);
         return _lease.Snapshot;
     }
 

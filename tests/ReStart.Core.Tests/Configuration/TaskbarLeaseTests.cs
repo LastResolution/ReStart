@@ -123,6 +123,36 @@ public sealed class TaskbarLeaseTests
         Assert.Null(store.State);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PersistentRevealTimeoutStopsAfterOneRetry(bool closeCoalesced)
+    {
+        var store = new Store();
+        var tray = new Tray();
+        using var lease = new TaskbarLease(store, new TimerBackend(tray), _ => new Guard(() => { }));
+        tray.Sending = (message, parameter) =>
+        {
+            if (message != 0x0211) return;
+            tray.Deliver(message, parameter);
+            throw new Win32Exception(1460);
+        };
+
+        for (var tick = 0; tick < 5; tick++)
+        {
+            Assert.False(lease.Synchronize(TaskbarLeaseMode.Reveal, revealRequestId: 1));
+            Assert.Null(store.State);
+            Assert.False(tray.TimerHeld);
+        }
+        Assert.Equal(2, tray.Messages.Count(message => message.Message == 0x0211));
+        Assert.Equal(2, tray.Messages.Count(message => message.Message == 0x0212));
+
+        if (!closeCoalesced) Assert.True(lease.Synchronize(null, revealRequestId: 1));
+        tray.Sending = null;
+        Assert.True(lease.Synchronize(TaskbarLeaseMode.Reveal, revealRequestId: closeCoalesced ? 2 : 1));
+        Assert.True(tray.TimerHeld);
+    }
+
     [Fact]
     public void FreshWatchdogRetriesDeletionWithoutSendingAnotherRelease()
     {
