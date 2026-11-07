@@ -578,7 +578,7 @@
   "WindowsSearchHandoffHelp": "Öffnet die Windows-Suche und überträgt die aktuelle Suchanfrage, wenn das Eingabefeld verfügbar ist. Bei der Rückkehr zu ReStart wird dieses Suchfenster geschlossen. Cloud-Ergebnisse hängen von Windows-Berechtigungen und verbundenen Konten ab; ReStart greift nicht auf Cloud-Dateien zu.",
   "WindowsSearchQueryUnavailable": "Die Windows-Suche wurde geöffnet, hat die Suchanfrage aber nicht übernommen. Geben Sie sie dort ein.",
   "SettingsLegacyUwpTiles": "Live-Kacheln von Windows-Apps anzeigen (Kompatibilität)",
-  "LegacyUwpTilesHelp": "Liest aktive Kachel- und Abzeichendaten nur für angeheftete Paket-Apps. Verwendet einen undokumentierten Windows-Speicher; nicht verfügbare Daten werden durch Symbole ersetzt. Toasts werden nicht gelesen, entfernte Bilder nicht heruntergeladen.",
+  "LegacyUwpTilesHelp": "Liest aktive Kachel- und Abzeichendaten nur für angeheftete Paket-Apps. Verwendet einen undokumentierten Windows-Speicher; nicht verfügbare Daten werden durch Standard-Kachelbilder oder Symbole ersetzt. Toasts werden nicht gelesen, entfernte Bilder nicht heruntergeladen.",
   "SearchWebFor": "Im Web nach „{0}“ suchen",
   "SettingsWebSearch": "Websuche im Standardbrowser anbieten",
   "WebSearchHelp": "Öffnet Bing nur bei Auswahl dieser Aktion im Standardbrowser. Beim Tippen wird kein Suchtext an das Web gesendet.",

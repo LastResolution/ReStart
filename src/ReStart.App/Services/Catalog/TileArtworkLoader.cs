@@ -19,7 +19,8 @@ internal static class TileArtworkLoader
             try { completion.SetResult(Read(requests, token)); }
             catch (OperationCanceledException) when (token.IsCancellationRequested) { completion.SetCanceled(token); }
             catch (Exception ex) { completion.SetException(ex); }
-        }) { IsBackground = true, Name = "ReStart tile artwork" };
+        })
+        { IsBackground = true, Name = "ReStart tile artwork" };
         thread.SetApartmentState(ApartmentState.STA); thread.Start(); return completion.Task;
     }
 
@@ -58,7 +59,8 @@ internal static class TileArtworkLoader
                 }
             }
             catch (Exception ex) when (ex is COMException or IOException or UnauthorizedAccessException or System.Security.SecurityException
-                or ArgumentException or NotSupportedException or InvalidOperationException or System.IO.FileFormatException) { }
+                or ArgumentException or NotSupportedException or InvalidOperationException or System.IO.FileFormatException)
+            { }
         }
         return result;
     }
@@ -81,11 +83,19 @@ internal static class TileArtworkLoader
                 executable = app.LaunchTarget.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase) ? AppCatalog.ReadShortcutMetadata(app.LaunchTarget).TargetPath : app.LaunchTarget;
             if (!Path.IsPathFullyQualified(executable) || executable.StartsWith(@"\\", StringComparison.Ordinal) || !Path.GetExtension(executable).Equals(".exe", StringComparison.OrdinalIgnoreCase)) return null;
             root = Path.GetDirectoryName(executable)!;
+            if (!LocalRoot(root)) return null;
             if (!LegacyTileAssets.SafeFile(executable, root)) return null;
             manifest = Path.ChangeExtension(executable, ".VisualElementsManifest.xml");
         }
-        if (!LegacyTileAssets.SafeFile(manifest, root) || new FileInfo(manifest).Length is <= 0 or > 2_000_000) return null;
+        if (!LocalRoot(root) || !LegacyTileAssets.SafeFile(manifest, root) || new FileInfo(manifest).Length is <= 0 or > 2_000_000) return null;
         using var stream = File.Open(manifest, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
         return AppTileArtwork.Read(stream, application) is { } artwork ? (root, artwork) : null;
+    }
+
+    private static bool LocalRoot(string root)
+    {
+        var drive = Path.GetPathRoot(root);
+        return drive is { Length: 3 } && drive[1] == ':' && new DriveInfo(drive).DriveType is DriveType.Fixed or DriveType.Removable or DriveType.CDRom or DriveType.Ram
+            && LegacyTileAssets.SafeFile(root, drive);
     }
 }

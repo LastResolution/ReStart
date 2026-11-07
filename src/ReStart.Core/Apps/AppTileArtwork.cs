@@ -87,7 +87,8 @@ public sealed record AppTileArtwork(IReadOnlyDictionary<TileSize, string> Images
                 var key = part[..split].ToLowerInvariant(); var value = part[(split + 1)..].ToLowerInvariant();
                 switch (key)
                 {
-                    case "scale": case "targetsize":
+                    case "scale":
+                    case "targetsize":
                         if (dimension || !int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var number) || number is < 1 or > 4096) valid = false;
                         else { dimension = true; pixels = key == "scale" ? basePixels * number / 100 : number; }
                         break;

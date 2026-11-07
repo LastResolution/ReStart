@@ -91,15 +91,15 @@ internal sealed class LegacyTileAssets
 
     internal static bool SafeFile(string path, string root)
     {
-        var current = Path.GetFullPath(path); var boundary = Path.GetFullPath(root).TrimEnd('\\');
-        if (!current.Equals(boundary, StringComparison.OrdinalIgnoreCase) && !current.StartsWith(boundary + "\\", StringComparison.OrdinalIgnoreCase)) return false;
-        while (current.Length >= boundary.Length)
+        var current = Path.TrimEndingDirectorySeparator(Path.GetFullPath(path)); var boundary = Path.TrimEndingDirectorySeparator(Path.GetFullPath(root));
+        if (!current.Equals(boundary, StringComparison.OrdinalIgnoreCase) && !current.StartsWith(boundary.TrimEnd('\\') + "\\", StringComparison.OrdinalIgnoreCase)) return false;
+        while (true)
         {
             if (!File.Exists(current) && !Directory.Exists(current) || (File.GetAttributes(current) & FileAttributes.ReparsePoint) != 0) return false;
             if (current.Equals(boundary, StringComparison.OrdinalIgnoreCase)) return true;
-            current = Path.GetDirectoryName(current)!;
+            if (Path.GetDirectoryName(current) is not { } parent) return false;
+            current = parent;
         }
-        return false;
     }
 
     private sealed class AssetKeyComparer : IEqualityComparer<(string App, string Source)>

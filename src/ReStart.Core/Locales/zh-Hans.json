@@ -578,7 +578,7 @@
   "WindowsSearchHandoffHelp": "打开 Windows 搜索，输入框可用时传递当前搜索词。返回 ReStart 时会关闭该搜索窗口。云端结果取决于 Windows 权限和已连接的帐户；ReStart 不会访问云端文件。",
   "WindowsSearchQueryUnavailable": "Windows 搜索已打开，但未能接收搜索词。请在 Windows 搜索中输入。",
   "SettingsLegacyUwpTiles": "显示 Windows 应用动态磁贴（兼容功能）",
-  "LegacyUwpTilesHelp": "仅读取已固定的打包应用的有效磁贴和徽章数据。使用未公开的 Windows 存储格式；数据不可用时显示图标。不读取弹出通知，也不下载远程图像。",
+  "LegacyUwpTilesHelp": "仅读取已固定的打包应用的有效磁贴和徽章数据。使用未公开的 Windows 存储格式；数据不可用时显示默认磁贴图片或图标。不读取弹出通知，也不下载远程图像。",
   "SearchWebFor": "在网上搜索“{0}”",
   "SettingsWebSearch": "显示通过默认浏览器进行网页搜索的选项",
   "WebSearchHelp": "仅在选择此操作时使用默认浏览器打开 Bing。仅输入文字不会将搜索词发送到网络。",

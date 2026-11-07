@@ -578,7 +578,7 @@
   "WindowsSearchHandoffHelp": "Opens Windows Search and transfers the current query when its input is available. Returning to ReStart dismisses that search window. Cloud results depend on Windows permissions and connected accounts; ReStart does not access cloud files.",
   "WindowsSearchQueryUnavailable": "Windows Search opened but did not accept the query. Enter it in Windows Search.",
   "SettingsLegacyUwpTiles": "Show Windows app live tiles (compatibility)",
-  "LegacyUwpTilesHelp": "Reads active tile and badge data only for pinned packaged apps. Uses an undocumented Windows store; unavailable data falls back to icons. Toasts are not read and remote images are not downloaded.",
+  "LegacyUwpTilesHelp": "Reads active tile and badge data only for pinned packaged apps. Uses an undocumented Windows store; unavailable data falls back to default tile images or icons. Toasts are not read and remote images are not downloaded.",
   "SearchWebFor": "Search the web for “{0}”",
   "SettingsWebSearch": "Show web search in the default browser",
   "WebSearchHelp": "Opens Bing in your default browser only when you choose this action. Typing does not send search text to the Web.",

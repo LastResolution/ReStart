@@ -28,6 +28,7 @@ public partial class MainWindow
         var checks = 0;
         void Check(bool condition, string message) { Require(condition, message); checks++; }
         var root = Path.Combine(directory, "owned-artwork"); Directory.CreateDirectory(root);
+        Check(LegacyTileAssets.SafeFile(root, Path.GetPathRoot(root)!), "Drive-root containment rejected a local owned artwork directory.");
         var executable = Path.Combine(root, "Owned.exe"); File.WriteAllText(executable, "Not an executable; artwork fixture only.");
         File.WriteAllText(Path.ChangeExtension(executable, ".VisualElementsManifest.xml"),
             "<Application><VisualElements Square70x70Logo='small.png' Square150x150Logo='medium.png' Wide310x150Logo='wide.png' Square310x310Logo='large.png' BackgroundColor='#123456' ForegroundText='light'/></Application>");
