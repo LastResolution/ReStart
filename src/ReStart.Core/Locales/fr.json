@@ -169,6 +169,8 @@
   "ErrorFutureLayout": "Cette disposition utilise un format plus récent et est protégée contre les modifications.",
   "LanguageJapanese": "日本語",
   "SettingsColoredTiles": "Utiliser les vignettes colorées classiques",
+  "SettingsAppTileImages": "Utiliser les images de vignettes fournies par les applications",
+  "AppTileImagesHelp": "Utilise les images incluses dans les applications installées, selon la taille de vignette, la mise à l’échelle et le thème. Sinon, affiche l’icône de l’application. N’active pas les mises à jour dynamiques.",
   "AddClock": "Vignette Horloge",
   "SearchBestMatch": "Meilleur résultat",
   "ErrorUnsupported": "Non pris en charge",

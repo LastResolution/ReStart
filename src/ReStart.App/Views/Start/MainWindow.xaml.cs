@@ -118,6 +118,7 @@ public partial class MainWindow : Window
         PreviewMouseDown += (_, _) => CompleteEntrance();
         IsVisibleChanged += (_, _) => { if (!IsVisible) { _touchPanning.Release(); StopMotion(); StopDragGhost(); ClearPlacementMotion(); SetLayoutEditing(false); } };
         Loaded += async (_, _) => await InitializeAsync();
+        Closed += (_, _) => _artworkCancellation?.Cancel();
         SourceInitialized += (_, _) =>
         {
             var square = 1;
@@ -191,6 +192,7 @@ public partial class MainWindow : Window
             IconsReady = true;
             MarkStartup("icons");
             RenderGroups();
+            if (_artworkReadTask != null) await _artworkReadTask;
             RenderApps();
             RefreshSearchResults();
             if (_store.RecoveryMessage == null) SetStatus("");
@@ -431,6 +433,7 @@ public partial class MainWindow : Window
         _selectionViews.Clear();
         _liveLabels.Clear();
         _legacyViews.Clear();
+        _artworkViews.Clear();
         _scriptViews.Clear();
         _usedHtmlTiles.Clear();
         _folderThumbnailIds.Clear();
@@ -487,6 +490,7 @@ public partial class MainWindow : Window
             GroupsPanel.Children.Add(button);
         }
         RetireHtmlTiles();
+        RefreshTileArtwork();
         UpdateLiveTiles();
         FitPanels();
         RefreshEntranceTargets();
@@ -573,12 +577,13 @@ public partial class MainWindow : Window
         {
             var (width, height) = TileLayout.Dimensions(tile.Size);
             var available = Math.Min(width * Cell - 4, height * Cell - 4) - 14 - (tile.Size == TileSize.Small ? 0 : 8);
-            var icon = CreateIcon(tile, Math.Max(1, Math.Min(available, tile.Size == TileSize.Small ? 23 : tile.Size == TileSize.Large ? 60 : 40)));
-            grid.Children.Add(icon);
+            var icon = CreateIcon(tile, Math.Max(1, folderThumbnail ? available : Math.Min(available, tile.Size == TileSize.Small ? 23 : tile.Size == TileSize.Large ? 60 : 40)));
+            var surface = ArtworkSurface(tile, button, icon);
+            grid.Children.Add(surface);
             if (nativeLive && (!studioPreview || folderThumbnail))
             {
                 var native = new LegacyTileView { IsHitTestVisible = false, Focusable = false };
-                grid.Children.Add(native); _legacyViews.Add((tile, native, icon, button));
+                grid.Children.Add(native); _legacyViews.Add((tile, native, surface, button));
             }
         }
         if (tile.Size != TileSize.Small && !tile.IsFolder && !webTile && (tile.Widget.Length == 0 && !nativeLive || DisplayPreferences.ShowLiveTileNames))

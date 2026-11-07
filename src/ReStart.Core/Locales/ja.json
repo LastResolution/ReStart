@@ -169,6 +169,8 @@
   "ErrorFutureLayout": "新しい形式のレイアウトは保護されています。",
   "LanguageJapanese": "日本語",
   "SettingsColoredTiles": "旧スタートの色付きタイルを使う",
+  "SettingsAppTileImages": "アプリ付属のタイル画像を使う",
+  "AppTileImagesHelp": "インストール済みアプリにタイル画像があれば、タイルのサイズ・画面の拡大率・テーマに合わせて表示します。画像がなければアプリアイコンを表示します。ライブ更新は有効になりません。",
   "AddClock": "時計タイル",
   "SearchBestMatch": "最も一致するアプリ",
   "ErrorUnsupported": "未対応",

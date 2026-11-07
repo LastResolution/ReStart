@@ -169,6 +169,8 @@
   "ErrorFutureLayout": "Dieses Layout verwendet ein neueres Format und ist vor Änderungen geschützt.",
   "LanguageJapanese": "日本語",
   "SettingsColoredTiles": "Klassisch farbige Kacheln verwenden",
+  "SettingsAppTileImages": "Mitgelieferte Kachelbilder der Apps verwenden",
+  "AppTileImagesHelp": "Verwendet verfügbare Kachelbilder installierter Apps passend zu Kachelgröße, Anzeigeskalierung und Design. Andernfalls erscheint das App-Symbol. Live-Aktualisierungen werden dadurch nicht aktiviert.",
   "AddClock": "Uhrkachel",
   "SearchBestMatch": "Höchste Übereinstimmung",
   "ErrorUnsupported": "Nicht unterstützt",

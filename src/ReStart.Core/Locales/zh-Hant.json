@@ -169,6 +169,8 @@
   "ErrorFutureLayout": "此配置使用較新格式，已禁止修改。",
   "LanguageJapanese": "日本語",
   "SettingsColoredTiles": "使用經典彩色動態磚",
+  "SettingsAppTileImages": "使用應用程式內附的磚圖片",
+  "AppTileImagesHelp": "若已安裝的應用程式提供磚圖片，則依磚大小、顯示縮放比例及佈景主題顯示。否則顯示應用程式圖示。此選項不會啟用動態更新。",
   "AddClock": "時鐘動態磚",
   "SearchBestMatch": "最佳比對",
   "ErrorUnsupported": "不支援",

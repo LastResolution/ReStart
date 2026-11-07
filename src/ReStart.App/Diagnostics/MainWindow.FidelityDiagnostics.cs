@@ -311,6 +311,7 @@ public partial class MainWindow
             }
             await fixture.SaveSearchShowcaseAsync(directory);
             checks += await VerifySessionMenusAsync(fixture, directory);
+            checks += await VerifyTileArtworkAsync(fixture, directory);
             checks += await VerifyLegacyTileRenderingAsync(fixture, directory);
             checks += await VerifyWindowsSearchAsync(fixture, launched, directory);
             checks += await IndexedFileSearch.VerifyOwnedFieldsAsync();

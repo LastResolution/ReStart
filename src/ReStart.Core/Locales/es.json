@@ -169,6 +169,8 @@
   "ErrorFutureLayout": "Esta distribución usa un formato más reciente y está protegida contra cambios.",
   "LanguageJapanese": "日本語",
   "SettingsColoredTiles": "Usar mosaicos de colores clásicos",
+  "SettingsAppTileImages": "Usar imágenes de mosaico incluidas en las aplicaciones",
+  "AppTileImagesHelp": "Usa las imágenes disponibles en las aplicaciones instaladas según el tamaño del mosaico, la escala de pantalla y el tema. Si no hay imágenes, muestra el icono. No activa las actualizaciones dinámicas.",
   "AddClock": "Mosaico de reloj",
   "SearchBestMatch": "Mejor coincidencia",
   "ErrorUnsupported": "No compatible",

@@ -509,6 +509,10 @@ public enum TextKey
     LanguageJapanese,
     /// <summary>Use classic colored tiles</summary>
     SettingsColoredTiles,
+    /// <summary>Use app-provided tile images</summary>
+    SettingsAppTileImages,
+    /// <summary>Explains installed tile artwork and ordinary icon fallback.</summary>
+    AppTileImagesHelp,
     /// <summary>Clock tile</summary>
     AddClock,
     /// <summary>Best match</summary>

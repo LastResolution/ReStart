@@ -61,6 +61,7 @@ public partial class MainWindow
 
     private void ApplyLegacyFrames()
     {
+        ApplyTileArtworkViews();
         foreach (var (tile, view, icon, button) in _legacyViews)
         {
             if (!TileInViewport(button)) continue;
@@ -72,6 +73,9 @@ public partial class MainWindow
             {
                 name.Margin = new(2, 0, frame?.Badge.Length > 0 ? (frame.Badge.Length * 7 + 6) * DisplayPreferences.TileScale : 1, 0);
                 name.Foreground = view.ContentForeground ?? button.Foreground;
+                name.Visibility = (view.HasTileContent ? DisplayPreferences.ShowLiveTileNames
+                    : !DisplayPreferences.UseAppTileImages || !_artworkFrames.TryGetValue((tile.AppId, tile.Size), out var artwork) || artwork.ShowName)
+                    ? Visibility.Visible : Visibility.Collapsed;
             }
         }
     }

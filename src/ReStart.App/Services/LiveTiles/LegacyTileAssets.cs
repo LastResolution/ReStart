@@ -67,23 +67,29 @@ internal sealed class LegacyTileAssets
             .OrderBy(path => path, StringComparer.OrdinalIgnoreCase).FirstOrDefault(path => SafeFile(path, root));
     }
 
-    internal static BitmapSource? LoadRaster(string path, string root)
+    internal static BitmapSource? LoadRaster(string path, string root, int maximumDimension = 256)
     {
         if (!SafeFile(path, root) || new FileInfo(path).Length is <= 0 or > 3_000_000) return null;
         using var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        Span<byte> header = stackalloc byte[8]; var count = stream.Read(header);
+        if (!(count >= 8 && header.SequenceEqual(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 })
+            || count >= 3 && header[0] == 255 && header[1] == 216 && header[2] == 255
+            || count >= 2 && header[0] == 'B' && header[1] == 'M'
+            || count >= 6 && (header[..6].SequenceEqual("GIF87a"u8) || header[..6].SequenceEqual("GIF89a"u8)))) return null;
+        stream.Position = 0;
         var decoder = BitmapDecoder.Create(stream, BitmapCreateOptions.DelayCreation, BitmapCacheOption.None);
         var size = decoder.Frames[0]; var width = size.PixelWidth; var height = size.PixelHeight;
         if (width <= 0 || height <= 0 || (long)width * height > 16_777_216) return null;
         stream.Position = 0;
         var image = new BitmapImage(); image.BeginInit(); image.CacheOption = BitmapCacheOption.OnLoad;
-        if (width >= height) image.DecodePixelWidth = Math.Min(width, 256); else image.DecodePixelHeight = Math.Min(height, 256);
+        if (width >= height) image.DecodePixelWidth = Math.Min(width, Math.Clamp(maximumDimension, 1, 1024)); else image.DecodePixelHeight = Math.Min(height, Math.Clamp(maximumDimension, 1, 1024));
         image.StreamSource = stream; image.EndInit(); image.Freeze(); return image;
     }
 
     private static IEnumerable<string> Sources(IEnumerable<LegacyTileElement> elements) => elements.SelectMany(e =>
         (e.Kind == "image" ? new[] { e.Source } : []).Concat(Sources(e.Children)));
 
-    private static bool SafeFile(string path, string root)
+    internal static bool SafeFile(string path, string root)
     {
         var current = Path.GetFullPath(path); var boundary = Path.GetFullPath(root).TrimEnd('\\');
         if (!current.Equals(boundary, StringComparison.OrdinalIgnoreCase) && !current.StartsWith(boundary + "\\", StringComparison.OrdinalIgnoreCase)) return false;

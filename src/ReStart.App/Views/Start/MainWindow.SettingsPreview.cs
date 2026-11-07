@@ -47,6 +47,7 @@ public partial class MainWindow
         p.BackgroundColor,
         p.ShowAccentOnStart,
         p.ColoredTiles,
+        p.UseAppTileImages,
         p.Columns,
         p.TileScale,
         p.ShowLiveTileNames,

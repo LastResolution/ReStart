@@ -169,6 +169,8 @@
   "ErrorFutureLayout": "此布局使用较新格式，已禁止修改。",
   "LanguageJapanese": "日本語",
   "SettingsColoredTiles": "使用经典彩色磁贴",
+  "SettingsAppTileImages": "使用应用自带的磁贴图片",
+  "AppTileImagesHelp": "如果已安装的应用提供磁贴图片，则按磁贴大小、显示缩放比例和主题显示。否则显示应用图标。此选项不会启用动态更新。",
   "AddClock": "时钟磁贴",
   "SearchBestMatch": "最佳匹配",
   "ErrorUnsupported": "不支持",
