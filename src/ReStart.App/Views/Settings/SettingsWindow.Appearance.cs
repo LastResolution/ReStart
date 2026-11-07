@@ -59,6 +59,8 @@ internal sealed partial class SettingsWindow
         Note(content, L.T(K.SettingsStartAccentHelp));
         BuildBackgroundImageSettings(content);
         Check(content, L.T(K.SettingsColoredTiles), _draft.ColoredTiles, v => _draft.ColoredTiles = v);
+        Check(content, L.T(K.SettingsAppTileImages), _draft.UseAppTileImages, v => _draft.UseAppTileImages = v);
+        Note(content, L.T(K.AppTileImagesHelp));
         Check(content, L.T(K.SettingsAnimation), _draft.Animate, v => _draft.Animate = v);
         Select(content, L.T(K.SettingsGroupWidth), new[] { L.T(K.ColumnsThree), L.T(K.ColumnsFour) }, _draft.Columns == 8 ? 1 : 0, i => _draft.Columns = i == 1 ? 8 : 6);
         Slide(content, L.T(K.SettingsTileSize), 0.7, 1.5, _draft.TileScale, v => _draft.TileScale = v, true);

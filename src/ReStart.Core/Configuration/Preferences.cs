@@ -95,6 +95,8 @@ public sealed class Preferences
     public string CustomBackgroundId { get; set; } = "";
     /// <summary>Gets or sets whether app tiles use classic accent-colored backgrounds.</summary>
     public bool ColoredTiles { get; set; }
+    /// <summary>Gets or sets whether pinned apps use locally installed, size-qualified default-tile artwork when available. True by default; shell icons remain the fallback.</summary>
+    public bool UseAppTileImages { get; set; } = true;
     /// <summary>Gets or sets whether the dark Start surface uses the selected accent color, as in late Windows 10.</summary>
     public bool ShowAccentOnStart { get; set; }
     /// <summary>Gets or sets whether showing the menu animates when system accessibility settings permit.</summary>

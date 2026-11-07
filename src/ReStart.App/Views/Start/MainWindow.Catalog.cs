@@ -26,6 +26,7 @@ public partial class MainWindow
             await WaitForCatalogViewsAsync();
             if (_exit) return;
             _apps = apps;
+            _artworkRequested = "";
             RenderApps(); RefreshSearchResults();
             await _catalog.LoadIconsAsync(apps);
             await WaitForCatalogViewsAsync();

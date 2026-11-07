@@ -241,6 +241,7 @@ public partial class App : Application
             AppearanceSmokeResult? appearance = null;
             SettingsPreviewSmokeResult? settingsPreview = null;
             FidelitySmokeResult? fidelity = null;
+            int? tileArtwork = null;
             string? error = null;
             try
             {
@@ -269,12 +270,13 @@ public partial class App : Application
                 if (args.Contains("--settings-preview-test")) settingsPreview = await _window.VerifySettingsPreviewAsync(path);
                 if (args.Contains("--appearance-test")) appearance = await _window.VerifyAppearanceAsync(path);
                 if (args.Contains("--fidelity-test")) fidelity = await _window.VerifyFidelityAsync(path);
+                if (args.Contains("--tile-artwork-test")) tileArtwork = await _window.VerifyTileArtworkOnlyAsync(path);
                 _window.SaveScreenshot(path);
             }
             catch (Exception ex) { success = false; error = ex.ToString(); Console.Error.WriteLine(ex); }
             try
             {
-                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, catalogFolders = _window.CatalogFolderCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, navigation, placement, appFolders, firstInput, appMenus, nativeJumps, releaseInfo, scrolling, bundledTiles, pinIcons, motion, editing, folderDrops, tileData, searchSelection, startupPreparation, warmResume, appearance, settingsPreview, fidelity, startup = _window.StartupMetrics, error, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
+                File.WriteAllText(Path.ChangeExtension(path, ".json"), JsonSerializer.Serialize(new { success, apps = _window.CatalogCount, icons = _window.IconCount, catalogFolders = _window.CatalogFolderCount, groups = _window.Document.Groups.Count, scriptTiles = _window.ScriptTileCount, scriptFrames = _window.ScriptFrameCount, query, searchResults = _window.SearchResultNames, searchInputVisible = _window.SearchInputInVisibleTree, navigation, placement, appFolders, firstInput, appMenus, nativeJumps, releaseInfo, scrolling, bundledTiles, pinIcons, motion, editing, folderDrops, tileData, searchSelection, startupPreparation, warmResume, appearance, settingsPreview, fidelity, tileArtwork, startup = _window.StartupMetrics, error, elapsedMs = watch.ElapsedMilliseconds }, new JsonSerializerOptions { WriteIndented = true }));
             }
             catch (IOException) { success = false; }
             _window.Exit(); Shutdown(success ? 0 : 1);

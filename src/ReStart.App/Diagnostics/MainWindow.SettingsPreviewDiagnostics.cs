@@ -64,12 +64,15 @@ public partial class MainWindow
                                 Check(!VisualChildren<CheckBox>(editor).Any(item => AutomationProperties.GetName(item) == L.T(K.SettingsTabletHide)),
                                     "The removed independent taskbar hide setting is still offered.");
                                 editor.SelectSection(L.T(K.SettingsAppearance));
+                                Named<CheckBox>(editor, K.SettingsAppTileImages).IsChecked = false;
                                 Named<ComboBox>(editor, K.SettingsBaseTheme).SelectedIndex = (int)mode;
                                 Named<ComboBox>(editor, K.SettingsGroupWidth).SelectedIndex = 1;
                                 Named<Slider>(editor, K.SettingsTileSize).Value = 1.25;
                                 Named<Slider>(editor, K.SettingsOpacity).Value = .1;
                                 Named<Slider>(editor, K.SettingsBlur).Value = 0;
                                 editor.ApplyDraftPreview(); fixture.UpdateLayout();
+                                Check(!fixture.DisplayPreferences.UseAppTileImages && fixture.Document.Preferences.UseAppTileImages,
+                                    "The app artwork preview changed committed preferences or failed to apply.");
                                 Check(fixture.DisplayPreferences.Theme == mode && fixture.GroupsPanel.TileColumns == 8 && Math.Abs(fixture.Cell - 65) < .01
                                     && fixture.Wallpaper.Effect == null, "Draft appearance and tile geometry were not rendered before saving.");
                                 Check(((SolidColorBrush)fixture.Tint.Background).Color.A == (SystemParameters.HighContrast ? 255 : 25), "Draft tint was not applied.");
@@ -98,6 +101,9 @@ public partial class MainWindow
                         });
                         editor.ShowDialog(); if (error != null) throw new InvalidOperationException("Settings draft fixture failed.", error);
                         Check(fixture._preferencesPreview == null, "A closed editor retained its display overlay.");
+                        Check(fixture.Document.Preferences.UseAppTileImages == (decision != SettingsCloseChoice.Save)
+                            && store.Load()!.Preferences.UseAppTileImages == (decision != SettingsCloseChoice.Save),
+                            "The app artwork switch did not follow Settings save/discard.");
                         Check(decision == SettingsCloseChoice.Save ? fixture.Document.Preferences.TileScale == 1.25 && store.Load()!.Preferences.Columns == 8
                             && store.Load()!.Preferences.TabletHideTaskbar && !store.Load()!.Preferences.ShowTaskbarWhileOpen
                             : JsonSerializer.Serialize(fixture.Document.Preferences) == original && JsonSerializer.Serialize(store.Load()!.Preferences) == original,

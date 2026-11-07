@@ -47,7 +47,7 @@
         "https://lastresolution.github.io/ReStart/assets/web-examples.png"
       ],
       "datePublished": "2026-10-22",
-      "dateModified": "2026-11-01",
+      "dateModified": "2026-11-08",
       "author": {
         "@type": "Organization",
         "name": "ReStart contributors",
@@ -110,7 +110,8 @@
 <h2 id="what-changed">What happened to Live Tiles?</h2>
 <p>In Windows 8 and Windows 10, some pinned app tiles could display changing information rather than just an icon: a date, photo or app update, for example. The Windows 10 Start screen combined those tiles with ordinary app shortcuts.</p>
 <p>Microsoft’s <a href="https://www.microsoft.com/en-us/windows/windows-11-specifications">Windows 11 specifications</a> list Live Tiles as removed and point to Widgets for glanceable information. Widgets are a separate Windows experience. ReStart instead places its own dynamic tiles alongside your pinned apps, using a different implementation.</p>
-<p>An optional compatibility reader can also display active tile and badge data that Windows still retains for pinned packaged apps. It is off by default and uses a read-only adapter for Windows’ undocumented notification store. Common size bindings, local images and data placeholders are supported; missing or unsupported data falls back to the app icon. It does not reconnect retired feeds or restart another app’s background delivery. For a clock, PC dashboard, weather tile or custom web view with data you choose, use ReStart’s own web tile system. See the <a href="https://github.com/LastResolution/ReStart/blob/main/docs/start-behavior.md#windows-app-tile-compatibility">compatibility settings and limits</a>.</p>
+<p>A separate <strong>Use app-provided tile images</strong> option is on by default under Appearance. It displays supported artwork already included with installed apps, selecting by tile size, display scale and theme. It also applies to folder previews and needs no network access. This supplies static artwork; it does not restart a retired news feed.</p>
+<p>An optional compatibility reader can also display active tile and badge data that Windows still retains for pinned packaged apps. It is off by default and uses a read-only adapter for Windows’ undocumented notification store. Common size bindings, local images and data placeholders are supported; missing or unsupported data falls back to the app’s default artwork or icon. It does not reconnect retired feeds or restart another app’s background delivery. For a clock, PC dashboard, weather tile or custom web view with data you choose, use ReStart’s own web tile system. See the <a href="https://github.com/LastResolution/ReStart/blob/main/docs/start-behavior.md#windows-app-tile-compatibility">compatibility settings and limits</a>.</p>
 <h2 id="add-a-tile">Add your first live tile</h2>
 <ol class="guide-steps">
 <li><strong>Set up the complete portable package.</strong> Follow the <a href="../full-screen-start-menu/#set-up">download and setup steps</a>. Keep the supporting folders with <code>ReStart.exe</code>. HTML rendering and Tile Studio previews require Microsoft WebView2 Runtime, which is maintained separately from the .NET runtime included in the ZIP.</li>

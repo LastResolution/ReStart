@@ -56,7 +56,7 @@ public partial class MainWindow
                     Check(boundary.Contains(mini.TransformToAncestor(button).TransformBounds(new Rect(mini.RenderSize))), "A folder preview exceeded the visible tile at " + size + "/" + scale);
                     foreach (var image in VisualChildren<Image>(mini))
                     {
-                        var slot = (Border)image.Parent;
+                        var slot = mini.Children.OfType<FrameworkElement>().Single(cell => VisualChildren<Image>(cell).Contains(image));
                         Check(new Rect(slot.RenderSize).Contains(image.TransformToAncestor(slot).TransformBounds(new Rect(image.RenderSize))), "A miniature icon was clipped by its cell.");
                     }
                 }

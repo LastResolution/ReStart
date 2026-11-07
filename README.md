@@ -73,7 +73,9 @@ Drag shortcut tips appear briefly at the bottom of Start and can be disabled in 
 
 Search now also uses Windows-provided settings keywords and Control Panel entries. Optional Advanced Query Syntax adds native file filtering and relevance order. **Search Windows and cloud** opens the Windows interface with <kbd>Win</kbd> + <kbd>S</kbd> and transfers the current query when its input is available.
 
-Two options are off by default: counts of app launches recorded by Windows for Most used, and a read-only compatibility reader for Windows app tiles and badges. The tile renderer supports common size bindings, local raster images and literal data bindings. It does not restore discontinued push services; unavailable data keeps the app icon.
+Two options are off by default: counts of app launches recorded by Windows for Most used, and a read-only compatibility reader for Windows app tiles and badges. The tile renderer supports common size bindings, local raster images and literal data bindings. It does not restore discontinued push services; unavailable updates keep the app's default artwork or icon.
+
+**Settings → Appearance → Use app-provided tile images** is on by default. Pinned apps use locally installed tile artwork when available, matched to size, display scale and theme; otherwise they retain their icons. It also applies to folder previews, can be previewed before saving, and makes no network requests. Live updates remain a separate option.
 
 [Settings and compatibility details](docs/start-behavior.md) · [Coverage](docs/fidelity.md)
 

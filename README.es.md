@@ -56,9 +56,11 @@ El engranaje permite elegir temas, inicio con Windows, integración de la tecla 
 
 La búsqueda añade palabras clave de los ajustes de Windows y elementos del Panel de control. La sintaxis AQS opcional ofrece filtros y relevancia nativos; **Buscar en Windows** deriva explícitamente la consulta a otras fuentes de Windows.
 
-Dos opciones independientes están desactivadas al principio: los contadores de uso de Windows para las aplicaciones más usadas y la compatibilidad de solo lectura con mosaicos e insignias de Windows. Se admiten formatos habituales, imágenes locales y enlaces de datos. No se restauran servicios push retirados; si no hay datos, se conserva el icono.
+Dos opciones independientes están desactivadas al principio: los contadores de uso de Windows para las aplicaciones más usadas y la compatibilidad de solo lectura con mosaicos e insignias de Windows. Se admiten formatos habituales, imágenes locales y enlaces de datos. No se restauran servicios push retirados; si no hay datos, se conserva la imagen predeterminada o el icono.
 
 [Ajustes y compatibilidad](docs/start-behavior.md) · [Alcance](docs/fidelity.md)
+
+**Configuración → Apariencia → Usar imágenes de mosaico incluidas en las aplicaciones** está activado por defecto. Las aplicaciones ancladas usan imágenes locales disponibles según el tamaño, la escala y el tema; de lo contrario, conservan sus iconos. También se aplica a las vistas previas de carpetas y puede probarse antes de guardar. No hace solicitudes de red; las actualizaciones dinámicas son una opción independiente.
 
 ## Funciones
 

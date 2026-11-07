@@ -1,5 +1,7 @@
 # Testing
 
+`scripts/test-tile-artwork.ps1 -Executable <build>/ReStart.exe` runs the installed-artwork fixture independently of Windows Search availability. Owned manifests and raster files exercise four sizes, two themes, three tile scales, folder thumbnails, live-content precedence, high-contrast fallback, cancellation and disabling. The full fidelity suite includes the same checks. Settings preview tests cover the new appearance switch across all eight languages, both themes, and save/discard. Tests never need another application's notification content.
+
 Run on Windows with the stable SDK in global.json. Exit ReStart when rebuilding its own output, or pass an isolated OutputPath as described in the README.
 
 ~~~powershell
