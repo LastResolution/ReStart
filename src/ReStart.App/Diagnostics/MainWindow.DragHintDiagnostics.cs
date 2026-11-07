@@ -14,6 +14,9 @@ public partial class MainWindow
     {
         var checks = 0;
         void Check(bool condition, string message) { Require(condition, message); checks++; }
+        // Earlier editing operations can enqueue drag completion at Background
+        // priority. Complete that work before starting this independent drag.
+        await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
         Check(new Preferences().ShowDragShortcutHints && JsonSerializer.Deserialize<Preferences>("{}")!.ShowDragShortcutHints,
             "New and existing settings do not default drag shortcut hints on.");
         var before = JsonSerializer.Serialize(Document.Groups);
@@ -35,7 +38,8 @@ public partial class MainWindow
         Check(timer?.Interval == DragShortcutHintDuration, "The drag toast does not use its specified lifetime.");
         await Task.Delay(DragShortcutHintDuration + TimeSpan.FromMilliseconds(250));
         await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
-        Check(_dragging && !_dragShortcutToast.IsVisible && timer?.IsEnabled == false, "The toast did not expire during an ongoing drag.");
+        Check(_dragging && !_dragShortcutToast.IsVisible && timer?.IsEnabled == false,
+            $"The toast did not expire during an ongoing drag (dragging={_dragging}, visible={_dragShortcutToast.IsVisible}, timer={timer?.IsEnabled}, motion={MotionEnabled}).");
         ShowDragShortcutHint("ReStart.Tile"); StopDragGhost();
         Check(!_dragShortcutToast.IsVisible && timer?.IsEnabled == false, "Cancelling a drag leaves the toast or timer alive.");
         ShowDragShortcutHint("ReStart.App"); Hide();
