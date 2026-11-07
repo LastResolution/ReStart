@@ -21,13 +21,16 @@ public sealed class TaskbarMonitorTests
     {
         var mode = TaskbarLeaseMode.Reveal;
         var first = new TaskbarBounds(0, 0, 1280, 800); var second = new TaskbarBounds(-900, 0, 900, 1440);
-        var windows = new[] { Window(1, first, new(0, 752, 1280, 48)), Window(2, second, new(-900, 1392, 900, 48)) };
+        var windows = new[] { Window(1, first, new(0, 752, 1280, 48)) with { HoldAutoHide = true }, Window(2, second, new(-900, 1392, 900, 48)) };
         var backend = new TaskbarNativeBackend(() => windows) { Scope = first };
         var before = backend.Capture(mode)!;
+        Assert.True(Assert.Single(before.Windows).HoldAutoHide); Assert.Equal(2, before.Version);
         Assert.Equal(1, Assert.Single(before.Windows).Window); Assert.True(backend.IsCurrent(before));
         backend.Scope = second;
         Assert.False(backend.IsCurrent(before));
-        Assert.Equal(2, Assert.Single(backend.Capture(mode)!.Windows).Window);
+        var secondary = backend.Capture(mode)!;
+        Assert.Equal(2, Assert.Single(secondary.Windows).Window);
+        Assert.False(secondary.Windows[0].HoldAutoHide); Assert.Equal(1, secondary.Version);
         backend.Scope = new(1280, 0, 1920, 1080);
         Assert.Null(backend.Capture(mode));
     }

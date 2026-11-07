@@ -28,6 +28,22 @@ public sealed class TaskbarRecoveryStoreTests : IDisposable
         Assert.Equal(before, File.ReadAllBytes(store.MarkerPath));
         store.Delete(state.Token); Assert.Null(store.Read());
     }
+
+    [Fact]
+    public void CheckpointPersistsAcrossStoreInstancesAndCannotReplaceAnotherOwner()
+    {
+        var store = new TaskbarRecoveryStore(_root);
+        using var ownership = store.Acquire();
+        var state = Snapshot() with { Version = 3, Phase = TaskbarRecoveryPhase.Prepared };
+        store.Save(state);
+        var pending = state with { Phase = TaskbarRecoveryPhase.RestorePending };
+        Assert.Throws<InvalidDataException>(() => store.Update(pending with { ParentStarted = state.ParentStarted + 1 }));
+        Assert.Equal(TaskbarRecoveryPhase.Prepared, store.Read()!.Phase);
+        store.Update(pending);
+        Assert.Equal(TaskbarRecoveryPhase.RestorePending, new TaskbarRecoveryStore(_root).Read()!.Phase);
+        store.Update(pending with { Phase = TaskbarRecoveryPhase.Restored });
+        Assert.Equal(TaskbarRecoveryPhase.Restored, new TaskbarRecoveryStore(_root).Read()!.Phase);
+    }
     [Theory]
     [InlineData("null")]
     [InlineData("{")]

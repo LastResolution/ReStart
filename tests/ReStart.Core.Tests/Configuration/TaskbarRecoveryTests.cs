@@ -7,6 +7,23 @@ namespace ReStart.Core.Tests;
 public sealed class TaskbarRecoveryTests
 {
     [Fact]
+    public void AutoHideHoldIsPersistedBeforeMutationAndNotInventedForLegacyRecords()
+    {
+        var state = new TaskbarLeaseState(2, Guid.NewGuid().ToString("N"), 1, 2, TaskbarLeaseMode.Reveal,
+            [new(1, 1, 1, true, true, new(0, 0, 800, 600), new(0, 598, 800, 40), new(0, 560, 800, 40), HoldAutoHide: true)]);
+        var json = JsonSerializer.SerializeToNode(state)!;
+        var restored = json.Deserialize<TaskbarLeaseState>()!;
+        Assert.True(restored.IsValid()); Assert.True(Assert.Single(restored.Windows).HoldAutoHide);
+        Assert.False((state with { Mode = TaskbarLeaseMode.Hide }).IsValid());
+        Assert.False((state with { Version = 1 }).IsValid());
+        Assert.False((state with { Windows = [state.Windows[0] with { HoldAutoHide = false }] }).IsValid());
+        json["Windows"]![0]!.AsObject().Remove("HoldAutoHide");
+        json["Version"] = 1;
+        var legacy = json.Deserialize<TaskbarLeaseState>()!;
+        Assert.True(legacy.IsValid()); Assert.False(Assert.Single(legacy.Windows).HoldAutoHide);
+    }
+
+    [Fact]
     public void ContentVisibilityRoundTripsAndOlderRecordsRemainReadable()
     {
         var state = new TaskbarLeaseState(1, Guid.NewGuid().ToString("N"), 1, 2, TaskbarLeaseMode.Reveal,
@@ -46,6 +63,7 @@ public sealed class TaskbarRecoveryTests
         public IDisposable Acquire() { if (Locked) throw new IOException(); return new Guard(); }
         public TaskbarLeaseState? Read() { if (FailRead) throw new InvalidDataException(); return State; }
         public void Save(TaskbarLeaseState state) => throw new NotSupportedException();
+        public void Update(TaskbarLeaseState state) { Assert.Equal(State?.Token, state.Token); State = state; }
         public void Delete(string token) { if (FailDelete) throw new IOException(); Assert.Equal(State?.Token, token); State = null; }
     }
     private sealed class Backend : ITaskbarLeaseBackend
@@ -54,7 +72,7 @@ public sealed class TaskbarRecoveryTests
         internal bool Fail;
         public TaskbarLeaseState? Capture(TaskbarLeaseMode mode) => throw new NotSupportedException();
         public bool IsCurrent(TaskbarLeaseState state) => throw new NotSupportedException();
-        public void Apply(TaskbarLeaseState state) => throw new NotSupportedException();
+        public void Apply(TaskbarLeaseState state, Action armRecovery) => throw new NotSupportedException();
         public void Restore(TaskbarLeaseState state) { Restored++; if (Fail) throw new IOException(); }
     }
     [Fact]

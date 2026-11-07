@@ -123,6 +123,7 @@ public partial class MainWindow
         public IDisposable Acquire() => new TabletCheckLease();
         public TaskbarLeaseState? Read() => State;
         public void Save(TaskbarLeaseState state) { if (FailSave) throw new IOException("Owned write failure."); State = state; }
+        public void Update(TaskbarLeaseState state) { Require(State?.Token == state.Token, "Owned tablet recovery changed owner."); State = state; }
         public void Delete(string token) { Require(State?.Token == token, "Owned tablet recovery changed owner."); State = null; }
     }
     private sealed class TabletCheckBackend : ITaskbarLeaseBackend
@@ -133,7 +134,7 @@ public partial class MainWindow
         public TaskbarLeaseState? Capture(TaskbarLeaseMode mode) => new(1, Guid.NewGuid().ToString("N"), 1, 1, mode,
             [new(1, 1, 1, true, true, Scope, new(Scope.X, Scope.Y + Scope.Height - 2, Scope.Width, 40), new(Scope.X, Scope.Y + Scope.Height - 40, Scope.Width, 40))]);
         public bool IsCurrent(TaskbarLeaseState state) => state.Windows[0].Monitor == Scope;
-        public void Apply(TaskbarLeaseState state) { Applied = state; Mutations++; }
+        public void Apply(TaskbarLeaseState state, Action armRecovery) { armRecovery(); Applied = state; Mutations++; }
         public void Restore(TaskbarLeaseState state) { Applied = null; Restores++; }
     }
 

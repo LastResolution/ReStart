@@ -33,9 +33,22 @@ internal sealed class TaskbarRecoveryStore(string directory) : ITaskbarRecoveryS
 
     public void Save(TaskbarLeaseState state)
     {
-        if (!state.IsValid()) throw new InvalidDataException("Invalid taskbar recovery state.");
         CheckLinks(MarkerPath);
         if (File.Exists(MarkerPath)) throw new IOException("An existing taskbar transaction requires recovery.");
+        Write(state, replace: false);
+    }
+
+    public void Update(TaskbarLeaseState state)
+    {
+        if (Read() is not { } current || current.Token != state.Token || current.ParentId != state.ParentId
+            || current.ParentStarted != state.ParentStarted || current.Mode != state.Mode)
+            throw new InvalidDataException("Taskbar recovery ownership changed.");
+        Write(state, replace: true);
+    }
+
+    private void Write(TaskbarLeaseState state, bool replace)
+    {
+        if (!state.IsValid()) throw new InvalidDataException("Invalid taskbar recovery state.");
         Directory.CreateDirectory(DirectoryPath); CheckLinks(MarkerPath);
         var temporary = Path.Combine(DirectoryPath, "taskbar-" + Guid.NewGuid().ToString("N") + ".tmp");
         try
@@ -44,7 +57,8 @@ internal sealed class TaskbarRecoveryStore(string directory) : ITaskbarRecoveryS
             if (bytes.Length > 32768) throw new InvalidDataException("Invalid taskbar recovery size.");
             using (var output = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))
             { output.Write(bytes); output.Flush(flushToDisk: true); }
-            File.Move(temporary, MarkerPath, overwrite: false);
+            CheckLinks(MarkerPath);
+            File.Move(temporary, MarkerPath, overwrite: replace);
         }
         finally
         {
