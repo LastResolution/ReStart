@@ -20,11 +20,19 @@ public partial class App : Application
     private MainWindow? _window;
     private PinRequestChannel? _pinRequests;
     private UpdateRelease? _updateNotificationRelease;
+    private WindowsKeyTrace? _windowsKeyTrace;
 
     /// <summary>Acquires the instance lease before creating UI or registering shell hooks.</summary>
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        if (e.Args is ["--verify-windows-key-diagnostics", var traceCheckReport])
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            Shutdown(await WindowsKeyTraceCheck.RunAsync(traceCheckReport)); return;
+        }
+        var keyDiagnostics = e.Args is ["--diagnose-windows-key", _];
+        if ((e.Args.Contains("--diagnose-windows-key") && !keyDiagnostics) || e.Args.Contains("--verify-windows-key-diagnostics")) { Shutdown(1); return; }
         if (e.Args is ["--taskbar-live-check", var monitorReport, var monitorText] && int.TryParse(monitorText, out var monitorIndex))
         {
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
@@ -89,6 +97,8 @@ public partial class App : Application
         _instance = new(sid, preview);
         if (!_instance.IsPrimary)
         {
+            // Diagnostic launch must not activate or modify a running stable build.
+            if (keyDiagnostics) { Shutdown(3); return; }
             if (pinPath != null)
             {
                 try
@@ -105,10 +115,21 @@ public partial class App : Application
             if (!smoke && !e.Args.Contains("--background")) _instance.NotifyExisting();
             Shutdown(smoke ? 2 : 0); return;
         }
+        if (keyDiagnostics)
+        {
+            try { WindowsKeyDiagnostics.Current = _windowsKeyTrace = new WindowsKeyTrace(Path.GetFullPath(e.Args[1])); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+            { Shutdown(4); return; }
+        }
         var data = preview ? Path.Combine(AppContext.BaseDirectory, "preview-data") : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ReStart");
         var store = new LayoutStore(Path.Combine(data, "layout.json"), AppBuildInfo.Version);
         if (!preview) SafeErrorLog.Prepare(data);
         _window = new MainWindow(store, preview);
+        if (keyDiagnostics)
+        {
+            _window.IsVisibleChanged += (_, _) => WindowsKeyDiagnostics.Flag(KeyTraceStage.VisibleChanged, _window.IsVisible);
+            _window.Deactivated += (_, _) => WindowsKeyDiagnostics.Mark(KeyTraceStage.Deactivated);
+        }
         _window.DeferLayoutSaves = e.Args.Contains("--complete-update");
         MainWindow = _window;
         _pinRequests = new(channelIdentity, path => Dispatcher.InvokeAsync(() => _window.PinPathAsync(path)).Task.Unwrap());
@@ -167,6 +188,7 @@ public partial class App : Application
         if (pinPath != null) await _window.PinPathAsync(pinPath);
         else if (e.Args.Contains("--background")) _ = _window.InitializeAsync();
         else _window.Present();
+        if (keyDiagnostics) _ = MarkKeyDiagnosticsReadyAsync(_window);
         DispatcherUnhandledException += (_, args) =>
         {
             args.Handled = true;
@@ -176,6 +198,12 @@ public partial class App : Application
             MessageBox.Show(L.T(K.ErrorUnhandled), "ReStart", MessageBoxButton.OK, MessageBoxImage.Error);
             ExitApplication();
         };
+    }
+
+    private static async Task MarkKeyDiagnosticsReadyAsync(MainWindow window)
+    {
+        await window.InitializeAsync();
+        WindowsKeyDiagnostics.Mark(KeyTraceStage.Ready);
     }
 
     private void CreateTray()
@@ -293,6 +321,8 @@ public partial class App : Application
         _tray?.Dispose();
         _wait?.Unregister(null);
         _instance?.Dispose();
+        _windowsKeyTrace?.Dispose();
+        WindowsKeyDiagnostics.Current = null;
         base.OnExit(e);
     }
 }

@@ -1,0 +1,36 @@
+ReStart Windows-key timing diagnostics
+
+This is a development build based on v2.1.1, not a proposed fix or release.
+Extract it into a separate writable folder. Do not install it over the stable app.
+Exit the existing ReStart instance, then run Start-Windows-Key-Diagnostics.cmd.
+No administrator rights, SDK, or manual command line is required.
+
+It uses your existing ReStart settings and layout; ordinary application behavior
+(including normal saves and integration preferences) still applies. Do not edit
+your layout during this short check. Before starting, keep Windows-key capture
+enabled, and disable taskbar reveal and Start-button interception as in the
+previous check. Close ReStart, then start this script.
+
+After READY, dismiss ReStart, focus an ordinary app on the affected secondary
+display, and press the physical Windows key once. If it fails, wait about ten
+seconds, then try Ctrl+Alt+Space once. No typing or screenshot is needed.
+
+The recorder stops automatically 90 seconds after launch, even if the UI stops
+responding. It flushes independently every 200 ms and accepts at most 4096 events.
+Reports are in Windows-key-reports next to the script. If startup took longer
+than 90 seconds, restart the diagnostic script after exiting ReStart and retry.
+You may exit earlier once both attempts have been captured. The script never
+kills an app. Exit the diagnostic build from the tray before returning to stable.
+
+Only attach the generated windows-key-*.jsonl file after reviewing it.
+The report contains relative milliseconds, fixed processing-stage names, fixed
+Windows-key/action/foreground-class categories, boolean flags, and bounded delay
+measurements. It does not contain typed text, other key identities, window titles,
+raw window classes, executable paths, account names, identifiers, monitor/device
+names or addresses. The build does not upload the report. Normal app features
+retain their usual network behavior. Do not attach your settings, layout, or any
+other log folder.
+
+The Start/Search foreground categories describe window classes, not a verified
+process identity. A heartbeat confirms a message loop responded; it cannot prove
+that Windows has retained or delivered input to a low-level hook.

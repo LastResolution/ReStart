@@ -91,6 +91,7 @@ public partial class MainWindow : Window
         WatchDesktopAppearance();
         Activated += (_, _) =>
         {
+            WindowsKeyDiagnostics.Mark(KeyTraceStage.Activated);
             if (!_focusOnActivation) return;
             Dispatcher.BeginInvoke(() =>
             {
@@ -227,26 +228,31 @@ public partial class MainWindow : Window
     /// <summary>Hides the active launcher or presents the existing window.</summary>
     public void Toggle()
     {
+        WindowsKeyDiagnostics.Mark(KeyTraceStage.ToggleEntered);
         if (_startupWindow != null) { CancelStartupPresentation(); return; }
-        if (IsVisible && IsActive && _dialogDepth == 0 && !_dismissing) Dismiss();
-        else Present();
+        if (IsVisible && IsActive && _dialogDepth == 0 && !_dismissing) { WindowsKeyDiagnostics.Mark(KeyTraceStage.ToggleDismiss); Dismiss(); }
+        else { WindowsKeyDiagnostics.Mark(KeyTraceStage.TogglePresent); Present(); }
     }
 
     /// <summary>Returns to the pinned home view and presents the launcher; existing owned dialogs retain focus and preview windows retain their size.</summary>
     public void Present()
     {
-        if (_returningFromWindowsSearch) return;
-        if (!_preview && _windowsSearchHandoff.HasHandoff) { _ = PresentAfterWindowsSearchAsync(); return; }
+        WindowsKeyDiagnostics.Mark(KeyTraceStage.PresentEntered);
+        if (_returningFromWindowsSearch) { WindowsKeyDiagnostics.Mark(KeyTraceStage.SearchReturnPending); return; }
+        if (!_preview && _windowsSearchHandoff.HasHandoff) { WindowsKeyDiagnostics.Mark(KeyTraceStage.SearchHandoffPending); _ = PresentAfterWindowsSearchAsync(); return; }
         PresentCore();
     }
 
     private void PresentCore()
     {
+        WindowsKeyDiagnostics.Mark(KeyTraceStage.UsageBegin);
         RefreshWindowsUsage();
+        WindowsKeyDiagnostics.Mark(KeyTraceStage.UsageEnd);
         if (!_startupComplete && _startupWindow == null && IsReady && IconsReady && ScriptTileCount == 0) _startupComplete = true;
-        if (!_startupComplete) { RequestStartupPresentation(); return; }
+        if (!_startupComplete) { WindowsKeyDiagnostics.Mark(KeyTraceStage.StartupPending); RequestStartupPresentation(); return; }
         var dialog = OwnedWindows.Cast<Window>().LastOrDefault(w => w.IsVisible);
-        if (dialog != null) { dialog.Activate(); return; }
+        if (dialog != null) { WindowsKeyDiagnostics.Mark(KeyTraceStage.DialogActivated); dialog.Activate(); return; }
+        WindowsKeyDiagnostics.Mark(KeyTraceStage.LayoutBegin);
         var wasHidden = !IsVisible;
         var wasDismissing = _dismissing;
         var previousOpacity = Opacity;
@@ -254,12 +260,16 @@ public partial class MainWindow : Window
         StopMotion();
         if (_expandedAppFolders.Count > 0) { _expandedAppFolders.Clear(); RenderApps(); }
         ResetToPinnedView();
+        WindowsKeyDiagnostics.Mark(KeyTraceStage.LayoutEnd);
         var handle = new WindowInteropHelper(this).EnsureHandle();
         _focusOnActivation = true;
+        WindowsKeyDiagnostics.Mark(KeyTraceStage.TaskbarBegin);
         if (!_preview) TaskbarNativeBackend.PrepareLauncher(handle, Document.Preferences.ShowTaskbarWhileOpen);
+        WindowsKeyDiagnostics.Mark(KeyTraceStage.TaskbarEnd);
         if (wasHidden && MotionEnabled) Opacity = EntranceOpacity;
         if (!_preview)
         {
+            WindowsKeyDiagnostics.Mark(KeyTraceStage.BoundsBegin);
             var screen = System.Windows.Forms.Screen.FromPoint(_startButtonPoint ?? System.Windows.Forms.Cursor.Position);
             var area = NativeWorkingArea?.Invoke(screen) ?? screen.WorkingArea;
             _wallpaperMonitor = screen.Bounds;
@@ -267,15 +277,22 @@ public partial class MainWindow : Window
             // a taskbar on the previous display during a cross-monitor opening.
             MonitorPlacement.FitWorkingArea(handle, new nint(-1), area, 0x0010, NativeWorkingArea);
             ApplyTaskbarContentInsets(area, NativeContentArea?.Invoke(screen) ?? area, VisualTreeHelper.GetDpi(this));
+            WindowsKeyDiagnostics.Mark(KeyTraceStage.BoundsEnd);
         }
+        WindowsKeyDiagnostics.Mark(KeyTraceStage.ShowBegin);
         if (!IsVisible) Show();
+        WindowsKeyDiagnostics.Mark(KeyTraceStage.ShowEnd);
         if (!_preview || _openingWallpaperFixture != null) QueueOpeningWallpaperRefresh();
         if (!_preview || _verifyNativeActivation) ForegroundActivation.Request(handle);
+        WindowsKeyDiagnostics.Mark(KeyTraceStage.ActivateBegin);
         Activate();
+        WindowsKeyDiagnostics.Flag(KeyTraceStage.ActivateEnd, IsActive);
         ExpandedRail.Visibility = Visibility.Collapsed;
         if (wasHidden || wasDismissing)
             BeginMotion(false, wasHidden ? EntranceOpacity : previousOpacity, wasHidden ? 0.9 : previousScale);
+        WindowsKeyDiagnostics.Mark(KeyTraceStage.SearchFocusBegin);
         FocusSearchInput();
+        WindowsKeyDiagnostics.Flag(KeyTraceStage.SearchFocusEnd, SearchBox.IsKeyboardFocused);
         QueueTileResume();
         RequestCatalogRefresh(opening: true);
         if (_windowsSearchQueryUnavailable) { _windowsSearchQueryUnavailable = false; SetStatus(L.T(K.WindowsSearchQueryUnavailable)); }
@@ -287,6 +304,7 @@ public partial class MainWindow : Window
                 _focusOnActivation = false;
             }
         }, DispatcherPriority.Input);
+        WindowsKeyDiagnostics.Mark(KeyTraceStage.PresentCompleted);
     }
 
     private void RefreshBackgroundMenu()
