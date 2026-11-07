@@ -32,7 +32,9 @@ public partial class MainWindow
         Check(_dragShortcutToast!.TranslatePoint(new(), Root).Y > Root.ActualHeight / 2
             && _dragShortcutToast.ActualWidth <= Root.ActualWidth - 64, "The toast is not within the lower viewport.");
         Check(!_dragShortcutToast.HasAnimatedProperties, "Disabled motion still animates the toast.");
+        Check(timer?.Interval == DragShortcutHintDuration, "The drag toast does not use its specified lifetime.");
         await Task.Delay(DragShortcutHintDuration + TimeSpan.FromMilliseconds(250));
+        await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
         Check(_dragging && !_dragShortcutToast.IsVisible && timer?.IsEnabled == false, "The toast did not expire during an ongoing drag.");
         ShowDragShortcutHint("ReStart.Tile"); StopDragGhost();
         Check(!_dragShortcutToast.IsVisible && timer?.IsEnabled == false, "Cancelling a drag leaves the toast or timer alive.");
