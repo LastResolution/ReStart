@@ -51,6 +51,7 @@ export async function updateContributors({ request = fetch, token = process.env.
     if (!people.length) throw new Error('Empty contributor response.');
     const seen = new Set();
     const portraits = [];
+    let portraitBytes = 0;
     for (const person of people.slice(0, 64)) {
       if (typeof person.login !== 'string' || !/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/.test(person.login)
           || seen.has(person.login.toLowerCase())) throw new Error('Invalid public contributor name.');
@@ -61,7 +62,10 @@ export async function updateContributors({ request = fetch, token = process.env.
       avatar.search = '?s=96&v=4'; avatar.hash = '';
       // No Authorization header is sent to the image host. Redirects are refused.
       const bytes = await boundedBody(await request(avatar.href, { signal, redirect: 'error' }), 128_000);
-      portraits.push({ login: person.login, uri: `data:${imageType(bytes)};base64,${bytes.toString('base64')}` });
+      const uri = `data:${imageType(bytes)};base64,${bytes.toString('base64')}`;
+      if (portraits.length && portraitBytes + uri.length > 900_000) break;
+      portraitBytes += uri.length;
+      portraits.push({ login: person.login, uri });
     }
     const columns = Math.min(portraits.length, 8), rows = Math.ceil(portraits.length / columns);
     const width = columns * 68 + 4, height = rows * 68 + 4;

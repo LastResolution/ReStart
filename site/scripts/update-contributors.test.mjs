@@ -53,6 +53,17 @@ test('contributor refresh is static, bounded and keeps its snapshot on API failu
         assert.equal(await readFile(destination, 'utf8'), previous);
       }
     });
+    await t.test('larger communities produce a bounded image with the leading contributors', async () => {
+      await reset(); let calls = 0;
+      const people = Array.from({ length: 64 }, (_, index) => ({ ...account, login: `Contributor${index}` }));
+      const portrait = Buffer.alloc(96_000); avatar.copy(portrait);
+      const request = async () => ++calls === 1 ? json(people) : new Response(portrait);
+      const result = await updateContributors({ destination, request });
+      assert.equal(result.updated, true);
+      assert.ok(result.count > 0 && result.count < 64);
+      const image = await readFile(destination, 'utf8');
+      assert.ok(Buffer.byteLength(image) < 1_000_000 && image.includes('Contributor0'));
+    });
   } finally {
     // Only the exact disposable fixture created by mkdtemp above is removed.
     await rm(directory, { recursive: true, force: true });
