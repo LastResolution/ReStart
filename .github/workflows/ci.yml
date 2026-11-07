@@ -178,6 +178,15 @@ jobs:
           ./scripts/test-jump-lists.ps1 -Executable $executable
           ./scripts/test-bundled-tiles.ps1 -Executable $executable
           ./scripts/test-studio.ps1 -Executable $executable
+      - name: Upload portable review package
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: portable-${{ matrix.runtime }}
+          path: |
+            artifacts/packages/ReStart-${{ matrix.runtime }}.zip
+            artifacts/packages/ReStart-${{ matrix.runtime }}.zip.sha256
+          retention-days: 14
+          if-no-files-found: error
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure() && matrix.runtime == 'win-x64'
         with:

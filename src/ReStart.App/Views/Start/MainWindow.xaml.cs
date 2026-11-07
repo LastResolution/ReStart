@@ -217,11 +217,21 @@ public partial class MainWindow : Window
         new("terminal", "Windows Terminal", "wt.exe", false), new("code", "Visual Studio Code", "https://code.visualstudio.com", false)
     ];
 
-    internal void ToggleFromStartButton(Native.Point point)
+    private void ToggleAtInputPoint(Native.Point point)
     {
         _startButtonPoint = new(point.X, point.Y);
         try { Toggle(); }
         finally { _startButtonPoint = null; }
+    }
+
+    internal void ToggleFromStartButton(Native.Point point) => ToggleFromWindowsKey(point);
+
+    internal void ToggleFromWindowsKey(Native.Point point)
+    {
+        if (_startupWindow != null || IsVisible && IsActive && _dialogDepth == 0 && !_dismissing
+            || _preview && _windowsKeyReturnFixture == null)
+        { ToggleAtInputPoint(point); return; }
+        _ = PresentAfterWindowsSearchAsync(explicitInput: true, point: new(point.X, point.Y), handoff: _windowsKeyReturnFixture);
     }
 
     /// <summary>Hides the active launcher or presents the existing window.</summary>
@@ -258,15 +268,17 @@ public partial class MainWindow : Window
         _focusOnActivation = true;
         if (!_preview) TaskbarNativeBackend.PrepareLauncher(handle, Document.Preferences.ShowTaskbarWhileOpen);
         if (wasHidden && MotionEnabled) Opacity = EntranceOpacity;
-        if (!IsVisible) Show();
         if (!_preview)
         {
             var screen = System.Windows.Forms.Screen.FromPoint(_startButtonPoint ?? System.Windows.Forms.Cursor.Position);
             var area = NativeWorkingArea?.Invoke(screen) ?? screen.WorkingArea;
             _wallpaperMonitor = screen.Bounds;
-            MonitorPlacement.FitWorkingArea(handle, new nint(-1), area, 0x0040, NativeWorkingArea);
+            // Position while hidden; showing on the old display can trigger a
+            // competing Shell activation before the requested monitor is used.
+            MonitorPlacement.FitWorkingArea(handle, new nint(-1), area, 0x0010, NativeWorkingArea);
             ApplyTaskbarContentInsets(area, NativeContentArea?.Invoke(screen) ?? area, VisualTreeHelper.GetDpi(this));
         }
+        if (!IsVisible) Show();
         if (!_preview || _openingWallpaperFixture != null) QueueOpeningWallpaperRefresh();
         if (!_preview || _verifyNativeActivation) ForegroundActivation.Request(handle);
         Activate();

@@ -71,29 +71,33 @@ internal sealed class WindowsSearchNativeBackend : IWindowsSearchHandoffBackend
 
     public async Task<bool> DismissForegroundAsync()
     {
-        var target = ForegroundSearch();
-        if (target == 0 || ModifiersHeld || ForegroundSearch() != target) return false;
+        var target = ForegroundSurface(includeStart: true);
+        if (target == 0 || ModifiersHeld || ForegroundSurface(includeStart: true) != target) return false;
         var inputs = WindowsSearchLauncher.CreateDismissInputs();
         var sent = Native.SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<Native.Input>());
         if (sent == 1) Native.SendInput(1, [inputs[1]], Marshal.SizeOf<Native.Input>());
         if (sent != inputs.Length) return false;
         // Allow Windows to consume Escape before ReStart takes foreground ownership.
         var deadline = Environment.TickCount64 + 400;
-        while (ForegroundSearch() == target && Environment.TickCount64 < deadline) await Task.Delay(20);
-        return ForegroundSearch() != target;
+        while (ForegroundSurface(includeStart: true) == target && Environment.TickCount64 < deadline) await Task.Delay(20);
+        return ForegroundSurface(includeStart: true) != target;
     }
 
-    private static nint ForegroundSearch()
+    private static nint ForegroundSearch() => ForegroundSurface(includeStart: false);
+
+    private static nint ForegroundSurface(bool includeStart)
     {
         var window = Native.GetForegroundWindow();
         if (window == 0) return 0;
         var name = new System.Text.StringBuilder(128); Native.GetClassName(window, name, name.Capacity);
-        if (name.ToString() != "Windows.UI.Core.CoreWindow") return 0;
+        if (name.ToString() != "Windows.UI.Core.CoreWindow" && (!includeStart || name.ToString() != "XamlExplorerHostIslandWindow")) return 0;
         Native.GetWindowThreadProcessId(window, out var processId);
         try
         {
             using var process = Process.GetProcessById((int)processId);
-            return WindowsSearchLauncher.IsSearchExecutable(process.MainModule?.FileName, Environment.GetFolderPath(Environment.SpecialFolder.Windows)) ? window : 0;
+            var path = process.MainModule?.FileName;
+            var windows = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+            return WindowsSearchLauncher.IsShellSurface(name.ToString(), path, windows, includeStart) ? window : 0;
         }
         catch (Exception ex) when (Unavailable(ex)) { return 0; }
     }

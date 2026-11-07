@@ -13,6 +13,7 @@ internal sealed class StartIntegration : IDisposable
     private readonly Action _toggle;
     private readonly Action _dismiss;
     private readonly Action<Native.Point> _toggleFromStart;
+    private readonly Action<Native.Point>? _toggleFromWindowsKey;
     private readonly Native.HookProc _keyboardCallback;
     private readonly Native.HookProc _mouseCallback;
     private readonly Native.WinEventProc _foregroundCallback;
@@ -31,12 +32,14 @@ internal sealed class StartIntegration : IDisposable
     private uint _hookThreadId;
     public string? Status { get; private set; }
 
-    public StartIntegration(nint handle, Dispatcher dispatcher, Action toggle, Action dismiss, Action<Native.Point> toggleFromStart)
+    public StartIntegration(nint handle, Dispatcher dispatcher, Action toggle, Action dismiss, Action<Native.Point> toggleFromStart,
+        Action<Native.Point>? toggleFromWindowsKey = null)
     {
         _dispatcher = dispatcher;
         _toggle = toggle;
         _dismiss = dismiss;
         _toggleFromStart = toggleFromStart;
+        _toggleFromWindowsKey = toggleFromWindowsKey;
         _keyboardCallback = KeyboardHook;
         _mouseCallback = MouseHook;
         _foregroundCallback = ForegroundChanged;
@@ -151,7 +154,10 @@ internal sealed class StartIntegration : IDisposable
         switch (_keys.Process((int)data.VkCode, down, modifier))
         {
             case WindowsKeyAction.Suppress: return 1;
-            case WindowsKeyAction.Toggle: QueueToggle(); return 1;
+            case WindowsKeyAction.Toggle:
+                if (Native.GetCursorPos(out var point)) QueueWindowsKeyToggle(point);
+                else QueueToggle();
+                return 1;
             case WindowsKeyAction.ReplayWindowsDown:
                 Native.SendInput(1, [new Native.Input { Type = 1, Union = new() { Keyboard = new() { Vk = (ushort)_keys.HeldKey } } }], Marshal.SizeOf<Native.Input>());
                 break;
@@ -167,7 +173,7 @@ internal sealed class StartIntegration : IDisposable
             switch (_startPress.Process(wp == 0x201, _captureStart && _startButtons.Contains(point), _captureStart))
             {
                 case StartButtonAction.Toggle:
-                    _dispatcher.BeginInvoke(() => _toggleFromStart(point), DispatcherPriority.Send);
+                    QueueStartButtonToggle(point);
                     return 1;
                 case StartButtonAction.Suppress: return 1;
             }
@@ -184,7 +190,21 @@ internal sealed class StartIntegration : IDisposable
         return Native.CallNextHookEx(_mouse, code, wp, lp);
     }
 
-    private void QueueToggle() => _dispatcher.BeginInvoke(_toggle, DispatcherPriority.Send);
+    private void QueueToggle()
+    {
+        if (_toggleFromWindowsKey != null && Native.GetCursorPos(out var point)) QueueWindowsKeyToggle(point);
+        else _dispatcher.BeginInvoke(_toggle, DispatcherPriority.Send);
+    }
+
+    internal void QueueStartButtonToggle(Native.Point point) => _dispatcher.BeginInvoke(() => _toggleFromStart(point), DispatcherPriority.Send);
+
+    /// <summary>Transfers an immutable display point to the UI dispatcher without doing foreground work in the input hook.</summary>
+    /// <param name="point">Physical desktop-pixel cursor position captured with the triggering input, including negative display coordinates.</param>
+    internal void QueueWindowsKeyToggle(Native.Point point) => _dispatcher.BeginInvoke(() =>
+    {
+        if (_toggleFromWindowsKey != null) _toggleFromWindowsKey(point);
+        else _toggle();
+    }, DispatcherPriority.Send);
 
     public void Dispose()
     {

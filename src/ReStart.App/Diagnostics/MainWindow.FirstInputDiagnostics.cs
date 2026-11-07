@@ -81,7 +81,8 @@ public partial class MainWindow
             }
             finally { other.Close(); }
             var foregroundChecks = await fixture.VerifyForegroundDismissalAsync();
-            return new(1, 1, 1, 1, 1, 1, 10, 1, foregroundChecks);
+            var windowsKeyChecks = await fixture.VerifyWindowsKeyReturnAsync();
+            return new(1, 1, 1, 1, 1, 1, 10, 1, foregroundChecks, windowsKeyChecks);
         }
         finally
         {
@@ -96,6 +97,71 @@ public partial class MainWindow
     {
         var source = Keyboard.FocusedElement ?? throw new InvalidOperationException("The input fixture has no focused element.");
         TextCompositionManager.StartComposition(new TextComposition(InputManager.Current, source, text));
+    }
+
+    private sealed class WindowsKeyReturnBackend : IWindowsSearchHandoffBackend
+    {
+        internal int Dismissals;
+        internal TaskCompletionSource<bool> Completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public bool ModifiersHeld => false;
+        public bool Open() => throw new InvalidOperationException("A Windows-key return must not launch native Search.");
+        public Task<bool> TransferAsync(string query, CancellationToken cancellation) => throw new InvalidOperationException("A Windows-key return must not transfer text.");
+        public Task<bool> DismissForegroundAsync() { Dismissals++; return Completion.Task; }
+    }
+
+    private async Task<int> VerifyWindowsKeyReturnAsync()
+    {
+        var checks = 0;
+        void Check(bool value, string message) { Require(value, message); checks++; }
+        var previous = _verifyNativeActivation; var close = Document.Preferences.CloseOnDeactivate;
+        var backend = new WindowsKeyReturnBackend();
+        using var handoff = new WindowsSearchHandoff(backend);
+        _windowsKeyReturnFixture = handoff; _verifyNativeActivation = true;
+        Document.Preferences.CloseOnDeactivate = false;
+        System.Drawing.Point? shownAt = null;
+        void Visibility(object sender, DependencyPropertyChangedEventArgs args) { if (IsVisible) shownAt = _startButtonPoint; }
+        IsVisibleChanged += Visibility;
+        var genericToggles = 0; var startToggles = 0;
+        using var integration = new StartIntegration(new WindowInteropHelper(this).Handle, Dispatcher,
+            () => genericToggles++, () => { }, point => { startToggles++; ToggleFromStartButton(point); }, ToggleFromWindowsKey);
+        integration.Apply(new Preferences { CaptureWindowsKey = false, CaptureStartButton = false, CloseOnDeactivate = false });
+        async Task Until(Func<bool> condition)
+        {
+            var deadline = Environment.TickCount64 + 2500;
+            while (!condition() && Environment.TickCount64 < deadline) await Task.Delay(20);
+            Check(condition(), "The owned Windows-key return did not settle.");
+        }
+        try
+        {
+            foreach (var (point, startButton) in new[] { (new Native.Point { X = -1200, Y = 80 }, false), (new Native.Point { X = 1700, Y = 150 }, false), (new Native.Point { X = -1000, Y = 50 }, true) })
+            {
+                Hide(); shownAt = null;
+                backend.Completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+                var count = backend.Dismissals;
+                if (startButton) integration.QueueStartButtonToggle(point);
+                else integration.QueueWindowsKeyToggle(point);
+                Check(backend.Dismissals == count, "The input adapter ran foreground work synchronously instead of queuing it.");
+                await Until(() => backend.Dismissals == count + 1);
+                Check(!IsVisible && _returningFromWindowsSearch, "ReStart appeared before native dismissal completed.");
+                backend.Completion.SetResult(true);
+                await Until(() => IsVisible && !_returningFromWindowsSearch);
+                Check(shownAt == new System.Drawing.Point(point.X, point.Y), "A deferred Windows-key open lost its captured display point.");
+                Check(SearchBox.IsKeyboardFocused, "The Windows-key return did not focus the search box.");
+                ComposeFixtureText("E"); Check(SearchBox.Text == "E", "The first character after a Windows-key return was lost.");
+                ToggleFromWindowsKey(point);
+                await Until(() => !IsVisible);
+                Check(backend.Dismissals == count + 1, "Closing an active launcher tried to dismiss an external surface.");
+            }
+            Check(genericToggles == 0 && startToggles == 1, "A Windows-key request was confused with a different activation source.");
+            return checks;
+        }
+        finally
+        {
+            backend.Completion.TrySetResult(false);
+            IsVisibleChanged -= Visibility;
+            _windowsKeyReturnFixture = null; _startButtonPoint = null;
+            _verifyNativeActivation = previous; Document.Preferences.CloseOnDeactivate = close;
+        }
     }
 
     private async Task<int> VerifyForegroundDismissalAsync()
@@ -154,4 +220,4 @@ public partial class MainWindow
 }
 
 internal sealed record FirstInputSmokeResult(int ColdStartChecks, int QueryContinuationChecks, int ReopenChecks, int NavigationFocusChecks,
-    int IntegrationBeforeCatalogChecks, int FocusRetentionChecks, int NativeActivationChecks, int DeactivationChecks, int ForegroundDismissalChecks);
+    int IntegrationBeforeCatalogChecks, int FocusRetentionChecks, int NativeActivationChecks, int DeactivationChecks, int ForegroundDismissalChecks, int WindowsKeyReturnChecks);

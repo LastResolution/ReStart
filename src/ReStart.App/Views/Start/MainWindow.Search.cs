@@ -29,6 +29,7 @@ public partial class MainWindow
     private Func<Task<IReadOnlyList<WindowsSettingsCatalog.Entry>>>? _windowsSettingsFixture = null;
     private Func<string, bool>? _windowsSearchFixture;
     private readonly WindowsSearchHandoff _windowsSearchHandoff = new(new WindowsSearchNativeBackend());
+    private WindowsSearchHandoff? _windowsKeyReturnFixture;
     private bool _returningFromWindowsSearch;
     private bool _windowsSearchQueryUnavailable;
     private Func<Uri, bool>? _webSearchFixture;
@@ -156,13 +157,20 @@ public partial class MainWindow
         else _windowsSearchQueryUnavailable = result == WindowsSearchHandoffResult.OpenedWithoutQuery;
     }
 
-    private async Task PresentAfterWindowsSearchAsync()
+    private async Task PresentAfterWindowsSearchAsync(bool explicitInput = false, System.Drawing.Point? point = null, WindowsSearchHandoff? handoff = null)
     {
         if (_returningFromWindowsSearch) return;
         _returningFromWindowsSearch = true;
-        try { await _windowsSearchHandoff.ReturnAsync(); }
+        var requestedPoint = point ?? _startButtonPoint;
+        try { await (handoff ?? _windowsSearchHandoff).ReturnAsync(explicitInput); }
         finally { _returningFromWindowsSearch = false; }
-        if (!_exit) PresentCore();
+        if (!_exit)
+        {
+            var previousPoint = _startButtonPoint;
+            _startButtonPoint = requestedPoint;
+            try { PresentCore(); }
+            finally { _startButtonPoint = previousPoint; }
+        }
     }
 
     private void OpenWebSearch(object sender, RoutedEventArgs e)

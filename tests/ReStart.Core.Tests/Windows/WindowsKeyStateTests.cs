@@ -48,4 +48,23 @@ public sealed class WindowsKeyStateTests
         state.Process(0x5B, true);
         Assert.Equal(WindowsKeyAction.Toggle, state.Process(0x5B, false));
     }
+
+    [Theory]
+    [InlineData(0x5B, 0x53)]
+    [InlineData(0x5C, 0x53)]
+    [InlineData(0x5B, 0x45)]
+    [InlineData(0x5C, 0x45)]
+    [InlineData(0x5B, 0x52)]
+    [InlineData(0x5C, 0x52)]
+    public void NativeSearchAndApplicationChordsNeverBecomeALauncherReturn(int win, int key)
+    {
+        var state = new WindowsKeyState();
+        Assert.Equal(WindowsKeyAction.Suppress, state.Process(win, true));
+        Assert.Equal(WindowsKeyAction.ReplayWindowsDown, state.Process(key, true));
+        Assert.Equal(win, state.HeldKey);
+        Assert.Equal(WindowsKeyAction.Pass, state.Process(key, false));
+        Assert.Equal(WindowsKeyAction.Pass, state.Process(win, false));
+        Assert.Equal(WindowsKeyAction.Suppress, state.Process(win, true));
+        Assert.Equal(WindowsKeyAction.Toggle, state.Process(win, false));
+    }
 }

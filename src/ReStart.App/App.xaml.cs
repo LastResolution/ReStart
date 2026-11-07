@@ -127,7 +127,7 @@ public partial class App : Application
         }
         var handle = new WindowInteropHelper(_window).EnsureHandle();
         LegacySettingsCleanup.Run();
-        _integration = new StartIntegration(handle, Dispatcher, _window.Toggle, _window.DismissFromTaskbar, _window.ToggleFromStartButton);
+        _integration = new StartIntegration(handle, Dispatcher, _window.Toggle, _window.DismissFromTaskbar, _window.ToggleFromStartButton, _window.ToggleFromWindowsKey);
         _tabletIntegration = new TabletIntegration(_window, HwndSource.FromHwnd(handle));
         _window.IsVisibleChanged += (_, _) => { _integration.SetMenuOpen(_window.IsPresenting); _tabletIntegration.Refresh(); };
         _window.PresentationVisibilityChanged = () => { _integration.SetMenuOpen(_window.IsPresenting); _tabletIntegration.Refresh(); };

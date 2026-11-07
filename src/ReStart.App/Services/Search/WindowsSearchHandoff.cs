@@ -12,7 +12,7 @@ internal interface IWindowsSearchHandoffBackend
     Task<bool> DismissForegroundAsync();
 }
 
-/// <summary>Owns only an explicit search handoff; returning cancels pending text before dismissing the foreground search surface.</summary>
+/// <summary>Owns explicit search handoffs and deliberate Windows-key returns; passive presentation never dismisses an unrelated surface.</summary>
 internal sealed class WindowsSearchHandoff(IWindowsSearchHandoffBackend backend) : IDisposable
 {
     private CancellationTokenSource? _pending;
@@ -48,11 +48,14 @@ internal sealed class WindowsSearchHandoff(IWindowsSearchHandoffBackend backend)
         finally { if (ReferenceEquals(_pending, pending)) _pending = null; }
     }
 
-    internal async Task ReturnAsync()
+    /// <summary>Cancels pending query transfer before a deliberate return to the launcher.</summary>
+    /// <param name="explicitInput">True only for an intercepted launcher key/hotkey or Start-button press; permits dismissing a verified foreground Start/Search surface without a preceding handoff. False requires an existing handoff.</param>
+    /// <returns>A task completing after the bounded modifier wait and the backend's foreground-only dismissal attempt.</returns>
+    internal async Task ReturnAsync(bool explicitInput = false)
     {
         _pending?.Cancel();
         var generation = ++_generation;
-        if (!HasHandoff || _disposed) return;
+        if ((!HasHandoff && !explicitInput) || _disposed) return;
         HasHandoff = false;
         // A hotkey may arrive while Ctrl/Alt/Win is still physically down. Never turn Escape into a different system chord.
         var deadline = Environment.TickCount64 + 600;

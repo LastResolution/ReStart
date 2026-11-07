@@ -20,6 +20,71 @@ public class WindowsSearchHandoffTests
         public Task<bool> DismissForegroundAsync() { Dismissals++; return DismissCompletion?.Task ?? Task.FromResult(true); }
     }
 
+    [Fact]
+    public async Task BareWindowsKeyCanReturnFromAnUnrequestedNativeSearch()
+    {
+        var backend = new Backend(); using var handoff = new WindowsSearchHandoff(backend);
+        await handoff.ReturnAsync(); Assert.Equal(0, backend.Dismissals);
+        await handoff.ReturnAsync(explicitInput: true);
+        Assert.Equal(1, backend.Dismissals); Assert.Equal(0, backend.OpensCalled); Assert.Null(backend.Query);
+        Assert.False(handoff.HasHandoff);
+    }
+
+    [Fact]
+    public async Task BareWindowsKeyReturnStillWaitsForModifiersAndCanBeSuperseded()
+    {
+        var backend = new Backend { ModifiersHeld = true }; using var handoff = new WindowsSearchHandoff(backend);
+        var returning = handoff.ReturnAsync(explicitInput: true);
+        Assert.False(returning.IsCompleted); Assert.Equal(0, backend.Dismissals);
+        await handoff.OpenAsync("later explicit search"); backend.ModifiersHeld = false;
+        await returning; Assert.Equal(0, backend.Dismissals); Assert.True(handoff.HasHandoff);
+    }
+
+    [Fact]
+    public async Task AReturnFromAnUnrequestedSurfaceWaitsForItsDismissalBeforeCompleting()
+    {
+        var backend = new Backend { DismissCompletion = new() }; using var handoff = new WindowsSearchHandoff(backend);
+        var returning = handoff.ReturnAsync(explicitInput: true);
+        Assert.False(returning.IsCompleted); Assert.Equal(1, backend.Dismissals);
+        backend.DismissCompletion.SetResult(true); await returning;
+        Assert.Equal(0, backend.OpensCalled); Assert.Null(backend.Query);
+    }
+
+    [Fact]
+    public async Task DisposingDuringAWindowsKeyModifierWaitCannotSendEscapeLater()
+    {
+        var backend = new Backend { ModifiersHeld = true }; var handoff = new WindowsSearchHandoff(backend);
+        var returning = handoff.ReturnAsync(explicitInput: true);
+        handoff.Dispose(); backend.ModifiersHeld = false;
+        await returning; await handoff.ReturnAsync(explicitInput: true);
+        Assert.Equal(0, backend.Dismissals);
+    }
+
+    [Theory]
+    [InlineData("Microsoft.Windows.Search_cw5n1h2txyewy", "SearchApp.exe")]
+    [InlineData("Microsoft.Windows.Cortana_cw5n1h2txyewy", "SearchUI.exe")]
+    [InlineData("MicrosoftWindows.Client.CBS_cw5n1h2txyewy", "SearchHost.exe")]
+    [InlineData("Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy", "StartMenuExperienceHost.exe")]
+    public void OnlyProtectedStartAndSearchSurfacesQualifyForWindowsKeyDismissal(string package, string executable)
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        const string windows = @"X:\Windows";
+        var path = Path.Combine(windows, "SystemApps", package, executable);
+        foreach (var className in new[] { "Windows.UI.Core.CoreWindow", "XamlExplorerHostIslandWindow" })
+        {
+            Assert.True(WindowsSearchLauncher.IsShellSurface(className, path, windows, true));
+            Assert.False(WindowsSearchLauncher.IsShellSurface(className, path + ".exe", windows, true));
+            Assert.False(WindowsSearchLauncher.IsShellSurface(className, path.Replace("SystemApps", "SystemAppsBackup"), windows, true));
+            Assert.False(WindowsSearchLauncher.IsShellSurface(className, path.Replace("SystemApps", @"SystemApps\..\SystemApps"), windows, true));
+            Assert.False(WindowsSearchLauncher.IsShellSurface(className, @"X:\Other\" + executable, windows, true));
+        }
+        Assert.False(WindowsSearchLauncher.IsShellSurface("Owned other application", path, windows, true));
+        Assert.False(WindowsSearchLauncher.IsShellSurface("Windows.UI.Core.CoreWindow", null, windows, true));
+        Assert.False(WindowsSearchLauncher.IsShellSurface("Windows.UI.Core.CoreWindow", path, "", true));
+        Assert.Equal(executable != "StartMenuExperienceHost.exe", WindowsSearchLauncher.IsShellSurface("Windows.UI.Core.CoreWindow", path, windows, false));
+        Assert.False(WindowsSearchLauncher.IsShellSurface("XamlExplorerHostIslandWindow", path, windows, false));
+    }
+
     [Theory]
     [InlineData("  notepad  ", "notepad")]
     [InlineData("日本語 ☁️ café 😀 & ? # %", "日本語 ☁️ café 😀 & ? # %")]

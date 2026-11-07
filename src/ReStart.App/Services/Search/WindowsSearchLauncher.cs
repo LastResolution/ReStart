@@ -29,6 +29,13 @@ internal static class WindowsSearchLauncher
         return packages.Any(package => path.Equals(Path.Combine(windowsDirectory, "SystemApps", package.Item1, package.Item2), StringComparison.OrdinalIgnoreCase));
     }
 
+    internal static bool IsStartExecutable(string? path, string windowsDirectory) => !string.IsNullOrEmpty(path) && !string.IsNullOrEmpty(windowsDirectory)
+        && path.Equals(Path.Combine(windowsDirectory, "SystemApps", "Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy", "StartMenuExperienceHost.exe"), StringComparison.OrdinalIgnoreCase);
+
+    internal static bool IsShellSurface(string className, string? path, string windowsDirectory, bool includeStart) =>
+        (className == "Windows.UI.Core.CoreWindow" || includeStart && className == "XamlExplorerHostIslandWindow")
+        && (IsSearchExecutable(path, windowsDirectory) || includeStart && IsStartExecutable(path, windowsDirectory));
+
     internal static bool TryOpen()
     {
         if (!IsAvailable() || new[] { 0x10, 0x11, 0x12, 0x5B, 0x5C }.Any(key => (Native.GetAsyncKeyState(key) & 0x8000) != 0)) return false;
