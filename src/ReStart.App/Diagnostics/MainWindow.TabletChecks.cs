@@ -129,11 +129,16 @@ public partial class MainWindow
     {
         internal TaskbarBounds Scope;
         internal TaskbarLeaseState? Applied;
-        internal int Mutations, Restores;
-        public TaskbarLeaseState? Capture(TaskbarLeaseMode mode) => new(1, Guid.NewGuid().ToString("N"), 1, 1, mode,
-            [new(1, 1, 1, true, true, Scope, new(Scope.X, Scope.Y + Scope.Height - 2, Scope.Width, 40), new(Scope.X, Scope.Y + Scope.Height - 40, Scope.Width, 40))]);
-        public bool IsCurrent(TaskbarLeaseState state) => state.Windows[0].Monitor == Scope;
-        public void Apply(TaskbarLeaseState state) { Applied = state; Mutations++; }
+        internal int Mutations, Restores, Observations;
+        internal bool ShellHidden;
+        public TaskbarLeaseState? Capture(TaskbarLeaseMode mode)
+        {
+            Observations++;
+            return new(1, Guid.NewGuid().ToString("N"), 1, 1, mode,
+                [new(1, 1, 1, true, true, Scope, new(Scope.X, Scope.Y + Scope.Height - 2, Scope.Width, 40), new(Scope.X, Scope.Y + Scope.Height - 40, Scope.Width, 40))]);
+        }
+        public bool IsCurrent(TaskbarLeaseState state) { Observations++; return !ShellHidden && state.Windows[0].Monitor == Scope; }
+        public void Apply(TaskbarLeaseState state) { Applied = state; ShellHidden = false; Mutations++; }
         public void Restore(TaskbarLeaseState state) { Applied = null; Restores++; }
     }
 
@@ -168,6 +173,21 @@ public partial class MainWindow
             await Settle(() => integration.CurrentMode == TaskbarLeaseMode.Reveal);
             Check(store.State != null && backend.Applied?.Windows.All(w => w.Monitor == backend.Scope) == true,
                 "Tablet effects escaped the fixture monitor or recovery transaction.");
+            var acceptedMutations = backend.Mutations; var observations = backend.Observations;
+            await Task.Delay(1100); // Exercise the real 350-ms DispatcherTimer, not manual calls alone.
+            Check(backend.Observations > observations && backend.Mutations == acceptedMutations,
+                "Taskbar monitoring repeatedly repositioned an accepted reveal.");
+            backend.ShellHidden = true;
+            await Settle(() => integration.CurrentMode == null);
+            await Task.Delay(800);
+            await Settle(() => integration.CurrentMode == null); // An unrelated device notification must not renew consent.
+            Check(backend.Mutations == acceptedMutations && store.State == null && backend.Applied == null,
+                "The periodic taskbar worker fought a native auto-hide decision.");
+            preferences.ShowTaskbarWhileOpen = false;
+            await Settle(() => integration.CurrentMode == null);
+            preferences.ShowTaskbarWhileOpen = true;
+            await Settle(() => integration.CurrentMode == TaskbarLeaseMode.Reveal);
+            Check(backend.Mutations == acceptedMutations + 1, "An explicit reveal preference change did not permit a fresh request.");
             preferences.TabletKeyboardMeansDesktop = true;
             await Settle(() => integration.CurrentMode == TaskbarLeaseMode.Reveal);
             preferences.ShowTaskbarWhileOpen = false;

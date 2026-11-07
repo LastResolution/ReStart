@@ -4,6 +4,97 @@ namespace ReStart.Core.Tests;
 
 public sealed class TaskbarLeaseTests
 {
+    private sealed class ContendedBackend : ITaskbarLeaseBackend
+    {
+        internal int Applied, Restored;
+        internal bool Visible, FailAfterMutation, FailRestore, SurfaceChanged;
+        internal long Window = 1, Started = 1;
+        internal TaskbarBounds Monitor = new(0, 0, 1280, 800);
+        public TaskbarLeaseState? Capture(TaskbarLeaseMode mode) => new(1, Guid.NewGuid().ToString("N"), 1, 1, mode,
+            [new(Window, 2, Started, Visible, true, Monitor, new(Monitor.X, Monitor.Y + (Visible ? 752 : 798), 1280, 48),
+                new(Monitor.X, Monitor.Y + 752, 1280, 48), Clip: SurfaceChanged ? new(true, [new(0, 0, 1280, 2)]) : new(false, []))]);
+        public bool IsCurrent(TaskbarLeaseState state) => Visible && !SurfaceChanged && state.Windows[0].Window == Window
+            && state.Windows[0].ProcessStarted == Started && state.Windows[0].Monitor == Monitor;
+        public void Apply(TaskbarLeaseState state)
+        {
+            Applied++; Visible = true; SurfaceChanged = false;
+            if (FailAfterMutation) throw new IOException("Owned shell refusal after position change");
+        }
+        public void Restore(TaskbarLeaseState state) { Restored++; if (FailRestore) throw new IOException("Owned restore failure"); }
+    }
+
+    [Fact]
+    public void MonitoringAnAcceptedRevealDoesNotRepeatedlyReapplyIt()
+    {
+        var store = new Store(); var backend = new ContendedBackend();
+        using var lease = new TaskbarLease(store, backend, _ => new Guard(() => { }));
+        Assert.True(lease.Synchronize(TaskbarLeaseMode.Reveal));
+        for (var tick = 0; tick < 100; tick++) Assert.True(lease.Synchronize(TaskbarLeaseMode.Reveal));
+        Assert.Equal(1, backend.Applied); Assert.NotNull(lease.Snapshot);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ExplorerHidingOrReclippingTheTrayDoesNotStartARevealLoop(bool reclip)
+    {
+        var store = new Store(); var backend = new ContendedBackend(); var released = 0;
+        using var lease = new TaskbarLease(store, backend, _ => new Guard(() => released++));
+        Assert.True(lease.Synchronize(TaskbarLeaseMode.Reveal));
+        backend.Visible = false; backend.SurfaceChanged = reclip;
+        for (var tick = 0; tick < 100; tick++) Assert.False(lease.Synchronize(TaskbarLeaseMode.Reveal));
+        Assert.False(backend.Visible); Assert.Equal(1, backend.Applied); Assert.Equal(1, backend.Restored);
+        Assert.Equal(1, released); Assert.Null(store.State); Assert.Null(lease.Snapshot); Assert.False(lease.RecoveryFailed);
+        // Pointer-triggered native reveals are not a fresh request to force it.
+        backend.Visible = true;
+        Assert.False(lease.Synchronize(TaskbarLeaseMode.Reveal)); Assert.Equal(1, backend.Applied);
+        Assert.True(lease.Synchronize(null));
+        Assert.True(lease.Synchronize(TaskbarLeaseMode.Reveal)); Assert.Equal(2, backend.Applied);
+    }
+
+    [Fact]
+    public void APartiallyRejectedRevealIsNotRetriedUntilAnotherOpenRequest()
+    {
+        var store = new Store(); var backend = new ContendedBackend { FailAfterMutation = true };
+        using var lease = new TaskbarLease(store, backend, _ => new Guard(() => { }));
+        for (var tick = 0; tick < 100; tick++) Assert.False(lease.Synchronize(TaskbarLeaseMode.Reveal));
+        Assert.Equal(1, backend.Applied); Assert.Equal(1, backend.Restored); Assert.Null(store.State);
+        backend.FailAfterMutation = false;
+        Assert.False(lease.Synchronize(TaskbarLeaseMode.Reveal));
+        Assert.True(lease.Synchronize(null)); Assert.True(lease.Synchronize(TaskbarLeaseMode.Reveal));
+        Assert.Equal(2, backend.Applied);
+    }
+
+    [Fact]
+    public void FailedRecoveryAfterAShellVetoRetainsProtectionWithoutAnotherReveal()
+    {
+        var store = new Store(); var backend = new ContendedBackend(); var released = 0;
+        using var lease = new TaskbarLease(store, backend, _ => new Guard(() => released++));
+        Assert.True(lease.Synchronize(TaskbarLeaseMode.Reveal));
+        backend.Visible = false; backend.FailRestore = true;
+        Assert.False(lease.Synchronize(TaskbarLeaseMode.Reveal));
+        Assert.True(lease.RecoveryFailed); Assert.NotNull(store.State); Assert.Null(lease.Snapshot); Assert.Equal(0, released);
+        backend.FailRestore = false;
+        Assert.False(lease.Synchronize(TaskbarLeaseMode.Reveal));
+        Assert.False(lease.RecoveryFailed); Assert.Null(store.State); Assert.Equal(1, released); Assert.Equal(1, backend.Applied);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ANewMonitorOrExplorerLifetimeCanAcquireItsOwnReveal(bool restart)
+    {
+        var store = new Store(); var backend = new ContendedBackend();
+        using var lease = new TaskbarLease(store, backend, _ => new Guard(() => { }));
+        Assert.True(lease.Synchronize(TaskbarLeaseMode.Reveal));
+        backend.Visible = false;
+        Assert.False(lease.Synchronize(TaskbarLeaseMode.Reveal));
+        if (restart) backend.Started++;
+        else backend.Monitor = new(-1280, 0, 1280, 800);
+        Assert.True(lease.Synchronize(TaskbarLeaseMode.Reveal));
+        Assert.Equal(2, backend.Applied); Assert.Equal(backend.Monitor, Assert.Single(lease.Snapshot!.Windows).Monitor);
+    }
+
     private sealed class Guard(Action release) : IDisposable { public void Dispose() => release(); }
     private sealed class Store : ITaskbarRecoveryStore
     {

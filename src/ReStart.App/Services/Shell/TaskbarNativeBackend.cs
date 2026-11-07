@@ -94,7 +94,11 @@ internal sealed class TaskbarNativeBackend(Func<IEnumerable<TaskbarWindowState>>
                 && observed.ProcessStarted == saved.ProcessStarted && observed.Monitor == saved.Monitor && observed.AutoHide == saved.AutoHide
                 && (observed.Content ?? []).Select(child => child.Window).Order().SequenceEqual((saved.Content ?? []).Select(child => child.Window).Order())
                 && ClipCurrent(saved, observed)
-                && (state.Mode != TaskbarLeaseMode.Reveal || observed.Target == saved.Target)));
+                && (state.Mode != TaskbarLeaseMode.Reveal || observed.Target == saved.Target)
+                // After acquisition, a native hide/animation is a Shell veto,
+                // not permission to put the tray back every 350 ms. Releasing
+                // the lease also removes the temporary content reservation.
+                && (_appliedToken != state.Token || observed.Visible && observed.Original == saved.Target)));
     }
 
     private static bool ClipCurrent(TaskbarWindowState saved, TaskbarWindowState current) => saved.Clip == null

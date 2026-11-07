@@ -58,6 +58,7 @@ internal interface ITaskbarLeaseBackend
 internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBackend backend, Func<TaskbarLeaseState, IDisposable> protect, Func<bool>? protectionReady = null) : IDisposable
 {
     private TaskbarLeaseState? _state;
+    private TaskbarLeaseState? _attemptedReveal;
     private IDisposable? _protection;
     private bool _disposed;
     private bool _applied;
@@ -69,14 +70,15 @@ internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBac
     /// <summary>Gets only successfully applied geometry; retained recovery ownership alone must not resize the launcher.</summary>
     internal TaskbarLeaseState? Snapshot => _applied ? _state : null;
 
-    /// <summary>Enforces an optional temporary effect; failure never bypasses recovery prerequisites.</summary>
-    /// <param name="mode">Desired effect, or null to release ownership and return control to the backend's current native policy.</param>
+    /// <summary>Acquires or monitors a temporary effect without repeatedly opposing the Shell's automatic hiding.</summary>
+    /// <param name="mode">Desired effect, or null to release ownership and permit a fresh reveal on the next open. A reveal is attempted once per tray, Explorer lifetime, monitor and target geometry until release.</param>
     /// <param name="stillRequested">Optional current-request check, evaluated after recovery readiness and before shell mutation. False cancels and restores acquisition.</param>
     /// <returns>True when the requested effect is active, or restoration completed; false for unavailable/failed acquisition or recovery.</returns>
     internal bool Synchronize(TaskbarLeaseMode? mode, Func<bool>? stillRequested = null)
     {
         LastFailure = null;
         if (_disposed) return mode == null && _state == null;
+        if (mode == null) _attemptedReveal = null;
         if (mode == null && _state == null) return true;
         try
         {
@@ -98,6 +100,10 @@ internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBac
                 var candidate = backend.Capture(mode.Value);
                 if (candidate == null) return false;
                 if (!candidate.IsValid()) throw new InvalidDataException("Invalid taskbar recovery snapshot.");
+                // A new token, clipping change or visibility transition is not
+                // a new user request. Explorer may immediately hide a forced
+                // reveal; reacquiring every timer tick makes the tray flash.
+                if (mode == TaskbarLeaseMode.Reveal && SameRevealRequest(_attemptedReveal, candidate)) return false;
                 store.Save(candidate);
                 var saved = store.Read();
                 if (saved == null || !saved.IsValid() || JsonSerializer.Serialize(candidate) != JsonSerializer.Serialize(saved))
@@ -109,7 +115,13 @@ internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBac
             }
             if (stillRequested?.Invoke() == false) { Restore(); return false; }
             if (protectionReady?.Invoke() == false) throw new IOException("Taskbar recovery watchdog is no longer ready.");
-            backend.Apply(_state);
+            if (!_applied || mode != TaskbarLeaseMode.Reveal)
+            {
+                // Remember even a partially rejected mutation. Recovery still
+                // runs, but a Shell veto must not turn into periodic retries.
+                if (mode == TaskbarLeaseMode.Reveal) _attemptedReveal = _state;
+                backend.Apply(_state);
+            }
             _applied = true;
             RecoveryFailed = false;
             return true;
@@ -121,6 +133,12 @@ internal sealed class TaskbarLease(ITaskbarRecoveryStore store, ITaskbarLeaseBac
             return false;
         }
     }
+
+    private static bool SameRevealRequest(TaskbarLeaseState? previous, TaskbarLeaseState candidate) => previous != null
+        && previous.Windows.Length == candidate.Windows.Length
+        && previous.Windows.All(saved => candidate.Windows.Any(current => saved.Window == current.Window
+            && saved.ProcessId == current.ProcessId && saved.ProcessStarted == current.ProcessStarted
+            && saved.Monitor == current.Monitor && saved.Target == current.Target));
 
     private bool Restore()
     {
