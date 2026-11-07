@@ -159,6 +159,8 @@ Schema 4 stores tiles, preferences, independent entries, producer version and th
 
 ## Rendering and resources
 
+`AppTileArtwork` parses the selected application manifest and ranks bounded filename-qualified raster variants without OS dependencies. `TileArtworkLoader` reads only requested pins' package manifests or adjacent desktop VisualElements manifests on a background STA. Approved roots, XML/entity limits, reparse rejection, raster decoding bounds and a shared pixel budget keep these static assets separate from script execution and network sources. The presentation coordinator rejects stale reads, keeps image selection out of search/app-list icons, and updates image surfaces without rebuilding live tile browsers. Installed artwork is enabled by default; Settings preview/discard and high-contrast fallback apply independently of the default-off notification compatibility reader. Supported live notification frames take precedence over static images.
+
 The native window uses the pointer monitor's working area and PerMonitorV2. WPF content uses DIPs and logical cells. The wallpaper blur is an approximation of the original composition.
 
 Warm presentation keeps the existing board, account picture and shortcut controls. Monitor wallpaper lookup, file metadata and image decoding run as one coalesced background operation; revision checks discard results superseded by preferences or another opening. Frozen pixels cross back to the dispatcher. Settings preview still applies its explicit wallpaper changes immediately.

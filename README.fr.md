@@ -56,9 +56,11 @@ La roue dentée permet de régler les thèmes, le lancement à l’ouverture de 
 
 La recherche ajoute les mots-clés des paramètres Windows et les éléments du Panneau de configuration. La syntaxe AQS facultative apporte filtres de fichiers et pertinence natifs ; **Rechercher dans Windows** transmet explicitement la recherche aux sources supplémentaires de Windows.
 
-Deux options distinctes sont désactivées au départ : les compteurs Windows existants pour les applications les plus utilisées, et la compatibilité en lecture seule des vignettes et badges Windows. Les formats courants, images locales et liaisons de données sont pris en charge. Les services push arrêtés ne sont pas rétablis ; sans données, l’icône reste affichée.
+Deux options distinctes sont désactivées au départ : les compteurs Windows existants pour les applications les plus utilisées, et la compatibilité en lecture seule des vignettes et badges Windows. Les formats courants, images locales et liaisons de données sont pris en charge. Les services push arrêtés ne sont pas rétablis ; sans données, l’image par défaut ou l’icône reste affichée.
 
 [Paramètres et compatibilité](docs/start-behavior.md) · [Couverture](docs/fidelity.md)
+
+**Paramètres → Apparence → Utiliser les images de vignettes fournies par les applications** est activé par défaut. Les applications épinglées utilisent les images locales disponibles selon la taille, la mise à l’échelle et le thème ; sinon, leur icône reste affichée. Les aperçus de dossiers sont inclus et le résultat peut être essayé avant l’enregistrement. Aucune requête réseau ; les mises à jour dynamiques restent une option distincte.
 
 ## Fonctionnalités
 

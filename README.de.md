@@ -56,9 +56,11 @@ Beim Ziehen folgt eine halbtransparente Kopie der Kachel, Gruppe oder Auswahl de
 
 Die Suche ergänzt Windows-eigene Einstellungsbegriffe und Systemsteuerungseinträge. Optionale Advanced Query Syntax bietet native Dateifilter und Relevanzsortierung; **In Windows suchen** übergibt weitere Quellen ausdrücklich an Windows.
 
-Zwei getrennte Optionen sind zunächst aus: vorhandene Windows-App-Nutzungszahlen für Meistverwendet und schreibgeschützte Windows-Kachel-/Abzeichenkompatibilität. Häufige Größenlayouts, lokale Rasterbilder und Datenbindungen werden unterstützt. Eingestellte Push-Dienste werden nicht wiederhergestellt; ohne Daten bleibt das App-Symbol sichtbar.
+Zwei getrennte Optionen sind zunächst aus: vorhandene Windows-App-Nutzungszahlen für Meistverwendet und schreibgeschützte Windows-Kachel-/Abzeichenkompatibilität. Häufige Größenlayouts, lokale Rasterbilder und Datenbindungen werden unterstützt. Eingestellte Push-Dienste werden nicht wiederhergestellt; ohne Daten bleiben das Standard-Kachelbild oder das App-Symbol sichtbar.
 
 [Einstellungen und Kompatibilität](docs/start-behavior.md) · [Abdeckung](docs/fidelity.md)
+
+**Einstellungen → Darstellung → Mitgelieferte Kachelbilder der Apps verwenden** ist standardmäßig an. Angeheftete Apps nutzen verfügbare lokale Kachelbilder passend zu Größe, Anzeigeskalierung und Design; sonst bleibt das Symbol. Dies gilt auch für Ordnervorschauen und lässt sich vor dem Speichern ausprobieren. Keine Netzwerkanfragen; Live-Aktualisierungen bleiben eine getrennte Option.
 
 ## Funktionen
 
