@@ -85,6 +85,7 @@ internal sealed class StartIntegration : IDisposable
         WindowsKeyDiagnostics.Flag(KeyTraceStage.CaptureWindows, _captureWindows);
         WindowsKeyDiagnostics.Flag(KeyTraceStage.CaptureStart, _captureStart);
         WindowsKeyDiagnostics.Flag(KeyTraceStage.CloseOnDeactivate, _dismissOnTaskbar);
+        WindowsKeyDiagnostics.Flag(KeyTraceStage.TaskbarReveal, preferences.ShowTaskbarWhileOpen);
         Native.PostThreadMessage(_hookThreadId, 0x8001, 0, 0);
     }
 

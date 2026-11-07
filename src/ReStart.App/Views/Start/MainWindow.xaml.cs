@@ -305,6 +305,7 @@ public partial class MainWindow : Window
             }
         }, DispatcherPriority.Input);
         WindowsKeyDiagnostics.Mark(KeyTraceStage.PresentCompleted);
+        WindowsKeyDiagnostics.Mark(KeyTraceStage.Ready);
     }
 
     private void RefreshBackgroundMenu()

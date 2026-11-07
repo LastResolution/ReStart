@@ -188,7 +188,6 @@ public partial class App : Application
         if (pinPath != null) await _window.PinPathAsync(pinPath);
         else if (e.Args.Contains("--background")) _ = _window.InitializeAsync();
         else _window.Present();
-        if (keyDiagnostics) _ = MarkKeyDiagnosticsReadyAsync(_window);
         DispatcherUnhandledException += (_, args) =>
         {
             args.Handled = true;
@@ -198,12 +197,6 @@ public partial class App : Application
             MessageBox.Show(L.T(K.ErrorUnhandled), "ReStart", MessageBoxButton.OK, MessageBoxImage.Error);
             ExitApplication();
         };
-    }
-
-    private static async Task MarkKeyDiagnosticsReadyAsync(MainWindow window)
-    {
-        await window.InitializeAsync();
-        WindowsKeyDiagnostics.Mark(KeyTraceStage.Ready);
     }
 
     private void CreateTray()

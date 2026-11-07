@@ -5,11 +5,11 @@ using System.Text.Json;
 
 namespace ReStart.App.Services;
 
-// Deliberately closed vocabulary: this recorder cannot accept text, keys, paths,
-// handles, process identifiers, window titles, or device/monitor information.
+// Deliberately closed export vocabulary: no free text, arbitrary key identities,
+// paths, handles, process identifiers, titles, or device/monitor information.
 internal enum KeyTraceStage
 {
-    Started, Ready, Completed, LimitReached, CaptureWindows, CaptureStart, CloseOnDeactivate,
+    Started, Ready, Completed, LimitReached, CaptureWindows, CaptureStart, CloseOnDeactivate, TaskbarReveal,
     HookInstalled, HookFailed, HookRemoved, HookHeartbeat, UiHeartbeat,
     WinDown, WinUp, InjectedWinDown, InjectedWinUp, KeyAction, ReplayWindowsDown,
     HotkeyReceived, ToggleQueued, ToggleDispatched, ToggleEntered, ToggleDismiss, TogglePresent,
