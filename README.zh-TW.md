@@ -182,6 +182,15 @@ ReStart 是受後期 Windows 10 全螢幕開始功能表啟發的獨立 MIT 專�
 
 ---
 
+<!-- contributors:start -->
+<h2 align="center">貢獻者</h2>
+<p align="center">感謝所有透過程式碼、翻譯、測試與創意協助改善 ReStart 的朋友。</p>
+<p align="center">
+  <a href="https://github.com/LastResolution/ReStart/graphs/contributors"><img src="https://lastresolution.github.io/ReStart/assets/contributors.svg" alt="ReStart 貢獻者" /></a>
+</p>
+<p align="center"><a href="https://github.com/LastResolution/ReStart/graphs/contributors">查看貢獻者</a> · <a href="CONTRIBUTING.md">參與貢獻</a></p>
+<!-- contributors:end -->
+
 <!-- support:start -->
 <h2 align="center">支持獨立開發</h2>
 <p align="center">

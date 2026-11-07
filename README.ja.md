@@ -382,6 +382,15 @@ ReStart のコードは [MIT License](LICENSE) です。[サードパーティ�
 
 ---
 
+<!-- contributors:start -->
+<h2 align="center">コントリビューター</h2>
+<p align="center">コード、翻訳、テスト、アイデアを通じてReStartに協力してくださる皆さんに感謝します。</p>
+<p align="center">
+  <a href="https://github.com/LastResolution/ReStart/graphs/contributors"><img src="https://lastresolution.github.io/ReStart/assets/contributors.svg" alt="ReStartのコントリビューター" /></a>
+</p>
+<p align="center"><a href="https://github.com/LastResolution/ReStart/graphs/contributors">コントリビューター一覧</a> · <a href="CONTRIBUTING.md">開発に参加する</a></p>
+<!-- contributors:end -->
+
 <!-- support:start -->
 <h2 align="center">個人開発を応援する</h2>
 <p align="center">

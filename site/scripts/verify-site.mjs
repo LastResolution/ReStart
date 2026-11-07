@@ -157,6 +157,19 @@ export async function verifySite(directory = defaultRoot) {
     }
   }
   let galleryBytes = 0;
+  const contributorImage = await readFile(path.join(root, 'assets/contributors.svg'), 'utf8');
+  const portraits = tags(contributorImage, 'image');
+  require(Buffer.byteLength(contributorImage) < 1_000_000 && portraits.length > 0 && portraits.length <= 64,
+    'Invalid contributor image size or count.');
+  require(!/<(?:script|foreignObject|iframe)|<!DOCTYPE|<!ENTITY|\bon\w+\s*=/i.test(contributorImage)
+    && portraits.every(image => /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+=*$/.test(image.href)),
+    'Contributor image must contain only embedded raster portraits.');
+  for (const page of ['index.html', 'developers/index.html']) {
+    const html = await readFile(path.join(root, page), 'utf8');
+    require(tags(html, 'img').some(image => image.src.endsWith('assets/contributors.svg') && image.alt)
+      && tags(html, 'a').some(link => link.href === 'https://github.com/LastResolution/ReStart/graphs/contributors'),
+      `Missing contributor recognition: ${page}`);
+  }
   for (const name of ['orbit', 'cpu', 'memory', 'calendar', 'weather-scene', 'canvas-garden']) {
     const png = await readFile(path.join(root, `assets/tile-${name}.png`));
     require(png.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])) &&

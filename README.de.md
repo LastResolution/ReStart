@@ -182,6 +182,15 @@ ReStart ist ein unabhängiges, von Microsoft nicht unterstütztes MIT-Projekt, i
 
 ---
 
+<!-- contributors:start -->
+<h2 align="center">Mitwirkende</h2>
+<p align="center">Danke an alle, die ReStart mit Code, Übersetzungen, Tests und Ideen verbessern.</p>
+<p align="center">
+  <a href="https://github.com/LastResolution/ReStart/graphs/contributors"><img src="https://lastresolution.github.io/ReStart/assets/contributors.svg" alt="Mitwirkende an ReStart" /></a>
+</p>
+<p align="center"><a href="https://github.com/LastResolution/ReStart/graphs/contributors">Alle Mitwirkenden</a> · <a href="CONTRIBUTING.md">Mitmachen</a></p>
+<!-- contributors:end -->
+
 <!-- support:start -->
 <h2 align="center">Unabhängige Entwicklung unterstützen</h2>
 <p align="center">

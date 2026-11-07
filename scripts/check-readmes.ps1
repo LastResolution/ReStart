@@ -10,6 +10,11 @@ $catalogs = @(Get-ChildItem -LiteralPath (Join-Path $repoRoot 'src/ReStart.Core/
 if (@($catalogs | Where-Object { -not $files.Contains($_) }).Count -gt 0 -or $catalogs.Count -ne $files.Count) { throw 'README languages do not match the supported locale catalogs.' }
 foreach ($entry in $files.GetEnumerator()) {
     $text = Get-Content -LiteralPath (Join-Path $repoRoot $entry.Value) -Raw
+    $contributors = [regex]::Matches($text, '(?s)<!-- contributors:start -->(.*?)<!-- contributors:end -->')
+    if ($contributors.Count -ne 1 -or -not $contributors[0].Value.Contains('src="https://lastresolution.github.io/ReStart/assets/contributors.svg"') -or
+        -not $contributors[0].Value.Contains('href="https://github.com/LastResolution/ReStart/graphs/contributors"')) {
+        throw "Missing shared contributor image or graph link in $($entry.Value)."
+    }
     foreach ($file in $files.Values) {
         if (-not $text.Contains("]($file)") -and -not $text.Contains('href="' + $file + '"')) { throw "Missing language link in $($entry.Value): $file" }
     }

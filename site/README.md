@@ -14,7 +14,15 @@ Open `http://127.0.0.1:4173/` for the landing page, `/developers/` for the devel
 
 To exercise the project prefix directly, run `python site/scripts/preview.py` instead, then open `http://127.0.0.1:4173/ReStart/`. This optional standard-library preview server also exposes isolated `/capture/orbit/`, `/capture/cpu/`, `/capture/memory/`, `/capture/calendar/`, `/capture/weather-scene/` and `/capture/canvas-garden/` pages for refreshing the gallery. Each renders the actual bundled HTML/CSS/JavaScript at 720×720 using its scale variable and fixed English sample context. Capture the top-left 720×720 region without resizing an old image; review it and replace only the matching PNG. These authoring fixtures are outside `dist`, make no provider requests and never read personal app settings or files.
 
-The site has no build step, third-party JavaScript, external fonts, analytics, contact forms or backend. Theme selection is kept in browser local storage; if storage is unavailable, switching still works for the current page. System mode follows the OS preference. Images and the silent product video are local assets.
+The site has no application build step, third-party JavaScript, external fonts, analytics, contact forms or backend. Theme selection is kept in browser local storage; if storage is unavailable, switching still works for the current page. System mode follows the OS preference. Images and the silent product video are local assets.
+
+## Contributor recognition
+
+All eight READMEs, the landing page and the developer guide share `dist/assets/contributors.svg`. Pages refreshes this self-contained image during production deployments and once a week. The refresh makes one read-only GitHub REST request for public contributors, then downloads up to 64 public account avatars from GitHub's image host within a 1 MB display budget. Larger lists keep the leading contributors visible, with the full contributor graph one click away. Only public usernames and raster avatar pixels enter the SVG; anonymous identities, email addresses, real-name fields and bots are excluded.
+
+Visitors make no GitHub API or third-party avatar requests. README images are served from the project's Pages URL, so they update without bot commits. Pages uses its ephemeral read-only `GITHUB_TOKEN` only for `api.github.com`; no personal token, paid service or new secret is required. Public-repository standard GitHub-hosted runners are free. API requests are still rate-limited, but a timeout, rate limit, invalid response or avatar failure retains the checked-in image instead of breaking the deployment. Refreshes have a 30-second overall deadline, one API page, no retries and bounded response/image sizes. The generated SVG has no scripts or external resources. Pull-request checks use the bundled image and offline response fixtures rather than live API calls.
+
+Run `node site/scripts/update-contributors.mjs` to refresh the checked-in fallback deliberately, and `node --test site/scripts/update-contributors.test.mjs` to check successful refresh, credential isolation and failure behavior. The normal Pages workflow runs the refresh, static verification and both test files before deploying. GitHub and README image caches may delay a newly merged contributor's appearance. GitHub's [rate-limit documentation](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api) and [Actions billing documentation](https://docs.github.com/en/billing/concepts/product-billing/github-actions) describe the current limits and public-runner pricing.
 
 ## Motion and presentation
 
@@ -45,7 +53,7 @@ When materially revising an article, update its visible coverage/date and JSON-L
 
 ## Search discovery
 
-The public sitemap is `https://lastresolution.github.io/ReStart/sitemap.xml`. It lists the landing page, developer guide, Guides index and both articles using their canonical URLs. Every footer links to it. Update the sitemap when adding or removing a public page; do not add guessed modification dates or unpublished URLs.
+The public sitemap is `https://lastresolution.github.io/ReStart/sitemap.xml`. It lists the landing page, developer guide, Guides index and both articles using their canonical URLs. It can be submitted directly to search engines. Update the sitemap when adding or removing a public page; do not add guessed modification dates or unpublished URLs.
 
 The landing page contains the maintainer-provided Google Search Console and Bing Webmaster Tools verification meta tags. These are public ownership markers, not login credentials or API keys. Keep them in the deployed HTML after verification. In Search Console, use the URL-prefix property `https://lastresolution.github.io/ReStart/`, complete verification after deployment, then submit `sitemap.xml`. Submit the same sitemap in Bing Webmaster Tools.
 

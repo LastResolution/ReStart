@@ -182,6 +182,15 @@ ReStart는 후기 Windows 10 전체 화면 시작 메뉴에서 영감을 받은 
 
 ---
 
+<!-- contributors:start -->
+<h2 align="center">기여자</h2>
+<p align="center">코드, 번역, 테스트와 아이디어로 ReStart를 개선해 주시는 모든 분께 감사드립니다.</p>
+<p align="center">
+  <a href="https://github.com/LastResolution/ReStart/graphs/contributors"><img src="https://lastresolution.github.io/ReStart/assets/contributors.svg" alt="ReStart 기여자" /></a>
+</p>
+<p align="center"><a href="https://github.com/LastResolution/ReStart/graphs/contributors">기여자 보기</a> · <a href="CONTRIBUTING.md">참여하기</a></p>
+<!-- contributors:end -->
+
 <!-- support:start -->
 <h2 align="center">개인 개발 응원하기</h2>
 <p align="center">
