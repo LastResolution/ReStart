@@ -310,6 +310,15 @@ Screenshots, animation and the video show the real launcher with an isolated Eng
 
 ---
 
+<!-- contributors:start -->
+<h2 align="center">Contributors</h2>
+<p align="center">Thank you to everyone helping ReStart through code, translations, testing and ideas.</p>
+<p align="center">
+  <a href="https://github.com/LastResolution/ReStart/graphs/contributors"><img src="https://lastresolution.github.io/ReStart/assets/contributors.svg" alt="ReStart contributors" /></a>
+</p>
+<p align="center"><a href="https://github.com/LastResolution/ReStart/graphs/contributors">Meet the contributors</a> · <a href="CONTRIBUTING.md">Get involved</a></p>
+<!-- contributors:end -->
+
 <!-- support:start -->
 <h2 align="center">Support independent development</h2>
 <p align="center">

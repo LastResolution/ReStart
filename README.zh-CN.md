@@ -182,6 +182,15 @@ ReStart 是受后期 Windows 10 全屏开始菜单启发的独立 MIT 项目，�
 
 ---
 
+<!-- contributors:start -->
+<h2 align="center">贡献者</h2>
+<p align="center">感谢所有通过代码、翻译、测试和创意帮助改进 ReStart 的朋友。</p>
+<p align="center">
+  <a href="https://github.com/LastResolution/ReStart/graphs/contributors"><img src="https://lastresolution.github.io/ReStart/assets/contributors.svg" alt="ReStart 贡献者" /></a>
+</p>
+<p align="center"><a href="https://github.com/LastResolution/ReStart/graphs/contributors">查看贡献者</a> · <a href="CONTRIBUTING.md">参与贡献</a></p>
+<!-- contributors:end -->
+
 <!-- support:start -->
 <h2 align="center">支持独立开发</h2>
 <p align="center">

@@ -33,6 +33,8 @@ test('public-site validation accepts the deployment and rejects broken discovery
     await t.test('incorrect breadcrumb parent', () => mutate(guide, html => html.replace('"item": "https://lastresolution.github.io/ReStart/guides/"', '"item": "https://lastresolution.github.io/ReStart/missing/"'), /Invalid breadcrumb trail/));
     await t.test('malformed JSON-LD', () => mutate(guide, html => html.replace('"@context": "https://schema.org",', '"@context": invalid,'), /JSON|Unexpected/));
     await t.test('incomplete sitemap', () => mutate('sitemap.xml', xml => xml.replace(/<url>\s*<loc>https:\/\/lastresolution\.github\.io\/ReStart\/guides\/windows-11-live-tiles\/<\/loc>\s*(?:<lastmod>[^<]+<\/lastmod>\s*)?<\/url>/, ''), /Sitemap entries/));
+    await t.test('remote contributor portraits', () => mutate('assets/contributors.svg', svg => svg.replace(/href="data:image\/[^\"]+"/, 'href="https://example.invalid/avatar.png"'), /embedded raster portraits/));
+    await t.test('active contributor SVG content', () => mutate('assets/contributors.svg', svg => svg.replace('</svg>', '<script>alert(1)</script></svg>'), /embedded raster portraits/));
     await t.test('undersized gallery image', async () => {
       const filename = path.join(fixture, 'assets/tile-orbit.png');
       const original = await readFile(filename);

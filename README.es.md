@@ -182,6 +182,15 @@ ReStart es un proyecto MIT independiente inspirado en Inicio a pantalla completa
 
 ---
 
+<!-- contributors:start -->
+<h2 align="center">Colaboradores</h2>
+<p align="center">Gracias a quienes ayudan a mejorar ReStart con código, traducciones, pruebas e ideas.</p>
+<p align="center">
+  <a href="https://github.com/LastResolution/ReStart/graphs/contributors"><img src="https://lastresolution.github.io/ReStart/assets/contributors.svg" alt="Colaboradores de ReStart" /></a>
+</p>
+<p align="center"><a href="https://github.com/LastResolution/ReStart/graphs/contributors">Ver colaboradores</a> · <a href="CONTRIBUTING.md">Participar</a></p>
+<!-- contributors:end -->
+
 <!-- support:start -->
 <h2 align="center">Apoya el desarrollo independiente</h2>
 <p align="center">
