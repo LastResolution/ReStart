@@ -29,6 +29,7 @@ internal sealed class StartIntegration : IDisposable
     private volatile bool _menuOpen, _dismissOnTaskbar;
     private readonly Thread _hookThread;
     private uint _hookThreadId;
+    private readonly Timer? _diagnosticHeartbeat;
     public string? Status { get; private set; }
 
     public StartIntegration(nint handle, Dispatcher dispatcher, Action toggle, Action dismiss, Action<Native.Point> toggleFromStart)
@@ -53,6 +54,9 @@ internal sealed class StartIntegration : IDisposable
                 while (Native.GetMessage(out var message, 0, 0, 0) > 0)
                 {
                     if (message.Id == 0x8001) UpdateHooks();
+                    else if (message.Id == 0x8002)
+                        WindowsKeyDiagnostics.Mark(KeyTraceStage.HookHeartbeat, _keyboard != 0 ? KeyTraceDetail.Yes : KeyTraceDetail.No,
+                            unchecked((int)((uint)Environment.TickCount - (uint)message.WParam)));
                     else { Native.TranslateMessage(ref message); Native.DispatchMessage(ref message); }
                 }
             }
@@ -66,6 +70,8 @@ internal sealed class StartIntegration : IDisposable
         { IsBackground = true, Name = "ReStart input hooks" };
         _hookThread.Start();
         ready.Wait();
+        if (WindowsKeyDiagnostics.Active)
+            _diagnosticHeartbeat = WindowsKeyDiagnostics.Heartbeats(dispatcher, tick => Native.PostThreadMessage(_hookThreadId, 0x8002, tick, 0));
         if (!Native.RegisterHotKey(handle, 0x5253, 0x4003, 0x20))
             Status = L.T(K.ErrorHotkeyInUse);
     }
@@ -76,6 +82,10 @@ internal sealed class StartIntegration : IDisposable
         _captureStart = preferences.CaptureStartButton;
         _startButtons.SetEnabled(_captureStart);
         _dismissOnTaskbar = preferences.CloseOnDeactivate;
+        WindowsKeyDiagnostics.Flag(KeyTraceStage.CaptureWindows, _captureWindows);
+        WindowsKeyDiagnostics.Flag(KeyTraceStage.CaptureStart, _captureStart);
+        WindowsKeyDiagnostics.Flag(KeyTraceStage.CloseOnDeactivate, _dismissOnTaskbar);
+        WindowsKeyDiagnostics.Flag(KeyTraceStage.TaskbarReveal, preferences.ShowTaskbarWhileOpen);
         Native.PostThreadMessage(_hookThreadId, 0x8001, 0, 0);
     }
 
@@ -93,9 +103,10 @@ internal sealed class StartIntegration : IDisposable
         if (_captureWindows && _keyboard == 0)
         {
             _keyboard = Native.SetWindowsHookEx(13, _keyboardCallback, Native.GetModuleHandle(null), 0);
+            WindowsKeyDiagnostics.Mark(_keyboard != 0 ? KeyTraceStage.HookInstalled : KeyTraceStage.HookFailed);
             if (_keyboard == 0) Status = L.T(K.ErrorWindowsKeyCapture) + new Win32Exception(Marshal.GetLastWin32Error()).Message;
         }
-        if (!_captureWindows && _keyboard != 0) { Native.UnhookWindowsHookEx(_keyboard); _keyboard = 0; _keys = new(); }
+        if (!_captureWindows && _keyboard != 0) { Native.UnhookWindowsHookEx(_keyboard); _keyboard = 0; _keys = new(); WindowsKeyDiagnostics.Mark(KeyTraceStage.HookRemoved); }
         var needMouse = _captureStart || _startPress.IsPressed || _dismissOnTaskbar && _menuOpen;
         if (needMouse && _mouse == 0) _mouse = Native.SetWindowsHookEx(14, _mouseCallback, Native.GetModuleHandle(null), 0);
         if (!needMouse && _mouse != 0) { Native.UnhookWindowsHookEx(_mouse); _mouse = 0; }
@@ -121,6 +132,7 @@ internal sealed class StartIntegration : IDisposable
             var name = new System.Text.StringBuilder(128);
             Native.GetClassName(Native.GetAncestor(current, 2), name, 128);
             if (name.ToString() is "Shell_TrayWnd" or "Shell_SecondaryTrayWnd" or "TaskListThumbnailWnd" or "#32768") return;
+            WindowsKeyDiagnostics.Mark(KeyTraceStage.ForegroundDismiss);
             _dismiss();
         }, DispatcherPriority.Input);
     }
@@ -137,7 +149,12 @@ internal sealed class StartIntegration : IDisposable
 
     private nint WindowProc(nint hwnd, int msg, nint wp, nint lp, ref bool handled)
     {
-        if (msg == 0x0312 && wp == 0x5253) { handled = true; QueueToggle(); }
+        if (msg == 0x0312 && wp == 0x5253)
+        {
+            handled = true;
+            WindowsKeyDiagnostics.Mark(KeyTraceStage.HotkeyReceived);
+            QueueToggle(KeyTraceDetail.RegisteredHotkey);
+        }
         return 0;
     }
 
@@ -145,14 +162,29 @@ internal sealed class StartIntegration : IDisposable
     {
         if (code < 0) return Native.CallNextHookEx(_keyboard, code, wp, lp);
         var data = Marshal.PtrToStructure<Native.KeyboardData>(lp);
-        if ((data.Flags & 0x10) != 0) return Native.CallNextHookEx(_keyboard, code, wp, lp);
         var down = wp is 0x100 or 0x104;
+        if ((data.Flags & 0x10) != 0)
+        {
+            WindowsKeyDiagnostics.Current?.Key(data.VkCode, down, true, false, data.Time, unchecked((uint)Environment.TickCount));
+            return Native.CallNextHookEx(_keyboard, code, wp, lp);
+        }
         var modifier = (Native.GetAsyncKeyState(0x10) & 0x8000) != 0 || (Native.GetAsyncKeyState(0x11) & 0x8000) != 0 || (Native.GetAsyncKeyState(0x12) & 0x8000) != 0;
-        switch (_keys.Process((int)data.VkCode, down, modifier))
+        WindowsKeyDiagnostics.Current?.Key(data.VkCode, down, false, modifier, data.Time, unchecked((uint)Environment.TickCount));
+        var action = _keys.Process((int)data.VkCode, down, modifier);
+        if (data.VkCode is 0x5B or 0x5C)
+            WindowsKeyDiagnostics.Mark(KeyTraceStage.KeyAction, action switch
+            {
+                WindowsKeyAction.Suppress => KeyTraceDetail.Suppress,
+                WindowsKeyAction.Toggle => KeyTraceDetail.Toggle,
+                WindowsKeyAction.ReplayWindowsDown => KeyTraceDetail.Replay,
+                _ => KeyTraceDetail.Pass
+            });
+        switch (action)
         {
             case WindowsKeyAction.Suppress: return 1;
-            case WindowsKeyAction.Toggle: QueueToggle(); return 1;
+            case WindowsKeyAction.Toggle: QueueToggle(KeyTraceDetail.WindowsKey); return 1;
             case WindowsKeyAction.ReplayWindowsDown:
+                WindowsKeyDiagnostics.Mark(KeyTraceStage.ReplayWindowsDown);
                 Native.SendInput(1, [new Native.Input { Type = 1, Union = new() { Keyboard = new() { Vk = (ushort)_keys.HeldKey } } }], Marshal.SizeOf<Native.Input>());
                 break;
         }
@@ -184,10 +216,21 @@ internal sealed class StartIntegration : IDisposable
         return Native.CallNextHookEx(_mouse, code, wp, lp);
     }
 
-    private void QueueToggle() => _dispatcher.BeginInvoke(_toggle, DispatcherPriority.Send);
+    private void QueueToggle(KeyTraceDetail source)
+    {
+        if (!WindowsKeyDiagnostics.Active) { _dispatcher.BeginInvoke(_toggle, DispatcherPriority.Send); return; }
+        WindowsKeyDiagnostics.Mark(KeyTraceStage.ToggleQueued, source);
+        var queued = System.Diagnostics.Stopwatch.GetTimestamp();
+        _dispatcher.BeginInvoke(() =>
+        {
+            WindowsKeyDiagnostics.Mark(KeyTraceStage.ToggleDispatched, source, (int)System.Diagnostics.Stopwatch.GetElapsedTime(queued).TotalMilliseconds);
+            _toggle();
+        }, DispatcherPriority.Send);
+    }
 
     public void Dispose()
     {
+        _diagnosticHeartbeat?.Dispose();
         _menuOpen = false;
         Interlocked.Increment(ref _visibilityGeneration);
         _startButtons.Dispose();

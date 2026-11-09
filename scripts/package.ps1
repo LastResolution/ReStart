@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
     [ValidateSet('win-x64', 'win-arm64')]
-    [string]$Runtime = 'win-x64'
+    [string]$Runtime = 'win-x64',
+    [switch]$WindowsKeyDiagnostics
 )
 
 $ErrorActionPreference = 'Stop'
@@ -32,6 +33,11 @@ $template = Get-Content -LiteralPath (Join-Path $repoRoot 'docs/portable-README.
 $stage = Join-Path $repoRoot ("artifacts/stage/" + [Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force -Path $stage, (Join-Path $stage 'TileHost') | Out-Null
 foreach ($name in @('ReStart.exe', 'LICENSE', 'README.txt')) { Copy-Item -LiteralPath (Join-Path $publishPath $name) -Destination $stage }
+if ($WindowsKeyDiagnostics) {
+    foreach ($name in @('Start-Windows-Key-Diagnostics.cmd', 'Start-Windows-Key-Diagnostics.ps1', 'WINDOWS-KEY-DIAGNOSTICS.txt')) {
+        Copy-Item -LiteralPath (Join-Path $repoRoot "diagnostics/windows-key/$name") -Destination $stage
+    }
+}
 Copy-Item -LiteralPath (Join-Path $workerPath 'ReStart.TileHost.exe') -Destination (Join-Path $stage 'TileHost')
 Copy-Item -LiteralPath (Join-Path $repoRoot 'examples/tiles') -Destination (Join-Path $stage 'Examples') -Recurse
 Copy-Item -LiteralPath (Join-Path $repoRoot 'third-party') -Destination $stage -Recurse
