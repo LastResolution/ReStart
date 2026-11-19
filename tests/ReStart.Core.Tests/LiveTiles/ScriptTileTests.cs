@@ -16,6 +16,16 @@ public sealed class ScriptTileTests
         Assert.Equal("ja-JP", frame.Text); Assert.Equal("3", frame.Detail);
         Assert.Equal(3, frame.State.GetProperty("count").GetInt32());
     }
+
+    [Theory]
+    [InlineData("scan: while (count < 3) { count++; continue; }")]
+    [InlineData("scan: do { count++; continue; } while (count < 3);")]
+    public void ContinuesLabelledLoopsAndReturnsTheTileFrame(string loop)
+    {
+        var frame = Render("function render() { let count = 0; " + loop + " return {text: String(count)}; }");
+        Assert.Equal("3", frame.Text);
+    }
+
     [Theory]
     [InlineData("function render(){ while(true) {} }")]
     [InlineData("function render(){ throw new Error('broken'); }")]
