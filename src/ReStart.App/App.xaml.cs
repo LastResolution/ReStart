@@ -67,6 +67,13 @@ public partial class App : Application
             Shutdown(await NativeJumpBroker.RunWorkerAsync());
             return;
         }
+        if (e.Args is ["--verify-start-discovery", var discoveryReport, ..] && e.Args.Length is 2 or 3)
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            var iterations = e.Args.Length == 3 && int.TryParse(e.Args[2], out var requested) ? Math.Clamp(requested, 1000, 200000) : 10000;
+            Shutdown(await StartButtonChecks.RunAsync(Path.GetFullPath(discoveryReport), iterations)); return;
+        }
+        if (e.Args.Contains("--verify-start-discovery")) { Shutdown(1); return; }
         if (await HandleUpdateEntryAsync(e.Args)) return;
         if (e.Args.Contains("--render-docs") || e.Args.Contains("--render-promo") || e.Args.Contains("--render-studio") || e.Args.Contains("--verify-platform")) { await RenderDocumentationAsync(e.Args); return; }
         var preview = e.Args.Contains("--preview") || e.Args.Contains("--smoke-test");
