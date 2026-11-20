@@ -71,6 +71,7 @@ jobs:
           ./scripts/test-jump-lists.ps1 -Executable $executable
           ./scripts/test-bundled-tiles.ps1 -Executable $executable
           ./scripts/test-tile-artwork.ps1 -Executable $executable
+          ./scripts/test-start-discovery.ps1 -Executable $executable
           ./scripts/test-studio.ps1 -Executable $executable
       - name: Preserve failed menu and update fixture diagnostics
         if: failure() && matrix.runtime == 'win-x64'
@@ -80,6 +81,7 @@ jobs:
           path: |
             artifacts/smoke/*.json
             artifacts/tile-artwork/*/start.json
+            artifacts/start-discovery/*/verification.json
             artifacts/smoke/*.png
             artifacts/app-menus/*.json
             artifacts/jump-lists/*/start.json
